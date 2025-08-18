@@ -488,10 +488,10 @@ class AdminController extends BaseController
         $settings = [
             'app_name' => defined('APP_NAME') ? APP_NAME : 'Shena Companion Welfare Association',
             'admin_email' => 'admin@shenacompanion.org',
-            'sms_enabled' => true,  // Enable SMS notifications
+            'sms_enabled' => false,
             'email_enabled' => true,
-            'mpesa_enabled' => true,  // Enable M-Pesa integration
-            'maintenance_mode' => false,  // Keep disabled for safety
+            'mpesa_enabled' => false,
+            'maintenance_mode' => false,
             'max_upload_size' => defined('MAX_FILE_SIZE') ? (MAX_FILE_SIZE / 1024 / 1024) . 'MB' : '5MB',
             'session_timeout' => defined('SESSION_LIFETIME') ? SESSION_LIFETIME : 3600,
             'default_package' => 'individual',
@@ -513,7 +513,7 @@ class AdminController extends BaseController
             'settings' => $settings
         ];
         
-        $this->view('admin/settings', $data);
+        $this->view('admin.settings', $data);
     }
 
     /**
