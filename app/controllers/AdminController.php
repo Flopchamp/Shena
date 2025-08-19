@@ -513,7 +513,7 @@ class AdminController extends BaseController
             'settings' => $settings
         ];
         
-        $this->view('admin/settings', $data);
+        $this->view('admin.settings', $data);
     }
 
     /**
