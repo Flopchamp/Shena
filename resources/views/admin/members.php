@@ -103,29 +103,29 @@
                                 <td><?php echo date('M j, Y', strtotime($member['registration_date'] ?? $member['created_at'])); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <?php if ($member['status'] === 'pending'): ?>
-                                        <form method="POST" action="/admin/activate-member" style="display: inline;">
+                                        <?php if ($member['status'] === 'inactive'): ?>
+                                        <form method="POST" action="/admin/member/activate" style="display: inline;">
                                             <input type="hidden" name="member_id" value="<?php echo $member['id']; ?>">
                                             <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Activate this member?')">
                                                 <i class="fas fa-check"></i> Activate
                                             </button>
                                         </form>
                                         <?php elseif ($member['status'] === 'active'): ?>
-                                        <form method="POST" action="/admin/deactivate-member" style="display: inline;">
+                                        <form method="POST" action="/admin/member/deactivate" style="display: inline;">
                                             <input type="hidden" name="member_id" value="<?php echo $member['id']; ?>">
                                             <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Deactivate this member?')">
                                                 <i class="fas fa-pause"></i> Deactivate
                                             </button>
                                         </form>
                                         <?php else: ?>
-                                        <form method="POST" action="/admin/activate-member" style="display: inline;">
+                                        <form method="POST" action="/admin/member/activate" style="display: inline;">
                                             <input type="hidden" name="member_id" value="<?php echo $member['id']; ?>">
                                             <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Activate this member?')">
                                                 <i class="fas fa-play"></i> Activate
                                             </button>
                                         </form>
                                         <?php endif; ?>
-                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#memberModal<?php echo $member['id']; ?>">
+                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#memberModal<?php echo $member['id']; ?>">
                                             <i class="fas fa-eye"></i> View
                                         </button>
                                     </div>

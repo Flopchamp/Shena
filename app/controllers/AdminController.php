@@ -164,45 +164,59 @@ class AdminController extends BaseController
     /**
      * Activate Member
      */
-    public function activateMember()
+    public function activateMember($id = null)
     {
         $this->requireAdminAccess();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $memberId = $_POST['member_id'] ?? 0;
-            $reason = $_POST['reason'] ?? '';
+            $memberId = $id ?? ($_POST['member_id'] ?? 0);
             
-            if ($memberId && $this->memberModel->activateMember($memberId, $reason)) {
+            if ($memberId) {
+                // Update member status
+                $this->memberModel->update($memberId, ['status' => 'active']);
+                
+                // Update user status
+                $member = $this->memberModel->find($memberId);
+                if ($member) {
+                    $this->userModel->update($member['user_id'], ['status' => 'active']);
+                }
+                
                 $_SESSION['success'] = 'Member activated successfully!';
             } else {
-                $_SESSION['error'] = 'Failed to activate member.';
+                $_SESSION['error'] = 'Invalid member ID.';
             }
         }
         
-        header('Location: /admin/members');
-        exit();
+        $this->redirect('/admin/members');
     }
 
     /**
      * Deactivate Member
      */
-    public function deactivateMember()
+    public function deactivateMember($id = null)
     {
         $this->requireAdminAccess();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $memberId = $_POST['member_id'] ?? 0;
-            $reason = $_POST['reason'] ?? '';
+            $memberId = $id ?? ($_POST['member_id'] ?? 0);
             
-            if ($memberId && $this->memberModel->deactivateMember($memberId, $reason)) {
+            if ($memberId) {
+                // Update member status
+                $this->memberModel->update($memberId, ['status' => 'inactive']);
+                
+                // Update user status
+                $member = $this->memberModel->find($memberId);
+                if ($member) {
+                    $this->userModel->update($member['user_id'], ['status' => 'inactive']);
+                }
+                
                 $_SESSION['success'] = 'Member deactivated successfully!';
             } else {
-                $_SESSION['error'] = 'Failed to deactivate member.';
+                $_SESSION['error'] = 'Invalid member ID.';
             }
         }
         
-        header('Location: /admin/members');
-        exit();
+        $this->redirect('/admin/members');
     }
 
     /**

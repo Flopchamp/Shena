@@ -47,6 +47,8 @@ class Router
         $this->addRoute('GET', '/admin/dashboard', 'AdminController@dashboard');
         $this->addRoute('GET', '/admin/members', 'AdminController@members');
         $this->addRoute('GET', '/admin/member/{id}', 'AdminController@viewMember');
+        $this->addRoute('POST', '/admin/member/activate', 'AdminController@activateMember');
+        $this->addRoute('POST', '/admin/member/deactivate', 'AdminController@deactivateMember');
         $this->addRoute('POST', '/admin/member/{id}/activate', 'AdminController@activateMember');
         $this->addRoute('POST', '/admin/member/{id}/deactivate', 'AdminController@deactivateMember');
         $this->addRoute('GET', '/admin/payments', 'AdminController@payments');

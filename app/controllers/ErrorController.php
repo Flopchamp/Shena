@@ -6,7 +6,9 @@ class ErrorController extends BaseController
 {
     public function notFound()
     {
-        http_response_code(404);
+        if (!headers_sent()) {
+            http_response_code(404);
+        }
         
         $data = [
             'title' => '404 - Page Not Found',
@@ -19,7 +21,9 @@ class ErrorController extends BaseController
     
     public function serverError()
     {
-        http_response_code(500);
+        if (!headers_sent()) {
+            http_response_code(500);
+        }
         
         $data = [
             'title' => '500 - Server Error',
@@ -32,7 +36,9 @@ class ErrorController extends BaseController
     
     public function forbidden()
     {
-        http_response_code(403);
+        if (!headers_sent()) {
+            http_response_code(403);
+        }
         
         $data = [
             'title' => '403 - Access Forbidden',
