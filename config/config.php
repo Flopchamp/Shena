@@ -24,6 +24,7 @@ define('MPESA_PASSKEY', 'your_passkey_here');
 define('MPESA_CALLBACK_URL', APP_URL . '/api/mpesa/callback');
 
 // Email Configuration (SMTP)
+define('MAIL_ENABLED', false); // Set to true when SMTP is configured
 define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_PORT', 587);
 define('MAIL_USERNAME', 'your_email@gmail.com');

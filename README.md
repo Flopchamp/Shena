@@ -75,7 +75,13 @@ A comprehensive web application for managing a welfare association that provides
    chmod 755 storage/uploads
    ```
 
-5. **Apache Configuration**
+5. **Run Development Server**
+   ```bash
+   php -S localhost:8001
+   ```
+   Then visit: http://localhost:8001
+
+6. **Apache Configuration** (For Production)
    - Ensure mod_rewrite is enabled
    - Point DocumentRoot to the project directory
    - The .htaccess file should handle URL routing

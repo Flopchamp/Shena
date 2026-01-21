@@ -216,19 +216,23 @@ class AuthController extends BaseController
                 $memberData['user_id'] = $userId;
                 $memberData['member_number'] = $memberNumber;
                 $memberData['monthly_contribution'] = $monthlyContribution;
-                $memberData['status'] = 'pending';
+                $memberData['status'] = 'inactive';
                 
                 $memberId = $this->memberModel->create($memberData);
                 
                 // Commit transaction
                 $this->db->getConnection()->commit();
                 
-                // Send welcome email
-                $emailService = new EmailService();
-                $emailService->sendWelcomeEmail($userData['email'], [
-                    'name' => $userData['first_name'] . ' ' . $userData['last_name'],
-                    'member_number' => $memberNumber
-                ]);
+                // Send welcome email (skip if mail server not configured)
+                try {
+                    $emailService = new EmailService();
+                    @$emailService->sendWelcomeEmail($userData['email'], [
+                        'name' => $userData['first_name'] . ' ' . $userData['last_name'],
+                        'member_number' => $memberNumber
+                    ]);
+                } catch (Exception $e) {
+                    error_log('Email sending failed: ' . $e->getMessage());
+                }
                 
                 $_SESSION['success'] = 'Registration successful! Your membership application is under review. You will be notified via email once approved.';
                 $this->redirect('/login');
@@ -240,7 +244,8 @@ class AuthController extends BaseController
             
         } catch (Exception $e) {
             error_log('Registration error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Registration failed. Please try again.';
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $_SESSION['error'] = 'Registration failed: ' . ($e->getMessage() ?: 'Please try again.');
             $this->redirect('/register');
         }
     }
