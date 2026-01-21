@@ -35,6 +35,8 @@ class Router
         $this->addRoute('GET', '/payments', 'MemberController@payments');
         $this->addRoute('GET', '/beneficiaries', 'MemberController@beneficiaries');
         $this->addRoute('POST', '/beneficiaries', 'MemberController@addBeneficiary');
+        $this->addRoute('POST', '/beneficiaries/delete', 'MemberController@deleteBeneficiary');
+        $this->addRoute('POST', '/beneficiaries/update', 'MemberController@updateBeneficiary');
         $this->addRoute('GET', '/claims', 'MemberController@claims');
         $this->addRoute('POST', '/claims', 'MemberController@submitClaim');
         
