@@ -291,8 +291,8 @@ class Member extends BaseModel
      */
     public function activateMember($memberId, $reason = '')
     {
-        $sql = "UPDATE {$this->table} SET status = 'active', updated_at = NOW() WHERE id = ?";
-        return $this->db->query($sql, [$memberId]);
+        $sql = "UPDATE {$this->table} SET status = 'active', updated_at = NOW() WHERE id = :id";
+        return $this->db->query($sql, ['id' => $memberId]);
     }
 
     /**
@@ -300,8 +300,8 @@ class Member extends BaseModel
      */
     public function deactivateMember($memberId, $reason = '')
     {
-        $sql = "UPDATE {$this->table} SET status = 'inactive', updated_at = NOW() WHERE id = ?";
-        return $this->db->query($sql, [$memberId]);
+        $sql = "UPDATE {$this->table} SET status = 'inactive', updated_at = NOW() WHERE id = :id";
+        return $this->db->query($sql, ['id' => $memberId]);
     }
 
     /**

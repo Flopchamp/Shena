@@ -69,8 +69,8 @@ class AdminController extends BaseController
             if (!$admin) {
                 // Also try to find by first_name as username for admin
                 $db = Database::getInstance();
-                $query = "SELECT * FROM users WHERE first_name = ? AND role IN ('super_admin', 'manager') LIMIT 1";
-                $admin = $db->fetch($query, [$username]);
+                $query = "SELECT * FROM users WHERE first_name = :first_name AND role IN ('super_admin', 'manager') LIMIT 1";
+                $admin = $db->fetch($query, ['first_name' => $username]);
             }
             
             if ($admin && in_array($admin['role'], ['super_admin', 'manager']) && 
@@ -83,7 +83,7 @@ class AdminController extends BaseController
                 
                 // Update last login
                 $db = Database::getInstance();
-                $db->execute("UPDATE users SET last_login = NOW() WHERE id = ?", [$admin['id']]);
+                $db->execute("UPDATE users SET last_login = NOW() WHERE id = :id", ['id' => $admin['id']]);
                 
                 header('Location: /admin/dashboard');
                 exit();
@@ -462,8 +462,8 @@ class AdminController extends BaseController
     {
         $db = Database::getInstance();
         $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
-                  VALUES (?, ?, ?, ?, ?, 'sent', NOW())";
-        $db->execute($query, [$type, $recipients, $count, $subject, $message]);
+                  VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
+        $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
     }
 
     /**
