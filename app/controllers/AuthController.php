@@ -38,17 +38,47 @@ class AuthController extends BaseController
             $email = $this->sanitizeInput($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
             
+            // Rate limiting - prevent brute force attacks
+            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $rateLimitKey = 'login_attempts_' . md5($ipAddress . $email);
+            
+            if (!isset($_SESSION[$rateLimitKey])) {
+                $_SESSION[$rateLimitKey] = ['count' => 0, 'time' => time()];
+            }
+            
+            // Reset counter after 15 minutes
+            if (time() - $_SESSION[$rateLimitKey]['time'] > 900) {
+                $_SESSION[$rateLimitKey] = ['count' => 0, 'time' => time()];
+            }
+            
+            // Block after 5 failed attempts
+            if ($_SESSION[$rateLimitKey]['count'] >= 5) {
+                $waitTime = 900 - (time() - $_SESSION[$rateLimitKey]['time']);
+                $_SESSION['error'] = 'Too many login attempts. Please try again in ' . ceil($waitTime / 60) . ' minutes.';
+                $this->redirect('/login');
+                return;
+            }
+            
             // Validate inputs
             if (empty($email) || empty($password)) {
+                $_SESSION[$rateLimitKey]['count']++;
                 $_SESSION['error'] = 'Please enter both email and password.';
                 $this->redirect('/login');
                 return;
             }
             
             // Find user by email
-            $user = $this->userModel->findByEmail($email);
+            try {
+                $user = $this->userModel->findByEmail($email);
+            } catch (Exception $e) {
+                error_log('Database error during login: ' . $e->getMessage());
+                $_SESSION['error'] = 'An error occurred. Please try again.';
+                $this->redirect('/login');
+                return;
+            }
             
             if (!$user) {
+                $_SESSION[$rateLimitKey]['count']++;
                 $_SESSION['error'] = 'Invalid credentials.';
                 $this->redirect('/login');
                 return;
@@ -56,6 +86,7 @@ class AuthController extends BaseController
             
             // Verify password
             if (!$this->userModel->verifyPassword($password, $user['password'])) {
+                $_SESSION[$rateLimitKey]['count']++;
                 $_SESSION['error'] = 'Invalid credentials.';
                 $this->redirect('/login');
                 return;
@@ -68,14 +99,25 @@ class AuthController extends BaseController
                 return;
             }
             
+            // Reset rate limit on successful login
+            unset($_SESSION[$rateLimitKey]);
+            
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
+            
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+            $_SESSION['login_time'] = time();
             
             // Update last login
-            $this->userModel->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
+            try {
+                $this->userModel->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
+            } catch (Exception $e) {
+                error_log('Failed to update last login: ' . $e->getMessage());
+            }
             
             // Redirect based on role
             if (in_array($user['role'], ['super_admin', 'manager'])) {
@@ -188,16 +230,30 @@ class AuthController extends BaseController
             
             // Validate age (18-100)
             if (!empty($memberData['date_of_birth'])) {
-                $age = $this->memberModel->calculateAge($memberData['date_of_birth']);
-                if ($age < 18 || $age > 100) {
-                    $_SESSION['error'] = 'Members must be between 18 and 100 years old.';
+                try {
+                    $age = $this->memberModel->calculateAge($memberData['date_of_birth']);
+                    if ($age < 18 || $age > 100) {
+                        $_SESSION['error'] = 'Members must be between 18 and 100 years old.';
+                        $this->redirect('/register');
+                        return;
+                    }
+                } catch (Exception $e) {
+                    error_log('Age calculation error: ' . $e->getMessage());
+                    $_SESSION['error'] = 'Invalid date of birth.';
                     $this->redirect('/register');
                     return;
                 }
             }
             
             // Start transaction
-            $this->db->getConnection()->beginTransaction();
+            try {
+                $this->db->getConnection()->beginTransaction();
+            } catch (Exception $e) {
+                error_log('Failed to start transaction: ' . $e->getMessage());
+                $_SESSION['error'] = 'Registration failed. Please try again.';
+                $this->redirect('/register');
+                return;
+            }
             
             try {
                 // Create user

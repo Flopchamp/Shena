@@ -20,6 +20,12 @@ class PaymentController extends BaseController
             // This endpoint expects JSON data
             $input = json_decode(file_get_contents('php://input'), true);
             
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log('JSON decode error: ' . json_last_error_msg());
+                $this->json(['error' => 'Invalid JSON data'], 400);
+                return;
+            }
+            
             if (!$input) {
                 $this->json(['error' => 'Invalid request data'], 400);
                 return;

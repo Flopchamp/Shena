@@ -122,8 +122,13 @@ class MemberController extends BaseController
             }
             
             // Update records
-            $this->userModel->update($_SESSION['user_id'], $userData);
-            $this->memberModel->update($member['id'], $memberData);
+            try {
+                $this->userModel->update($_SESSION['user_id'], $userData);
+                $this->memberModel->update($member['id'], $memberData);
+            } catch (Exception $e) {
+                error_log('Database update error: ' . $e->getMessage());
+                throw new Exception('Failed to update profile in database.');
+            }
             
             $_SESSION['success'] = 'Profile updated successfully.';
             

@@ -4,12 +4,11 @@
  * Front Controller Pattern
  */
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-
-// Start session
+// Start session with secure settings
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+ini_set('session.cookie_samesite', 'Strict');
 session_start();
 
 // Define constants
@@ -19,6 +18,21 @@ define('PUBLIC_PATH', ROOT_PATH . '/public');
 define('CONFIG_PATH', ROOT_PATH . '/config');
 define('VIEWS_PATH', ROOT_PATH . '/resources/views');
 define('UPLOADS_PATH', ROOT_PATH . '/storage/uploads');
+
+// Load configuration first
+require_once CONFIG_PATH . '/config.php';
+
+// Set error reporting based on DEBUG_MODE
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+} else {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    ini_set('error_log', ROOT_PATH . '/storage/logs/error.log');
+}
 
 // Auto-load classes
 spl_autoload_register(function ($class) {
@@ -40,22 +54,28 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Load configuration
-require_once CONFIG_PATH . '/config.php';
-
 // Load helper functions
-require_once APP_PATH . '/helpers/functions.php';
+if (file_exists(APP_PATH . '/helpers/functions.php')) {
+    require_once APP_PATH . '/helpers/functions.php';
+}
 
 // Initialize the application
 try {
     $router = new Router();
     $router->dispatch();
 } catch (Exception $e) {
-    error_log($e->getMessage());
-    if (DEBUG_MODE) {
-        echo '<h1>Error</h1><p>' . $e->getMessage() . '</p>';
-        echo '<pre>' . $e->getTraceAsString() . '</pre>';
+    error_log('Application error: ' . $e->getMessage());
+    error_log('Stack trace: ' . $e->getTraceAsString());
+    
+    if (defined('DEBUG_MODE') && DEBUG_MODE) {
+        echo '<h1>Error</h1><p>' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
     } else {
-        header('Location: /error/500');
+        http_response_code(500);
+        if (file_exists(VIEWS_PATH . '/errors/500.php')) {
+            include VIEWS_PATH . '/errors/500.php';
+        } else {
+            echo 'An error occurred. Please try again later.';
+        }
     }
 }

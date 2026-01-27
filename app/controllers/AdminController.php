@@ -441,17 +441,22 @@ class AdminController extends BaseController
      */
     private function getRecipientList($criteria)
     {
-        switch ($criteria) {
-            case 'all':
-                return $this->memberModel->getAllMembers();
-            case 'active':
-                return $this->memberModel->getActiveMembersList();
-            case 'inactive':
-                return $this->memberModel->getInactiveMembersList();
-            case 'recent':
-                return $this->memberModel->getRecentMembers(30); // Last 30 days
-            default:
-                return [];
+        try {
+            switch ($criteria) {
+                case 'all':
+                    return $this->memberModel->getAllMembers();
+                case 'active':
+                    return $this->memberModel->getActiveMembersList();
+                case 'inactive':
+                    return $this->memberModel->getInactiveMembersList();
+                case 'recent':
+                    return $this->memberModel->getRecentMembers(30);
+                default:
+                    return [];
+            }
+        } catch (Exception $e) {
+            error_log('Failed to get recipient list: ' . $e->getMessage());
+            return [];
         }
     }
 
