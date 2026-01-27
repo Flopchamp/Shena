@@ -475,24 +475,29 @@ class AdminController extends BaseController
      */
     private function getRecentCommunications($type = 'all', $status = 'all')
     {
-        $db = Database::getInstance();
-        $query = "SELECT * FROM communications WHERE 1=1";
-        $params = [];
-        
-        if ($type !== 'all') {
-            $query .= " AND type = ?";
-            $params[] = $type;
+        try {
+            $db = Database::getInstance();
+            $query = "SELECT * FROM communications WHERE 1=1";
+            $params = [];
+            
+            if ($type !== 'all') {
+                $query .= " AND type = ?";
+                $params[] = $type;
+            }
+            
+            if ($status !== 'all') {
+                $query .= " AND status = ?";
+                $params[] = $status;
+            }
+            
+            $query .= " ORDER BY sent_at DESC LIMIT 50";
+            
+            $result = $db->query($query, $params);
+            return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Exception $e) {
+            error_log('Failed to fetch communications: ' . $e->getMessage());
+            return [];
         }
-        
-        if ($status !== 'all') {
-            $query .= " AND status = ?";
-            $params[] = $status;
-        }
-        
-        $query .= " ORDER BY sent_at DESC LIMIT 50";
-        
-        $result = $db->query($query, $params);
-        return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
