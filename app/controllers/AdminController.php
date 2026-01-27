@@ -586,7 +586,20 @@ class AdminController extends BaseController
                 
                 // Read current config file
                 $configPath = ROOT_PATH . '/config/config.php';
+                
+                if (!file_exists($configPath)) {
+                    throw new Exception("Configuration file not found");
+                }
+                
+                if (!is_writable($configPath)) {
+                    throw new Exception("Configuration file is not writable");
+                }
+                
                 $configContent = file_get_contents($configPath);
+                
+                if ($configContent === false) {
+                    throw new Exception("Failed to read configuration file");
+                }
                 
                 // Update each setting in the config file
                 foreach ($newSettings as $key => $value) {
