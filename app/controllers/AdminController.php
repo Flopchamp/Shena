@@ -441,17 +441,22 @@ class AdminController extends BaseController
      */
     private function getRecipientList($criteria)
     {
-        switch ($criteria) {
-            case 'all':
-                return $this->memberModel->getAllMembers();
-            case 'active':
-                return $this->memberModel->getActiveMembersList();
-            case 'inactive':
-                return $this->memberModel->getInactiveMembersList();
-            case 'recent':
-                return $this->memberModel->getRecentMembers(30); // Last 30 days
-            default:
-                return [];
+        try {
+            switch ($criteria) {
+                case 'all':
+                    return $this->memberModel->getAllMembers();
+                case 'active':
+                    return $this->memberModel->getActiveMembersList();
+                case 'inactive':
+                    return $this->memberModel->getInactiveMembersList();
+                case 'recent':
+                    return $this->memberModel->getRecentMembers(30);
+                default:
+                    return [];
+            }
+        } catch (Exception $e) {
+            error_log('Failed to get recipient list: ' . $e->getMessage());
+            return [];
         }
     }
 
@@ -460,10 +465,14 @@ class AdminController extends BaseController
      */
     private function logCommunication($type, $recipients, $subject, $message, $count)
     {
-        $db = Database::getInstance();
-        $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
-                  VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
-        $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
+        try {
+            $db = Database::getInstance();
+            $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
+                      VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
+            $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
+        } catch (Exception $e) {
+            error_log('Failed to log communication: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -471,24 +480,29 @@ class AdminController extends BaseController
      */
     private function getRecentCommunications($type = 'all', $status = 'all')
     {
-        $db = Database::getInstance();
-        $query = "SELECT * FROM communications WHERE 1=1";
-        $params = [];
-        
-        if ($type !== 'all') {
-            $query .= " AND type = ?";
-            $params[] = $type;
+        try {
+            $db = Database::getInstance();
+            $query = "SELECT * FROM communications WHERE 1=1";
+            $params = [];
+            
+            if ($type !== 'all') {
+                $query .= " AND type = ?";
+                $params[] = $type;
+            }
+            
+            if ($status !== 'all') {
+                $query .= " AND status = ?";
+                $params[] = $status;
+            }
+            
+            $query .= " ORDER BY sent_at DESC LIMIT 50";
+            
+            $result = $db->query($query, $params);
+            return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Exception $e) {
+            error_log('Failed to fetch communications: ' . $e->getMessage());
+            return [];
         }
-        
-        if ($status !== 'all') {
-            $query .= " AND status = ?";
-            $params[] = $status;
-        }
-        
-        $query .= " ORDER BY sent_at DESC LIMIT 50";
-        
-        $result = $db->query($query, $params);
-        return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
     /**
@@ -577,7 +591,20 @@ class AdminController extends BaseController
                 
                 // Read current config file
                 $configPath = ROOT_PATH . '/config/config.php';
+                
+                if (!file_exists($configPath)) {
+                    throw new Exception("Configuration file not found");
+                }
+                
+                if (!is_writable($configPath)) {
+                    throw new Exception("Configuration file is not writable");
+                }
+                
                 $configContent = file_get_contents($configPath);
+                
+                if ($configContent === false) {
+                    throw new Exception("Failed to read configuration file");
+                }
                 
                 // Update each setting in the config file
                 foreach ($newSettings as $key => $value) {

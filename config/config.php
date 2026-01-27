@@ -4,7 +4,7 @@
  */
 
 // Environment Settings
-define('DEBUG_MODE', true);
+define('DEBUG_MODE', false); // CRITICAL: Set to false in production
 define('APP_NAME', 'Shena Companion Welfare Association');
 define('APP_URL', 'http://localhost');
 
@@ -12,43 +12,44 @@ define('APP_URL', 'http://localhost');
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'shena_welfare_db');
 define('DB_USER', 'root');
-define('DB_PASS', '4885'); // XAMPP default has no password for root
+define('DB_PASS', '4885');
 define('DB_CHARSET', 'utf8mb4');
-define('DB_FILE', ROOT_PATH . '/database/shena_welfare.db'); // SQLite database file
+define('DB_FILE', ROOT_PATH . '/database/shena_welfare.db');
 
-// M-Pesa Configuration (Placeholder)
-define('MPESA_CONSUMER_KEY', 'your_consumer_key_here');
-define('MPESA_CONSUMER_SECRET', 'your_consumer_secret_here');
+// M-Pesa Configuration
+define('MPESA_CONSUMER_KEY', getenv('MPESA_CONSUMER_KEY') ?: 'your_consumer_key_here');
+define('MPESA_CONSUMER_SECRET', getenv('MPESA_CONSUMER_SECRET') ?: 'your_consumer_secret_here');
 define('MPESA_BUSINESS_SHORTCODE', '4163987');
-define('MPESA_PASSKEY', 'your_passkey_here');
+define('MPESA_PASSKEY', getenv('MPESA_PASSKEY') ?: 'your_passkey_here');
 define('MPESA_CALLBACK_URL', APP_URL . '/api/mpesa/callback');
 
 // Email Configuration (SMTP)
-define('MAIL_ENABLED', false); // Set to true when SMTP is configured
+define('MAIL_ENABLED', false);
 define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_PORT', 587);
-define('MAIL_USERNAME', 'your_email@gmail.com');
-define('MAIL_PASSWORD', 'your_app_password');
+define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: 'your_email@gmail.com');
+define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: 'your_app_password');
 define('MAIL_FROM_EMAIL', 'noreply@shenacompanion.org');
 define('MAIL_FROM_NAME', 'Shena Companion Welfare Association');
 
-// Twilio SMS Configuration (Placeholder)
-define('TWILIO_SID', 'your_twilio_sid_here');
-define('TWILIO_AUTH_TOKEN', 'your_twilio_auth_token_here');
+// Twilio SMS Configuration
+define('TWILIO_SID', getenv('TWILIO_SID') ?: 'your_twilio_sid_here');
+define('TWILIO_AUTH_TOKEN', getenv('TWILIO_AUTH_TOKEN') ?: 'your_twilio_auth_token_here');
 define('TWILIO_PHONE_NUMBER', '+1234567890');
 
-// Security Settings
-define('ENCRYPTION_KEY', 'your-32-character-secret-key-here');
-define('JWT_SECRET', 'your-jwt-secret-key-here');
+// Security Settings - CRITICAL: Change these in production
+define('ENCRYPTION_KEY', getenv('ENCRYPTION_KEY') ?: bin2hex(random_bytes(16)));
+define('JWT_SECRET', getenv('JWT_SECRET') ?: bin2hex(random_bytes(32)));
 define('SESSION_LIFETIME', 7200); // 2 hours
 
 // File Upload Settings
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
 define('ALLOWED_FILE_TYPES', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx']);
+define('UPLOAD_PATH', ROOT_PATH . '/storage/uploads');
 
 // Payment Settings
-define('REGISTRATION_FEE', 200); // KES 200
-define('REACTIVATION_FEE', 100); // KES 100
+define('REGISTRATION_FEE', 200);
+define('REACTIVATION_FEE', 100);
 
 // Grace Period Settings (in months)
 define('GRACE_PERIOD_UNDER_80', 4);
