@@ -460,10 +460,14 @@ class AdminController extends BaseController
      */
     private function logCommunication($type, $recipients, $subject, $message, $count)
     {
-        $db = Database::getInstance();
-        $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
-                  VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
-        $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
+        try {
+            $db = Database::getInstance();
+            $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
+                      VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
+            $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
+        } catch (Exception $e) {
+            error_log('Failed to log communication: ' . $e->getMessage());
+        }
     }
 
     /**
