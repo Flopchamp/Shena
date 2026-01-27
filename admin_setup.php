@@ -1,6 +1,15 @@
 <?php
 define('ROOT_PATH', __DIR__);
-require_once 'config/config.php';
+
+try {
+    require_once 'config/config.php';
+} catch (Exception $e) {
+    die("Configuration error: Unable to load config file.\n");
+}
+
+if (!defined('DB_HOST') || !defined('DB_NAME') || !defined('DB_USER') || !defined('DB_PASS')) {
+    die("Database configuration missing. Please check config.php\n");
+}
 
 try {
     $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
@@ -30,6 +39,10 @@ try {
             echo "- ID: " . $user['id'] . ", Email: " . $user['email'] . ", Role: " . $user['role'] . "\n";
         }
     }
+} catch (PDOException $e) {
+    error_log("Admin setup database error: " . $e->getMessage());
+    die("Database connection failed. Check error logs for details.\n");
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+    error_log("Admin setup error: " . $e->getMessage());
+    die("Setup failed. Check error logs for details.\n");
 }
