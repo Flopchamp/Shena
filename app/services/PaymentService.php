@@ -154,6 +154,60 @@ class PaymentService
                     // Update payment status
                     $paymentModel->confirmPayment($paymentId, $mpesaReceiptNumber);
                     
+                    // Retrieve updated payment record to check type and member
+                    $confirmedPayment = $paymentModel->find($paymentId);
+                    $memberId = $confirmedPayment['member_id'];
+                    $paymentType = $confirmedPayment['payment_type'] ?? 'monthly';
+                    
+                    // -- Automate Reactivation Logic --
+                    // Check if member is defaulted or payment is explicitly for reactivation
+                    $memberModel = new Member();
+                    $member = $memberModel->find($memberId);
+                    
+                    if ($member && ($member['status'] === 'defaulted' || $paymentType === 'reactivation')) {
+                         // Calculate Arrears
+                         // Arrears = (Months since coverage ended) * Monthly Contribution
+                         // But simple policy check: Pay Arrears + Reactivation Fee (100)
+                         
+                         // We need to calculate how many months missed.
+                         // Coverage ends date vs Today.
+                         $today = new DateTimeImmutable('today');
+                         $coverageEnds = $member['coverage_ends'] ? new DateTimeImmutable($member['coverage_ends']) : $today;
+                         
+                         // If coverage ends is in future/today, maybe not defaulted? 
+                         // But Status says defaulted.
+                         
+                         $monthsMissed = 0;
+                         if ($coverageEnds < $today) {
+                             $diff = $today->diff($coverageEnds);
+                             $monthsMissed = ($diff->y * 12) + $diff->m + ($diff->d > 0 ? 1 : 0);
+                         }
+                         
+                         // If defaulted, at least 2 months missed typically?
+                         if ($monthsMissed < 0) $monthsMissed = 0;
+                         
+                         // Enforce minimum arrears calculation if detailed logic needed
+                         // For now, valid payment check:
+                         $reactivationFee = defined('REACTIVATION_FEE') ? REACTIVATION_FEE : 100;
+                         $monthlyContribution = $member['monthly_contribution'];
+                         
+                         $arrearsAmount = $monthsMissed * $monthlyContribution;
+                         $totalRequired = $arrearsAmount + $reactivationFee;
+                         
+                         // Allow small variance or just check if payment covers significant portion?
+                         // Policy says "Pay all outstanding contributions plus reactivation fee".
+                         // If the user initiates a specific "Reactivation" payment, they should have been quoted this amount.
+                         // We assume the amount paid ($amount) is what was requested.
+                         
+                         // We verify if this amount is roughly sufficient (e.g. within 100 bob or exact?)
+                         // Let's be strict but safe: check if type is reactivation OR (defaulted AND amount big enough)
+                         
+                         if ($paymentType === 'reactivation' || ($member['status'] === 'defaulted' && $amount >= $totalRequired)) {
+                             $memberModel->reactivateMember($memberId);
+                             error_log("Member #{$memberId} automatically reactivated after payment of {$amount}.");
+                         }
+                    }
+                    
                     // Send confirmation SMS and email
                     $this->sendPaymentConfirmation($payment[0], $amount, $mpesaReceiptNumber);
                     
