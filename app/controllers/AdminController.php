@@ -579,29 +579,32 @@ class AdminController extends BaseController
     /**
      * Settings Management
      */
+    /**
+     * Settings Management
+     */
     public function settings()
     {
         $this->requireAdminAccess();
         
-        // Get current settings from config file
-        $settings = [
-            'app_name' => defined('APP_NAME') ? APP_NAME : 'Shena Companion Welfare Association',
-            'admin_email' => 'admin@shenacompanion.org',
-            'sms_enabled' => false,
-            'email_enabled' => true,
-            'mpesa_enabled' => false,
-            'maintenance_mode' => false,
-            'max_upload_size' => defined('MAX_FILE_SIZE') ? (MAX_FILE_SIZE / 1024 / 1024) . 'MB' : '5MB',
-            'session_timeout' => defined('SESSION_LIFETIME') ? SESSION_LIFETIME : 3600,
-            'default_package' => 'individual',
-            'base_contribution' => 500,
-            'registration_fee' => defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200,
-            'reactivation_fee' => defined('REACTIVATION_FEE') ? REACTIVATION_FEE : 100,
-            'grace_period_under_80' => defined('GRACE_PERIOD_UNDER_80') ? GRACE_PERIOD_UNDER_80 : 4,
-            'grace_period_80_and_above' => defined('GRACE_PERIOD_80_AND_ABOVE') ? GRACE_PERIOD_80_AND_ABOVE : 5,
-            'debug_mode' => defined('DEBUG_MODE') ? DEBUG_MODE : false
-        ];
+        $settingsService = new SettingsService();
+        $dbSettings = $settingsService->getAll();
         
+        // Merge DB settings with defaults or constants if not in DB
+        $settings = array_merge([
+            'app_name' => defined('APP_NAME') ? APP_NAME : 'Shena Companion',
+            'registration_fee' => 200,
+            'reactivation_fee' => 100,
+            'grace_period_under_80' => 4,
+            'grace_period_80_and_above' => 5,
+            'maturation_period_under_80' => 4, // Align logic naming
+            'maturation_period_80_and_above' => 5,
+        ], $dbSettings);
+        
+        // Ensure values are present via lookup if keys differ
+        // Note: system_settings keys should be lower_snake_case
+        if (!isset($settings['registration_fee'])) $settings['registration_fee'] = get_system_setting('registration_fee', 200);
+        if (!isset($settings['reactivation_fee'])) $settings['reactivation_fee'] = get_system_setting('reactivation_fee', 100);
+
         // Generate CSRF token if not exists
         if (!isset($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -628,68 +631,24 @@ class AdminController extends BaseController
                 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
                     throw new Exception("Invalid CSRF token");
                 }
-                
-                // Get settings from form
-                $newSettings = [
-                    'APP_NAME' => $_POST['app_name'] ?? APP_NAME,
-                    'ADMIN_EMAIL' => $_POST['admin_email'] ?? '',
-                    'SMS_ENABLED' => isset($_POST['sms_enabled']) ? 'true' : 'false',
-                    'EMAIL_ENABLED' => isset($_POST['email_enabled']) ? 'true' : 'false',
-                    'MPESA_ENABLED' => isset($_POST['mpesa_enabled']) ? 'true' : 'false',
-                    'MAINTENANCE_MODE' => isset($_POST['maintenance_mode']) ? 'true' : 'false',
-                    'MAX_UPLOAD_SIZE' => $_POST['max_upload_size'] ?? '5MB',
-                    'SESSION_TIMEOUT' => (int)($_POST['session_timeout'] ?? 3600),
-                    'DEFAULT_PACKAGE' => $_POST['default_package'] ?? 'individual',
-                    'BASE_CONTRIBUTION' => (int)($_POST['base_contribution'] ?? 500)
+
+                $settingsService = new SettingsService();
+                $editableSettings = [
+                    'registration_fee', 
+                    'reactivation_fee', 
+                    'grace_period_under_80', 
+                    'grace_period_80_and_above',
+                    'app_name',
+                    'admin_email'
                 ];
-                
-                // Validate settings
-                if (empty($newSettings['APP_NAME'])) {
-                    throw new Exception("App name is required");
+
+                foreach ($editableSettings as $key) {
+                    if (isset($_POST[$key])) {
+                        $settingsService->set($key, $_POST[$key]);
+                    }
                 }
                 
-                if (!filter_var($newSettings['ADMIN_EMAIL'], FILTER_VALIDATE_EMAIL)) {
-                    throw new Exception("Invalid admin email address");
-                }
-                
-                if ($newSettings['SESSION_TIMEOUT'] < 300 || $newSettings['SESSION_TIMEOUT'] > 86400) {
-                    throw new Exception("Session timeout must be between 5 minutes and 24 hours");
-                }
-                
-                if ($newSettings['BASE_CONTRIBUTION'] < 100 || $newSettings['BASE_CONTRIBUTION'] > 10000) {
-                    throw new Exception("Base contribution must be between 100 and 10,000");
-                }
-                
-                // Read current config file
-                $configPath = ROOT_PATH . '/config/config.php';
-                
-                if (!file_exists($configPath)) {
-                    throw new Exception("Configuration file not found");
-                }
-                
-                if (!is_writable($configPath)) {
-                    throw new Exception("Configuration file is not writable");
-                }
-                
-                $configContent = file_get_contents($configPath);
-                
-                if ($configContent === false) {
-                    throw new Exception("Failed to read configuration file");
-                }
-                
-                // Update each setting in the config file
-                foreach ($newSettings as $key => $value) {
-                    $pattern = "/define\('$key',\s*['\"].*?['\"]\);/";
-                    $replacement = "define('$key', '$value');";
-                    $configContent = preg_replace($pattern, $replacement, $configContent);
-                }
-                
-                // Write updated config back to file
-                if (file_put_contents($configPath, $configContent) === false) {
-                    throw new Exception("Failed to update configuration file");
-                }
-                
-                $_SESSION['success'] = 'Settings updated successfully! Some changes may require a server restart to take effect.';
+                $_SESSION['success'] = 'Settings updated successfully to database!';
                 
             } catch (Exception $e) {
                 $_SESSION['error'] = 'Error updating settings: ' . $e->getMessage();

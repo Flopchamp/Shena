@@ -4,37 +4,56 @@
  */
 
 // Environment Settings
-define('DEBUG_MODE', false); // CRITICAL: Set to false in production
-define('APP_NAME', 'Shena Companion Welfare Association');
-define('APP_URL', 'http://localhost');
+// Simple .env loader
+if (file_exists(ROOT_PATH . '/.env')) {
+    $lines = file(ROOT_PATH . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2) + [NULL, NULL];
+        if ($name && $value !== null) {
+            $name = trim($name);
+            $value = trim($value);
+            // Handle comments at end of line
+            $value = explode('#', $value, 2)[0];
+            $value = trim($value);
+            // Put in environment
+            putenv("{$name}={$value}");
+            $_ENV[$name] = $value;
+        }
+    }
+}
+
+define('DEBUG_MODE', getenv('DEBUG_MODE') === 'true'); // CRITICAL: Set to false in production
+define('APP_NAME', getenv('APP_NAME') ?: 'Shena Companion Welfare Association');
+define('APP_URL', getenv('APP_URL') ?: 'http://localhost');
 
 // Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'shena_welfare_db');
-define('DB_USER', 'root');
-define('DB_PASS', '4885');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'shena_welfare_db');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_FILE', ROOT_PATH . '/database/shena_welfare.db');
 
 // M-Pesa Configuration
-define('MPESA_CONSUMER_KEY', getenv('MPESA_CONSUMER_KEY') ?: 'your_consumer_key_here');
-define('MPESA_CONSUMER_SECRET', getenv('MPESA_CONSUMER_SECRET') ?: 'your_consumer_secret_here');
+define('MPESA_CONSUMER_KEY', getenv('MPESA_CONSUMER_KEY') ?: '');
+define('MPESA_CONSUMER_SECRET', getenv('MPESA_CONSUMER_SECRET') ?: '');
 define('MPESA_BUSINESS_SHORTCODE', '4163987');
-define('MPESA_PASSKEY', getenv('MPESA_PASSKEY') ?: 'your_passkey_here');
-define('MPESA_CALLBACK_URL', APP_URL . '/api/mpesa/callback');
+define('MPESA_PASSKEY', getenv('MPESA_PASSKEY') ?: '');
+define('MPESA_CALLBACK_URL', getenv('MPESA_CALLBACK_URL') ?: (APP_URL . '/api/mpesa/callback'));
 
 // Email Configuration (SMTP)
 define('MAIL_ENABLED', false);
 define('MAIL_HOST', 'smtp.gmail.com');
 define('MAIL_PORT', 587);
-define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: 'your_email@gmail.com');
-define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: 'your_app_password');
+define('MAIL_USERNAME', getenv('MAIL_USERNAME') ?: '');
+define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: '');
 define('MAIL_FROM_EMAIL', 'noreply@shenacompanion.org');
-define('MAIL_FROM_NAME', 'Shena Companion Welfare Association');
+define('MAIL_FROM_NAME', APP_NAME);
 
 // Twilio SMS Configuration
-define('TWILIO_SID', getenv('TWILIO_SID') ?: 'your_twilio_sid_here');
-define('TWILIO_AUTH_TOKEN', getenv('TWILIO_AUTH_TOKEN') ?: 'your_twilio_auth_token_here');
+define('TWILIO_SID', getenv('TWILIO_SID') ?: '');
+define('TWILIO_AUTH_TOKEN', getenv('TWILIO_AUTH_TOKEN') ?: '');
 define('TWILIO_PHONE_NUMBER', '+1234567890');
 
 // Security Settings - CRITICAL: Change these in production
