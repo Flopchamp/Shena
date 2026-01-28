@@ -230,6 +230,42 @@ function calculateAge($dateOfBirth)
 }
 
 /**
+ * Check if age is eligible for membership (18-100 years)
+ * 
+ * @param int $age Member's age
+ * @return bool True if age is within eligible range
+ */
+function isAgeEligible($age)
+{
+    return $age >= 18 && $age <= 100;
+}
+
+/**
+ * Get maturity period in months based on age
+ * Maturity period is the waiting period before coverage becomes active
+ * 
+ * @param int $age Member's age
+ * @return int Maturity period in months (4 or 5)
+ */
+function getMaturityPeriodMonths($age)
+{
+    // 5 months for members aged 81-100 years
+    // 4 months for members aged 1-80 years
+    return ($age >= 81 && $age <= 100) ? MATURITY_PERIOD_80_AND_ABOVE : MATURITY_PERIOD_UNDER_80;
+}
+
+/**
+ * Get grace period in months (allowance for late payment)
+ * Grace period is the window to pay late without losing benefits
+ * 
+ * @return int Grace period in months
+ */
+function getGracePeriodMonths()
+{
+    return GRACE_PERIOD_MONTHS; // 2 months max
+}
+
+/**
  * Get membership package details
  */
 function getPackageDetails($package)
@@ -239,11 +275,118 @@ function getPackageDetails($package)
 }
 
 /**
- * Get grace period months based on age
+ * Check if a death cause is excluded from coverage
+ * 
+ * @param string $cause Death cause code
+ * @return bool True if cause is excluded
  */
-function getGracePeriodMonths($age)
+function isExcludedCause($cause)
 {
-    return $age >= 80 ? GRACE_PERIOD_80_AND_ABOVE : GRACE_PERIOD_UNDER_80;
+    $excludedCauses = [
+        'self_medication',
+        'drug_abuse',
+        'substance_abuse',
+        'criminal_activity',
+        'civil_commotion',
+        'riots',
+        'war',
+        'terrorism',
+        'hazardous_activities'
+    ];
+    
+    return in_array($cause, $excludedCauses);
+}
+
+/**
+ * Get list of excluded death causes
+ * 
+ * @return array Excluded causes with descriptions
+ */
+function getExcludedCauses()
+{
+    return [
+        'self_medication' => 'Deaths from self-medication without proper medical supervision',
+        'drug_abuse' => 'Deaths resulting from drug use and substance abuse',
+        'substance_abuse' => 'Deaths from addiction-related causes',
+        'criminal_activity' => 'Deaths while engaged in criminal acts',
+        'civil_commotion' => 'Deaths during civil unrest, riots or mass demonstrations',
+        'riots' => 'Deaths caused by riots or mass violence',
+        'war' => 'Deaths from military action, war or combat',
+        'terrorism' => 'Deaths caused by terrorist attacks or acts of terrorism',
+        'hazardous_activities' => 'Deaths during participation in extremely hazardous activities (skydiving, BASE jumping, etc.)'
+    ];
+}
+
+/**
+ * Validate claim eligibility for a member
+ * Checks all policy conditions before claim can be approved
+ * 
+ * @param array $member Member details
+ * @param array $claim Claim details
+ * @return array Status and message [success => bool, message => string]
+ */
+function validateClaimEligibility($member, $claim)
+{
+    // Check if member is registered
+    if (!$member) {
+        return [
+            'success' => false,
+            'message' => 'Deceased is not a registered member'
+        ];
+    }
+    
+    // Check if member is in good standing (not defaulted for more than 2 months)
+    if ($member['status'] === 'defaulted') {
+        return [
+            'success' => false,
+            'message' => 'Member is in default status. Membership must be reactivated.'
+        ];
+    }
+    
+    // Check if maturity period has been completed
+    if (!empty($member['maturity_ends']) && strtotime($member['maturity_ends']) > time()) {
+        $daysRemaining = ceil((strtotime($member['maturity_ends']) - time()) / 86400);
+        return [
+            'success' => false,
+            'message' => "Maturity period not yet completed. {$daysRemaining} days remaining."
+        ];
+    }
+    
+    // Check if claim is submitted before coverage ends
+    if (!empty($member['coverage_ends']) && strtotime($claim['date_of_death']) > strtotime($member['coverage_ends'])) {
+        return [
+            'success' => false,
+            'message' => 'Claim date is beyond membership coverage period'
+        ];
+    }
+    
+    // Check if death cause is excluded
+    if (!empty($claim['cause_of_death']) && isExcludedCause($claim['cause_of_death'])) {
+        $excludedCauses = getExcludedCauses();
+        $reason = $excludedCauses[$claim['cause_of_death']] ?? 'Excluded cause of death';
+        return [
+            'success' => false,
+            'message' => "Claim cannot be approved: {$reason}"
+        ];
+    }
+    
+    return [
+        'success' => true,
+        'message' => 'Member is eligible for claim'
+    ];
+}
+
+/**
+ * Calculate mortuary bill payment (capped at 14 days)
+ * 
+ * @param int $daysOfPreservation Days of mortuary preservation
+ * @param float $dailyRate Daily mortuary rate
+ * @return float Amount to be paid (capped at 14 days)
+ */
+function calculateMortuaryBillPayment($daysOfPreservation, $dailyRate)
+{
+    $daysToCharge = min($daysOfPreservation, MORTUARY_DAYS_COVERED);
+    return $daysToCharge * $dailyRate;
 }
 
 /**
