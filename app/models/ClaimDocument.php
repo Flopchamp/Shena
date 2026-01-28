@@ -48,17 +48,24 @@ class ClaimDocument extends BaseModel
     
     public function getRequiredDocuments()
     {
+        // Policy booklet requires:
+        // 1) Photocopy of ID/Birth Certificate
+        // 2) Letter from the Area Chief
+        // 3) Invoice from the Mortuary
+        // Death certificate is useful but not explicitly required, so it is treated as optional.
         return [
             'id_copy' => 'Copy of ID/Birth Certificate',
-            'death_certificate' => 'Death Certificate',
             'chief_letter' => "Chief's Letter",
-            'mortuary_invoice' => 'Mortuary Invoice'
+            'mortuary_invoice' => 'Mortuary Invoice',
+            'death_certificate' => 'Death Certificate (optional but recommended)'
         ];
     }
     
     public function checkClaimDocumentCompleteness($claimId)
     {
-        $required = array_keys($this->getRequiredDocuments());
+        $requiredDocs = $this->getRequiredDocuments();
+        // Only enforce the three mandatory policy documents
+        $required = ['id_copy', 'chief_letter', 'mortuary_invoice'];
         $uploaded = [];
         
         $documents = $this->getClaimDocuments($claimId);

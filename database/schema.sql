@@ -32,9 +32,16 @@ CREATE TABLE members (
     address TEXT,
     next_of_kin VARCHAR(200),
     next_of_kin_phone VARCHAR(20),
+    -- High-level category used for reporting (matches policy booklet groupings)
     package ENUM('individual', 'couple', 'family', 'executive') DEFAULT 'individual',
+    -- Specific package key from configuration (e.g. individual_below_70, couple_children_parents_below_70)
+    package_key VARCHAR(100) DEFAULT NULL,
     monthly_contribution DECIMAL(10,2) DEFAULT 0,
     status ENUM('active', 'inactive', 'grace_period', 'defaulted', 'suspended') DEFAULT 'inactive',
+    -- Date when waiting/maturity period ends and cover first becomes active
+    maturity_ends DATE NULL,
+    -- Date when cover ends based on paid-up contributions (nullable if not yet established)
+    coverage_ends DATE NULL,
     grace_period_expires TIMESTAMP NULL,
     reactivated_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -93,12 +100,16 @@ CREATE TABLE claims (
     mortuary_bill_amount DECIMAL(10,2) DEFAULT 0,
     claim_amount DECIMAL(10,2) NOT NULL,
     approved_amount DECIMAL(10,2),
+    -- How the claim is settled: full funeral services or cash alternative
+    settlement_type ENUM('services', 'cash') DEFAULT 'services',
+    cash_settlement_amount DECIMAL(10,2) DEFAULT NULL,
     status ENUM('submitted', 'under_review', 'approved', 'rejected', 'paid') DEFAULT 'submitted',
     processed_by INT,
     processed_at TIMESTAMP NULL,
     approved_at TIMESTAMP NULL,
     rejected_at TIMESTAMP NULL,
     processing_notes TEXT,
+    settlement_reason TEXT,
     rejection_reason TEXT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -191,6 +202,9 @@ CREATE INDEX idx_members_member_number ON members(member_number);
 CREATE INDEX idx_members_id_number ON members(id_number);
 CREATE INDEX idx_members_status ON members(status);
 CREATE INDEX idx_members_package ON members(package);
+CREATE INDEX idx_members_package_key ON members(package_key);
+CREATE INDEX idx_members_maturity_ends ON members(maturity_ends);
+CREATE INDEX idx_members_coverage_ends ON members(coverage_ends);
 
 CREATE INDEX idx_payments_member_id ON payments(member_id);
 CREATE INDEX idx_payments_status ON payments(status);

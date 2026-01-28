@@ -109,6 +109,36 @@ class Member extends BaseModel
     }
     
     /**
+     * Calculate monthly contribution for a given configured package and age.
+     *
+     * This method is the concrete implementation expected by AuthController::register()
+     * and simply defers to the configuration-driven package definitions so that
+     * contributions stay aligned with the policy booklet.
+     *
+     * @param string $packageKey Key in $membership_packages (e.g. individual_below_70)
+     * @param int    $age        Member age (18-100). Currently used only for validation.
+     * @return float             Monthly contribution amount
+     * @throws Exception         If the package is not available for the given age
+     */
+    public function calculateMonthlyContribution($packageKey, $age)
+    {
+        global $membership_packages;
+        
+        if (!isset($membership_packages[$packageKey])) {
+            throw new Exception("Unknown membership package: {$packageKey}");
+        }
+        
+        $package = $membership_packages[$packageKey];
+        
+        // Ensure the chosen package is valid for the member's age, as per policy ranges
+        if ($age < $package['age_min'] || $age > $package['age_max']) {
+            throw new Exception("Selected package is not valid for age {$age}");
+        }
+        
+        return (float)($package['monthly_contribution'] ?? 0);
+    }
+    
+    /**
      * Get recommended individual package for age
      * 
      * @param int $age Member's age
@@ -171,7 +201,57 @@ class Member extends BaseModel
     
     public function getMembersByPackage($package)
     {
+        // Keep backwards-compatible behaviour by filtering on the high-level category.
+        // Callers that need specific package breakdowns should use package_key instead.
         return $this->findAll(['package' => $package], 'created_at DESC');
+    }
+
+    /**
+     * Apply effects of a successful completed monthly payment on a member's record.
+     *
+     * - Extends coverage_ends by one month from either today or the existing coverage_ends,
+     *   whichever is later.
+     * - Clears any grace_period_expires.
+     * - If the maturity period has already ended, moves the member into "active" status.
+     *
+     * This encodes the policy that cover is only active after the maturity period, but
+     * allows contributions to be collected beforehand.
+     *
+     * @param int    $memberId
+     * @param string $paymentDate Y-m-d H:i:s
+     */
+    public function applySuccessfulMonthlyPayment($memberId, $paymentDate)
+    {
+        $member = $this->find($memberId);
+        if (!$member) {
+            return;
+        }
+
+        $paymentDay = date('Y-m-d', strtotime($paymentDate));
+        $currentCoverage = !empty($member['coverage_ends']) ? $member['coverage_ends'] : null;
+
+        if ($currentCoverage && $currentCoverage > $paymentDay) {
+            $baseDate = $currentCoverage;
+        } else {
+            $baseDate = $paymentDay;
+        }
+
+        $newCoverageEnds = date('Y-m-d', strtotime('+1 month', strtotime($baseDate)));
+
+        $updates = [
+            'coverage_ends' => $newCoverageEnds,
+            'grace_period_expires' => null
+        ];
+
+        // Activate member only if maturity period is complete
+        $today = date('Y-m-d');
+        if (!empty($member['maturity_ends']) && $member['maturity_ends'] <= $today) {
+            if (in_array($member['status'], ['inactive', 'grace_period', 'defaulted', 'suspended'])) {
+                $updates['status'] = 'active';
+            }
+        }
+
+        $this->update($memberId, $updates);
     }
     
     public function updateGracePeriod($memberId, $gracePeriodExpires)
@@ -181,7 +261,18 @@ class Member extends BaseModel
     
     public function reactivateMember($memberId)
     {
-        return $this->update($memberId, ['status' => 'active', 'grace_period_expires' => null]);
+        // Policy: To reactivate after default, member pays arrears + KES 100
+        // and starts a fresh maturity period of 4 months before cover resumes.
+        $reactivatedAt = date('Y-m-d');
+        $newMaturityEnds = date('Y-m-d', strtotime('+4 months'));
+
+        return $this->update($memberId, [
+            'status' => 'inactive', // membership reactivated but cover waits for new maturity
+            'grace_period_expires' => null,
+            'reactivated_at' => $reactivatedAt,
+            'maturity_ends' => $newMaturityEnds,
+            'coverage_ends' => null
+        ]);
     }
     
     public function getTotalMembers()
@@ -251,6 +342,63 @@ class Member extends BaseModel
     public function getAllMembers()
     {
         return $this->findAll([], 'created_at DESC');
+    }
+
+    /**
+     * Refresh a member's status based on coverage_ends and grace period rules.
+     *
+     * - If today is before or on coverage_ends, keep status as-is (active if maturity passed).
+     * - If today is after coverage_ends but within GRACE_PERIOD_MONTHS, set status to grace_period.
+     * - If today is after coverage_ends + GRACE_PERIOD_MONTHS, set status to defaulted.
+     *
+     * This is mainly used at claim-approval time to ensure default/grace logic
+     * matches the policy even if a periodic job has not run.
+     *
+     * @param int $memberId
+     * @return array|null Updated member row
+     */
+    public function refreshStatusFromCoverage($memberId)
+    {
+        $member = $this->find($memberId);
+        if (!$member) {
+            return null;
+        }
+
+        $today = new DateTimeImmutable('today');
+
+        if (empty($member['coverage_ends'])) {
+            // No coverage period yet; keep existing status
+            return $member;
+        }
+
+        $coverageEnds = new DateTimeImmutable($member['coverage_ends']);
+
+        // If coverage still valid, we don't downgrade status here
+        if ($coverageEnds >= $today) {
+            return $member;
+        }
+
+        // Compute end of grace period (2 months from coverage_ends by policy)
+        $graceEnd = $coverageEnds->modify('+' . GRACE_PERIOD_MONTHS . ' months');
+
+        $newStatus = $member['status'];
+        $graceExpires = $member['grace_period_expires'];
+
+        if ($today <= $graceEnd) {
+            $newStatus = 'grace_period';
+            $graceExpires = $graceEnd->format('Y-m-d H:i:s');
+        } else {
+            $newStatus = 'defaulted';
+            $graceExpires = $graceEnd->format('Y-m-d H:i:s');
+        }
+
+        $this->update($memberId, [
+            'status' => $newStatus,
+            'grace_period_expires' => $graceExpires
+        ]);
+
+        // Return a fresh copy
+        return $this->find($memberId);
     }
 
     public function getMembersByPackageReport()

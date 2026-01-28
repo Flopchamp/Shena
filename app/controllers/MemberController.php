@@ -335,7 +335,45 @@ class MemberController extends BaseController
                 return;
             }
             
+            // Persist core claim details
             $claimId = $this->claimModel->submitClaim($claimData);
+
+            // Handle required and optional claim documents according to policy
+            $claimDocumentModel = new ClaimDocument();
+
+            $fileFields = [
+                'id_copy' => 'id_copy',
+                'chief_letter' => 'chief_letter',
+                'mortuary_invoice' => 'mortuary_invoice',
+                'death_certificate' => 'death_certificate'
+            ];
+
+            foreach ($fileFields as $inputName => $documentType) {
+                if (!isset($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+
+                $uploadResult = uploadFile($_FILES[$inputName], 'claims/' . $claimId);
+                if ($uploadResult === false) {
+                    // If a mandatory document fails upload, abort and show error
+                    if (in_array($documentType, ['id_copy', 'chief_letter', 'mortuary_invoice'])) {
+                        $_SESSION['error'] = 'Failed to upload required document: ' . $documentType . '. Please try again.';
+                        $this->redirect('/claims');
+                        return;
+                    }
+                    continue;
+                }
+
+                $claimDocumentModel->addDocument([
+                    'claim_id' => $claimId,
+                    'document_type' => $documentType,
+                    'file_name' => $uploadResult['file_name'],
+                    'file_path' => $uploadResult['file_path'],
+                    'file_size' => $uploadResult['file_size'],
+                    'mime_type' => $uploadResult['mime_type'],
+                    'uploaded_by' => $_SESSION['user_id'] ?? null
+                ]);
+            }
             
             // Send notification email to admin
             $emailService = new EmailService();

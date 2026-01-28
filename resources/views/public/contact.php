@@ -25,7 +25,7 @@
                         <i class="fas fa-phone fa-3x text-primary mb-3"></i>
                         <h5>24/7 Emergency Hotline</h5>
                         <p class="text-muted">Call us anytime for immediate assistance</p>
-                        <h4 class="text-primary">+254 700 000 000</h4>
+                        <h4 class="text-primary">0748 585 067 / 0748 585 071</h4>
                         <small class="text-muted">Available round the clock</small>
                     </div>
                 </div>
@@ -37,8 +37,7 @@
                         <i class="fas fa-envelope fa-3x text-success mb-3"></i>
                         <h5>Email Support</h5>
                         <p class="text-muted">Send us your questions and concerns</p>
-                        <h6 class="text-success">info@shenacompanion.org</h6>
-                        <h6 class="text-success">support@shenacompanion.org</h6>
+                        <h6 class="text-success">info@shenacompanion.ac.ke</h6>
                         <small class="text-muted">We respond within 24 hours</small>
                     </div>
                 </div>
@@ -51,9 +50,9 @@
                         <h5>Visit Our Office</h5>
                         <p class="text-muted">Come see us at our main office</p>
                         <address class="text-danger">
-                            <strong>Shena Companion Welfare Association</strong><br>
-                            Nairobi, Kenya<br>
-                            P.O. Box 12345-00100
+                            <strong>SHENA Companion Welfare Association</strong><br>
+                            P.O. Box 4018<br>
+                            40100 - Kisumu
                         </address>
                         <small class="text-muted">Mon-Fri: 8:00 AM - 5:00 PM</small>
                     </div>
@@ -91,15 +90,15 @@
                         <div class="row mt-4">
                             <div class="col-md-4">
                                 <h6><i class="fas fa-user-plus text-primary"></i> Registration Fee</h6>
-                                <p class="text-muted">KES 200 (One-time payment)</p>
+                                <p class="text-muted">KES 200 (one-time, non-refundable)</p>
                             </div>
                             <div class="col-md-4">
                                 <h6><i class="fas fa-calendar text-success"></i> Monthly Contributions</h6>
-                                <p class="text-muted">As per your selected package</p>
+                                <p class="text-muted">According to your selected package</p>
                             </div>
                             <div class="col-md-4">
                                 <h6><i class="fas fa-redo text-warning"></i> Reactivation Fee</h6>
-                                <p class="text-muted">KES 100 + Outstanding dues</p>
+                                <p class="text-muted">KES 100 + all outstanding contributions</p>
                             </div>
                         </div>
                     </div>
@@ -211,9 +210,9 @@
                                 What happens if I miss a payment?
                             </button>
                         </h2>
-                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                We offer grace periods: 4 months for members under 80 years and 5 months for members 80 and above. After the grace period, you can reactivate by paying KES 100 plus outstanding dues.
+                                Your membership remains active for a maximum grace period of 2 consecutive months (60 days) after a missed contribution. If you fail to pay for more than 2 months, your account goes into default and cover is suspended. You can reactivate by paying all outstanding contributions plus a KES 100 reactivation fee and serving a fresh 4-month maturity period.
                             </div>
                         </div>
                     </div>
@@ -224,9 +223,9 @@
                                 How do I make a claim?
                             </button>
                         </h2>
-                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Log into your member dashboard and submit a claim with required documents: death certificate, chief's letter, mortuary invoice, and copy of ID. Our team will review and process within 48 hours.
+                                Notify SHENA Companion immediately by phone or by visiting our office, then log in to your member dashboard and submit a claim. You must provide: copy of the deceased's ID or birth certificate, a letter from the area chief, and the mortuary invoice. Claims are verified (including maturity and payment status) and once approved we arrange services directly with the mortuary and family.
                             </div>
                         </div>
                     </div>
@@ -256,8 +255,8 @@
             <div class="col-lg-8 mx-auto text-center">
                 <h2 class="mb-4"><i class="fas fa-exclamation-triangle"></i> Emergency?</h2>
                 <p class="lead mb-4">If you have an emergency and need immediate assistance, call our 24/7 hotline now.</p>
-                <a href="tel:+254700000000" class="btn btn-light btn-lg">
-                    <i class="fas fa-phone"></i> Call Now: +254 700 000 000
+                <a href="tel:0748585067" class="btn btn-light btn-lg">
+                    <i class="fas fa-phone"></i> Call Now: 0748 585 067 / 0748 585 071
                 </a>
             </div>
         </div>

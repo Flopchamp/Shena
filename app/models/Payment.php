@@ -80,7 +80,19 @@ class Payment extends BaseModel
             $data['transaction_id'] = $transactionId;
         }
         
-        return $this->update($paymentId, $data);
+        $this->update($paymentId, $data);
+
+        // Apply membership-side effects for monthly contributions (coverage, status, grace period)
+        $payment = $this->find($paymentId);
+        if ($payment && isset($payment['payment_type']) && $payment['payment_type'] === 'monthly') {
+            $memberModel = new Member();
+            $memberModel->applySuccessfulMonthlyPayment(
+                $payment['member_id'],
+                $payment['payment_date'] ?? $payment['created_at'] ?? date('Y-m-d H:i:s')
+            );
+        }
+
+        return true;
     }
     
     public function failPayment($paymentId, $reason = null)

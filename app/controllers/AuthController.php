@@ -174,7 +174,8 @@ class AuthController extends BaseController
                 'address' => $this->sanitizeInput($_POST['address'] ?? ''),
                 'next_of_kin' => $this->sanitizeInput($_POST['next_of_kin'] ?? ''),
                 'next_of_kin_phone' => $this->sanitizeInput($_POST['next_of_kin_phone'] ?? ''),
-                'package' => $_POST['package'] ?? 'individual'
+                // This is the specific configured package key (e.g. individual_below_70)
+                'package_key' => $_POST['package'] ?? ''
             ];
             
             // Validate required fields
@@ -228,7 +229,8 @@ class AuthController extends BaseController
                 return;
             }
             
-            // Validate age (18-100)
+            // Validate age (18-100) and capture for later calculations
+            $age = null;
             if (!empty($memberData['date_of_birth'])) {
                 try {
                     $age = $this->memberModel->calculateAge($memberData['date_of_birth']);
@@ -263,16 +265,44 @@ class AuthController extends BaseController
                 // Generate member number
                 $memberNumber = 'SC' . date('Y') . str_pad($userId, 4, '0', STR_PAD_LEFT);
                 
-                // Calculate monthly contribution
-                $age = !empty($memberData['date_of_birth']) ? 
-                       $this->memberModel->calculateAge($memberData['date_of_birth']) : 25;
-                $monthlyContribution = $this->memberModel->calculateMonthlyContribution($memberData['package'], $age);
+                // Ensure we have a valid age for contribution/maturity calculations
+                if ($age === null && !empty($memberData['date_of_birth'])) {
+                    $age = $this->memberModel->calculateAge($memberData['date_of_birth']);
+                }
+                if ($age === null) {
+                    $_SESSION['error'] = 'Date of birth is required to determine eligibility and package.';
+                    $this->db->getConnection()->rollback();
+                    $this->redirect('/register');
+                    return;
+                }
+                
+                // Determine high-level package category from selected configured package
+                global $membership_packages;
+                $selectedKey = $memberData['package_key'];
+                if (empty($selectedKey) || !isset($membership_packages[$selectedKey])) {
+                    $_SESSION['error'] = 'Please select a valid membership package.';
+                    $this->db->getConnection()->rollback();
+                    $this->redirect('/register');
+                    return;
+                }
+                
+                $selectedPackage = $membership_packages[$selectedKey];
+                $packageCategory = $selectedPackage['category'] ?? 'individual';
+                
+                // Calculate monthly contribution strictly from configured package definition
+                $monthlyContribution = $this->memberModel->calculateMonthlyContribution($selectedKey, $age);
+                
+                // Calculate maturity period end date based on age and policy configuration
+                $maturityMonths = getMaturityPeriodMonths($age);
+                $maturityEnds = date('Y-m-d', strtotime("+{$maturityMonths} months"));
                 
                 // Create member record
                 $memberData['user_id'] = $userId;
                 $memberData['member_number'] = $memberNumber;
                 $memberData['monthly_contribution'] = $monthlyContribution;
-                $memberData['status'] = 'inactive';
+                $memberData['package'] = $packageCategory;
+                $memberData['status'] = 'inactive'; // Will become active once registration fee and first contributions are confirmed
+                $memberData['maturity_ends'] = $maturityEnds;
                 
                 $memberId = $this->memberModel->create($memberData);
                 

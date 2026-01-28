@@ -102,17 +102,26 @@
                         <input type="number" name="claim_amount" class="form-control" step="0.01" required>
                     </div>
                     <h6 class="mt-4">Required Documents</h6>
+                    <p class="text-muted small">
+                        As per SHENA Companion policy, the following documents are mandatory:
+                        Copy of ID/Birth Certificate, Letter from the Area Chief, and Mortuary Invoice.
+                        Death certificate is recommended but optional.
+                    </p>
                     <div class="mb-3">
-                        <label class="form-label">Death Certificate</label>
-                        <input type="file" name="death_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">ID Copy</label>
+                        <label class="form-label">Copy of ID / Birth Certificate (Required)</label>
                         <input type="file" name="id_copy" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Mortuary Invoice (Optional)</label>
-                        <input type="file" name="mortuary_invoice" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <label class="form-label">Chief's Letter (Required)</label>
+                        <input type="file" name="chief_letter" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mortuary Invoice (Required)</label>
+                        <input type="file" name="mortuary_invoice" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Death Certificate (Optional)</label>
+                        <input type="file" name="death_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -47,7 +47,9 @@ class Claim extends BaseModel
     
     public function submitClaim($data)
     {
-        $requiredFields = ['member_id', 'deceased_name', 'deceased_relationship', 'death_date'];
+        // Align required fields with database schema and policy booklet
+        // Schema columns: deceased_name, deceased_id_number, date_of_death, place_of_death, claim_amount, etc.
+        $requiredFields = ['member_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death', 'claim_amount'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field])) {
                 throw new Exception("Missing required field: {$field}");
@@ -55,8 +57,8 @@ class Claim extends BaseModel
         }
         
         $data['created_at'] = date('Y-m-d H:i:s');
-        $data['status'] = 'pending';
-        $data['claim_number'] = 'CLM-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+        // New claims start in "submitted" status, matching admin dashboards and policy
+        $data['status'] = 'submitted';
         
         return $this->create($data);
     }
@@ -69,12 +71,20 @@ class Claim extends BaseModel
             'updated_at' => date('Y-m-d H:i:s')
         ];
         
-        if ($approvedAmount) {
+        // If admin did not specify an approved amount, default to the claimed amount
+        if ($approvedAmount === null) {
+            $existing = $this->find($claimId);
+            if ($existing && isset($existing['claim_amount'])) {
+                $approvedAmount = $existing['claim_amount'];
+            }
+        }
+        
+        if ($approvedAmount !== null) {
             $data['approved_amount'] = $approvedAmount;
         }
         
         if ($notes) {
-            $data['approval_notes'] = $notes;
+            $data['processing_notes'] = $notes;
         }
         
         return $this->update($claimId, $data);

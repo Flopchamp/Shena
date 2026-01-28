@@ -275,11 +275,66 @@ class AdminController extends BaseController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $claimId = $_POST['claim_id'] ?? 0;
             $notes = $_POST['notes'] ?? '';
+            $approvedAmount = isset($_POST['approved_amount']) ? (float)$_POST['approved_amount'] : null;
             
-            if ($claimId && $this->claimModel->approveClaim($claimId, $notes)) {
-                $_SESSION['success'] = 'Claim approved successfully!';
-            } else {
-                $_SESSION['error'] = 'Failed to approve claim.';
+            if ($claimId) {
+                try {
+                    // Load claim and member details
+                    $claim = $this->claimModel->find($claimId);
+                    if (!$claim) {
+                        throw new Exception('Claim not found.');
+                    }
+
+                    $member = $this->memberModel->getMemberWithUser($claim['member_id']);
+                    if (!$member) {
+                        throw new Exception('Associated member not found.');
+                    }
+
+                    // Refresh member status based on coverage and grace period rules before eligibility check
+                    $member = $this->memberModel->refreshStatusFromCoverage($member['id']);
+
+                    // Enforce policy-based claim eligibility (maturity, default status, coverage window, exclusions)
+                    $eligibility = validateClaimEligibility($member, $claim);
+                    if (empty($eligibility['success'])) {
+                        throw new Exception($eligibility['message'] ?? 'Claim is not eligible under current policy rules.');
+                    }
+
+                    // Ensure all required claim documents are present
+                    $claimDocumentModel = new ClaimDocument();
+                    $docStatus = $claimDocumentModel->checkClaimDocumentCompleteness($claimId);
+                    if (empty($docStatus['complete'])) {
+                        $missingList = !empty($docStatus['missing']) ? implode(', ', $docStatus['missing']) : 'required';
+                        throw new Exception('Required claim documents are missing: ' . $missingList);
+                    }
+
+                    // Determine settlement type according to admin choice and policy
+                    $settlementType = isset($_POST['settlement_type']) ? $_POST['settlement_type'] : 'services';
+                    $settlementType = in_array($settlementType, ['services', 'cash']) ? $settlementType : 'services';
+
+                    if ($settlementType === 'cash') {
+                        // Apply fixed KES 20,000 cash alternative as per policy booklet
+                        $approvedAmount = 20000.00;
+                        $notes = trim(($notes ? $notes . "\n" : '') . 'Settled as KES 20,000 cash alternative.');
+                    }
+
+                    // Approve claim with optional approved amount and notes
+                    if ($this->claimModel->approveClaim($claimId, $approvedAmount, $notes)) {
+                        // Persist settlement metadata
+                        $updateData = ['settlement_type' => $settlementType];
+                        if ($settlementType === 'cash') {
+                            $updateData['cash_settlement_amount'] = $approvedAmount ?? 20000.00;
+                            $updateData['settlement_reason'] = $_POST['settlement_reason'] ?? 'Cash alternative selected by mutual agreement.';
+                        }
+                        $this->claimModel->update($claimId, $updateData);
+
+                        $_SESSION['success'] = 'Claim approved successfully.';
+                    } else {
+                        throw new Exception('Failed to update claim status.');
+                    }
+                } catch (Exception $e) {
+                    error_log('Claim approval error: ' . $e->getMessage());
+                    $_SESSION['error'] = 'Failed to approve claim: ' . $e->getMessage();
+                }
             }
         }
         
@@ -467,9 +522,25 @@ class AdminController extends BaseController
     {
         try {
             $db = Database::getInstance();
-            $query = "INSERT INTO communications (type, recipient_type, recipient_count, subject, message, status, sent_at) 
-                      VALUES (:type, :recipients, :count, :subject, :message, 'sent', NOW())";
-            $db->execute($query, ['type' => $type, 'recipients' => $recipients, 'count' => $count, 'subject' => $subject, 'message' => $message]);
+            // communications table schema:
+            // sender_id, recipient_id (optional), recipient_type, recipient_criteria (JSON),
+            // subject, message, type, status, sent_at
+            $query = "INSERT INTO communications (sender_id, recipient_id, recipient_type, recipient_criteria, subject, message, type, status, sent_at) 
+                      VALUES (:sender_id, NULL, :recipient_type, :recipient_criteria, :subject, :message, :type, 'sent', NOW())";
+
+            $criteria = [
+                'criteria' => $recipients,
+                'estimated_recipient_count' => $count
+            ];
+
+            $db->execute($query, [
+                'sender_id' => $_SESSION['user_id'] ?? null,
+                'recipient_type' => $recipients,
+                'recipient_criteria' => json_encode($criteria),
+                'subject' => $subject,
+                'message' => $message,
+                'type' => $type
+            ]);
         } catch (Exception $e) {
             error_log('Failed to log communication: ' . $e->getMessage());
         }

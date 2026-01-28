@@ -77,31 +77,55 @@
                         
                         <!-- Membership Package -->
                         <h5 class="border-bottom pb-2 mb-3 mt-4">Membership Package</h5>
+                        <p class="text-muted">
+                            Select the package that best matches your family structure and age group.
+                            All packages include the full set of last respect services described in the policy booklet.
+                        </p>
                         <div class="row">
                             <?php foreach ($packages as $key => $package): ?>
                                 <div class="col-md-6 mb-3">
-                                    <div class="card <?php echo $key === 'executive' ? 'border-warning' : ''; ?>">
+                                    <div class="card">
                                         <div class="card-body">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="package" 
-                                                       id="package_<?php echo $key; ?>" value="<?php echo $key; ?>"
-                                                       <?php echo $key === 'individual' ? 'checked' : ''; ?>>
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="package"
+                                                    id="package_<?php echo $key; ?>"
+                                                    value="<?php echo $key; ?>"
+                                                    <?php echo $key === 'individual_below_70' ? 'checked' : ''; ?>
+                                                >
                                                 <label class="form-check-label" for="package_<?php echo $key; ?>">
                                                     <strong><?php echo e($package['name']); ?></strong>
-                                                    <?php if ($key === 'executive'): ?>
+                                                    <?php if (!empty($package['category']) && $package['category'] === 'executive'): ?>
                                                         <i class="fas fa-crown text-warning"></i>
                                                     <?php endif; ?>
                                                 </label>
                                             </div>
                                             <div class="mt-2">
-                                                <small class="text-muted">
-                                                    Base contribution: KES <?php echo number_format($package['base_price']); ?>/month
-                                                    <?php if (isset($package['discount'])): ?>
-                                                        <br><span class="text-success">
-                                                            <?php echo ($package['discount'] * 100); ?>% family discount
-                                                        </span>
-                                                    <?php endif; ?>
+                                                <small class="text-muted d-block">
+                                                    Monthly contribution:
+                                                    <strong>KES <?php echo number_format($package['monthly_contribution'], 2); ?></strong>
                                                 </small>
+                                                <?php if (isset($package['age_min']) && isset($package['age_max'])): ?>
+                                                    <small class="text-muted d-block">
+                                                        Eligible ages: <?php echo (int)$package['age_min']; ?> - <?php echo (int)$package['age_max']; ?> years
+                                                    </small>
+                                                <?php endif; ?>
+                                                <?php if (isset($package['max_children']) || isset($package['max_parents']) || isset($package['max_inlaws'])): ?>
+                                                    <small class="text-muted d-block">
+                                                        Coverage:
+                                                        <?php if (isset($package['max_children'])): ?>
+                                                            up to <?php echo (int)$package['max_children']; ?> children;
+                                                        <?php endif; ?>
+                                                        <?php if (isset($package['max_parents'])): ?>
+                                                            up to <?php echo (int)$package['max_parents']; ?> parents;
+                                                        <?php endif; ?>
+                                                        <?php if (isset($package['max_inlaws'])): ?>
+                                                            up to <?php echo (int)$package['max_inlaws']; ?> in-laws;
+                                                        <?php endif; ?>
+                                                    </small>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
