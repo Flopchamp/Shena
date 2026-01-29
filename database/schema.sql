@@ -49,6 +49,32 @@ CREATE TABLE members (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Dependents table (covered family members under family packages)
+CREATE TABLE dependents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    member_id INT NOT NULL,
+    full_name VARCHAR(200) NOT NULL,
+    relationship ENUM('spouse', 'child', 'parent', 'father_in_law', 'mother_in_law') NOT NULL,
+    id_number VARCHAR(20), -- May be null for children without IDs
+    birth_certificate VARCHAR(50), -- For children below 18
+    date_of_birth DATE NOT NULL,
+    gender ENUM('male', 'female') NOT NULL,
+    phone_number VARCHAR(20),
+    -- Track if dependent is still eligible (e.g., child turned 18)
+    is_covered BOOLEAN DEFAULT TRUE,
+    -- Date when dependent was added
+    coverage_start_date DATE NOT NULL,
+    -- Date when dependent coverage ended (e.g., child turned 18, removed from package)
+    coverage_end_date DATE NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    INDEX idx_dependents_member_id (member_id),
+    INDEX idx_dependents_relationship (relationship),
+    INDEX idx_dependents_is_covered (is_covered)
+);
+
 -- Beneficiaries table
 CREATE TABLE beneficiaries (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,9 +116,13 @@ CREATE TABLE payments (
 CREATE TABLE claims (
     id INT AUTO_INCREMENT PRIMARY KEY,
     member_id INT NOT NULL,
+    dependent_id INT NULL, -- If claim is for a dependent, link here
     beneficiary_id INT,
+    -- Who died: 'member' or 'dependent'
+    deceased_type ENUM('member', 'dependent') DEFAULT 'member',
     deceased_name VARCHAR(200) NOT NULL,
     deceased_id_number VARCHAR(20) NOT NULL,
+    date_of_birth DATE NULL,
     date_of_death DATE NOT NULL,
     place_of_death VARCHAR(200) NOT NULL,
     cause_of_death TEXT,
@@ -115,6 +145,7 @@ CREATE TABLE claims (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    FOREIGN KEY (dependent_id) REFERENCES dependents(id) ON DELETE SET NULL,
     FOREIGN KEY (beneficiary_id) REFERENCES beneficiaries(id) ON DELETE SET NULL,
     FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL
 );

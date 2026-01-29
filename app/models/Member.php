@@ -468,4 +468,125 @@ class Member extends BaseModel
                 ORDER BY m.created_at DESC";
         return $this->db->fetchAll($sql);
     }
+    
+    /**
+     * Find members by multiple statuses
+     */
+    public function findByStatuses($statuses)
+    {
+        if (empty($statuses)) {
+            return [];
+        }
+        
+        $placeholders = implode(',', array_fill(0, count($statuses), '?'));
+        $sql = "SELECT * FROM {$this->table} WHERE status IN ($placeholders)";
+        
+        return $this->db->fetchAll($sql, $statuses);
+    }
+    
+    /**
+     * Get all dependents for a member
+     * 
+     * @param int $memberId Member ID
+     * @return array List of dependents
+     */
+    public function getDependents($memberId)
+    {
+        $dependentModel = new Dependent();
+        return $dependentModel->getMemberDependents($memberId, true);
+    }
+    
+    /**
+     * Check if member's package allows dependents
+     * 
+     * @param int $memberId Member ID
+     * @return bool True if package allows dependents
+     */
+    public function canHaveDependents($memberId)
+    {
+        $member = $this->find($memberId);
+        if (!$member) {
+            return false;
+        }
+        
+        global $membership_packages;
+        $packageKey = $member['package_key'];
+        
+        if (!isset($membership_packages[$packageKey])) {
+            return false;
+        }
+        
+        $package = $membership_packages[$packageKey];
+        return $package['coverage_type'] !== 'principal_only';
+    }
+    
+    /**
+     * Validate if adding a dependent is allowed for this member's package
+     * 
+     * @param int $memberId Member ID
+     * @param string $relationship Relationship type
+     * @return array [allowed => bool, message => string]
+     */
+    public function canAddDependent($memberId, $relationship)
+    {
+        $member = $this->find($memberId);
+        if (!$member) {
+            return ['allowed' => false, 'message' => 'Member not found'];
+        }
+        
+        global $membership_packages;
+        $packageKey = $member['package_key'];
+        
+        if (!isset($membership_packages[$packageKey])) {
+            return ['allowed' => false, 'message' => 'Invalid package'];
+        }
+        
+        $package = $membership_packages[$packageKey];
+        
+        if ($package['coverage_type'] === 'principal_only') {
+            return ['allowed' => false, 'message' => 'Your package does not cover dependents'];
+        }
+        
+        $dependentModel = new Dependent();
+        $counts = $dependentModel->countDependentsByRelationship($memberId);
+        
+        if ($relationship === 'spouse') {
+            if (!in_array($package['coverage_type'], ['couple', 'couple_children', 'couple_children_parents', 'couple_children_parents_inlaws'])) {
+                return ['allowed' => false, 'message' => 'Your package does not cover spouse'];
+            }
+            if ($counts['spouse'] >= 1) {
+                return ['allowed' => false, 'message' => 'You already have a spouse registered'];
+            }
+        }
+        
+        if ($relationship === 'child') {
+            if (!isset($package['max_children'])) {
+                return ['allowed' => false, 'message' => 'Your package does not cover children'];
+            }
+            if ($counts['child'] >= $package['max_children']) {
+                return ['allowed' => false, 'message' => "Maximum {$package['max_children']} children allowed for your package"];
+            }
+        }
+        
+        if ($relationship === 'parent') {
+            if (!isset($package['max_parents'])) {
+                return ['allowed' => false, 'message' => 'Your package does not cover parents'];
+            }
+            if ($counts['parent'] >= $package['max_parents']) {
+                return ['allowed' => false, 'message' => "Maximum {$package['max_parents']} parents allowed for your package"];
+            }
+        }
+        
+        if (in_array($relationship, ['father_in_law', 'mother_in_law'])) {
+            if (!isset($package['max_inlaws'])) {
+                return ['allowed' => false, 'message' => 'Your package does not cover in-laws'];
+            }
+            $inlawCount = $counts['father_in_law'] + $counts['mother_in_law'];
+            if ($inlawCount >= $package['max_inlaws']) {
+                return ['allowed' => false, 'message' => "Maximum {$package['max_inlaws']} in-laws allowed for your package"];
+            }
+        }
+        
+        return ['allowed' => true, 'message' => 'Dependent can be added'];
+    }
 }

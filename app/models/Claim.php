@@ -56,6 +56,23 @@ class Claim extends BaseModel
             }
         }
         
+        // Set deceased type (member or dependent)
+        if (!isset($data['deceased_type'])) {
+            $data['deceased_type'] = isset($data['dependent_id']) && $data['dependent_id'] ? 'dependent' : 'member';
+        }
+        
+        // Validate dependent exists if claiming for dependent
+        if ($data['deceased_type'] === 'dependent' && isset($data['dependent_id'])) {
+            $dependentModel = new Dependent();
+            $dependent = $dependentModel->find($data['dependent_id']);
+            if (!$dependent || $dependent['member_id'] != $data['member_id']) {
+                throw new Exception("Invalid dependent for this member");
+            }
+            if (!$dependent['is_covered']) {
+                throw new Exception("Dependent is not currently covered");
+            }
+        }
+        
         $data['created_at'] = date('Y-m-d H:i:s');
         // New claims start in "submitted" status, matching admin dashboards and policy
         $data['status'] = 'submitted';
@@ -294,5 +311,53 @@ class Claim extends BaseModel
                 ORDER BY month DESC";
         
         return $this->db->fetchAll($sql);
+    }
+    
+    /**
+     * Get claim with dependent information
+     * 
+     * @param int $claimId Claim ID
+     * @return array|null Claim details with dependent info
+     */
+    public function getClaimWithDependent($claimId)
+    {
+        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name, u.email, u.phone,
+                       d.full_name as dependent_name, d.relationship as dependent_relationship,
+                       d.date_of_birth as dependent_dob
+                FROM {$this->table} c 
+                JOIN members m ON c.member_id = m.id 
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN dependents d ON c.dependent_id = d.id
+                WHERE c.id = :claim_id";
+        
+        return $this->db->fetch($sql, ['claim_id' => $claimId]);
+    }
+    
+    /**
+     * Get all claims with dependent information
+     * 
+     * @param array $conditions Filter conditions
+     * @return array List of claims
+     */
+    public function getAllClaimsWithDependents($conditions = [])
+    {
+        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name,
+                       d.full_name as dependent_name, d.relationship as dependent_relationship
+                FROM {$this->table} c 
+                JOIN members m ON c.member_id = m.id 
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN dependents d ON c.dependent_id = d.id";
+        
+        if (!empty($conditions)) {
+            $where_clauses = [];
+            foreach ($conditions as $column => $value) {
+                $where_clauses[] = "c.{$column} = :{$column}";
+            }
+            $sql .= " WHERE " . implode(' AND ', $where_clauses);
+        }
+        
+        $sql .= " ORDER BY c.created_at DESC";
+        
+        return $this->db->fetchAll($sql, $conditions);
     }
 }
