@@ -71,20 +71,20 @@ class MemberController extends BaseController
     
     public function profile()
     {
-        $member = $this->memberModel->getMemberWithUser($_SESSION['user_id']);
-        
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+
         if (!$member) {
             $_SESSION['error'] = 'Member profile not found.';
             $this->redirect('/dashboard');
             return;
         }
-        
+
         $data = [
             'title' => 'My Profile - Shena Companion Welfare Association',
             'member' => $member,
             'csrf_token' => $this->generateCsrfToken()
         ];
-        
+
         $this->view('member.profile', $data);
     }
     

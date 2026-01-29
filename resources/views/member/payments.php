@@ -27,7 +27,7 @@ include VIEWS_PATH . '/layouts/member-header.php';
             <div class="card shadow-sm border-0 bg-info text-white">
                 <div class="card-body">
                     <h6>Monthly Contribution</h6>
-                    <h3>KES <?php echo number_format($member['monthly_contribution'], 2); ?></h3>
+                    <h3>KES <?php echo number_format($member->monthly_contribution, 2); ?></h3>
                 </div>
             </div>
         </div>
@@ -84,8 +84,8 @@ include VIEWS_PATH . '/layouts/member-header.php';
             </div>
             <div class="modal-body">
                 <p><strong>M-Pesa Paybill:</strong> 4163987</p>
-                <p><strong>Account Number:</strong> <?php echo $member['member_number']; ?></p>
-                <p><strong>Amount:</strong> KES <?php echo number_format($member['monthly_contribution'], 2); ?></p>
+                <p><strong>Account Number:</strong> <?php echo $member->member_number; ?></p>
+                <p><strong>Amount:</strong> KES <?php echo number_format($member->monthly_contribution, 2); ?></p>
                 <hr>
                 <p class="text-muted">After making payment via M-Pesa, it will reflect here automatically.</p>
             </div>

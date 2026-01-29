@@ -1,16 +1,17 @@
 
 <?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
+<?php $memberData = is_array($member ?? null) ? $member : (is_object($member ?? null) ? get_object_vars($member) : []); ?>
 
 <div class="container-fluid py-4">
     <h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Member Dashboard</h2>
     
     <!-- Grace Period Warning Alert -->
-    <?php if (isset($member['status']) && $member['status'] === 'grace_period'): ?>
+    <?php if (isset($memberData['status']) && $memberData['status'] === 'grace_period'): ?>
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Grace Period Active</h4>
         <p><strong>Your account is in grace period.</strong> Please make your payment to avoid suspension.</p>
-        <?php if (!empty($member['grace_period_expires'])): 
-            $expiry = new DateTime($member['grace_period_expires']);
+        <?php if (!empty($memberData['grace_period_expires'])): 
+            $expiry = new DateTime($memberData['grace_period_expires']);
             $today = new DateTime();
             $diff = $today->diff($expiry);
             $daysLeft = $diff->days;
@@ -21,7 +22,7 @@
                 <p class="mb-0"><strong>Days Remaining:</strong> 
                     <span class="badge badge-danger fs-5"><?php echo $daysLeft; ?> days</span>
                 </p>
-                <p class="mb-0"><small>Grace period expires on: <?php echo date('F j, Y', strtotime($member['grace_period_expires'])); ?></small></p>
+                <p class="mb-0"><small>Grace period expires on: <?php echo date('F j, Y', strtotime($memberData['grace_period_expires'])); ?></small></p>
             </div>
             <div class="col-md-6 text-right">
                 <a href="/payments" class="btn btn-success btn-lg">
@@ -36,12 +37,12 @@
     </div>
     <?php endif; ?>
     
-    <?php if (isset($member['status']) && $member['status'] === 'inactive'): ?>
+    <?php if (isset($memberData['status']) && $memberData['status'] === 'inactive'): ?>
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         <h4 class="alert-heading"><i class="fas fa-clock"></i> Maturity Period Active</h4>
         <p><strong>Your membership is in the maturity period.</strong> Coverage will begin after completion.</p>
-        <?php if (!empty($member['maturity_ends'])): 
-            $maturityDate = new DateTime($member['maturity_ends']);
+        <?php if (!empty($memberData['maturity_ends'])): 
+            $maturityDate = new DateTime($memberData['maturity_ends']);
             $today = new DateTime();
             $diff = $today->diff($maturityDate);
             $daysUntilActive = $diff->days;
@@ -49,7 +50,7 @@
         <hr>
         <p class="mb-0"><strong>Coverage starts in:</strong> 
             <span class="badge badge-info fs-5"><?php echo $daysUntilActive; ?> days</span>
-            <small class="d-block mt-1">Activation date: <?php echo date('F j, Y', strtotime($member['maturity_ends'])); ?></small>
+            <small class="d-block mt-1">Activation date: <?php echo date('F j, Y', strtotime($memberData['maturity_ends'])); ?></small>
         </p>
         <?php endif; ?>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -58,7 +59,7 @@
     </div>
     <?php endif; ?>
     
-    <?php if (isset($member['status']) && $member['status'] === 'defaulted'): ?>
+    <?php if (isset($memberData['status']) && $memberData['status'] === 'defaulted'): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <h4 class="alert-heading"><i class="fas fa-ban"></i> Account Suspended</h4>
         <p><strong>Your account has been suspended due to non-payment.</strong></p>
@@ -81,15 +82,15 @@
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card <?php 
-                echo isset($member['status']) ? (
-                    $member['status'] === 'active' ? 'bg-success' : 
-                    ($member['status'] === 'grace_period' ? 'bg-warning' : 
-                    ($member['status'] === 'defaulted' ? 'bg-danger' : 'bg-primary'))
+                echo isset($memberData['status']) ? (
+                    $memberData['status'] === 'active' ? 'bg-success' : 
+                    ($memberData['status'] === 'grace_period' ? 'bg-warning' : 
+                    ($memberData['status'] === 'defaulted' ? 'bg-danger' : 'bg-primary'))
                 ) : 'bg-primary'; 
             ?> text-white">
                 <div class="card-body">
                     <h6>Account Status</h6>
-                    <h3><?php echo isset($member['status']) ? ucfirst(str_replace('_', ' ', $member['status'])) : 'N/A'; ?></h3>
+                    <h3><?php echo isset($memberData['status']) ? ucfirst(str_replace('_', ' ', $memberData['status'])) : 'N/A'; ?></h3>
                 </div>
             </div>
         </div>
@@ -97,7 +98,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h6>Monthly Contribution</h6>
-                    <h3>KES <?php echo isset($member['monthly_contribution']) ? number_format($member['monthly_contribution'], 2) : '0.00'; ?></h3>
+                    <h3>KES <?php echo isset($memberData['monthly_contribution']) ? number_format($memberData['monthly_contribution'], 2) : '0.00'; ?></h3>
                 </div>
             </div>
         </div>
@@ -127,10 +128,10 @@
                     <h5><i class="fas fa-user"></i> Member Information</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Member Number:</strong> <?php echo isset($member['member_number']) ? $member['member_number'] : 'N/A'; ?></p>
-                    <p><strong>Name:</strong> <?php echo (isset($member['first_name']) ? $member['first_name'] : '') . ' ' . (isset($member['last_name']) ? $member['last_name'] : ''); ?></p>
-                    <p><strong>Package:</strong> <?php echo isset($member['package']) ? ucfirst($member['package']) : 'N/A'; ?></p>
-                    <p><strong>Registered:</strong> <?php echo isset($member['created_at']) ? date('M j, Y', strtotime($member['created_at'])) : 'N/A'; ?></p>
+                    <p><strong>Member Number:</strong> <?php echo isset($memberData['member_number']) ? $memberData['member_number'] : 'N/A'; ?></p>
+                    <p><strong>Name:</strong> <?php echo (isset($memberData['first_name']) ? $memberData['first_name'] : '') . ' ' . (isset($memberData['last_name']) ? $memberData['last_name'] : ''); ?></p>
+                    <p><strong>Package:</strong> <?php echo isset($memberData['package']) ? ucfirst($memberData['package']) : 'N/A'; ?></p>
+                    <p><strong>Registered:</strong> <?php echo isset($memberData['created_at']) ? date('M j, Y', strtotime($memberData['created_at'])) : 'N/A'; ?></p>
                     <a href="/profile" class="btn btn-primary btn-sm">Update Profile</a>
                 </div>
             </div>
