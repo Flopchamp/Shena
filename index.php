@@ -73,6 +73,8 @@ try {
     } else {
         http_response_code(500);
         if (file_exists(VIEWS_PATH . '/errors/500.php')) {
+            $error_code = 'Internal Server Error';
+            $error_message = 'An unexpected error occurred. Please try again later.';
             include VIEWS_PATH . '/errors/500.php';
         } else {
             echo 'An error occurred. Please try again later.';

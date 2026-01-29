@@ -1,3 +1,12 @@
+<?php
+// Set default values if not provided
+if (!isset($error_code)) {
+    $error_code = 'Internal Server Error';
+}
+if (!isset($error_message)) {
+    $error_message = 'An unexpected error occurred. Please try again later.';
+}
+?>
 <?php include VIEWS_PATH . '/layouts/header.php'; ?>
 
 <div class="container mt-5">
