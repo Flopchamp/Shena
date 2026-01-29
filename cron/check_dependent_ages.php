@@ -14,6 +14,13 @@ define('CONFIG_PATH', ROOT_PATH . '/config');
 
 // Load configuration
 require_once CONFIG_PATH . '/config.php';
+require_once APP_PATH . '/core/Database.php';
+require_once APP_PATH . '/core/BaseModel.php';
+require_once APP_PATH . '/models/Member.php';
+require_once APP_PATH . '/models/Dependent.php';
+require_once APP_PATH . '/services/EmailService.php';
+require_once APP_PATH . '/services/SmsService.php';
+require_once CONFIG_PATH . '/config.php';
 
 // Load core classes
 require_once APP_PATH . '/core/Database.php';

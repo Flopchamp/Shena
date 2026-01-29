@@ -2,6 +2,9 @@
 /**
  * Authentication Controller - Handles user login, registration, and logout
  */
+require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Member.php';
+
 class AuthController extends BaseController 
 {
     private $userModel;
@@ -122,6 +125,8 @@ class AuthController extends BaseController
             // Redirect based on role
             if (in_array($user['role'], ['super_admin', 'manager'])) {
                 $this->redirect('/admin');
+            } elseif ($user['role'] === 'agent') {
+                $this->redirect('/agent/dashboard');
             } else {
                 $this->redirect('/dashboard');
             }
@@ -205,12 +210,18 @@ class AuthController extends BaseController
             // Validate password
             if (strlen($userData['password']) < 8) {
                 $_SESSION['error'] = 'Password must be at least 8 characters long.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'password';
                 $this->redirect('/register');
                 return;
             }
             
             if ($userData['password'] !== $userData['confirm_password']) {
                 $_SESSION['error'] = 'Passwords do not match.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'confirm_password';
                 $this->redirect('/register');
                 return;
             }
@@ -218,6 +229,9 @@ class AuthController extends BaseController
             // Check if email already exists
             if ($this->userModel->findByEmail($userData['email'])) {
                 $_SESSION['error'] = 'Email address already registered.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'email';
                 $this->redirect('/register');
                 return;
             }
@@ -225,6 +239,9 @@ class AuthController extends BaseController
             // Check if phone already exists
             if ($this->userModel->findByPhone($userData['phone'])) {
                 $_SESSION['error'] = 'Phone number already registered.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'phone';
                 $this->redirect('/register');
                 return;
             }
@@ -236,6 +253,9 @@ class AuthController extends BaseController
                     $age = $this->memberModel->calculateAge($memberData['date_of_birth']);
                     if ($age < 18 || $age > 100) {
                         $_SESSION['error'] = 'Members must be between 18 and 100 years old.';
+                        $_SESSION['old_input'] = array_merge($userData, $memberData);
+                        unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                        $_SESSION['error_field'] = 'date_of_birth';
                         $this->redirect('/register');
                         return;
                     }
@@ -276,35 +296,43 @@ class AuthController extends BaseController
                     return;
                 }
                 
-                // Determine high-level package category from selected configured package
+                // Determine package from selected package key
                 global $membership_packages;
-                $selectedKey = $memberData['package_key'];
-                if (empty($selectedKey) || !isset($membership_packages[$selectedKey])) {
+                $packageKey = $memberData['package'] ?? null;
+                
+                if (empty($packageKey) || !isset($membership_packages[$packageKey])) {
                     $_SESSION['error'] = 'Please select a valid membership package.';
                     $this->db->getConnection()->rollback();
                     $this->redirect('/register');
                     return;
                 }
                 
-                $selectedPackage = $membership_packages[$selectedKey];
+                $selectedPackage = $membership_packages[$packageKey];
+                $monthlyContribution = $selectedPackage['monthly_contribution'];
                 $packageCategory = $selectedPackage['category'] ?? 'individual';
                 
-                // Calculate monthly contribution strictly from configured package definition
-                $monthlyContribution = $this->memberModel->calculateMonthlyContribution($selectedKey, $age);
-                
                 // Calculate maturity period end date based on age and policy configuration
-                $maturityMonths = getMaturityPeriodMonths($age);
+                $maturityMonths = isset($selectedPackage['maturity_months']) ? $selectedPackage['maturity_months'] : 
+                                  ($age >= 81 ? MATURITY_PERIOD_80_AND_ABOVE : MATURITY_PERIOD_UNDER_80);
                 $maturityEnds = date('Y-m-d', strtotime("+{$maturityMonths} months"));
                 
-                // Create member record
-                $memberData['user_id'] = $userId;
-                $memberData['member_number'] = $memberNumber;
-                $memberData['monthly_contribution'] = $monthlyContribution;
-                $memberData['package'] = $packageCategory;
-                $memberData['status'] = 'inactive'; // Will become active once registration fee and first contributions are confirmed
-                $memberData['maturity_ends'] = $maturityEnds;
+                // Create member record with actual database columns
+                $memberRecord = [
+                    'user_id' => $userId,
+                    'member_number' => $memberNumber,
+                    'id_number' => $memberData['id_number'] ?? '',
+                    'date_of_birth' => $memberData['date_of_birth'] ?? null,
+                    'gender' => $memberData['gender'] ?? 'male',
+                    'address' => $memberData['address'] ?? '',
+                    'next_of_kin' => $memberData['next_of_kin'] ?? '',
+                    'next_of_kin_phone' => $memberData['next_of_kin_phone'] ?? '',
+                    'package' => $packageCategory,
+                    'monthly_contribution' => $monthlyContribution,
+                    'status' => 'inactive',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
                 
-                $memberId = $this->memberModel->create($memberData);
+                $memberId = $this->memberModel->create($memberRecord);
                 
                 // Commit transaction
                 $this->db->getConnection()->commit();
@@ -320,6 +348,7 @@ class AuthController extends BaseController
                     error_log('Email sending failed: ' . $e->getMessage());
                 }
                 
+                unset($_SESSION['old_input'], $_SESSION['error_field']);
                 $_SESSION['success'] = 'Registration successful! Your membership application is under review. You will be notified via email once approved.';
                 $this->redirect('/login');
                 
@@ -343,4 +372,248 @@ class AuthController extends BaseController
         $_SESSION['success'] = 'You have been logged out successfully.';
         $this->redirect('/login');
     }
+    
+    /**
+     * Show public registration page
+     */
+    public function showPublicRegistration()
+    {
+        global $membership_packages;
+        
+        $data = [
+            'title' => 'Join Shena Companion - Public Registration',
+            'packages' => $membership_packages,
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+        
+        $this->view('public.register-public', $data);
+    }
+    
+    /**
+     * Process public registration with payment
+     */
+    public function processPublicRegistration()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $this->validateCsrf();
+            
+            // Validate required fields
+            $required = ['package_id', 'first_name', 'last_name', 'national_id', 'date_of_birth', 
+                        'email', 'phone', 'address', 'county', 'payment_method'];
+            
+            foreach ($required as $field) {
+                if (empty($_POST[$field])) {
+                    throw new Exception("Field {$field} is required");
+                }
+            }
+            
+            // Sanitize inputs
+            $packageId = intval($_POST['package_id']);
+            $firstName = $this->sanitizeInput($_POST['first_name']);
+            $lastName = $this->sanitizeInput($_POST['last_name']);
+            $nationalId = $this->sanitizeInput($_POST['national_id']);
+            $dateOfBirth = $_POST['date_of_birth'];
+            $email = $this->sanitizeInput($_POST['email']);
+            $phone = $this->sanitizeInput($_POST['phone']);
+            $address = $this->sanitizeInput($_POST['address']);
+            $county = $this->sanitizeInput($_POST['county']);
+            $subCounty = $this->sanitizeInput($_POST['sub_county'] ?? '');
+            $postalCode = $this->sanitizeInput($_POST['postal_code'] ?? '');
+            $paymentMethod = $this->sanitizeInput($_POST['payment_method']);
+            
+            // Validate email
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Invalid email address');
+            }
+            
+            // Validate phone (Kenyan format)
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            if (!preg_match('/^(254|0)[17][0-9]{8}$/', $phone)) {
+                throw new Exception('Invalid phone number. Use format: 0712345678 or 254712345678');
+            }
+            
+            // Normalize phone to 254 format
+            if (substr($phone, 0, 1) === '0') {
+                $phone = '254' . substr($phone, 1);
+            }
+            
+            // Validate age
+            $age = floor((time() - strtotime($dateOfBirth)) / 31557600); // Seconds in a year
+            if ($age < 18) {
+                throw new Exception('You must be at least 18 years old to register');
+            }
+            
+            // Get package details
+            global $membership_packages;
+            $package = null;
+            foreach ($membership_packages as $pkg) {
+                if ($pkg['id'] == $packageId) {
+                    $package = $pkg;
+                    break;
+                }
+            }
+            
+            if (!$package) {
+                throw new Exception('Invalid package selected');
+            }
+            
+            // Validate age against package limits
+            if (isset($package['max_entry_age']) && $age > $package['max_entry_age']) {
+                throw new Exception("You exceed the maximum entry age ({$package['max_entry_age']}) for this package");
+            }
+            
+            // Check if email or national ID already exists
+            $existingUser = $this->userModel->findByEmail($email);
+            if ($existingUser) {
+                throw new Exception('Email address already registered');
+            }
+            
+            $existingMember = $this->memberModel->findByNationalId($nationalId);
+            if ($existingMember) {
+                throw new Exception('National ID already registered');
+            }
+            
+            $this->db->getConnection()->beginTransaction();
+            
+            try {
+                // Generate member number
+                $memberNumber = $this->generateMemberNumber();
+                
+                // Create user account (password will be sent via email)
+                $tempPassword = bin2hex(random_bytes(8));
+                $hashedPassword = password_hash($tempPassword, PASSWORD_DEFAULT);
+                
+                $userData = [
+                    'email' => $email,
+                    'password' => $hashedPassword,
+                    'role' => 'member',
+                    'status' => 'pending',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $userId = $this->userModel->create($userData);
+                
+                // Create member record
+                $maturityMonths = $package['maturity_months'] ?? 4;
+                $maturityEnds = date('Y-m-d', strtotime("+{$maturityMonths} months"));
+                
+                $memberData = [
+                    'user_id' => $userId,
+                    'member_number' => $memberNumber,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'national_id' => $nationalId,
+                    'date_of_birth' => $dateOfBirth,
+                    'phone' => $phone,
+                    'email' => $email,
+                    'address' => $address,
+                    'county' => $county,
+                    'sub_county' => $subCounty,
+                    'postal_code' => $postalCode,
+                    'package_id' => $packageId,
+                    'monthly_contribution' => $package['monthly_contribution'],
+                    'status' => 'pending_payment', // Awaiting registration fee
+                    'registration_date' => date('Y-m-d'),
+                    'maturity_ends' => $maturityEnds,
+                    'payment_deadline' => date('Y-m-d', strtotime('+14 days')), // 2-week deadline
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $memberId = $this->memberModel->create($memberData);
+                
+                // Handle payment based on method
+                if ($paymentMethod === 'mpesa') {
+                    // M-Pesa STK Push will be implemented separately
+                    // For now, set status to awaiting_payment
+                    $paymentData = [
+                        'member_id' => $memberId,
+                        'amount' => REGISTRATION_FEE,
+                        'payment_type' => 'registration',
+                        'payment_method' => 'mpesa',
+                        'status' => 'pending',
+                        'reference' => 'REG' . $phone,
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+                } else {
+                    // Cash/office payment
+                    $paymentData = [
+                        'member_id' => $memberId,
+                        'amount' => REGISTRATION_FEE,
+                        'payment_type' => 'registration',
+                        'payment_method' => 'cash',
+                        'status' => 'pending',
+                        'notes' => 'Awaiting office payment within 14 days',
+                        'created_at' => date('Y-m-d H:i:s')
+                    ];
+                }
+                
+                $paymentModel = new Payment();
+                $paymentModel->create($paymentData);
+                
+                $this->db->getConnection()->commit();
+                
+                // Send confirmation email
+                try {
+                    $emailService = new EmailService();
+                    $emailService->sendRegistrationConfirmation($email, [
+                        'name' => $firstName . ' ' . $lastName,
+                        'member_number' => $memberNumber,
+                        'package' => $package['name'],
+                        'monthly_amount' => $package['monthly_contribution'],
+                        'payment_method' => $paymentMethod,
+                        'temp_password' => $tempPassword,
+                        'payment_deadline' => date('F j, Y', strtotime('+14 days'))
+                    ]);
+                    
+                    $smsService = new SmsService();
+                    $smsService->sendWelcomeSms($phone, [
+                        'member_number' => $memberNumber
+                    ]);
+                } catch (Exception $e) {
+                    error_log('Notification sending failed: ' . $e->getMessage());
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Registration successful! Check your email for login credentials.',
+                    'member_number' => $memberNumber,
+                    'payment_method' => $paymentMethod
+                ]);
+                
+            } catch (Exception $e) {
+                $this->db->getConnection()->rollback();
+                throw $e;
+            }
+            
+        } catch (Exception $e) {
+            error_log('Public registration error: ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Generate unique member number
+     */
+    private function generateMemberNumber()
+    {
+        $prefix = 'SCA';
+        $year = date('Y');
+        
+        // Get the last member number for this year
+        $lastMember = $this->memberModel->getLastMemberByYear($year);
+        
+        if ($lastMember && preg_match('/^SCA' . $year . '(\d{4})$/', $lastMember['member_number'], $matches)) {
+            $sequence = intval($matches[1]) + 1;
+        } else {
+            $sequence = 1;
+        }
+        
+        return $prefix . $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
 }
+

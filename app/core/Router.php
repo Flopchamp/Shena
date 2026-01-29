@@ -28,6 +28,10 @@ class Router
         $this->addRoute('POST', '/register', 'AuthController@register');
         $this->addRoute('GET', '/logout', 'AuthController@logout');
         
+        // Public Registration Routes
+        $this->addRoute('GET', '/register-public', 'AuthController@showPublicRegistration');
+        $this->addRoute('POST', '/register/process', 'AuthController@processPublicRegistration');
+        
         // Member Routes (Protected)
         $this->addRoute('GET', '/dashboard', 'MemberController@dashboard');
         $this->addRoute('GET', '/profile', 'MemberController@profile');
@@ -64,6 +68,38 @@ class Router
         $this->addRoute('POST', '/admin/communications/send-sms', 'AdminController@sendSMS');
         $this->addRoute('GET', '/admin/settings', 'AdminController@settings');
         $this->addRoute('POST', '/admin/settings', 'AdminController@updateSettings');
+        
+        // Agent Management Routes (Admin Only)
+        $this->addRoute('GET', '/admin/agents', 'AgentController@index');
+        $this->addRoute('GET', '/admin/agents/create', 'AgentController@create');
+        $this->addRoute('POST', '/admin/agents/store', 'AgentController@store');
+        $this->addRoute('GET', '/admin/agents/view/{id}', 'AgentController@view');
+        $this->addRoute('GET', '/admin/agents/edit/{id}', 'AgentController@edit');
+        $this->addRoute('POST', '/admin/agents/update/{id}', 'AgentController@update');
+        $this->addRoute('POST', '/admin/agents/status/{id}', 'AgentController@updateStatus');
+        $this->addRoute('GET', '/admin/commissions', 'AgentController@commissions');
+        $this->addRoute('POST', '/admin/commissions/approve/{id}', 'AgentController@approveCommission');
+        $this->addRoute('POST', '/admin/commissions/pay/{id}', 'AgentController@markCommissionPaid');
+
+        // Agent Dashboard Routes (Agent Only)
+        $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');
+        $this->addRoute('GET', '/agent/profile', 'AgentDashboardController@profile');
+        $this->addRoute('POST', '/agent/profile', 'AgentDashboardController@updateProfile');
+        $this->addRoute('POST', '/agent/profile/update', 'AgentDashboardController@updateProfile');
+        $this->addRoute('POST', '/agent/password/update', 'AgentDashboardController@updatePassword');
+        $this->addRoute('GET', '/agent/members', 'AgentDashboardController@members');
+        $this->addRoute('GET', '/agent/commissions', 'AgentDashboardController@commissions');
+        $this->addRoute('GET', '/agent/register-member', 'AgentDashboardController@registerMember');
+        $this->addRoute('POST', '/agent/register-member/store', 'AgentDashboardController@storeRegisterMember');
+        
+        // Bulk SMS Routes (Admin & Manager)
+        $this->addRoute('GET', '/admin/bulk-sms', 'BulkSmsController@index');
+        $this->addRoute('GET', '/admin/bulk-sms/create', 'BulkSmsController@create');
+        $this->addRoute('POST', '/admin/bulk-sms/store', 'BulkSmsController@store');
+        $this->addRoute('GET', '/admin/bulk-sms/view/{id}', 'BulkSmsController@view');
+        $this->addRoute('POST', '/admin/bulk-sms/send/{id}', 'BulkSmsController@send');
+        $this->addRoute('POST', '/admin/bulk-sms/delete/{id}', 'BulkSmsController@delete');
+        $this->addRoute('GET', '/admin/bulk-sms/preview-recipients', 'BulkSmsController@previewRecipients');
         
         // API Routes
         $this->addRoute('POST', '/api/mpesa/callback', 'PaymentController@mpesaCallback');

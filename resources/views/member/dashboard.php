@@ -4,13 +4,92 @@
 <div class="container-fluid py-4">
     <h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Member Dashboard</h2>
     
+    <!-- Grace Period Warning Alert -->
+    <?php if (isset($member['status']) && $member['status'] === 'grace_period'): ?>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Grace Period Active</h4>
+        <p><strong>Your account is in grace period.</strong> Please make your payment to avoid suspension.</p>
+        <?php if (!empty($member['grace_period_expires'])): 
+            $expiry = new DateTime($member['grace_period_expires']);
+            $today = new DateTime();
+            $diff = $today->diff($expiry);
+            $daysLeft = $diff->days;
+        ?>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-0"><strong>Days Remaining:</strong> 
+                    <span class="badge badge-danger fs-5"><?php echo $daysLeft; ?> days</span>
+                </p>
+                <p class="mb-0"><small>Grace period expires on: <?php echo date('F j, Y', strtotime($member['grace_period_expires'])); ?></small></p>
+            </div>
+            <div class="col-md-6 text-right">
+                <a href="/payments" class="btn btn-success btn-lg">
+                    <i class="fas fa-money-bill-wave"></i> Make Payment Now
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (isset($member['status']) && $member['status'] === 'inactive'): ?>
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-clock"></i> Maturity Period Active</h4>
+        <p><strong>Your membership is in the maturity period.</strong> Coverage will begin after completion.</p>
+        <?php if (!empty($member['maturity_ends'])): 
+            $maturityDate = new DateTime($member['maturity_ends']);
+            $today = new DateTime();
+            $diff = $today->diff($maturityDate);
+            $daysUntilActive = $diff->days;
+        ?>
+        <hr>
+        <p class="mb-0"><strong>Coverage starts in:</strong> 
+            <span class="badge badge-info fs-5"><?php echo $daysUntilActive; ?> days</span>
+            <small class="d-block mt-1">Activation date: <?php echo date('F j, Y', strtotime($member['maturity_ends'])); ?></small>
+        </p>
+        <?php endif; ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (isset($member['status']) && $member['status'] === 'defaulted'): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-ban"></i> Account Suspended</h4>
+        <p><strong>Your account has been suspended due to non-payment.</strong></p>
+        <p>To reactivate your membership, you must:</p>
+        <ol>
+            <li>Pay all outstanding contributions</li>
+            <li>Pay a reactivation fee of KES <?php echo number_format(REACTIVATION_FEE); ?></li>
+            <li>Wait for a new 4-month maturity period</li>
+        </ol>
+        <a href="/payments" class="btn btn-danger">
+            <i class="fas fa-redo"></i> Reactivate Account
+        </a>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <?php endif; ?>
+
     <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
+            <div class="card <?php 
+                echo isset($member['status']) ? (
+                    $member['status'] === 'active' ? 'bg-success' : 
+                    ($member['status'] === 'grace_period' ? 'bg-warning' : 
+                    ($member['status'] === 'defaulted' ? 'bg-danger' : 'bg-primary'))
+                ) : 'bg-primary'; 
+            ?> text-white">
                 <div class="card-body">
                     <h6>Account Status</h6>
-                    <h3><?php echo isset($member['status']) ? ucfirst($member['status']) : 'N/A'; ?></h3>
+                    <h3><?php echo isset($member['status']) ? ucfirst(str_replace('_', ' ', $member['status'])) : 'N/A'; ?></h3>
                 </div>
             </div>
         </div>

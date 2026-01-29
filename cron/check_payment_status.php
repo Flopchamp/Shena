@@ -14,6 +14,13 @@ define('CONFIG_PATH', ROOT_PATH . '/config');
 
 // Load configuration
 require_once CONFIG_PATH . '/config.php';
+require_once APP_PATH . '/core/Database.php';
+require_once APP_PATH . '/core/BaseModel.php';
+require_once APP_PATH . '/models/Member.php';
+require_once APP_PATH . '/models/Payment.php';
+require_once APP_PATH . '/services/EmailService.php';
+require_once APP_PATH . '/services/SmsService.php';
+require_once CONFIG_PATH . '/config.php';
 
 // Load core classes
 require_once APP_PATH . '/core/Database.php';
@@ -23,12 +30,18 @@ require_once APP_PATH . '/core/BaseModel.php';
 require_once APP_PATH . '/models/Member.php';
 require_once APP_PATH . '/models/Payment.php';
 
+// Load services
+require_once APP_PATH . '/services/EmailService.php';
+require_once APP_PATH . '/services/SmsService.php';
+
 // Load helper functions
 require_once APP_PATH . '/helpers/functions.php';
 
 // Initialize
 $memberModel = new Member();
 $paymentModel = new Payment();
+$emailService = new EmailService();
+$smsService = new SmsService();
 
 $logFile = ROOT_PATH . '/storage/logs/payment_monitoring_' . date('Y-m-d') . '.log';
 
@@ -101,7 +114,23 @@ try {
                         $counters['defaulted']++;
                         logMessage("Member {$memberNumber}: Marked as DEFAULTED ({$daysPastDue} days past due)");
                         
-                        // TODO: Send notification to member
+                        // Send account suspended notification
+                        try {
+                            $emailService->sendAccountSuspendedEmail($member['email'], [
+                                'name' => $member['first_name'] . ' ' . $member['last_name'],
+                                'member_number' => $memberNumber,
+                                'days_past_due' => $daysPastDue,
+                                'total_outstanding' => $member['outstanding_balance'] ?? 0
+                            ]);
+                            
+                            $smsService->sendAccountDeactivationSms($member['phone'], [
+                                'member_number' => $memberNumber
+                            ]);
+                            
+                            logMessage("Member {$memberNumber}: Suspension notifications sent");
+                        } catch (Exception $notifyEx) {
+                            logMessage("ERROR sending suspension notifications to {$memberNumber}: " . $notifyEx->getMessage());
+                        }
                     }
                 } elseif ($daysPastDue > 0) {
                     // Member is within grace period
@@ -117,7 +146,26 @@ try {
                         $counters['entered_grace']++;
                         logMessage("Member {$memberNumber}: Entered GRACE PERIOD ({$daysPastDue} days past due, expires {$gracePeriodExpires})");
                         
-                        // TODO: Send grace period warning notification
+                        // Send grace period warning notification
+                        try {
+                            $daysLeft = GRACE_PERIOD_MONTHS * 30;
+                            $emailService->sendGracePeriodWarning($member['email'], [
+                                'name' => $member['first_name'] . ' ' . $member['last_name'],
+                                'member_number' => $memberNumber,
+                                'days_left' => $daysLeft,
+                                'expiry_date' => date('F j, Y', strtotime($gracePeriodExpires)),
+                                'monthly_amount' => $member['monthly_contribution'] ?? 0
+                            ]);
+                            
+                            $smsService->sendGracePeriodWarning($member['phone'], [
+                                'member_number' => $memberNumber,
+                                'expiry_date' => date('M j, Y', strtotime($gracePeriodExpires))
+                            ]);
+                            
+                            logMessage("Member {$memberNumber}: Grace period notifications sent");
+                        } catch (Exception $notifyEx) {
+                            logMessage("ERROR sending grace period notifications to {$memberNumber}: " . $notifyEx->getMessage());
+                        }
                     }
                 }
                 
@@ -126,9 +174,27 @@ try {
                     $daysUntilDefault = floor((strtotime($member['grace_period_expires']) - strtotime($today)) / 86400);
                     
                     if ($daysUntilDefault <= 10 && $daysUntilDefault > 0) {
-                        // TODO: Send urgent warning notification
-                        $counters['warnings_sent']++;
-                        logMessage("Member {$memberNumber}: WARNING sent - {$daysUntilDefault} days until default");
+                        // Send urgent warning notification
+                        try {
+                            $emailService->sendGracePeriodWarning($member['email'], [
+                                'name' => $member['first_name'] . ' ' . $member['last_name'],
+                                'member_number' => $memberNumber,
+                                'days_left' => $daysUntilDefault,
+                                'expiry_date' => date('F j, Y', strtotime($member['grace_period_expires'])),
+                                'monthly_amount' => $member['monthly_contribution'] ?? 0,
+                                'urgent' => true
+                            ]);
+                            
+                            $smsService->sendPaymentReminderSms($member['phone'], [
+                                'member_number' => $memberNumber,
+                                'amount' => $member['monthly_contribution'] ?? 0
+                            ]);
+                            
+                            $counters['warnings_sent']++;
+                            logMessage("Member {$memberNumber}: URGENT warning sent - {$daysUntilDefault} days until default");
+                        } catch (Exception $notifyEx) {
+                            logMessage("ERROR sending urgent warning to {$memberNumber}: " . $notifyEx->getMessage());
+                        }
                     }
                 }
             }

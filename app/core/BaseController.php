@@ -54,6 +54,31 @@ abstract class BaseController
         }
     }
     
+    protected function requireRole($roles)
+    {
+        $this->requireAuth();
+        
+        if (!is_array($roles)) {
+            $roles = [$roles];
+        }
+        
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], $roles)) {
+            $this->redirect('/error/403');
+        }
+    }
+    
+    protected function render($template, $data = [])
+    {
+        // Alias for view() method
+        return $this->view($template, $data);
+    }
+    
+    protected function setFlashMessage($message, $type = 'info')
+    {
+        $_SESSION['flash_message'] = $message;
+        $_SESSION['flash_type'] = $type;
+    }
+    
     protected function validateCsrf()
     {
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {

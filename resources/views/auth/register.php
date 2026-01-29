@@ -1,4 +1,39 @@
-<?php include VIEWS_PATH . '/layouts/header.php'; ?>
+<?php 
+// Helper function to get old input value
+function old($field, $default = '') {
+    return $_SESSION['old_input'][$field] ?? $default;
+}
+
+// Helper function to check if field has error
+function hasError($field) {
+    return isset($_SESSION['error_field']) && $_SESSION['error_field'] === $field;
+}
+
+include VIEWS_PATH . '/layouts/header.php'; 
+?>
+
+<style>
+    .is-invalid {
+        border-color: #dc3545 !important;
+        background-color: #fff5f5 !important;
+    }
+    .is-invalid:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    .error-field-label {
+        color: #dc3545 !important;
+        font-weight: 600;
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    .shake {
+        animation: shake 0.5s;
+    }
+</style>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -16,49 +51,49 @@
                         <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="first_name" class="form-label">First Name *</label>
-                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                <label for="first_name" class="form-label <?php echo hasError('first_name') ? 'error-field-label' : ''; ?>">First Name *</label>
+                                <input type="text" class="form-control <?php echo hasError('first_name') ? 'is-invalid shake' : ''; ?>" id="first_name" name="first_name" value="<?php echo e(old('first_name')); ?>" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="last_name" class="form-label">Last Name *</label>
-                                <input type="text" class="form-control" id="last_name" name="last_name" required>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">Email Address *</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="phone" class="form-label">Phone Number *</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+254..." required>
+                                <label for="last_name" class="form-label <?php echo hasError('last_name') ? 'error-field-label' : ''; ?>">Last Name *</label>
+                                <input type="text" class="form-control <?php echo hasError('last_name') ? 'is-invalid shake' : ''; ?>" id="last_name" name="last_name" value="<?php echo e(old('last_name')); ?>" required>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="id_number" class="form-label">National ID Number *</label>
-                                <input type="text" class="form-control" id="id_number" name="id_number" required>
+                                <label for="email" class="form-label <?php echo hasError('email') ? 'error-field-label' : ''; ?>">Email Address *</label>
+                                <input type="email" class="form-control <?php echo hasError('email') ? 'is-invalid shake' : ''; ?>" id="email" name="email" value="<?php echo e(old('email')); ?>" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="date_of_birth" class="form-label">Date of Birth</label>
-                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                                <label for="phone" class="form-label <?php echo hasError('phone') ? 'error-field-label' : ''; ?>">Phone Number *</label>
+                                <input type="tel" class="form-control <?php echo hasError('phone') ? 'is-invalid shake' : ''; ?>" id="phone" name="phone" value="<?php echo e(old('phone')); ?>" placeholder="+254..." required>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="gender" class="form-label">Gender *</label>
-                                <select class="form-select" id="gender" name="gender" required>
+                                <label for="id_number" class="form-label <?php echo hasError('id_number') ? 'error-field-label' : ''; ?>">National ID Number *</label>
+                                <input type="text" class="form-control <?php echo hasError('id_number') ? 'is-invalid shake' : ''; ?>" id="id_number" name="id_number" value="<?php echo e(old('id_number')); ?>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label <?php echo hasError('date_of_birth') ? 'error-field-label' : ''; ?>">Date of Birth</label>
+                                <input type="date" class="form-control <?php echo hasError('date_of_birth') ? 'is-invalid shake' : ''; ?>" id="date_of_birth" name="date_of_birth" value="<?php echo e(old('date_of_birth')); ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label <?php echo hasError('gender') ? 'error-field-label' : ''; ?>">Gender *</label>
+                                <select class="form-select <?php echo hasError('gender') ? 'is-invalid shake' : ''; ?>" id="gender" name="gender" required>
                                     <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
+                                    <option value="male" <?php echo old('gender') === 'male' ? 'selected' : ''; ?>>Male</option>
+                                    <option value="female" <?php echo old('gender') === 'female' ? 'selected' : ''; ?>>Female</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="address" class="form-label">Address</label>
-                                <input type="text" class="form-control" id="address" name="address">
+                                <label for="address" class="form-label <?php echo hasError('address') ? 'error-field-label' : ''; ?>">Address</label>
+                                <input type="text" class="form-control <?php echo hasError('address') ? 'is-invalid shake' : ''; ?>" id="address" name="address" value="<?php echo e(old('address')); ?>">
                             </div>
                         </div>
                         
@@ -66,12 +101,12 @@
                         <h5 class="border-bottom pb-2 mb-3 mt-4">Next of Kin Information</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="next_of_kin" class="form-label">Next of Kin Name</label>
-                                <input type="text" class="form-control" id="next_of_kin" name="next_of_kin">
+                                <label for="next_of_kin" class="form-label <?php echo hasError('next_of_kin') ? 'error-field-label' : ''; ?>">Next of Kin Name</label>
+                                <input type="text" class="form-control <?php echo hasError('next_of_kin') ? 'is-invalid shake' : ''; ?>" id="next_of_kin" name="next_of_kin" value="<?php echo e(old('next_of_kin')); ?>">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="next_of_kin_phone" class="form-label">Next of Kin Phone</label>
-                                <input type="tel" class="form-control" id="next_of_kin_phone" name="next_of_kin_phone">
+                                <label for="next_of_kin_phone" class="form-label <?php echo hasError('next_of_kin_phone') ? 'error-field-label' : ''; ?>">Next of Kin Phone</label>
+                                <input type="tel" class="form-control <?php echo hasError('next_of_kin_phone') ? 'is-invalid shake' : ''; ?>" id="next_of_kin_phone" name="next_of_kin_phone" value="<?php echo e(old('next_of_kin_phone')); ?>">
                             </div>
                         </div>
                         
@@ -137,13 +172,13 @@
                         <h5 class="border-bottom pb-2 mb-3 mt-4">Account Security</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="password" class="form-label">Password *</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <label for="password" class="form-label <?php echo hasError('password') ? 'error-field-label' : ''; ?>">Password *</label>
+                                <input type="password" class="form-control <?php echo hasError('password') ? 'is-invalid shake' : ''; ?>" id="password" name="password" required>
                                 <div class="form-text">Minimum 8 characters</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="confirm_password" class="form-label">Confirm Password *</label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                <label for="confirm_password" class="form-label <?php echo hasError('confirm_password') ? 'error-field-label' : ''; ?>">Confirm Password *</label>
+                                <input type="password" class="form-control <?php echo hasError('confirm_password') ? 'is-invalid shake' : ''; ?>" id="confirm_password" name="confirm_password" required>
                             </div>
                         </div>
                         
@@ -202,7 +237,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     password.addEventListener('input', validatePasswordMatch);
     confirmPassword.addEventListener('input', validatePasswordMatch);
+    
+    // Scroll to first error field if present
+    const errorField = document.querySelector('.is-invalid');
+    if (errorField) {
+        setTimeout(function() {
+            errorField.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            errorField.focus();
+        }, 300);
+    }
+    
+    // Restore selected package if present
+    const selectedPackage = '<?php echo e(old('package', 'individual_below_70')); ?>';
+    const packageInput = document.querySelector('input[name="package"][value="' + selectedPackage + '"]');
+    if (packageInput) {
+        packageInput.checked = true;
+    }
 });
 </script>
 
-<?php include VIEWS_PATH . '/layouts/footer.php'; ?>
+<?php 
+// Clear old input after displaying
+unset($_SESSION['old_input'], $_SESSION['error_field']);
+include VIEWS_PATH . '/layouts/footer.php'; 
+?>

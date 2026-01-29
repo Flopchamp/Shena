@@ -70,6 +70,11 @@ define('UPLOAD_PATH', ROOT_PATH . '/storage/uploads');
 define('REGISTRATION_FEE', 200); // Ksh. 200
 define('REACTIVATION_FEE', 100); // Ksh. 100
 
+// Contact Information
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'info@shenacompanion.org');
+define('ADMIN_PHONE', getenv('ADMIN_PHONE') ?: '+254712345678');
+define('OFFICE_ADDRESS', 'Shena Companion Welfare Association Office, Nairobi, Kenya');
+
 // Membership Maturity & Grace Period Settings (in months)
 // MATURITY PERIOD: Waiting period before coverage becomes active
 define('MATURITY_PERIOD_UNDER_80', 4); // 4 months for ages 1-80 years

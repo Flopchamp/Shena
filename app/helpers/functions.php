@@ -159,6 +159,15 @@ function requireAdmin()
 }
 
 /**
+ * Redirect to URL
+ */
+function redirect($url)
+{
+    header("Location: {$url}");
+    exit;
+}
+
+/**
  * Generate URL
  */
 function url($path = '')

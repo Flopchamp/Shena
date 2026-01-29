@@ -209,4 +209,213 @@ class EmailService
                 </html>";
         }
     }
+    
+    /**
+     * Send grace period warning email
+     */
+    public function sendGracePeriodWarning($email, $data)
+    {
+        $subject = 'URGENT: Account Entering Grace Period - Payment Required';
+        
+        $body = "
+        <html>
+        <head>
+            <style>
+                .warning { background-color: #fff3cd; padding: 20px; border-left: 4px solid #ffc107; }
+                .btn { background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; display: inline-block; }
+            </style>
+        </head>
+        <body>
+            <h2>Shena Companion Welfare Association</h2>
+            <div class='warning'>
+                <h3>⚠️ Grace Period Warning</h3>
+                <p>Dear {$data['name']},</p>
+                <p>Your account (Member #: {$data['member_number']}) has entered the <strong>grace period</strong> due to missed contributions.</p>
+                
+                <p><strong>Important Information:</strong></p>
+                <ul>
+                    <li><strong>Days Remaining:</strong> {$data['days_left']} days</li>
+                    <li><strong>Grace Period Expires:</strong> {$data['expiry_date']}</li>
+                    <li><strong>Amount Due:</strong> KES " . number_format($data['amount']) . "</li>
+                </ul>
+                
+                <p><strong>What happens if payment is not made:</strong></p>
+                <ul>
+                    <li>Your account will be suspended</li>
+                    <li>Coverage will be terminated</li>
+                    <li>Reactivation requires additional fees</li>
+                </ul>
+                
+                <p style='margin-top: 20px;'>
+                    <a href='" . APP_URL . "/payments' class='btn'>Make Payment Now</a>
+                </p>
+                
+                <p><strong>Payment Instructions:</strong><br>
+                M-Pesa Paybill: <strong>" . MPESA_BUSINESS_SHORTCODE . "</strong><br>
+                Account Number: Your ID Number<br>
+                Amount: KES " . number_format($data['amount']) . "</p>
+            </div>
+            
+            <p>For assistance, contact us:<br>
+            Phone: 0748585067 / 0748585071<br>
+            Email: info@shenacompanion.org</p>
+            
+            <p>Best regards,<br>Shena Companion Welfare Association</p>
+        </body>
+        </html>";
+        
+        return $this->sendEmail($email, $subject, $body);
+    }
+    
+    /**
+     * Send account suspended notification
+     */
+    public function sendAccountSuspendedEmail($email, $data)
+    {
+        $subject = 'Account Suspended - Immediate Action Required';
+        
+        $body = "
+        <html>
+        <head>
+            <style>
+                .danger { background-color: #f8d7da; padding: 20px; border-left: 4px solid #dc3545; }
+            </style>
+        </head>
+        <body>
+            <h2>Shena Companion Welfare Association</h2>
+            <div class='danger'>
+                <h3>🚫 Account Suspended</h3>
+                <p>Dear {$data['name']},</p>
+                <p>Your account (Member #: {$data['member_number']}) has been <strong>suspended</strong> due to non-payment exceeding the grace period.</p>
+                
+                <p><strong>Reactivation Requirements:</strong></p>
+                <ol>
+                    <li>Pay all outstanding contributions: KES " . number_format($data['outstanding_amount']) . "</li>
+                    <li>Pay reactivation fee: KES " . number_format(REACTIVATION_FEE) . "</li>
+                    <li>Complete new 4-month maturity period</li>
+                </ol>
+                
+                <p><strong>Total Amount Due:</strong> KES " . number_format($data['total_due']) . "</p>
+                
+                <p>To reactivate your account, please contact our office or make payment via M-Pesa.</p>
+            </div>
+            
+            <p>Contact Us:<br>
+            Phone: 0748585067 / 0748585071<br>
+            Email: info@shenacompanion.org</p>
+            
+            <p>Best regards,<br>Shena Companion Welfare Association</p>
+        </body>
+        </html>";
+        
+        return $this->sendEmail($email, $subject, $body);
+    }
+    
+    /**
+     * Send registration confirmation email
+     */
+    public function sendRegistrationConfirmation($email, $data)
+    {
+        $subject = 'Registration Successful - Shena Companion';
+        
+        $body = "
+        <html>
+        <body>
+            <h2>Shena Companion Welfare Association</h2>
+            <h3>✅ Registration Successful!</h3>
+            <p>Dear {$data['name']},</p>
+            <p>Thank you for registering with Shena Companion Welfare Association.</p>
+            
+            <p><strong>Your Membership Details:</strong></p>
+            <ul>
+                <li><strong>Member Number:</strong> {$data['member_number']}</li>
+                <li><strong>Package:</strong> {$data['package_name']}</li>
+                <li><strong>Monthly Contribution:</strong> KES " . number_format($data['monthly_contribution']) . "</li>
+                <li><strong>Maturity Date:</strong> {$data['maturity_date']}</li>
+            </ul>
+            
+            <p><strong>Important:</strong> Your coverage will become active after {$data['maturity_months']} months (maturity period) of consistent contributions.</p>
+            
+            <p><strong>First Payment:</strong><br>
+            Please make your first monthly contribution payment.<br>
+            M-Pesa Paybill: <strong>" . MPESA_BUSINESS_SHORTCODE . "</strong><br>
+            Account Number: Your ID Number<br>
+            Amount: KES " . number_format($data['monthly_contribution']) . "</p>
+            
+            <p>Welcome to our family!</p>
+            <p>Best regards,<br>Shena Companion Welfare Association</p>
+        </body>
+        </html>";
+        
+        return $this->sendEmail($email, $subject, $body);
+    }
+    
+    /**
+     * Send welcome email to new agent
+     * 
+     * @param array $agent Agent details
+     * @param string $password Temporary password
+     * @return bool Success status
+     */
+    public function sendAgentWelcomeEmail($agent, $password)
+    {
+        $subject = 'Welcome to Shena Welfare - Agent Account Created';
+        
+        $body = "<!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #28a745; color: white; padding: 20px; text-align: center; }
+                .content { padding: 20px; background: #f8f9fa; }
+                .credentials { background: white; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }
+                .footer { text-align: center; padding: 20px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Welcome Agent {$agent['first_name']}!</h1>
+                </div>
+                <div class='content'>
+                    <h2>Your Agent Account is Ready</h2>
+                    <p>Your agent account has been successfully created for Shena Companion Welfare Association.</p>
+                    
+                    <div class='credentials'>
+                        <strong>Your Agent Details:</strong><br>
+                        Agent Number: <strong>{$agent['agent_number']}</strong><br>
+                        Name: {$agent['first_name']} {$agent['last_name']}<br>
+                        Commission Rate: {$agent['commission_rate']}%<br><br>
+                        
+                        <strong>Login Credentials:</strong><br>
+                        Email: <strong>{$agent['email']}</strong><br>
+                        Password: <strong>{$password}</strong><br>
+                        <em style='color: #dc3545;'>Please change your password after first login</em>
+                    </div>
+                    
+                    <h3>Getting Started:</h3>
+                    <ol>
+                        <li>Log in to your agent portal</li>
+                        <li>Complete your profile information</li>
+                        <li>Start registering members</li>
+                        <li>Track your commissions</li>
+                    </ol>
+                    
+                    <p><strong>Commission Structure:</strong><br>
+                    You will earn {$agent['commission_rate']}% commission on all member registrations you facilitate. 
+                    Commissions are calculated on the first payment and approved monthly.</p>
+                    
+                    <p>If you have any questions, please contact us at " . ADMIN_EMAIL . "</p>
+                </div>
+                <div class='footer'>
+                    <p>Shena Companion Welfare Association<br>
+                    Phone: " . ADMIN_PHONE . "</p>
+                </div>
+            </div>
+        </body>
+        </html>";
+        
+        return $this->sendEmail($agent['email'], $subject, $body);
+    }
 }
