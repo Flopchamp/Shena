@@ -513,31 +513,50 @@ function pagination($currentPage, $totalPages, $baseUrl)
     if ($totalPages <= 1) {
         return '';
     }
-    
+
     $html = '<nav aria-label="Page navigation"><ul class="pagination">';
-    
+
     // Previous button
     if ($currentPage > 1) {
         $prevPage = $currentPage - 1;
         $html .= '<li class="page-item"><a class="page-link" href="' . $baseUrl . '?page=' . $prevPage . '">Previous</a></li>';
     }
-    
+
     // Page numbers
     $start = max(1, $currentPage - 2);
     $end = min($totalPages, $currentPage + 2);
-    
+
     for ($i = $start; $i <= $end; $i++) {
         $active = $i === $currentPage ? 'active' : '';
         $html .= '<li class="page-item ' . $active . '"><a class="page-link" href="' . $baseUrl . '?page=' . $i . '">' . $i . '</a></li>';
     }
-    
+
     // Next button
     if ($currentPage < $totalPages) {
         $nextPage = $currentPage + 1;
         $html .= '<li class="page-item"><a class="page-link" href="' . $baseUrl . '?page=' . $nextPage . '">Next</a></li>';
     }
-    
+
     $html .= '</ul></nav>';
-    
+
     return $html;
+}
+
+/**
+ * Get system setting from database
+ *
+ * @param string $key Setting key
+ * @param mixed $default Default value if not found
+ * @return mixed Setting value or default
+ */
+function get_system_setting($key, $default = null)
+{
+    try {
+        $db = Database::getInstance();
+        $result = $db->fetch("SELECT setting_value FROM system_settings WHERE setting_key = :key", ['key' => $key]);
+        return $result ? $result['setting_value'] : $default;
+    } catch (Exception $e) {
+        error_log('Error getting system setting: ' . $e->getMessage());
+        return $default;
+    }
 }

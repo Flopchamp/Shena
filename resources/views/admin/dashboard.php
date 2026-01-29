@@ -126,10 +126,10 @@
                                         <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
                                         <td>
                                             <span class="badge badge-<?php echo $member['status'] === 'active' ? 'success' : 'warning'; ?>">
-                                                <?php echo ucfirst($member['status']); ?>
+                                                <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
                                             </span>
                                         </td>
-                                        <td><?php echo date('M j, Y', strtotime($member['registration_date'])); ?></td>
+                                        <td><?php echo !empty($member['registration_date']) ? date('M j, Y', strtotime($member['registration_date'])) : (!empty($member['created_at']) ? date('M j, Y', strtotime($member['created_at'])) : 'N/A'); ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -168,7 +168,7 @@
                                         <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
                                         <td>
                                             <span class="badge badge-<?php echo $payment['status'] === 'completed' ? 'success' : 'warning'; ?>">
-                                                <?php echo ucfirst($payment['status']); ?>
+                                                <?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?>
                                             </span>
                                         </td>
                                         <td><?php echo date('M j, Y', strtotime($payment['created_at'])); ?></td>
@@ -215,7 +215,7 @@
                                         <td>KES <?php echo number_format($claim['claim_amount'], 2); ?></td>
                                         <td>
                                             <span class="badge badge-<?php 
-                                                echo match($claim['status']) {
+                                                echo match($claim['status'] ?? 'pending') {
                                                     'submitted' => 'primary',
                                                     'approved' => 'success',
                                                     'rejected' => 'danger',
@@ -223,7 +223,7 @@
                                                     default => 'secondary'
                                                 };
                                             ?>">
-                                                <?php echo ucfirst($claim['status']); ?>
+                                                <?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?>
                                             </span>
                                         </td>
                                         <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>

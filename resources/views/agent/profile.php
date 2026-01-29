@@ -25,7 +25,7 @@
                 <h4 class="mb-1"><?php echo htmlspecialchars($agent['first_name'] . ' ' . $agent['last_name']); ?></h4>
                 <p class="text-muted mb-2">Agent ID: <strong><?php echo htmlspecialchars($agent['agent_number']); ?></strong></p>
                 <span class="badge bg-<?php echo $agent['status'] === 'active' ? 'success' : 'warning'; ?> mb-3">
-                    <?php echo ucfirst($agent['status']); ?>
+                    <?php echo !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending'; ?>
                 </span>
                 <hr>
                 <div class="text-start">
@@ -43,7 +43,7 @@
                     </p>
                     <p class="mb-2">
                         <i class="fas fa-calendar text-muted"></i>
-                        <small>Joined: <?php echo date('M d, Y', strtotime($agent['registration_date'])); ?></small>
+                        <small>Joined: <?php echo !empty($agent['registration_date']) ? date('M d, Y', strtotime($agent['registration_date'])) : (!empty($agent['created_at']) ? date('M d, Y', strtotime($agent['created_at'])) : 'N/A'); ?></small>
                     </p>
                 </div>
             </div>

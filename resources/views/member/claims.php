@@ -1,6 +1,8 @@
 
-<?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
-
+<?php
+$page = 'claims';
+include VIEWS_PATH . '/layouts/member-header.php';
+?>
 
 <div class="container py-4">
     <h2 class="mb-4"><i class="fas fa-file-medical"></i> Claims Management</h2>
@@ -31,9 +33,9 @@
                         <tr>
                             <td>#<?php echo $claim['id']; ?></td>
                             <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
-                            <td><?php echo date('M j, Y', strtotime($claim['date_of_death'])); ?></td>
-                            <td>KES <?php echo number_format($claim['claim_amount'], 2); ?></td>
-                            <td><span class="badge bg-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>"><?php echo ucfirst($claim['status']); ?></span></td>
+                            <td><?php echo !empty($claim['date_of_death']) ? date('M j, Y', strtotime($claim['date_of_death'])) : 'N/A'; ?></td>
+                            <td><?php echo number_format($claim['claim_amount'], 2); ?></td>
+                            <td><span class="badge bg-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>"><?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?></span></td>
                             <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
                             <td>
                                 <button class="btn btn-sm btn-info" onclick="viewClaim(<?php echo $claim['id']; ?>)">View</button>

@@ -98,7 +98,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-info">
-                                    <?php echo ucfirst($commission['package'] ?? 'N/A'); ?>
+                                    <?php echo !empty($commission['package']) ? ucfirst($commission['package']) : 'N/A'; ?>
                                 </span>
                             </td>
                             <td>
@@ -112,7 +112,7 @@
                                          ($commission['status'] === 'pending' ? 'warning' : 
                                          ($commission['status'] === 'approved' ? 'info' : 'secondary')); 
                                 ?>">
-                                    <?php echo ucfirst($commission['status']); ?>
+                                    <?php echo !empty($commission['status']) ? ucfirst($commission['status']) : 'Pending'; ?>
                                 </span>
                             </td>
                             <td>

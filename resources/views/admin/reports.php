@@ -210,10 +210,10 @@
                             <tr>
                                 <td><?php echo htmlspecialchars($member['member_number']); ?></td>
                                 <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
-                                <td><?php echo ucfirst($member['package_type'] ?? 'individual'); ?></td>
+                                <td><?php echo !empty($member['package_type']) ? ucfirst($member['package_type']) : 'Individual'; ?></td>
                                 <td>
                                     <span class="badge badge-<?php echo $member['status'] === 'active' ? 'success' : 'warning'; ?>">
-                                        <?php echo ucfirst($member['status']); ?>
+                                        <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
                                     </span>
                                 </td>
                                 <td><?php echo date('M j, Y', strtotime($member['created_at'])); ?></td>
@@ -258,11 +258,11 @@
                                 <td><?php echo htmlspecialchars($payment['transaction_id']); ?></td>
                                 <td><?php echo htmlspecialchars($payment['member_name']); ?></td>
                                 <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
-                                <td><?php echo ucfirst($payment['payment_type']); ?></td>
-                                <td><?php echo strtoupper($payment['payment_method']); ?></td>
+                                <td><?php echo !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly'; ?></td>
+                                <td><?php echo !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A'; ?></td>
                                 <td>
                                     <span class="badge badge-<?php echo $payment['status'] === 'completed' ? 'success' : 'warning'; ?>">
-                                        <?php echo ucfirst($payment['status']); ?>
+                                        <?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?>
                                     </span>
                                 </td>
                                 <td><?php echo date('M j, Y', strtotime($payment['created_at'])); ?></td>
@@ -309,7 +309,7 @@
                                 <td>KES <?php echo number_format($claim['claim_amount'], 2); ?></td>
                                 <td>
                                     <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>">
-                                        <?php echo ucfirst($claim['status']); ?>
+                                        <?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?>
                                     </span>
                                 </td>
                                 <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>

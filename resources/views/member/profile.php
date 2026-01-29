@@ -1,6 +1,8 @@
 
-<?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
-
+<?php
+$page = 'profile';
+include VIEWS_PATH . '/layouts/member-header.php';
+?>
 
 <div class="container py-4">
     <h2 class="mb-4"><i class="fas fa-user-edit"></i> Profile Management</h2>

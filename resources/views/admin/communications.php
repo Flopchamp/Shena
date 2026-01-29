@@ -198,13 +198,13 @@
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <h6>Communication Info</h6>
-                                                    <p><strong>Type:</strong> <?php echo strtoupper($comm['type']); ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $comm['status'] === 'sent' ? 'success' : 'danger'; ?>"><?php echo ucfirst($comm['status']); ?></span></p>
-                                                    <p><strong>Sent Date:</strong> <?php echo date('M j, Y H:i:s', strtotime($comm['sent_at'])); ?></p>
+                                                    <p><strong>Type:</strong> <?php echo !empty($comm['type']) ? strtoupper($comm['type']) : 'N/A'; ?></p>
+                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $comm['status'] === 'sent' ? 'success' : 'danger'; ?>"><?php echo !empty($comm['status']) ? ucfirst($comm['status']) : 'Pending'; ?></span></p>
+                                                    <p><strong>Sent Date:</strong> <?php echo !empty($comm['sent_at']) ? date('M j, Y H:i:s', strtotime($comm['sent_at'])) : 'Not sent yet'; ?></p>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <h6>Recipients</h6>
-                                                    <p><strong>Type:</strong> <?php echo ucfirst($comm['recipient_type']); ?></p>
+                                                    <p><strong>Type:</strong> <?php echo !empty($comm['recipient_type']) ? ucfirst($comm['recipient_type']) : 'N/A'; ?></p>
                                                     <p><strong>Count:</strong> <?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</p>
                                                     <?php if (!empty($comm['recipient_group'])): ?>
                                                     <p><strong>Group:</strong> <?php echo ucfirst($comm['recipient_group']); ?></p>
@@ -213,11 +213,11 @@
                                             </div>
                                             
                                             <h6>Subject</h6>
-                                            <p><?php echo htmlspecialchars($comm['subject']); ?></p>
+                                            <p><?php echo htmlspecialchars($comm['subject'] ?? ''); ?></p>
                                             
                                             <h6>Message</h6>
                                             <div class="border p-3 bg-light">
-                                                <?php echo nl2br(htmlspecialchars($comm['message'])); ?>
+                                                <?php echo nl2br(htmlspecialchars($comm['message'] ?? '')); ?>
                                             </div>
 
                                             <?php if (!empty($comm['error_message'])): ?>

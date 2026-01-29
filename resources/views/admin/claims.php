@@ -139,7 +139,7 @@
                                     <div>
                                         <strong><?php echo htmlspecialchars($claim['deceased_name']); ?></strong><br>
                                         <small class="text-muted">
-                                            <?php echo ucfirst($claim['relationship_to_deceased']); ?>
+                                            <?php echo !empty($claim['relationship_to_deceased']) ? ucfirst($claim['relationship_to_deceased']) : 'N/A'; ?>
                                         </small>
                                     </div>
                                 </td>

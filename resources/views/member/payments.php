@@ -1,6 +1,8 @@
 
-<?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
-
+<?php
+$page = 'payments';
+include VIEWS_PATH . '/layouts/member-header.php';
+?>
 
 <div class="container py-4">
     <h2 class="mb-4"><i class="fas fa-money-bill-wave"></i> Payment History</h2>
@@ -54,12 +56,12 @@
                     <tbody>
                         <?php foreach ($payments as $payment): ?>
                         <tr>
-                            <td><?php echo date('M j, Y', strtotime($payment['payment_date'])); ?></td>
+                            <td><?php echo date('M j, Y', strtotime($payment['payment_date'] ?? $payment['created_at'])); ?></td>
                             <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
-                            <td><?php echo ucfirst($payment['payment_type']); ?></td>
-                            <td><?php echo strtoupper($payment['payment_method']); ?></td>
+                            <td><?php echo !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly'; ?></td>
+                            <td><?php echo !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A'; ?></td>
                             <td><?php echo $payment['transaction_id'] ?? 'N/A'; ?></td>
-                            <td><span class="badge bg-<?php echo $payment['status'] === 'completed' ? 'success' : ($payment['status'] === 'failed' ? 'danger' : 'warning'); ?>"><?php echo ucfirst($payment['status']); ?></span></td>
+                            <td><span class="badge bg-<?php echo $payment['status'] === 'completed' ? 'success' : ($payment['status'] === 'failed' ? 'danger' : 'warning'); ?>"><?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?></span></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

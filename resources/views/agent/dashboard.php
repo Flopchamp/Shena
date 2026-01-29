@@ -10,7 +10,7 @@
         </div>
         <div class="col-md-4 text-end">
             <span class="badge bg-<?php echo $agent['status'] === 'active' ? 'success' : 'warning'; ?> fs-6">
-                <i class="fas fa-circle" style="font-size: 8px;"></i> <?php echo ucfirst($agent['status']); ?>
+                <i class="fas fa-circle" style="font-size: 8px;"></i> <?php echo !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending'; ?>
             </span>
         </div>
     </div>
@@ -175,7 +175,7 @@
                                         </small>
                                     </div>
                                     <span class="badge bg-<?php echo $member['status'] === 'active' ? 'success' : ($member['status'] === 'inactive' ? 'secondary' : 'warning'); ?>">
-                                        <?php echo ucfirst($member['status']); ?>
+                                        <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
                                     </span>
                                 </div>
                             </div>
@@ -222,7 +222,7 @@
                                         echo $commission['status'] === 'paid' ? 'success' : 
                                              ($commission['status'] === 'pending' ? 'warning' : 'secondary'); 
                                     ?>">
-                                        <?php echo ucfirst($commission['status']); ?>
+                                        <?php echo !empty($commission['status']) ? ucfirst($commission['status']) : 'Pending'; ?>
                                     </span>
                                 </div>
                             </div>
@@ -251,7 +251,7 @@
                                             </small>
                                         </div>
                                         <span class="badge bg-<?= $commission['status'] === 'paid' ? 'success' : ($commission['status'] === 'approved' ? 'info' : 'warning') ?>">
-                                            <?= ucfirst($commission['status']) ?>
+                                            <?= !empty($commission['status']) ? ucfirst($commission['status']) : 'Pending' ?>
                                         </span>
                                     </div>
                                 </div>

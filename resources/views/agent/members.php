@@ -64,7 +64,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-info">
-                                    <?php echo ucfirst($member['package']); ?>
+                                    <?php echo !empty($member['package']) ? ucfirst($member['package']) : 'Individual'; ?>
                                 </span>
                             </td>
                             <td>
@@ -73,7 +73,7 @@
                                          ($member['status'] === 'inactive' ? 'secondary' : 
                                          ($member['status'] === 'grace_period' ? 'warning' : 'danger')); 
                                 ?>">
-                                    <?php echo ucfirst(str_replace('_', ' ', $member['status'])); ?>
+                                    <?php echo !empty($member['status']) ? ucfirst(str_replace('_', ' ', $member['status'])) : 'Pending'; ?>
                                 </span>
                             </td>
                             <td>
