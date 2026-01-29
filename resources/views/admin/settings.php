@@ -1,216 +1,280 @@
-<?php include_once VIEWS_PATH . '/admin/admin-header.php'; ?>
+<?php
+$page = 'settings';
+$pageTitle = 'System Settings';
+$pageSubtitle = 'Configure system-wide preferences and integrations';
+include VIEWS_PATH . '/layouts/dashboard-header.php';
+?>
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">System Settings</h1>
-    <small class="text-muted">Configure system-wide settings and preferences</small>
-</div>
-
-<div class="row">
-    <div class="col-lg-8">
-        <form method="POST" action="/admin/settings">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-            
-            <!-- General Settings -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">General Settings</h6>
+<form method="POST" action="/admin/settings">
+    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+    
+    <!-- General Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-gear-fill"></i> General Settings</h4>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label" for="app_name">Application Name</label>
+                    <input type="text" 
+                           id="app_name" 
+                           name="app_name" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['app_name'] ?? 'Shena Companion Welfare'); ?>" 
+                           required>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="app_name" class="form-label">Application Name</label>
-                                <input type="text" class="form-control" id="app_name" name="app_name" 
-                                       value="<?php echo htmlspecialchars($settings['app_name'] ?? 'Shena Companion Welfare'); ?>" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="admin_email" class="form-label">Admin Email</label>
-                                <input type="email" class="form-control" id="admin_email" name="admin_email" 
-                                       value="<?php echo htmlspecialchars($settings['admin_email'] ?? ''); ?>" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="session_timeout" class="form-label">Session Timeout (seconds)</label>
-                                <input type="number" class="form-control" id="session_timeout" name="session_timeout" 
-                                       value="<?php echo $settings['session_timeout'] ?? 3600; ?>" min="300" max="86400" required>
-                                <div class="form-text">Minimum: 300 (5 minutes), Maximum: 86400 (24 hours)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="max_upload_size" class="form-label">Max Upload Size</label>
-                                <select class="form-control" id="max_upload_size" name="max_upload_size">
-                                    <option value="1MB" <?php echo ($settings['max_upload_size'] ?? '2MB') === '1MB' ? 'selected' : ''; ?>>1 MB</option>
-                                    <option value="2MB" <?php echo ($settings['max_upload_size'] ?? '2MB') === '2MB' ? 'selected' : ''; ?>>2 MB</option>
-                                    <option value="5MB" <?php echo ($settings['max_upload_size'] ?? '2MB') === '5MB' ? 'selected' : ''; ?>>5 MB</option>
-                                    <option value="10MB" <?php echo ($settings['max_upload_size'] ?? '2MB') === '10MB' ? 'selected' : ''; ?>>10 MB</option>
-                                    <option value="20MB" <?php echo ($settings['max_upload_size'] ?? '2MB') === '20MB' ? 'selected' : ''; ?>>20 MB</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="admin_email">Admin Email</label>
+                    <input type="email" 
+                           id="admin_email" 
+                           name="admin_email" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['admin_email'] ?? ''); ?>" 
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="contact_phone">Contact Phone</label>
+                    <input type="tel" 
+                           id="contact_phone" 
+                           name="contact_phone" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['contact_phone'] ?? ''); ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="session_timeout">Session Timeout (minutes)</label>
+                    <input type="number" 
+                           id="session_timeout" 
+                           name="session_timeout" 
+                           class="form-control" 
+                           value="<?php echo ($settings['session_timeout'] ?? 3600) / 60; ?>" 
+                           min="5" 
+                           max="1440" 
+                           required>
+                    <small style="color: var(--medium-grey); font-size: 0.75rem;">Min: 5 minutes, Max: 24 hours</small>
                 </div>
             </div>
-
-            <!-- Feature Settings -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Feature Settings</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="email_enabled" name="email_enabled" 
-                                       <?php echo !empty($settings['email_enabled']) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="email_enabled">
-                                    <strong>Email Notifications</strong>
-                                    <div class="form-text">Enable email notifications for members and admins</div>
-                                </label>
-                            </div>
-                            
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled" 
-                                       <?php echo !empty($settings['sms_enabled']) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="sms_enabled">
-                                    <strong>SMS Notifications</strong>
-                                    <div class="form-text">Enable SMS notifications via Twilio</div>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="mpesa_enabled" name="mpesa_enabled" 
-                                       <?php echo !empty($settings['mpesa_enabled']) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="mpesa_enabled">
-                                    <strong>M-Pesa Integration</strong>
-                                    <div class="form-text">Enable M-Pesa payment processing</div>
-                                </label>
-                            </div>
-                            
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" 
-                                       <?php echo !empty($settings['maintenance_mode']) ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="maintenance_mode">
-                                    <strong>Maintenance Mode</strong>
-                                    <div class="form-text text-warning">⚠️ Disable public access to the website</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Membership Settings -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Membership Settings</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="default_package" class="form-label">Default Package</label>
-                                <select class="form-control" id="default_package" name="default_package">
-                                    <option value="individual" <?php echo ($settings['default_package'] ?? 'individual') === 'individual' ? 'selected' : ''; ?>>Individual</option>
-                                    <option value="family" <?php echo ($settings['default_package'] ?? 'individual') === 'family' ? 'selected' : ''; ?>>Family</option>
-                                    <option value="premium" <?php echo ($settings['default_package'] ?? 'individual') === 'premium' ? 'selected' : ''; ?>>Premium</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="base_contribution" class="form-label">Base Monthly Contribution (KES)</label>
-                                <input type="number" class="form-control" id="base_contribution" name="base_contribution" 
-                                       value="<?php echo $settings['base_contribution'] ?? 500; ?>" min="100" max="10000" required>
-                                <div class="form-text">Base amount before age and package adjustments</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Save Settings -->
-            <div class="card shadow mb-4">
-                <div class="card-body text-center">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save me-2"></i>Save Settings
-                    </button>
-                    <button type="reset" class="btn btn-secondary btn-lg ms-2">
-                        <i class="fas fa-undo me-2"></i>Reset
-                    </button>
-                </div>
-            </div>
-        </form>
+        </div>
     </div>
     
-    <!-- Settings Help -->
-    <div class="col-lg-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Settings Help</h6>
-            </div>
-            <div class="card-body">
-                <h6><i class="fas fa-info-circle text-info me-2"></i>General Settings</h6>
-                <p class="small text-muted mb-3">
-                    Configure basic application settings like name, admin email, and session timeouts.
-                </p>
+    <!-- Feature Toggles -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-toggles"></i> Feature Settings</h4>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <div class="form-check" style="margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="email_enabled" 
+                               name="email_enabled" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['email_enabled']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="email_enabled">
+                            <strong style="color: var(--secondary-violet); display: block; margin-bottom: 0.25rem;">Email Notifications</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Send automated email notifications to members and admins</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check" style="margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="sms_enabled" 
+                               name="sms_enabled" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['sms_enabled']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="sms_enabled">
+                            <strong style="color: var(--secondary-violet); display: block; margin-bottom: 0.25rem;">SMS Notifications</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Enable SMS notifications via Twilio integration</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               id="mpesa_enabled" 
+                               name="mpesa_enabled" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['mpesa_enabled']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="mpesa_enabled">
+                            <strong style="color: var(--secondary-violet); display: block; margin-bottom: 0.25rem;">M-Pesa Integration</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Process payments through Safaricom M-Pesa</span>
+                        </label>
+                    </div>
+                </div>
                 
-                <h6><i class="fas fa-toggle-on text-success me-2"></i>Feature Settings</h6>
-                <p class="small text-muted mb-3">
-                    Enable or disable specific features like email notifications, SMS, M-Pesa payments, and maintenance mode.
-                </p>
-                
-                <h6><i class="fas fa-users text-primary me-2"></i>Membership Settings</h6>
-                <p class="small text-muted mb-3">
-                    Set default membership package and base contribution amounts for new members.
-                </p>
-                
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Important:</strong> Some settings may require server restart to take full effect.
+                <div>
+                    <div class="form-check" style="margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="agent_registration" 
+                               name="agent_registration" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['agent_registration']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="agent_registration">
+                            <strong style="color: var(--secondary-violet); display: block; margin-bottom: 0.25rem;">Agent Registration</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Allow new agent registrations and recruitment</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check" style="margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="public_registration" 
+                               name="public_registration" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['public_registration']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="public_registration">
+                            <strong style="color: var(--secondary-violet); display: block; margin-bottom: 0.25rem;">Public Registration</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Allow members to self-register online</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               id="maintenance_mode" 
+                               name="maintenance_mode" 
+                               class="form-check-input" 
+                               <?php echo !empty($settings['maintenance_mode']) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="maintenance_mode">
+                            <strong style="color: var(--danger-red); display: block; margin-bottom: 0.25rem;">Maintenance Mode</strong>
+                            <span style="font-size: 0.875rem; color: var(--medium-grey);">Disable public access for system maintenance</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Current System Status</h6>
+    </div>
+    
+    <!-- Payment Settings -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-credit-card-fill"></i> Payment Settings</h4>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label" for="mpesa_paybill">M-Pesa Paybill Number</label>
+                    <input type="text" 
+                           id="mpesa_paybill" 
+                           name="mpesa_paybill" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['mpesa_paybill'] ?? '4163987'); ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="mpesa_shortcode">M-Pesa Shortcode</label>
+                    <input type="text" 
+                           id="mpesa_shortcode" 
+                           name="mpesa_shortcode" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['mpesa_shortcode'] ?? ''); ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="payment_grace_period">Payment Grace Period (days)</label>
+                    <input type="number" 
+                           id="payment_grace_period" 
+                           name="payment_grace_period" 
+                           class="form-control" 
+                           value="<?php echo $settings['payment_grace_period'] ?? 7; ?>" 
+                           min="0" 
+                           max="30">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="agent_commission_rate">Agent Commission Rate (%)</label>
+                    <input type="number" 
+                           id="agent_commission_rate" 
+                           name="agent_commission_rate" 
+                           class="form-control" 
+                           value="<?php echo $settings['agent_commission_rate'] ?? 10; ?>" 
+                           min="0" 
+                           max="100" 
+                           step="0.1">
+                </div>
             </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>Email Service:</span>
-                    <span class="badge bg-<?php echo $settings['email_enabled'] ? 'success' : 'secondary'; ?>">
-                        <?php echo $settings['email_enabled'] ? 'Enabled' : 'Disabled'; ?>
-                    </span>
+        </div>
+    </div>
+    
+    <!-- Notification Settings -->
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-bell-fill"></i> Notification Settings</h4>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label" for="smtp_host">SMTP Host</label>
+                    <input type="text" 
+                           id="smtp_host" 
+                           name="smtp_host" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['smtp_host'] ?? ''); ?>">
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>SMS Service:</span>
-                    <span class="badge bg-<?php echo $settings['sms_enabled'] ? 'success' : 'secondary'; ?>">
-                        <?php echo $settings['sms_enabled'] ? 'Enabled' : 'Disabled'; ?>
-                    </span>
+                
+                <div class="form-group">
+                    <label class="form-label" for="smtp_port">SMTP Port</label>
+                    <input type="number" 
+                           id="smtp_port" 
+                           name="smtp_port" 
+                           class="form-control" 
+                           value="<?php echo $settings['smtp_port'] ?? 587; ?>">
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>M-Pesa:</span>
-                    <span class="badge bg-<?php echo $settings['mpesa_enabled'] ? 'success' : 'secondary'; ?>">
-                        <?php echo $settings['mpesa_enabled'] ? 'Enabled' : 'Disabled'; ?>
-                    </span>
+                
+                <div class="form-group">
+                    <label class="form-label" for="smtp_username">SMTP Username</label>
+                    <input type="text" 
+                           id="smtp_username" 
+                           name="smtp_username" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>">
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>Maintenance:</span>
-                    <span class="badge bg-<?php echo $settings['maintenance_mode'] ? 'warning' : 'success'; ?>">
-                        <?php echo $settings['maintenance_mode'] ? 'Active' : 'Inactive'; ?>
-                    </span>
+                
+                <div class="form-group">
+                    <label class="form-label" for="twilio_phone">Twilio Phone Number</label>
+                    <input type="tel" 
+                           id="twilio_phone" 
+                           name="twilio_phone" 
+                           class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['twilio_phone'] ?? ''); ?>">
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+        <button type="reset" class="btn btn-outline">
+            <i class="bi bi-x-circle"></i> Reset
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle-fill"></i> Save Settings
+        </button>
+    </div>
+</form>
+
+<!-- System Information -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h4 style="margin: 0;"><i class="bi bi-info-circle-fill"></i> System Information</h4>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+            <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--medium-grey); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">PHP Version:</label>
+                <span style="color: var(--secondary-violet); font-weight: 600;"><?php echo phpversion(); ?></span>
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--medium-grey); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">Server Software:</label>
+                <span style="color: var(--secondary-violet); font-weight: 600;"><?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'N/A'; ?></span>
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--medium-grey); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">Application Version:</label>
+                <span style="color: var(--secondary-violet); font-weight: 600;">1.0.0</span>
             </div>
         </div>
     </div>
 </div>
 
-<?php include_once VIEWS_PATH . '/admin/admin-footer.php'; ?>
+<?php include VIEWS_PATH . '/layouts/dashboard-footer.php'; ?>

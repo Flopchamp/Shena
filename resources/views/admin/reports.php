@@ -1,453 +1,291 @@
-<?php include_once 'admin-header.php'; ?>
+<?php
+$page = 'reports';
+$pageTitle = 'Reports & Analytics';
+$pageSubtitle = 'View comprehensive reports and business insights';
+include VIEWS_PATH . '/layouts/dashboard-header.php';
+?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-chart-bar mr-2"></i>Reports & Analytics
-        </h1>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary" onclick="exportReport('pdf')">
-                <i class="fas fa-file-pdf mr-2"></i>Export PDF
+<!-- Report Filters -->
+<div class="card">
+    <div class="card-header">
+        <h4 style="margin: 0;"><i class="bi bi-sliders"></i> Report Configuration</h4>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/admin/reports" style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 1rem; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="report_type">Report Type</label>
+                <select id="report_type" name="report_type" class="form-select">
+                    <option value="overview" <?php echo ($_GET['report_type'] ?? 'overview') === 'overview' ? 'selected' : ''; ?>>Overview</option>
+                    <option value="members" <?php echo ($_GET['report_type'] ?? '') === 'members' ? 'selected' : ''; ?>>Members Report</option>
+                    <option value="payments" <?php echo ($_GET['report_type'] ?? '') === 'payments' ? 'selected' : ''; ?>>Payments Report</option>
+                    <option value="claims" <?php echo ($_GET['report_type'] ?? '') === 'claims' ? 'selected' : ''; ?>>Claims Report</option>
+                    <option value="agents" <?php echo ($_GET['report_type'] ?? '') === 'agents' ? 'selected' : ''; ?>>Agents Report</option>
+                    <option value="financial" <?php echo ($_GET['report_type'] ?? '') === 'financial' ? 'selected' : ''; ?>>Financial Summary</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="date_from">Date From</label>
+                <input type="date" 
+                       id="date_from" 
+                       name="date_from" 
+                       class="form-control" 
+                       value="<?php echo $_GET['date_from'] ?? date('Y-m-01'); ?>">
+            </div>
+            
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="date_to">Date To</label>
+                <input type="date" 
+                       id="date_to" 
+                       name="date_to" 
+                       class="form-control" 
+                       value="<?php echo $_GET['date_to'] ?? date('Y-m-d'); ?>">
+            </div>
+            
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="format">Export Format</label>
+                <select id="format" name="format" class="form-select">
+                    <option value="pdf">PDF Document</option>
+                    <option value="excel">Excel Spreadsheet</option>
+                    <option value="csv">CSV File</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i> Generate
             </button>
-            <button type="button" class="btn btn-success" onclick="exportReport('excel')">
-                <i class="fas fa-file-excel mr-2"></i>Export Excel
-            </button>
-        </div>
+        </form>
     </div>
-
-    <!-- Report Filters -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Report Filters</h6>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="/admin/reports">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Report Type</label>
-                            <select name="report_type" class="form-control">
-                                <option value="overview" <?php echo ($_GET['report_type'] ?? '') === 'overview' ? 'selected' : ''; ?>>Overview</option>
-                                <option value="members" <?php echo ($_GET['report_type'] ?? '') === 'members' ? 'selected' : ''; ?>>Members</option>
-                                <option value="payments" <?php echo ($_GET['report_type'] ?? '') === 'payments' ? 'selected' : ''; ?>>Payments</option>
-                                <option value="claims" <?php echo ($_GET['report_type'] ?? '') === 'claims' ? 'selected' : ''; ?>>Claims</option>
-                                <option value="financial" <?php echo ($_GET['report_type'] ?? '') === 'financial' ? 'selected' : ''; ?>>Financial</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Date From</label>
-                            <input type="date" name="date_from" class="form-control" value="<?php echo $_GET['date_from'] ?? date('Y-m-01'); ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Date To</label>
-                            <input type="date" name="date_to" class="form-control" value="<?php echo $_GET['date_to'] ?? date('Y-m-d'); ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button type="submit" class="btn btn-primary btn-block">Generate Report</button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Key Metrics Overview -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Members
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo $totalMembers ?? 0; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Revenue
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format($totalRevenue ?? 0, 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Claims Paid
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format($totalClaimsPaid ?? 0, 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-file-medical fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Net Income
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format(($totalRevenue ?? 0) - ($totalClaimsPaid ?? 0), 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <!-- Revenue Chart -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Monthly Revenue Trend</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Member Growth Chart -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Member Growth</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-pie pt-4 pb-2">
-                        <canvas id="memberChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small">
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-primary"></i> Active
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-success"></i> Inactive
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-info"></i> Pending
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed Reports Tables -->
-    <?php if (($_GET['report_type'] ?? 'overview') === 'members'): ?>
-    <!-- Member Report -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Member Registration Report</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Member Number</th>
-                            <th>Name</th>
-                            <th>Package</th>
-                            <th>Status</th>
-                            <th>Join Date</th>
-                            <th>Last Payment</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($memberReports)): ?>
-                            <?php foreach ($memberReports as $member): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($member['member_number']); ?></td>
-                                <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
-                                <td><?php echo !empty($member['package_type']) ? ucfirst($member['package_type']) : 'Individual'; ?></td>
-                                <td>
-                                    <span class="badge badge-<?php echo $member['status'] === 'active' ? 'success' : 'warning'; ?>">
-                                        <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y', strtotime($member['created_at'])); ?></td>
-                                <td><?php echo $member['last_payment'] ? date('M j, Y', strtotime($member['last_payment'])) : 'N/A'; ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No member data available</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <?php elseif (($_GET['report_type'] ?? 'overview') === 'payments'): ?>
-    <!-- Payment Report -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Payment Transaction Report</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Member</th>
-                            <th>Amount</th>
-                            <th>Type</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($paymentReports)): ?>
-                            <?php foreach ($paymentReports as $payment): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($payment['transaction_id']); ?></td>
-                                <td><?php echo htmlspecialchars($payment['member_name']); ?></td>
-                                <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
-                                <td><?php echo !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly'; ?></td>
-                                <td><?php echo !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A'; ?></td>
-                                <td>
-                                    <span class="badge badge-<?php echo $payment['status'] === 'completed' ? 'success' : 'warning'; ?>">
-                                        <?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y', strtotime($payment['created_at'])); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center">No payment data available</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <?php elseif (($_GET['report_type'] ?? 'overview') === 'claims'): ?>
-    <!-- Claims Report -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Claims Processing Report</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Claim ID</th>
-                            <th>Member</th>
-                            <th>Deceased Name</th>
-                            <th>Claim Amount</th>
-                            <th>Status</th>
-                            <th>Submitted</th>
-                            <th>Processed</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($claimReports)): ?>
-                            <?php foreach ($claimReports as $claim): ?>
-                            <tr>
-                                <td>#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
-                                <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
-                                <td>KES <?php echo number_format($claim['claim_amount'], 2); ?></td>
-                                <td>
-                                    <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>">
-                                        <?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
-                                <td><?php echo $claim['processed_at'] ? date('M j, Y', strtotime($claim['processed_at'])) : 'N/A'; ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center">No claims data available</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <?php else: ?>
-    <!-- Overview Report -->
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Member Summary</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <p><strong>Total Members:</strong> <?php echo $totalMembers ?? 0; ?></p>
-                            <p><strong>Active Members:</strong> <?php echo $activeMembers ?? 0; ?></p>
-                            <p><strong>Inactive Members:</strong> <?php echo $inactiveMembers ?? 0; ?></p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p><strong>New This Month:</strong> <?php echo $newMembersThisMonth ?? 0; ?></p>
-                            <p><strong>Pending Applications:</strong> <?php echo $pendingMembers ?? 0; ?></p>
-                            <p><strong>Renewal Due:</strong> <?php echo $renewalDue ?? 0; ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Financial Summary</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <p><strong>Total Revenue:</strong> KES <?php echo number_format($totalRevenue ?? 0, 2); ?></p>
-                            <p><strong>This Month:</strong> KES <?php echo number_format($monthlyRevenue ?? 0, 2); ?></p>
-                            <p><strong>Claims Paid:</strong> KES <?php echo number_format($totalClaimsPaid ?? 0, 2); ?></p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p><strong>Net Income:</strong> KES <?php echo number_format(($totalRevenue ?? 0) - ($totalClaimsPaid ?? 0), 2); ?></p>
-                            <p><strong>Pending Payments:</strong> <?php echo $pendingPayments ?? 0; ?></p>
-                            <p><strong>Failed Payments:</strong> <?php echo $failedPayments ?? 0; ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Key Metrics Overview -->
+<div class="stats-grid" style="margin-top: 2rem;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-primary);">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($totalMembers ?? 0); ?></div>
+            <div class="stat-label">Total Members</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-success);">
+            <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value">KES <?php echo number_format($totalRevenue ?? 0); ?></div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-info);">
+            <i class="bi bi-file-medical-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($totalClaims ?? 0); ?></div>
+            <div class="stat-label">Total Claims</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-warning);">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($growthRate ?? 0, 1); ?>%</div>
+            <div class="stat-label">Growth Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+    <!-- Revenue Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-bar-chart-fill"></i> Monthly Revenue</h4>
+        </div>
+        <div class="card-body">
+            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    
+    <!-- Membership Growth Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-graph-up"></i> Membership Growth</h4>
+        </div>
+        <div class="card-body">
+            <canvas id="membershipChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+    <!-- Members Statistics -->
+    <div class="card">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-people-fill"></i> Member Statistics</h4>
+        </div>
+        <div class="card-body">
+            <div class="info-grid" style="gap: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Active Members:</span>
+                    <span style="font-weight: 700; color: var(--primary-purple); font-size: 1.125rem;">
+                        <?php echo number_format($activeMembers ?? 0); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Pending Approval:</span>
+                    <span style="font-weight: 700; color: var(--warning-yellow); font-size: 1.125rem;">
+                        <?php echo number_format($pendingMembers ?? 0); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Inactive Members:</span>
+                    <span style="font-weight: 700; color: var(--medium-grey); font-size: 1.125rem;">
+                        <?php echo number_format($inactiveMembers ?? 0); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--medium-grey);">New This Month:</span>
+                    <span style="font-weight: 700; color: var(--success-green); font-size: 1.125rem;">
+                        <?php echo number_format($newMembersThisMonth ?? 0); ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary -->
+    <div class="card">
+        <div class="card-header">
+            <h4 style="margin: 0;"><i class="bi bi-wallet-fill"></i> Financial Summary</h4>
+        </div>
+        <div class="card-body">
+            <div class="info-grid" style="gap: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Total Collections:</span>
+                    <span style="font-weight: 700; color: var(--success-green); font-size: 1.125rem;">
+                        KES <?php echo number_format($totalCollections ?? 0, 2); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Claims Paid:</span>
+                    <span style="font-weight: 700; color: var(--danger-red); font-size: 1.125rem;">
+                        KES <?php echo number_format($claimsPaid ?? 0, 2); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--light-grey);">
+                    <span style="color: var(--medium-grey);">Agent Commissions:</span>
+                    <span style="font-weight: 700; color: var(--warning-yellow); font-size: 1.125rem;">
+                        KES <?php echo number_format($agentCommissions ?? 0, 2); ?>
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--medium-grey);">Net Balance:</span>
+                    <span style="font-weight: 700; color: var(--primary-purple); font-size: 1.125rem;">
+                        KES <?php echo number_format($netBalance ?? 0, 2); ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Claims Statistics -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h4 style="margin: 0;"><i class="bi bi-clipboard-data-fill"></i> Claims Analysis</h4>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;">
+            <div style="text-align: center; padding: 1.5rem; background: var(--soft-grey); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-purple); margin-bottom: 0.5rem;">
+                    <?php echo number_format($totalClaims ?? 0); ?>
+                </div>
+                <div style="color: var(--medium-grey); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+                    Total Claims
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 1.5rem; background: var(--soft-grey); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--warning-yellow); margin-bottom: 0.5rem;">
+                    <?php echo number_format($pendingClaims ?? 0); ?>
+                </div>
+                <div style="color: var(--medium-grey); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+                    Pending
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 1.5rem; background: var(--soft-grey); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--success-green); margin-bottom: 0.5rem;">
+                    <?php echo number_format($approvedClaims ?? 0); ?>
+                </div>
+                <div style="color: var(--medium-grey); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+                    Approved
+                </div>
+            </div>
+            
+            <div style="text-align: center; padding: 1.5rem; background: var(--soft-grey); border-radius: var(--radius-md);">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--danger-red); margin-bottom: 0.5rem;">
+                    <?php echo number_format($rejectedClaims ?? 0); ?>
+                </div>
+                <div style="color: var(--medium-grey); text-transform: uppercase; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+                    Rejected
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Actions -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h4 style="margin: 0;"><i class="bi bi-download"></i> Quick Export Options</h4>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+            <button class="btn btn-outline" onclick="exportReport('members-list')">
+                <i class="bi bi-people-fill"></i> Export Members List
+            </button>
+            <button class="btn btn-outline" onclick="exportReport('payments-summary')">
+                <i class="bi bi-cash-stack"></i> Export Payments Summary
+            </button>
+            <button class="btn btn-outline" onclick="exportReport('claims-report')">
+                <i class="bi bi-file-medical-fill"></i> Export Claims Report
+            </button>
+            <button class="btn btn-outline" onclick="exportReport('financial-summary')">
+                <i class="bi bi-wallet-fill"></i> Export Financial Summary
+            </button>
+            <button class="btn btn-outline" onclick="exportReport('agents-performance')">
+                <i class="bi bi-person-badge-fill"></i> Export Agents Performance
+            </button>
+            <button class="btn btn-primary" onclick="exportReport('comprehensive')">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i> Export Comprehensive Report
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-// Revenue Chart
-const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-const revenueChart = new Chart(revenueCtx, {
-    type: 'line',
-    data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        datasets: [{
-            label: 'Monthly Revenue',
-            data: <?php echo json_encode($monthlyRevenueData ?? array_fill(0, 12, 0)); ?>,
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            tension: 0.1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return 'KES ' + value.toLocaleString();
-                    }
-                }
-            }
-        }
-    }
-});
-
-// Member Chart
-const memberCtx = document.getElementById('memberChart').getContext('2d');
-const memberChart = new Chart(memberCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Active', 'Inactive', 'Pending'],
-        datasets: [{
-            data: [
-                <?php echo $activeMembers ?? 0; ?>,
-                <?php echo $inactiveMembers ?? 0; ?>,
-                <?php echo $pendingMembers ?? 0; ?>
-            ],
-            backgroundColor: ['#1cc88a', '#36b9cc', '#f6c23e'],
-            hoverBackgroundColor: ['#17a673', '#2c9faf', '#f4b619'],
-            hoverBorderColor: "rgba(234, 236, 244, 1)",
-        }],
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        }
-    }
-});
-
-function exportReport(format) {
-    const reportType = new URLSearchParams(window.location.search).get('report_type') || 'overview';
-    const dateFrom = new URLSearchParams(window.location.search).get('date_from') || '';
-    const dateTo = new URLSearchParams(window.location.search).get('date_to') || '';
+function exportReport(type) {
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    const format = document.getElementById('format').value;
     
-    let url = `/admin/reports/export?format=${format}&type=${reportType}`;
-    if (dateFrom) url += `&date_from=${dateFrom}`;
-    if (dateTo) url += `&date_to=${dateTo}`;
-    
-    window.open(url, '_blank');
+    window.location.href = `/admin/reports/export?type=${type}&date_from=${dateFrom}&date_to=${dateTo}&format=${format}`;
 }
+
+// Placeholder for chart initialization - integrate with Chart.js when ready
+window.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts here using Chart.js
+    console.log('Charts will be initialized with actual data');
+});
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include VIEWS_PATH . '/layouts/dashboard-footer.php'; ?>

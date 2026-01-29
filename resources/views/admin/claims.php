@@ -1,381 +1,406 @@
-<?php include_once 'admin-header.php'; ?>
+<?php
+$page = 'claims';
+$pageTitle = 'Claims Management';
+$pageSubtitle = 'Process and manage member insurance claims';
+include VIEWS_PATH . '/layouts/dashboard-header.php';
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-file-medical mr-2"></i>Claims Management
-        </h1>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newClaimModal">
-            <i class="fas fa-plus mr-2"></i>New Claim
-        </button>
-    </div>
+// Calculate stats
+$pending_count = count(array_filter($claims ?? [], fn($c) => $c['status'] === 'pending'));
+$approved_count = count(array_filter($claims ?? [], fn($c) => $c['status'] === 'approved'));
+$rejected_count = count(array_filter($claims ?? [], fn($c) => $c['status'] === 'rejected'));
+$total_value = array_sum(array_column($claims ?? [], 'claim_amount'));
+?>
 
-    <!-- Claims Statistics -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'pending')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-warning);">
+            <i class="bi bi-clock-fill"></i>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Approved Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'approved')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Value
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format(array_sum(array_column($claims, 'claim_amount')), 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Rejected Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'rejected')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($pending_count); ?></div>
+            <div class="stat-label">Pending Claims</div>
         </div>
     </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-success);">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($approved_count); ?></div>
+            <div class="stat-label">Approved</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-danger);">
+            <i class="bi bi-x-circle-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($rejected_count); ?></div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-info);">
+            <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value">KES <?php echo number_format($total_value); ?></div>
+            <div class="stat-label">Total Value</div>
+        </div>
+    </div>
+</div>
 
-    <!-- Claims Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Insurance Claims</h6>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                    Filter by Status
+<!-- Search and Filter Card -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h4 style="margin: 0;"><i class="bi bi-funnel-fill"></i> Filter Claims</h4>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/admin/claims" style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 1rem; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="search">Search Claims</label>
+                <input type="text" 
+                       id="search" 
+                       name="search" 
+                       class="form-control" 
+                       placeholder="Member name or claim ID" 
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
+            </div>
+            
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="status">Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="pending" <?php echo ($status ?? '') === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                    <option value="approved" <?php echo ($status ?? '') === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                    <option value="rejected" <?php echo ($status ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                    <option value="processing" <?php echo ($status ?? '') === 'processing' ? 'selected' : ''; ?>>Processing</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+            
+            <a href="/admin/claims" class="btn btn-outline">
+                <i class="bi bi-x-circle"></i> Clear
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- Claims Table -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 style="margin: 0;"><i class="bi bi-file-medical-fill"></i> Claims List</h4>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-success btn-sm" onclick="window.location.href='/admin/export/claims'">
+                    <i class="bi bi-download"></i> Export
                 </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="/admin/claims">All Claims</a>
-                    <a class="dropdown-item" href="/admin/claims?status=pending">Pending</a>
-                    <a class="dropdown-item" href="/admin/claims?status=approved">Approved</a>
-                    <a class="dropdown-item" href="/admin/claims?status=rejected">Rejected</a>
-                </div>
+                <button class="btn btn-primary btn-sm" onclick="openModal('newClaimModal')">
+                    <i class="bi bi-plus-circle-fill"></i> New Claim
+                </button>
             </div>
         </div>
-        <div class="card-body">
-            <?php if (!empty($claims)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Claim ID</th>
-                                <th>Member</th>
-                                <th>Deceased Name</th>
-                                <th>Claim Amount</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($claims as $claim): ?>
-                            <tr>
-                                <td>#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?></strong><br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($claim['member_number']); ?></small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($claim['deceased_name']); ?></strong><br>
-                                        <small class="text-muted">
-                                            <?php echo !empty($claim['relationship_to_deceased']) ? ucfirst($claim['relationship_to_deceased']) : 'N/A'; ?>
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <strong>KES <?php echo number_format($claim['claim_amount'], 2); ?></strong>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?php 
-                                        echo match($claim['status']) {
-                                            'pending' => 'warning',
-                                            'approved' => 'success',
-                                            'rejected' => 'danger',
-                                            'processing' => 'info',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo ucfirst($claim['status']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#claimModal<?php echo $claim['id']; ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <?php if ($claim['status'] === 'pending'): ?>
-                                        <button type="button" class="btn btn-success btn-sm" onclick="approveClaim(<?php echo $claim['id']; ?>)">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="rejectClaim(<?php echo $claim['id']; ?>)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Claim Details Modal -->
-                            <div class="modal fade" id="claimModal<?php echo $claim['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Claim Details - #<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <h6>Claim Information</h6>
-                                                    <p><strong>Claim Amount:</strong> KES <?php echo number_format($claim['claim_amount'], 2); ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : 'warning'; ?>"><?php echo ucfirst($claim['status']); ?></span></p>
-                                                    <p><strong>Date Submitted:</strong> <?php echo date('M j, Y H:i', strtotime($claim['created_at'])); ?></p>
-                                                    <?php if (!empty($claim['processed_at'])): ?>
-                                                    <p><strong>Date Processed:</strong> <?php echo date('M j, Y H:i', strtotime($claim['processed_at'])); ?></p>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6>Member Information</h6>
-                                                    <p><strong>Name:</strong> <?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?></p>
-                                                    <p><strong>Member Number:</strong> <?php echo htmlspecialchars($claim['member_number']); ?></p>
-                                                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($claim['phone_number'] ?? 'N/A'); ?></p>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6>Deceased Information</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <p><strong>Full Name:</strong> <?php echo htmlspecialchars($claim['deceased_name']); ?></p>
-                                                            <p><strong>Relationship:</strong> <?php echo ucfirst($claim['relationship_to_deceased']); ?></p>
-                                                            <p><strong>Date of Death:</strong> <?php echo date('M j, Y', strtotime($claim['date_of_death'])); ?></p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <p><strong>Place of Death:</strong> <?php echo htmlspecialchars($claim['place_of_death'] ?? 'N/A'); ?></p>
-                                                            <p><strong>Cause of Death:</strong> <?php echo htmlspecialchars($claim['cause_of_death'] ?? 'N/A'); ?></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <?php if (!empty($claim['description'])): ?>
-                                            <hr>
-                                            <h6>Additional Information</h6>
-                                            <p><?php echo nl2br(htmlspecialchars($claim['description'])); ?></p>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($claim['supporting_documents'])): ?>
-                                            <hr>
-                                            <h6>Supporting Documents</h6>
-                                            <p><a href="/uploads/<?php echo htmlspecialchars($claim['supporting_documents']); ?>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-download mr-2"></i>View Documents
-                                            </a></p>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($claim['admin_notes'])): ?>
-                                            <hr>
-                                            <h6>Admin Notes</h6>
-                                            <div class="alert alert-info">
-                                                <?php echo nl2br(htmlspecialchars($claim['admin_notes'])); ?>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
+    </div>
+    <div class="card-body">
+        <?php if (!empty($claims)): ?>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Member</th>
+                        <th>Deceased Info</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($claims as $claim): ?>
+                    <tr>
+                        <td>
+                            <span style="font-family: var(--font-mono); font-weight: 600; color: var(--primary-purple);">
+                                #<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600; color: var(--secondary-violet);">
+                                    <?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--medium-grey);">
+                                    <?php echo htmlspecialchars($claim['member_number']); ?>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                        </td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600;">
+                                    <?php echo htmlspecialchars($claim['deceased_name']); ?>
+                                </div>
+                                <?php if (!empty($claim['relationship_to_deceased'])): ?>
+                                <div style="font-size: 0.75rem; color: var(--medium-grey);">
+                                    <?php echo ucfirst($claim['relationship_to_deceased']); ?>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--secondary-violet); font-family: var(--font-mono);">
+                                KES <?php echo number_format($claim['claim_amount'], 2); ?>
+                            </div>
+                        </td>
+                        <td>
+                            <?php
+                            $statusClass = match($claim['status']) {
+                                'pending' => 'badge-warning',
+                                'approved' => 'badge-success',
+                                'rejected' => 'badge-danger',
+                                'processing' => 'badge-info',
+                                default => 'badge-secondary'
+                            };
+                            ?>
+                            <span class="badge <?php echo $statusClass; ?>">
+                                <?php echo ucfirst($claim['status']); ?>
+                            </span>
+                        </td>
+                        <td><?php echo date('M d, Y', strtotime($claim['submitted_at'] ?? $claim['created_at'])); ?></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-info" 
+                                        onclick="viewClaim(<?php echo $claim['id']; ?>)"
+                                        title="View Details">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                
+                                <?php if ($claim['status'] === 'pending'): ?>
+                                <form method="POST" action="/admin/claim/approve" style="display: inline;" onsubmit="return confirm('Approve this claim?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                                    <input type="hidden" name="claim_id" value="<?php echo $claim['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="/admin/claim/reject" style="display: inline;" onsubmit="return confirm('Reject this claim?')">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                                    <input type="hidden" name="claim_id" value="<?php echo $claim['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Store claim data for modal -->
+                    <script>
+                        window.claimData = window.claimData || {};
+                        window.claimData[<?php echo $claim['id']; ?>] = {
+                            claim_id: "#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?>",
+                            member_name: "<?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?>",
+                            member_number: "<?php echo htmlspecialchars($claim['member_number']); ?>",
+                            deceased_name: "<?php echo htmlspecialchars($claim['deceased_name']); ?>",
+                            relationship: "<?php echo ucfirst($claim['relationship_to_deceased'] ?? 'N/A'); ?>",
+                            date_of_death: "<?php echo !empty($claim['date_of_death']) ? date('F d, Y', strtotime($claim['date_of_death'])) : 'N/A'; ?>",
+                            place_of_death: "<?php echo htmlspecialchars($claim['place_of_death'] ?? 'N/A'); ?>",
+                            cause_of_death: "<?php echo htmlspecialchars($claim['cause_of_death'] ?? 'N/A'); ?>",
+                            claim_amount: "KES <?php echo number_format($claim['claim_amount'], 2); ?>",
+                            status: "<?php echo ucfirst($claim['status']); ?>",
+                            submitted_at: "<?php echo date('F d, Y', strtotime($claim['submitted_at'] ?? $claim['created_at'])); ?>",
+                            notes: "<?php echo htmlspecialchars($claim['admin_notes'] ?? 'No notes'); ?>"
+                        };
+                    </script>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+        <div class="empty-state">
+            <i class="bi bi-file-medical" style="font-size: 4rem; color: var(--light-grey); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--medium-grey); margin-bottom: 0.5rem;">No Claims Found</h3>
+            <p style="color: var(--medium-grey);">
+                <?php echo !empty($search) ? 'Try adjusting your search criteria.' : 'Claims will appear here once submitted by members.'; ?>
+            </p>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Claim Details Modal -->
+<div class="modal" id="claimModal">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h3 id="modalClaimId" style="margin: 0;"></h3>
+            <button class="modal-close" onclick="closeModal('claimModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <!-- Member & Claim Information -->
+                <div>
+                    <h4 style="color: var(--secondary-violet); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-person-fill"></i> Member Information
+                    </h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Member Name:</label>
+                            <span id="modalMemberName"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Member Number:</label>
+                            <span id="modalMemberNumber"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Claim Status:</label>
+                            <span id="modalStatus"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Claim Amount:</label>
+                            <span id="modalAmount"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Submitted Date:</label>
+                            <span id="modalSubmitted"></span>
+                        </div>
+                    </div>
                 </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-file-medical fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No claims found</h5>
-                    <p class="text-gray-500">Insurance claims will appear here when members submit them.</p>
+                
+                <!-- Deceased Information -->
+                <div>
+                    <h4 style="color: var(--secondary-violet); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="bi bi-file-medical-fill"></i> Deceased Information
+                    </h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Deceased Name:</label>
+                            <span id="modalDeceasedName"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Relationship:</label>
+                            <span id="modalRelationship"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Date of Death:</label>
+                            <span id="modalDateOfDeath"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Place of Death:</label>
+                            <span id="modalPlaceOfDeath"></span>
+                        </div>
+                        <div class="info-item">
+                            <label>Cause of Death:</label>
+                            <span id="modalCauseOfDeath"></span>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
+            </div>
+            
+            <!-- Admin Notes -->
+            <div style="margin-top: 2rem;">
+                <h4 style="color: var(--secondary-violet); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-sticky-fill"></i> Admin Notes
+                </h4>
+                <div style="background: var(--soft-grey); padding: 1rem; border-radius: var(--radius-md);">
+                    <p id="modalNotes" style="margin: 0; color: var(--secondary-violet);"></p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('claimModal')">Close</button>
         </div>
     </div>
 </div>
 
 <!-- New Claim Modal -->
-<div class="modal fade" id="newClaimModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create New Claim</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+<div class="modal" id="newClaimModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 style="margin: 0;">Submit New Claim</h3>
+            <button class="modal-close" onclick="closeModal('newClaimModal')">&times;</button>
+        </div>
+        <form method="POST" action="/admin/claim/create">
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                
+                <div class="form-group">
+                    <label class="form-label" for="member_id">Select Member</label>
+                    <select id="member_id" name="member_id" class="form-select" required>
+                        <option value="">Choose a member...</option>
+                        <?php if (!empty($all_members)): ?>
+                            <?php foreach ($all_members as $member): ?>
+                            <option value="<?php echo $member['id']; ?>">
+                                <?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name'] . ' (' . $member['member_number'] . ')'); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="deceased_name">Deceased Name</label>
+                    <input type="text" id="deceased_name" name="deceased_name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="relationship_to_deceased">Relationship</label>
+                    <select id="relationship_to_deceased" name="relationship_to_deceased" class="form-select" required>
+                        <option value="">Select relationship...</option>
+                        <option value="self">Self</option>
+                        <option value="spouse">Spouse</option>
+                        <option value="parent">Parent</option>
+                        <option value="child">Child</option>
+                        <option value="sibling">Sibling</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="date_of_death">Date of Death</label>
+                    <input type="date" id="date_of_death" name="date_of_death" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="claim_amount">Claim Amount (KES)</label>
+                    <input type="number" id="claim_amount" name="claim_amount" class="form-control" min="0" step="0.01" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('newClaimModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle-fill"></i> Submit Claim
                 </button>
             </div>
-            <form method="POST" action="/admin/claims/create" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Member *</label>
-                                <select name="member_id" class="form-control" required>
-                                    <option value="">Select Member</option>
-                                    <!-- Members will be populated here -->
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Claim Amount *</label>
-                                <input type="number" name="claim_amount" class="form-control" step="0.01" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Deceased Name *</label>
-                                <input type="text" name="deceased_name" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Relationship to Deceased *</label>
-                                <select name="relationship_to_deceased" class="form-control" required>
-                                    <option value="">Select Relationship</option>
-                                    <option value="spouse">Spouse</option>
-                                    <option value="parent">Parent</option>
-                                    <option value="child">Child</option>
-                                    <option value="sibling">Sibling</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Date of Death *</label>
-                                <input type="date" name="date_of_death" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Place of Death</label>
-                                <input type="text" name="place_of_death" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Cause of Death</label>
-                        <input type="text" name="cause_of_death" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Supporting Documents</label>
-                        <input type="file" name="supporting_documents" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="form-text text-muted">Upload death certificate, medical reports, etc. (PDF, JPG, PNG)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Additional information about the claim..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Claim</button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
 <script>
-function approveClaim(claimId) {
-    const notes = prompt('Admin notes (optional):');
-    if (confirm('Approve this claim?')) {
-        // Implementation for approving claim
-        window.location.href = `/admin/claims/approve/${claimId}?notes=${encodeURIComponent(notes || '')}`;
-    }
-}
-
-function rejectClaim(claimId) {
-    const reason = prompt('Reason for rejection:');
-    if (reason) {
-        // Implementation for rejecting claim
-        window.location.href = `/admin/claims/reject/${claimId}?reason=${encodeURIComponent(reason)}`;
-    }
+function viewClaim(claimId) {
+    const claim = window.claimData[claimId];
+    if (!claim) return;
+    
+    document.getElementById('modalClaimId').textContent = claim.claim_id;
+    document.getElementById('modalMemberName').textContent = claim.member_name;
+    document.getElementById('modalMemberNumber').textContent = claim.member_number;
+    document.getElementById('modalStatus').textContent = claim.status;
+    document.getElementById('modalAmount').textContent = claim.claim_amount;
+    document.getElementById('modalSubmitted').textContent = claim.submitted_at;
+    document.getElementById('modalDeceasedName').textContent = claim.deceased_name;
+    document.getElementById('modalRelationship').textContent = claim.relationship;
+    document.getElementById('modalDateOfDeath').textContent = claim.date_of_death;
+    document.getElementById('modalPlaceOfDeath').textContent = claim.place_of_death;
+    document.getElementById('modalCauseOfDeath').textContent = claim.cause_of_death;
+    document.getElementById('modalNotes').textContent = claim.notes;
+    
+    openModal('claimModal');
 }
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include VIEWS_PATH . '/layouts/dashboard-footer.php'; ?>

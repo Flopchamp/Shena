@@ -1,39 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?php echo $title ?? 'Member Portal - Shena Companion'; ?></title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-	<style>
-		body { background: #f8f9fa; }
-		.member-navbar { background: #667eea; }
-		.member-navbar .navbar-brand, .member-navbar .nav-link, .member-navbar .navbar-text { color: #fff !important; }
-		.member-navbar .nav-link.active { font-weight: bold; text-decoration: underline; }
-		.sidebar { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-		.sidebar .nav-link { color: #667eea; }
-		.sidebar .nav-link.active, .sidebar .nav-link:hover { background: #f1f5fb; color: #5a67d8; }
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>SHENA Member Portal</title>
+    <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
-	<nav class="navbar navbar-expand-lg member-navbar mb-4">
-		<div class="container">
-			<a class="navbar-brand" href="/dashboard"><i class="fas fa-user-shield"></i> Member Portal</a>
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#memberNav">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="memberNav">
-				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'dashboard' ? ' active' : ''; ?>" href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'payments' ? ' active' : ''; ?>" href="/payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
-					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'beneficiaries' ? ' active' : ''; ?>" href="/beneficiaries"><i class="fas fa-users"></i> Beneficiaries</a></li>
-					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'claims' ? ' active' : ''; ?>" href="/claims"><i class="fas fa-file-medical"></i> Claims</a></li>
-					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'profile' ? ' active' : ''; ?>" href="/profile"><i class="fas fa-user-edit"></i> Profile</a></li>
-				</ul>
-				<span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($member['first_name'] ?? 'Member'); ?></span>
-				<a href="/logout" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</a>
-			</div>
-		</div>
-	</nav>
-	<main>
+
+<div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="memberSidebar" style="background: linear-gradient(135deg, #6A0DAD 0%, #8E2DE2 100%);">
+        <div class="dashboard-sidebar-brand">
+            <i class="bi bi-person-circle"></i> MEMBER PORTAL
+        </div>
+        
+        <ul class="dashboard-menu">
+            <li class="dashboard-menu-item">
+                <a href="/member/dashboard" class="dashboard-menu-link <?php echo isset($page) && $page == 'dashboard' ? 'active' : ''; ?>">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item">
+                <a href="/member/profile" class="dashboard-menu-link <?php echo isset($page) && $page == 'profile' ? 'active' : ''; ?>">
+                    <i class="bi bi-person-fill"></i> My Profile
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item">
+                <a href="/member/payments" class="dashboard-menu-link <?php echo isset($page) && $page == 'payments' ? 'active' : ''; ?>">
+                    <i class="bi bi-cash-stack"></i> Payments
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item">
+                <a href="/member/beneficiaries" class="dashboard-menu-link <?php echo isset($page) && $page == 'beneficiaries' ? 'active' : ''; ?>">
+                    <i class="bi bi-people-fill"></i> Beneficiaries
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item">
+                <a href="/member/claims" class="dashboard-menu-link <?php echo isset($page) && $page == 'claims' ? 'active' : ''; ?>">
+                    <i class="bi bi-file-earmark-text-fill"></i> Claims
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item">
+                <a href="/member/documents" class="dashboard-menu-link <?php echo isset($page) && $page == 'documents' ? 'active' : ''; ?>">
+                    <i class="bi bi-folder-fill"></i> Documents
+                </a>
+            </li>
+            
+            <li class="dashboard-menu-item" style="margin-top: auto; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                <a href="/logout" class="dashboard-menu-link">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Mobile Sidebar Toggle -->
+        <button data-sidebar-toggle class="btn btn-primary" style="position: fixed; top: 1rem; left: 1rem; z-index: 1001; display: none;">
+            <i class="bi bi-list"></i>
+        </button>
+        
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title"><?php echo isset($pageTitle) ? $pageTitle : 'Member Portal'; ?></h1>
+                <?php if (isset($pageSubtitle)): ?>
+                    <p class="text-muted" style="margin: 0;"><?php echo $pageSubtitle; ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Member Profile -->
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 40px; height: 40px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                        <?php 
+                            if (isset($member->first_name)) {
+                                echo strtoupper(substr($member->first_name, 0, 1));
+                            } else {
+                                echo 'M';
+                            }
+                        ?>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; font-size: 0.875rem;">
+                            <?php 
+                                if (isset($member->first_name)) {
+                                    echo htmlspecialchars($member->first_name . ' ' . $member->last_name);
+                                } else {
+                                    echo 'Member';
+                                }
+                            ?>
+                        </span>
+                        <span style="font-size: 0.75rem; color: var(--medium-grey);">
+                            ID: <?php echo isset($member->member_id) ? $member->member_id : 'N/A'; ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Page Content -->
+        <div class="dashboard-content">

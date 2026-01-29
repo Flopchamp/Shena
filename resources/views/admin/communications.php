@@ -1,367 +1,292 @@
-<?php include_once 'admin-header.php'; ?>
+<?php
+$page = 'communications';
+$pageTitle = 'Communications';
+$pageSubtitle = 'Send notifications and manage member communications';
+include VIEWS_PATH . '/layouts/dashboard-header.php';
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-comments mr-2"></i>Communications
-        </h1>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#sendEmailModal">
-                <i class="fas fa-envelope mr-2"></i>Send Email
-            </button>
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#sendSMSModal">
-                <i class="fas fa-sms mr-2"></i>Send SMS
-            </button>
+// Calculate stats
+$email_count = count(array_filter($communications ?? [], fn($c) => $c['type'] === 'email'));
+$sms_count = count(array_filter($communications ?? [], fn($c) => $c['type'] === 'sms'));
+$this_month = array_filter($communications ?? [], fn($c) => 
+    date('Y-m', strtotime($c['sent_at'])) === date('Y-m')
+);
+?>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-primary);">
+            <i class="bi bi-envelope-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($email_count); ?></div>
+            <div class="stat-label">Emails Sent</div>
         </div>
     </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-success);">
+            <i class="bi bi-chat-dots-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format($sms_count); ?></div>
+            <div class="stat-label">SMS Sent</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-info);">
+            <i class="bi bi-calendar-month-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format(count($this_month)); ?></div>
+            <div class="stat-label">This Month</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--gradient-warning);">
+            <i class="bi bi-megaphone-fill"></i>
+        </div>
+        <div class="stat-details">
+            <div class="stat-value"><?php echo number_format(count($communications ?? [])); ?></div>
+            <div class="stat-label">Total Sent</div>
+        </div>
+    </div>
+</div>
 
-    <!-- Communication Statistics -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Emails Sent
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['type'] === 'email')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                SMS Sent
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['type'] === 'sms')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-sms fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                This Month
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php 
-                                    $thisMonth = array_filter($communications, fn($c) => 
-                                        date('Y-m', strtotime($c['sent_at'])) === date('Y-m')
-                                    );
-                                    echo count($thisMonth);
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Failed
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['status'] === 'failed')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+<!-- Action Buttons -->
+<div style="display: flex; justify-content: flex-end; gap: 1rem; margin: 2rem 0 1.5rem;">
+    <button class="btn btn-success" onclick="openModal('sendSMSModal')">
+        <i class="bi bi-chat-dots-fill"></i> Send SMS
+    </button>
+    <button class="btn btn-primary" onclick="openModal('sendEmailModal')">
+        <i class="bi bi-envelope-fill"></i> Send Email
+    </button>
+</div>
+
+<!-- Communications History -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 style="margin: 0;"><i class="bi bi-clock-history"></i> Communication History</h4>
+            <div style="display: flex; gap: 0.5rem;">
+                <select class="form-select" style="width: 150px;" onchange="filterCommunications(this.value)">
+                    <option value="">All Types</option>
+                    <option value="email">Email Only</option>
+                    <option value="sms">SMS Only</option>
+                </select>
             </div>
         </div>
     </div>
-
-    <!-- Communications History -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Communication History</h6>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                    Filter
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="/admin/communications">All Communications</a>
-                    <a class="dropdown-item" href="/admin/communications?type=email">Emails Only</a>
-                    <a class="dropdown-item" href="/admin/communications?type=sms">SMS Only</a>
-                    <a class="dropdown-item" href="/admin/communications?status=failed">Failed Only</a>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <?php if (!empty($communications)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Recipients</th>
-                                <th>Subject</th>
-                                <th>Status</th>
-                                <th>Sent Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($communications as $comm): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge badge-<?php echo $comm['type'] === 'email' ? 'primary' : 'success'; ?>">
-                                        <i class="fas fa-<?php echo $comm['type'] === 'email' ? 'envelope' : 'sms'; ?> mr-1"></i>
-                                        <?php echo strtoupper($comm['type']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div>
-                                        <?php if ($comm['recipient_type'] === 'all'): ?>
-                                            <strong>All Members</strong>
-                                        <?php elseif ($comm['recipient_type'] === 'group'): ?>
-                                            <strong><?php echo ucfirst($comm['recipient_group']); ?> Members</strong>
-                                        <?php else: ?>
-                                            <?php echo htmlspecialchars($comm['recipient_name'] ?? 'Individual Member'); ?>
-                                        <?php endif; ?>
-                                        <br>
-                                        <small class="text-muted"><?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($comm['subject']); ?></strong><br>
-                                        <small class="text-muted">
-                                            <?php echo htmlspecialchars(substr($comm['message'], 0, 50) . '...'); ?>
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?php 
-                                        echo match($comm['status']) {
-                                            'sent' => 'success',
-                                            'failed' => 'danger',
-                                            'pending' => 'warning',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo ucfirst($comm['status']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y H:i', strtotime($comm['sent_at'])); ?></td>
-                                <td>
-                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#commModal<?php echo $comm['id']; ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- Communication Details Modal -->
-                            <div class="modal fade" id="commModal<?php echo $comm['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Communication Details</h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <h6>Communication Info</h6>
-                                                    <p><strong>Type:</strong> <?php echo !empty($comm['type']) ? strtoupper($comm['type']) : 'N/A'; ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $comm['status'] === 'sent' ? 'success' : 'danger'; ?>"><?php echo !empty($comm['status']) ? ucfirst($comm['status']) : 'Pending'; ?></span></p>
-                                                    <p><strong>Sent Date:</strong> <?php echo !empty($comm['sent_at']) ? date('M j, Y H:i:s', strtotime($comm['sent_at'])) : 'Not sent yet'; ?></p>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6>Recipients</h6>
-                                                    <p><strong>Type:</strong> <?php echo !empty($comm['recipient_type']) ? ucfirst($comm['recipient_type']) : 'N/A'; ?></p>
-                                                    <p><strong>Count:</strong> <?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</p>
-                                                    <?php if (!empty($comm['recipient_group'])): ?>
-                                                    <p><strong>Group:</strong> <?php echo ucfirst($comm['recipient_group']); ?></p>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                            
-                                            <h6>Subject</h6>
-                                            <p><?php echo htmlspecialchars($comm['subject'] ?? ''); ?></p>
-                                            
-                                            <h6>Message</h6>
-                                            <div class="border p-3 bg-light">
-                                                <?php echo nl2br(htmlspecialchars($comm['message'] ?? '')); ?>
-                                            </div>
-
-                                            <?php if (!empty($comm['error_message'])): ?>
-                                            <h6 class="mt-3">Error Details</h6>
-                                            <div class="alert alert-danger">
-                                                <?php echo htmlspecialchars($comm['error_message']); ?>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
+    <div class="card-body">
+        <?php if (!empty($communications)): ?>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Recipient(s)</th>
+                        <th>Subject/Message</th>
+                        <th>Status</th>
+                        <th>Sent Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($communications as $comm): ?>
+                    <tr data-type="<?php echo $comm['type']; ?>">
+                        <td>
+                            <?php if ($comm['type'] === 'email'): ?>
+                            <span class="badge badge-primary">
+                                <i class="bi bi-envelope-fill"></i> Email
+                            </span>
+                            <?php else: ?>
+                            <span class="badge badge-success">
+                                <i class="bi bi-chat-dots-fill"></i> SMS
+                            </span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--secondary-violet);">
+                                <?php echo htmlspecialchars($comm['recipient_name'] ?? 'Bulk Message'); ?>
+                            </div>
+                            <?php if (!empty($comm['recipient_count']) && $comm['recipient_count'] > 1): ?>
+                            <div style="font-size: 0.75rem; color: var(--medium-grey);">
+                                + <?php echo $comm['recipient_count'] - 1; ?> others
+                            </div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <?php echo htmlspecialchars($comm['subject'] ?? $comm['message']); ?>
+                            </div>
+                        </td>
+                        <td>
+                            <?php
+                            $statusClass = match($comm['status'] ?? 'sent') {
+                                'sent' => 'badge-success',
+                                'pending' => 'badge-warning',
+                                'failed' => 'badge-danger',
+                                default => 'badge-secondary'
+                            };
+                            ?>
+                            <span class="badge <?php echo $statusClass; ?>">
+                                <?php echo ucfirst($comm['status'] ?? 'Sent'); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.875rem;">
+                                <div><?php echo date('M d, Y', strtotime($comm['sent_at'])); ?></div>
+                                <div style="color: var(--medium-grey); font-size: 0.75rem;">
+                                    <?php echo date('h:i A', strtotime($comm['sent_at'])); ?>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-comments fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No communications yet</h5>
-                    <p class="text-gray-500">Email and SMS communications will appear here.</p>
-                </div>
-            <?php endif; ?>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info" 
+                                    onclick="viewCommunication(<?php echo $comm['id']; ?>)"
+                                    title="View Details">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+        <?php else: ?>
+        <div class="empty-state">
+            <i class="bi bi-chat-square-text" style="font-size: 4rem; color: var(--light-grey); margin-bottom: 1rem;"></i>
+            <h3 style="color: var(--medium-grey); margin-bottom: 0.5rem;">No Communications Yet</h3>
+            <p style="color: var(--medium-grey);">Start sending emails or SMS to your members.</p>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" onclick="openModal('sendEmailModal')">
+                    <i class="bi bi-envelope-fill"></i> Send Email
+                </button>
+                <button class="btn btn-success" onclick="openModal('sendSMSModal')">
+                    <i class="bi bi-chat-dots-fill"></i> Send SMS
+                </button>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
 <!-- Send Email Modal -->
-<div class="modal fade" id="sendEmailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send Email</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+<div class="modal" id="sendEmailModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 style="margin: 0;"><i class="bi bi-envelope-fill"></i> Send Email</h3>
+            <button class="modal-close" onclick="closeModal('sendEmailModal')">&times;</button>
+        </div>
+        <form method="POST" action="/admin/communications/send-email">
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                
+                <div class="form-group">
+                    <label class="form-label" for="email_recipients">Recipients</label>
+                    <select id="email_recipients" name="recipients" class="form-select" required>
+                        <option value="all">All Active Members</option>
+                        <option value="pending">Pending Members</option>
+                        <option value="agents">All Agents</option>
+                        <option value="custom">Custom List</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email_subject">Subject</label>
+                    <input type="text" 
+                           id="email_subject" 
+                           name="subject" 
+                           class="form-control" 
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email_message">Message</label>
+                    <textarea id="email_message" 
+                              name="message" 
+                              class="form-control" 
+                              rows="8" 
+                              required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('sendEmailModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send-fill"></i> Send Email
                 </button>
             </div>
-            <form method="POST" action="/admin/communications/send-email">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Recipients *</label>
-                        <select name="recipients" class="form-control" required>
-                            <option value="">Select Recipients</option>
-                            <option value="all">All Members</option>
-                            <option value="active">Active Members Only</option>
-                            <option value="inactive">Inactive Members Only</option>
-                            <option value="recent">Recently Joined Members</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Subject *</label>
-                        <input type="text" name="subject" class="form-control" required placeholder="Email subject">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Message *</label>
-                        <textarea name="message" class="form-control" rows="8" required placeholder="Email message content..."></textarea>
-                        <small class="form-text text-muted">You can use HTML formatting in your message.</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="sendCopy" name="send_copy" value="1">
-                            <label class="custom-control-label" for="sendCopy">Send a copy to my email</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane mr-2"></i>Send Email
-                    </button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
 <!-- Send SMS Modal -->
-<div class="modal fade" id="sendSMSModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send SMS</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+<div class="modal" id="sendSMSModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 style="margin: 0;"><i class="bi bi-chat-dots-fill"></i> Send SMS</h3>
+            <button class="modal-close" onclick="closeModal('sendSMSModal')">&times;</button>
+        </div>
+        <form method="POST" action="/admin/communications/send-sms">
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                
+                <div class="form-group">
+                    <label class="form-label" for="sms_recipients">Recipients</label>
+                    <select id="sms_recipients" name="recipients" class="form-select" required>
+                        <option value="all">All Active Members</option>
+                        <option value="pending">Pending Members</option>
+                        <option value="agents">All Agents</option>
+                        <option value="custom">Custom Numbers</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="sms_message">Message</label>
+                    <textarea id="sms_message" 
+                              name="message" 
+                              class="form-control" 
+                              rows="4" 
+                              maxlength="160" 
+                              required 
+                              oninput="updateCharCount(this)"></textarea>
+                    <small style="color: var(--medium-grey); font-size: 0.75rem;">
+                        <span id="charCount">0</span>/160 characters
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('sendSMSModal')">Cancel</button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-send-fill"></i> Send SMS
                 </button>
             </div>
-            <form method="POST" action="/admin/communications/send-sms">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Recipients *</label>
-                        <select name="recipients" class="form-control" required>
-                            <option value="">Select Recipients</option>
-                            <option value="all">All Members</option>
-                            <option value="active">Active Members Only</option>
-                            <option value="inactive">Inactive Members Only</option>
-                            <option value="recent">Recently Joined Members</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Message *</label>
-                        <textarea name="message" class="form-control" rows="4" required placeholder="SMS message content..." maxlength="160"></textarea>
-                        <small class="form-text text-muted">Maximum 160 characters for SMS messages.</small>
-                        <div class="text-right">
-                            <small id="smsCounter" class="text-muted">0/160</small>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Note:</strong> SMS charges apply. Please ensure you have sufficient SMS credits before sending.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-sms mr-2"></i>Send SMS
-                    </button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
 <script>
-// SMS character counter
-$(document).ready(function() {
-    $('textarea[name="message"]').on('input', function() {
-        const length = $(this).val().length;
-        $('#smsCounter').text(length + '/160');
-        
-        if (length > 160) {
-            $('#smsCounter').addClass('text-danger');
+function filterCommunications(type) {
+    const rows = document.querySelectorAll('.data-table tbody tr');
+    rows.forEach(row => {
+        if (type === '' || row.dataset.type === type) {
+            row.style.display = '';
         } else {
-            $('#smsCounter').removeClass('text-danger');
+            row.style.display = 'none';
         }
     });
-});
+}
+
+function updateCharCount(textarea) {
+    document.getElementById('charCount').textContent = textarea.value.length;
+}
+
+function viewCommunication(id) {
+    // Implement view details functionality
+    console.log('View communication:', id);
+}
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include VIEWS_PATH . '/layouts/dashboard-footer.php'; ?>

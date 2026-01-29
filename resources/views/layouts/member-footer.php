@@ -1,16 +1,48 @@
-	</main>
-	<footer class="mt-5 py-4 bg-light border-top">
-		<div class="container text-center">
-			<div class="mb-2">
-				<a href="/dashboard" class="text-decoration-none me-3">Dashboard</a>
-				<a href="/payments" class="text-decoration-none me-3">Payments</a>
-				<a href="/beneficiaries" class="text-decoration-none me-3">Beneficiaries</a>
-				<a href="/claims" class="text-decoration-none me-3">Claims</a>
-				<a href="/profile" class="text-decoration-none me-3">Profile</a>
-			</div>
-			<div class="text-muted">&copy; <?php echo date('Y'); ?> Shena Companion Welfare Association. All rights reserved.</div>
-		</div>
-	</footer>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        </div><!-- .dashboard-content -->
+    </main><!-- .dashboard-main -->
+</div><!-- .dashboard-wrapper -->
+
+<script src="/public/js/app.js"></script>
+
+<style>
+    /* Mobile Sidebar Toggle */
+    @media (max-width: 768px) {
+        [data-sidebar-toggle] {
+            display: block !important;
+        }
+        
+        .dashboard-sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .dashboard-sidebar.active {
+            transform: translateX(0);
+        }
+    }
+</style>
+
+<script>
+    // Sidebar toggle for mobile
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.querySelector('[data-sidebar-toggle]');
+        const sidebar = document.querySelector('.dashboard-sidebar');
+        
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
