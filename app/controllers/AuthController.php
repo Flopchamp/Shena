@@ -367,8 +367,15 @@ class AuthController extends BaseController
                 }
                 
                 unset($_SESSION['old_input'], $_SESSION['error_field']);
-                $_SESSION['success'] = 'Registration successful! Your membership application is under review. You will be notified via email once approved.';
-                $this->redirect('/login');
+                $_SESSION['registration_complete'] = [
+                    'member_id' => $memberId,
+                    'member_number' => $memberNumber,
+                    'name' => $userData['first_name'] . ' ' . $userData['last_name'],
+                    'email' => $userData['email'],
+                    'phone' => $userData['phone'],
+                    'amount' => REGISTRATION_FEE
+                ];
+                $this->redirect('/registration/complete');
                 
             } catch (Exception $e) {
                 $this->db->getConnection()->rollback();
@@ -394,6 +401,342 @@ class AuthController extends BaseController
         session_start();
         $_SESSION['success'] = 'You have been logged out successfully.';
         $this->redirect('/login');
+    }
+    
+    /**
+     * Show registration complete page with payment options
+     */
+    public function registrationComplete()
+    {
+        // Check if registration was just completed
+        if (!isset($_SESSION['registration_complete'])) {
+            $_SESSION['error'] = 'Registration session expired. Please login to make payment.';
+            $this->redirect('/login');
+            return;
+        }
+        
+        $registrationData = $_SESSION['registration_complete'];
+        
+        $data = [
+            'title' => 'Registration Complete - Payment Required',
+            'registration' => $registrationData
+        ];
+        
+        $this->view('auth.registration-complete', $data);
+    }
+    
+    /**
+     * Initiate registration payment via STK push
+     */
+    public function initiateRegistrationPayment()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            // Check if registration data exists
+            if (!isset($_SESSION['registration_complete'])) {
+                $this->json(['error' => 'Registration session expired'], 400);
+                return;
+            }
+            
+            $registrationData = $_SESSION['registration_complete'];
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $phoneNumber = $input['phone_number'] ?? $registrationData['phone'];
+            $paymentMethod = $input['payment_method'] ?? 'stk';
+            
+            if ($paymentMethod === 'stk') {
+                // Initiate STK push
+                require_once __DIR__ . '/../services/PaymentService.php';
+                $paymentService = new PaymentService();
+                
+                $response = $paymentService->initiateSTKPush(
+                    $phoneNumber,
+                    $registrationData['amount'],
+                    $registrationData['member_number'],
+                    'Registration Fee'
+                );
+                
+                if ($response && isset($response['CheckoutRequestID'])) {
+                    // Record payment attempt
+                    require_once __DIR__ . '/../models/Payment.php';
+                    $paymentModel = new Payment();
+                    
+                    $paymentModel->recordPayment([
+                        'member_id' => $registrationData['member_id'],
+                        'amount' => $registrationData['amount'],
+                        'payment_type' => 'registration',
+                        'payment_method' => 'mpesa',
+                        'phone_number' => $phoneNumber,
+                        'status' => 'pending',
+                        'transaction_reference' => $response['CheckoutRequestID']
+                    ]);
+                    
+                    $this->json([
+                        'success' => true,
+                        'message' => 'Payment request sent. Check your phone for M-Pesa prompt.',
+                        'checkout_request_id' => $response['CheckoutRequestID']
+                    ]);
+                } else {
+                    $this->json(['error' => 'Failed to initiate payment. Please try again.'], 500);
+                }
+            } else {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Please complete payment via M-Pesa paybill.',
+                    'paybill' => MPESA_BUSINESS_SHORTCODE,
+                    'account' => $registrationData['member_number']
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            error_log('Registration payment error: ' . $e->getMessage());
+            $this->json(['error' => 'Payment initiation failed'], 500);
+        }
+    }
+    
+    /**
+     * Initiate STK push for public registration
+     */
+    public function initiatePublicRegistrationPayment()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            // Get form data from POST
+            $phoneNumber = $_POST['phone_number'] ?? '';
+            $amount = REGISTRATION_FEE;
+            
+            // Validate phone number
+            $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+            if (strlen($phoneNumber) === 10 && substr($phoneNumber, 0, 1) === '0') {
+                $phoneNumber = '254' . substr($phoneNumber, 1);
+            }
+            
+            if (!preg_match('/^254[17][0-9]{8}$/', $phoneNumber)) {
+                $this->json(['success' => false, 'message' => 'Invalid phone number format'], 400);
+                return;
+            }
+            
+            // Generate temporary reference
+            $reference = 'REG' . $phoneNumber . '_' . time();
+            
+            // Initiate STK push
+            require_once __DIR__ . '/../services/PaymentService.php';
+            $paymentService = new PaymentService();
+            
+            $response = $paymentService->initiateSTKPush(
+                $phoneNumber,
+                $amount,
+                $reference,
+                'Registration Fee'
+            );
+            
+            if ($response && isset($response['CheckoutRequestID'])) {
+                // Store in session for tracking
+                $_SESSION['pending_registration_payment'] = [
+                    'checkout_request_id' => $response['CheckoutRequestID'],
+                    'phone_number' => $phoneNumber,
+                    'amount' => $amount,
+                    'reference' => $reference,
+                    'timestamp' => time()
+                ];
+                
+                $this->json([
+                    'success' => true,
+                    'message' => 'Payment request sent. Check your phone for M-Pesa prompt.',
+                    'checkout_request_id' => $response['CheckoutRequestID']
+                ]);
+            } else {
+                $this->json(['success' => false, 'message' => 'Failed to initiate payment. Please try again.'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log('Public registration STK push error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Payment initiation failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Show transaction verification page
+     */
+    public function showTransactionVerification()
+    {
+        $data = [
+            'title' => 'Verify Your Payment - Shena Companion'
+        ];
+        
+        $this->view('auth.verify-transaction', $data);
+    }
+    
+    /**
+     * Verify M-Pesa transaction code and activate account
+     */
+    public function verifyTransaction()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $transactionCode = $_POST['transaction_code'] ?? '';
+            $phoneNumber = $_POST['phone_number'] ?? '';
+            
+            // Validate inputs
+            if (empty($transactionCode)) {
+                $this->json(['success' => false, 'message' => 'Please enter M-Pesa transaction code'], 400);
+                return;
+            }
+            
+            if (empty($phoneNumber)) {
+                $this->json(['success' => false, 'message' => 'Please enter your phone number'], 400);
+                return;
+            }
+            
+            // Format phone number
+            $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+            if (strlen($phoneNumber) === 10 && substr($phoneNumber, 0, 1) === '0') {
+                $phoneNumber = '254' . substr($phoneNumber, 1);
+            }
+            
+            // Format transaction code (remove spaces, uppercase)
+            $transactionCode = strtoupper(preg_replace('/\s+/', '', $transactionCode));
+            
+            // Search for payment record with this transaction code or phone number
+            require_once __DIR__ . '/../models/Payment.php';
+            require_once __DIR__ . '/../models/Member.php';
+            $paymentModel = new Payment();
+            $memberModel = new Member();
+            
+            // Try to find payment by transaction code in transaction_reference or mpesa_receipt_number
+            $sql = "SELECT p.*, m.member_number, m.user_id, u.email, u.first_name, u.last_name 
+                    FROM payments p 
+                    JOIN members m ON p.member_id = m.id 
+                    JOIN users u ON m.user_id = u.id
+                    WHERE (p.mpesa_receipt_number = :code OR p.transaction_reference LIKE :code_pattern)
+                    AND p.phone_number LIKE :phone
+                    ORDER BY p.created_at DESC 
+                    LIMIT 1";
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([
+                ':code' => $transactionCode,
+                ':code_pattern' => '%' . $transactionCode . '%',
+                ':phone' => '%' . substr($phoneNumber, -9) . '%'
+            ]);
+            
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$payment) {
+                // Try alternative search - by phone and recent pending payments
+                $sql = "SELECT p.*, m.member_number, m.user_id, u.email, u.first_name, u.last_name 
+                        FROM payments p 
+                        JOIN members m ON p.member_id = m.id 
+                        JOIN users u ON m.user_id = u.id
+                        WHERE p.phone_number LIKE :phone
+                        AND p.status IN ('pending', 'initiated')
+                        AND p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                        ORDER BY p.created_at DESC 
+                        LIMIT 1";
+                
+                $stmt = $this->db->getConnection()->prepare($sql);
+                $stmt->execute([':phone' => '%' . substr($phoneNumber, -9) . '%']);
+                $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            
+            if (!$payment) {
+                $this->json([
+                    'success' => false, 
+                    'message' => 'No matching payment found. Please verify your transaction code and phone number.'
+                ], 404);
+                return;
+            }
+            
+            // Check if already verified
+            if ($payment['status'] === 'completed') {
+                $this->json([
+                    'success' => true, 
+                    'message' => 'Payment already verified! Your account is active.',
+                    'member_number' => $payment['member_number']
+                ]);
+                return;
+            }
+            
+            // Update payment status
+            $this->db->getConnection()->beginTransaction();
+            
+            try {
+                // Update payment record
+                $updatePayment = "UPDATE payments SET 
+                                status = 'completed',
+                                mpesa_receipt_number = :receipt,
+                                transaction_date = NOW(),
+                                verified_at = NOW(),
+                                verified_by = 'manual_recovery'
+                              WHERE id = :id";
+                
+                $stmt = $this->db->getConnection()->prepare($updatePayment);
+                $stmt->execute([
+                    ':receipt' => $transactionCode,
+                    ':id' => $payment['id']
+                ]);
+                
+                // Activate member account
+                $updateMember = "UPDATE members SET 
+                               status = 'active',
+                               last_payment_date = NOW()
+                             WHERE id = :id";
+                
+                $stmt = $this->db->getConnection()->prepare($updateMember);
+                $stmt->execute([':id' => $payment['member_id']]);
+                
+                // Update user account status
+                $updateUser = "UPDATE users SET status = 'active' WHERE id = :id";
+                $stmt = $this->db->getConnection()->prepare($updateUser);
+                $stmt->execute([':id' => $payment['user_id']]);
+                
+                $this->db->getConnection()->commit();
+                
+                // Send confirmation notifications
+                try {
+                    require_once __DIR__ . '/../services/EmailService.php';
+                    require_once __DIR__ . '/../services/SmsService.php';
+                    
+                    $emailService = new EmailService();
+                    $smsService = new SmsService();
+                    
+                    $emailService->sendPaymentConfirmation($payment['email'], [
+                        'name' => $payment['first_name'] . ' ' . $payment['last_name'],
+                        'member_number' => $payment['member_number'],
+                        'amount' => $payment['amount'],
+                        'receipt' => $transactionCode
+                    ]);
+                    
+                    $smsService->sendPaymentConfirmation($phoneNumber, [
+                        'amount' => $payment['amount'],
+                        'member_number' => $payment['member_number']
+                    ]);
+                } catch (Exception $e) {
+                    error_log('Notification error: ' . $e->getMessage());
+                }
+                
+                $this->json([
+                    'success' => true,
+                    'message' => 'Payment verified successfully! Your account is now active.',
+                    'member_number' => $payment['member_number'],
+                    'redirect' => '/login'
+                ]);
+                
+            } catch (Exception $e) {
+                $this->db->getConnection()->rollback();
+                throw $e;
+            }
+            
+        } catch (Exception $e) {
+            error_log('Transaction verification error: ' . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'Verification failed. Please try again or contact support.'
+            ], 500);
+        }
     }
     
     /**
@@ -549,7 +892,10 @@ class AuthController extends BaseController
                 $hashedPassword = password_hash($tempPassword, PASSWORD_DEFAULT);
                 
                 $userData = [
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
                     'email' => $email,
+                    'phone' => $phone,
                     'password' => $hashedPassword,
                     'role' => 'member',
                     'status' => 'pending',
@@ -562,57 +908,71 @@ class AuthController extends BaseController
                 $maturityMonths = $package['maturity_months'] ?? 4;
                 $maturityEnds = date('Y-m-d', strtotime("+{$maturityMonths} months"));
                 
+                // Determine gender from national ID or default
+                $gender = 'male'; // Default, or implement logic to determine from national ID
+                
+                // Extract package type from package_id (e.g., 'couple_below_70' -> 'couple')
+                $packageType = 'individual'; // Default
+                if (strpos($packageId, 'couple') !== false) {
+                    $packageType = 'couple';
+                } elseif (strpos($packageId, 'family') !== false) {
+                    $packageType = 'family';
+                } elseif (strpos($packageId, 'executive') !== false) {
+                    $packageType = 'executive';
+                }
+                
                 $memberData = [
                     'user_id' => $userId,
                     'member_number' => $memberNumber,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'national_id' => $nationalId,
+                    'id_number' => $nationalId,
                     'date_of_birth' => $dateOfBirth,
-                    'phone' => $phone,
-                    'email' => $email,
+                    'gender' => $gender,
                     'address' => $address,
-                    'county' => $county,
-                    'sub_county' => $subCounty,
-                    'postal_code' => $postalCode,
-                    'package_id' => $packageId,
+                    'package' => $packageType,
                     'monthly_contribution' => $package['monthly_contribution'],
-                    'status' => 'pending_payment', // Awaiting registration fee
-                    'registration_date' => date('Y-m-d'),
+                    'status' => 'inactive', // Awaiting registration fee payment
                     'maturity_ends' => $maturityEnds,
-                    'payment_deadline' => date('Y-m-d', strtotime('+14 days')), // 2-week deadline
                     'created_at' => date('Y-m-d H:i:s')
                 ];
                 
                 $memberId = $this->memberModel->create($memberData);
                 
                 // Handle payment based on method
+                $paymentModel = new Payment();
+                
                 if ($paymentMethod === 'mpesa') {
-                    // M-Pesa STK Push will be implemented separately
-                    // For now, set status to awaiting_payment
+                    // Check if checkout_request_id was provided from STK push
+                    $checkoutRequestId = $_POST['checkout_request_id'] ?? null;
+                    $paymentPhone = $_POST['payment_phone'] ?? $phone;
+                    
                     $paymentData = [
                         'member_id' => $memberId,
                         'amount' => REGISTRATION_FEE,
                         'payment_type' => 'registration',
                         'payment_method' => 'mpesa',
                         'status' => 'pending',
-                        'reference' => 'REG' . $phone,
+                        'phone_number' => $paymentPhone,
+                        'transaction_reference' => $checkoutRequestId ?? ('REG' . $phone . '_' . time()),
                         'created_at' => date('Y-m-d H:i:s')
                     ];
+                    
+                    // If checkout_request_id exists, it means STK push was initiated
+                    if ($checkoutRequestId) {
+                        $paymentData['notes'] = 'STK Push initiated - awaiting M-Pesa confirmation';
+                    }
                 } else {
-                    // Cash/office payment
+                    // Cash/office payment or manual M-Pesa
                     $paymentData = [
                         'member_id' => $memberId,
                         'amount' => REGISTRATION_FEE,
                         'payment_type' => 'registration',
-                        'payment_method' => 'cash',
+                        'payment_method' => $paymentMethod,
                         'status' => 'pending',
-                        'notes' => 'Awaiting office payment within 14 days',
+                        'notes' => 'Awaiting payment confirmation within 14 days',
                         'created_at' => date('Y-m-d H:i:s')
                     ];
                 }
                 
-                $paymentModel = new Payment();
                 $paymentModel->create($paymentData);
                 
                 $this->db->getConnection()->commit();

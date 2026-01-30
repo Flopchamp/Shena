@@ -302,6 +302,97 @@
             text-align: center;
             margin-bottom: 20px;
         }
+        
+        .payment-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-tab {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .payment-tab:hover {
+            border-color: var(--secondary-color);
+        }
+        
+        .payment-tab.active {
+            border-color: var(--success-color);
+            background: #f0f9f4;
+        }
+        
+        .payment-content {
+            display: none;
+        }
+        
+        .payment-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        .stk-push-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .phone-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        
+        .phone-input-group input {
+            flex: 1;
+        }
+        
+        #paymentStatus {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        #paymentStatus.pending {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            display: block;
+        }
+        
+        #paymentStatus.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            display: block;
+        }
+        
+        #paymentStatus.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            display: block;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: var(--secondary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -335,6 +426,7 @@
         <!-- Registration Body -->
         <div class="registration-body">
             <form id="registrationForm" method="POST" action="/register">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
                 
                 <!-- Step 1: Package Selection -->
                 <div class="form-section active" data-section="1">
@@ -458,56 +550,94 @@
                         </div>
                     </div>
                     
-                    <!-- Payment Method Selection -->
+                    <!-- Payment Method Tabs -->
                     <h5 class="mb-3">Choose Payment Method</h5>
                     
-                    <div class="payment-method" data-method="mpesa" onclick="selectPaymentMethod('mpesa')">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-mobile-alt fa-2x me-3" style="color: #27ae60;"></i>
-                            <div>
-                                <h5 class="mb-0">M-Pesa (Recommended)</h5>
-                                <small class="text-muted">Instant payment confirmation</small>
+                    <div class="payment-tabs">
+                        <div class="payment-tab active" onclick="switchPaymentTab('stk-push')">
+                            <i class="fas fa-mobile-alt fa-2x mb-2" style="color: #27ae60;"></i>
+                            <h6 class="mb-0">STK Push</h6>
+                            <small class="text-muted">Instant payment</small>
+                        </div>
+                        <div class="payment-tab" onclick="switchPaymentTab('manual')">
+                            <i class="fas fa-money-bill-wave fa-2x mb-2" style="color: #3498db;"></i>
+                            <h6 class="mb-0">Manual Payment</h6>
+                            <small class="text-muted">Paybill or Office</small>
+                        </div>
+                    </div>
+                    
+                    <!-- STK Push Content -->
+                    <div id="stkPushContent" class="payment-content active">
+                        <div class="alert-info-custom">
+                            <i class="fas fa-mobile-alt"></i>
+                            <strong>How it works:</strong> Enter your M-Pesa phone number below and click "Pay Now". You'll receive a payment prompt on your phone to complete the transaction.
+                        </div>
+                        
+                        <div class="stk-push-form">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-phone"></i> M-Pesa Phone Number</label>
+                                <div class="phone-input-group">
+                                    <input type="tel" id="stkPhoneNumber" class="form-control" placeholder="0712345678" pattern="[0-9]{10}" maxlength="10">
+                                    <button type="button" class="btn btn-success" onclick="initiateSTKPush()" id="stkPayBtn">
+                                        <i class="fas fa-mobile-alt"></i> Pay Now
+                                    </button>
+                                </div>
+                                <small class="text-muted">Enter the phone number registered with M-Pesa</small>
+                            </div>
+                            
+                            <!-- Payment Status -->
+                            <div id="paymentStatus"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Payment Content -->
+                    <div id="manualContent" class="payment-content">
+                        <div class="payment-method selected" data-method="mpesa">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-mobile-alt fa-2x me-3" style="color: #27ae60;"></i>
+                                <div>
+                                    <h5 class="mb-0">M-Pesa Paybill</h5>
+                                    <small class="text-muted">Manual payment via M-Pesa</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mpesa-instructions">
+                                <h5><i class="fas fa-mobile-alt"></i> M-Pesa Payment Instructions</h5>
+                                <ol>
+                                    <li>Go to M-Pesa menu on your phone</li>
+                                    <li>Select <strong>Lipa Na M-Pesa</strong></li>
+                                    <li>Select <strong>Pay Bill</strong></li>
+                                    <li>Enter Business Number: <strong><?php echo MPESA_BUSINESS_SHORTCODE; ?></strong></li>
+                                    <li>Enter Account Number: <strong>REG[Your Phone]</strong> (e.g., REG0712345678)</li>
+                                    <li>Enter Amount: <strong>KES 200</strong></li>
+                                    <li>Enter your M-Pesa PIN and confirm</li>
+                                </ol>
+                                <p class="mb-0"><strong>Note:</strong> You will receive an M-Pesa confirmation message. Keep it for reference.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-method" data-method="cash" onclick="selectManualMethod('cash')">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-money-bill-wave fa-2x me-3" style="color: #3498db;"></i>
+                                <div>
+                                    <h5 class="mb-0">Office Visit</h5>
+                                    <small class="text-muted">Pay at our office within 2 weeks</small>
+                                </div>
+                            </div>
+                            
+                            <div id="cashInstructions" class="alert-info-custom" style="display: none;">
+                                <h5><i class="fas fa-info-circle"></i> Office Visit Payment</h5>
+                                <p>By selecting this option, you agree to visit our office and complete payment within <strong>2 weeks</strong>.</p>
+                                <p><strong>Office Location:</strong><br>
+                                Shena Companion Welfare Association<br>
+                                [Office Address]<br>
+                                Office Hours: Monday - Friday, 9:00 AM - 5:00 PM</p>
+                                <p class="mb-0"><strong>Important:</strong> Your membership will be pending until payment is confirmed. You must complete payment within 2 weeks or your application will be cancelled.</p>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="payment-method" data-method="cash" onclick="selectPaymentMethod('cash')">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-money-bill-wave fa-2x me-3" style="color: #3498db;"></i>
-                            <div>
-                                <h5 class="mb-0">Office Visit (Cash/Cheque)</h5>
-                                <small class="text-muted">Pay at our office within 2 weeks</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <input type="hidden" name="payment_method" id="selectedPaymentMethod">
-                    
-                    <!-- M-Pesa Instructions (Hidden by default) -->
-                    <div id="mpesaInstructions" class="mpesa-instructions" style="display: none;">
-                        <h5><i class="fas fa-mobile-alt"></i> M-Pesa Payment Instructions</h5>
-                        <ol>
-                            <li>Go to M-Pesa menu on your phone</li>
-                            <li>Select <strong>Lipa Na M-Pesa</strong></li>
-                            <li>Select <strong>Pay Bill</strong></li>
-                            <li>Enter Business Number: <strong><?php echo MPESA_BUSINESS_SHORTCODE; ?></strong></li>
-                            <li>Enter Account Number: <strong>REG[Your Phone]</strong> (e.g., REG0712345678)</li>
-                            <li>Enter Amount: <strong>KES 200</strong></li>
-                            <li>Enter your M-Pesa PIN and confirm</li>
-                        </ol>
-                        <p class="mb-0"><strong>Note:</strong> You will receive an M-Pesa confirmation message. Keep it for reference.</p>
-                    </div>
-                    
-                    <!-- Cash Instructions (Hidden by default) -->
-                    <div id="cashInstructions" class="alert-info-custom" style="display: none;">
-                        <h5><i class="fas fa-info-circle"></i> Office Visit Payment</h5>
-                        <p>By selecting this option, you agree to visit our office and complete payment within <strong>2 weeks</strong>.</p>
-                        <p><strong>Office Location:</strong><br>
-                        Shena Companion Welfare Association<br>
-                        [Office Address]<br>
-                        Office Hours: Monday - Friday, 9:00 AM - 5:00 PM</p>
-                        <p class="mb-0"><strong>Important:</strong> Your membership will be pending until payment is confirmed. You must complete payment within 2 weeks or your application will be cancelled.</p>
-                    </div>
+                    <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="stk_push">
                     
                     <div class="d-flex justify-content-between mt-4">
                         <button type="button" class="btn btn-secondary btn-navigation" onclick="prevStep(3)">
@@ -552,6 +682,13 @@
                             <p>Contact us:<br>
                             <i class="fas fa-phone"></i> <?php echo ADMIN_PHONE; ?><br>
                             <i class="fas fa-envelope"></i> <?php echo ADMIN_EMAIL; ?></p>
+                        </div>
+                        
+                        <!-- Already Paid Section -->
+                        <div class="alert alert-success mt-4">
+                            <i class="fas fa-check-circle"></i> <strong>Already paid?</strong><br>
+                            If you've already made payment and have your M-Pesa transaction code, 
+                            <a href="/verify-transaction" class="alert-link"><strong>click here to verify instantly →</strong></a>
                         </div>
                         
                         <div class="mt-4">
@@ -797,12 +934,222 @@
             }
         }
         
+        // Payment tab switching
+        function switchPaymentTab(tab) {
+            // Update tab styling
+            document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.payment-tab').classList.add('active');
+            
+            // Update content visibility
+            document.querySelectorAll('.payment-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'stk-push') {
+                document.getElementById('stkPushContent').classList.add('active');
+                document.getElementById('selectedPaymentMethod').value = 'stk_push';
+            } else {
+                document.getElementById('manualContent').classList.add('active');
+                document.getElementById('selectedPaymentMethod').value = 'mpesa';
+            }
+        }
+        
+        // Select manual payment method
+        function selectManualMethod(method) {
+            document.querySelectorAll('#manualContent .payment-method').forEach(pm => {
+                pm.classList.remove('selected');
+            });
+            event.target.closest('.payment-method').classList.add('selected');
+            
+            document.getElementById('selectedPaymentMethod').value = method;
+            document.getElementById('cashInstructions').style.display = method === 'cash' ? 'block' : 'none';
+        }
+        
+        // STK Push initiation
+        let paymentCheckInterval = null;
+        
+        function initiateSTKPush() {
+            const phoneNumber = document.getElementById('stkPhoneNumber').value.trim();
+            const statusDiv = document.getElementById('paymentStatus');
+            const payBtn = document.getElementById('stkPayBtn');
+            
+            // Validate phone number
+            if (!phoneNumber || !/^[0-9]{10}$/.test(phoneNumber)) {
+                statusDiv.className = 'error';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a valid 10-digit phone number (e.g., 0712345678)';
+                return;
+            }
+            
+            // Disable button and show loading
+            payBtn.disabled = true;
+            payBtn.innerHTML = '<span class="spinner"></span> Processing...';
+            
+            statusDiv.className = 'pending';
+            statusDiv.innerHTML = '<div class="spinner"></div> Initiating payment request...';
+            
+            // Get registration data from form
+            const formData = new FormData(document.getElementById('registrationForm'));
+            formData.append('phone_number', phoneNumber);
+            formData.append('amount', 200);
+            
+            // Initiate STK push
+            fetch('/register/initiate-payment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'success';
+                    statusDiv.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-check-circle fa-3x mb-3" style="color: #28a745;"></i>
+                            <h5>Payment Prompt Sent!</h5>
+                            <p>Check your phone (${phoneNumber}) and enter your M-Pesa PIN.</p>
+                            <small class="text-muted">Submitting your registration...</small>
+                        </div>
+                    `;
+                    
+                    // Store checkout request ID in hidden field for tracking
+                    let checkoutField = document.getElementById('checkout_request_id');
+                    if (!checkoutField) {
+                        checkoutField = document.createElement('input');
+                        checkoutField.type = 'hidden';
+                        checkoutField.name = 'checkout_request_id';
+                        checkoutField.id = 'checkout_request_id';
+                        document.getElementById('registrationForm').appendChild(checkoutField);
+                    }
+                    checkoutField.value = data.checkout_request_id;
+                    
+                    // Also store phone number used for payment
+                    let paymentPhoneField = document.getElementById('payment_phone');
+                    if (!paymentPhoneField) {
+                        paymentPhoneField = document.createElement('input');
+                        paymentPhoneField.type = 'hidden';
+                        paymentPhoneField.name = 'payment_phone';
+                        paymentPhoneField.id = 'payment_phone';
+                        document.getElementById('registrationForm').appendChild(paymentPhoneField);
+                    }
+                    paymentPhoneField.value = phoneNumber;
+                    
+                    // Auto-submit the registration form after 2 seconds
+                    setTimeout(() => {
+                        statusDiv.innerHTML += '<br><small>Processing registration...</small>';
+                        document.getElementById('registrationForm').submit();
+                    }, 2000);
+                } else {
+                    statusDiv.className = 'error';
+                    statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.message || 'Failed to initiate payment. Please try again.'}`;
+                    
+                    // Re-enable button
+                    payBtn.disabled = false;
+                    payBtn.innerHTML = '<i class="fas fa-mobile-alt"></i> Pay Now';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.className = 'error';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error. Please check your connection and try again.';
+                
+                // Re-enable button
+                payBtn.disabled = false;
+                payBtn.innerHTML = '<i class="fas fa-mobile-alt"></i> Pay Now';
+            });
+        }
+        
+        // Start checking payment status
+        function startPaymentStatusCheck(checkoutRequestId) {
+            let attempts = 0;
+            const maxAttempts = 60; // Check for 2 minutes (60 * 2s)
+            
+            paymentCheckInterval = setInterval(() => {
+                attempts++;
+                
+                fetch(`/payment/status?checkout_request_id=${checkoutRequestId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'completed') {
+                            clearInterval(paymentCheckInterval);
+                            showPaymentSuccess();
+                        } else if (data.status === 'failed' || data.status === 'cancelled') {
+                            clearInterval(paymentCheckInterval);
+                            showPaymentError(data.message || 'Payment was not completed');
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(paymentCheckInterval);
+                            showPaymentTimeout();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Status check error:', error);
+                    });
+            }, 2000); // Check every 2 seconds
+        }
+        
+        // Show payment success
+        function showPaymentSuccess() {
+            const statusDiv = document.getElementById('paymentStatus');
+            statusDiv.className = 'success';
+            statusDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-check-circle fa-3x mb-3" style="color: #28a745;"></i>
+                    <h5>Payment Successful!</h5>
+                    <p>Your registration has been completed successfully.</p>
+                </div>
+            `;
+            
+            // Move to confirmation step
+            setTimeout(() => {
+                currentStep = 4;
+                updateStepIndicator();
+                showSection(4);
+            }, 2000);
+        }
+        
+        // Show payment error
+        function showPaymentError(message) {
+            const statusDiv = document.getElementById('paymentStatus');
+            const payBtn = document.getElementById('stkPayBtn');
+            
+            statusDiv.className = 'error';
+            statusDiv.innerHTML = `
+                <i class="fas fa-times-circle"></i> <strong>Payment Failed</strong><br>
+                <small>${message}</small><br>
+                <small>Please try again or use manual payment method.</small>
+            `;
+            
+            // Re-enable button
+            payBtn.disabled = false;
+            payBtn.innerHTML = '<i class="fas fa-mobile-alt"></i> Pay Now';
+        }
+        
+        // Show payment timeout
+        function showPaymentTimeout() {
+            const statusDiv = document.getElementById('paymentStatus');
+            const payBtn = document.getElementById('stkPayBtn');
+            
+            statusDiv.className = 'error';
+            statusDiv.innerHTML = `
+                <i class="fas fa-clock"></i> <strong>Payment Timeout</strong><br>
+                <small>The payment request timed out. If you completed the payment, it will be verified within 24 hours.</small><br>
+                <small>Otherwise, please try again or use manual payment method.</small>
+            `;
+            
+            // Re-enable button
+            payBtn.disabled = false;
+            payBtn.innerHTML = '<i class="fas fa-mobile-alt"></i> Pay Now';
+        }
+        
         // Form submission
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // If using STK push and payment not completed, prevent form submission
+            const paymentMethod = document.getElementById('selectedPaymentMethod').value;
+            if (paymentMethod === 'stk_push') {
+                alert('Please complete payment using STK Push before submitting, or switch to Manual Payment method.');
+                return;
+            }
+            
             // Validate payment method
-            if (!document.getElementById('selectedPaymentMethod').value) {
+            if (!paymentMethod) {
                 alert('Please select a payment method');
                 return;
             }

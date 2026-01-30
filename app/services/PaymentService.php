@@ -20,9 +20,17 @@ class PaymentService
     public function getAccessToken()
     {
         try {
-            $url = 'https://sandbox-api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
+            // Use environment-specific API URL
+            $baseUrl = MPESA_ENVIRONMENT === 'production' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+            
+            $url = $baseUrl . '/oauth/v1/generate?grant_type=client_credentials';
             
             $credentials = base64_encode($this->config['consumer_key'] . ':' . $this->config['consumer_secret']);
+            
+            error_log("Getting M-Pesa token from: {$url}");
+            error_log("Using credentials: " . substr($credentials, 0, 20) . "...");
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -31,16 +39,23 @@ class PaymentService
                 'Content-Type: application/json'
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, MPESA_ENVIRONMENT === 'production');
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
             
             if ($httpCode == 200) {
                 $data = json_decode($response, true);
-                return $data['access_token'];
+                $token = $data['access_token'] ?? false;
+                if ($token) {
+                    error_log("✅ M-Pesa token obtained: " . substr($token, 0, 20) . "...");
+                }
+                return $token;
             }
             
+            error_log("❌ M-Pesa token error: HTTP {$httpCode}, Response: {$response}, CURL Error: {$curlError}");
             return false;
             
         } catch (Exception $e) {
@@ -52,11 +67,24 @@ class PaymentService
     public function initiateSTKPush($phoneNumber, $amount, $memberNumber, $description = 'Monthly Contribution')
     {
         try {
+            error_log("=== Starting STK Push Process ===");
+            error_log("Phone: {$phoneNumber}, Amount: {$amount}, Member: {$memberNumber}");
+            
             $accessToken = $this->getAccessToken();
             
             if (!$accessToken) {
                 throw new Exception('Failed to get M-Pesa access token');
             }
+            
+            error_log("Access token received for STK push");
+            
+            // Format phone number to 254XXXXXXXXX
+            $phone = $this->formatPhoneNumber($phoneNumber);
+            if (!$phone) {
+                throw new Exception('Invalid phone number format');
+            }
+            
+            error_log("Formatted phone: {$phone}");
             
             $timestamp = date('YmdHis');
             $password = base64_encode($this->config['business_shortcode'] . $this->config['passkey'] . $timestamp);
@@ -66,22 +94,33 @@ class PaymentService
                 'Password' => $password,
                 'Timestamp' => $timestamp,
                 'TransactionType' => 'CustomerPayBillOnline',
-                'Amount' => $amount,
-                'PartyA' => $phoneNumber,
+                'Amount' => (int)$amount,
+                'PartyA' => $phone,
                 'PartyB' => $this->config['business_shortcode'],
-                'PhoneNumber' => $phoneNumber,
+                'PhoneNumber' => $phone,
                 'CallBackURL' => $this->config['callback_url'],
                 'AccountReference' => $memberNumber,
                 'TransactionDesc' => $description
             ];
             
-            $url = 'https://sandbox-api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+            error_log("STK Push payload: " . json_encode($data));
+            
+            // Use environment-specific API URL
+            $baseUrl = MPESA_ENVIRONMENT === 'production' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+            
+            $url = $baseUrl . '/mpesa/stkpush/v1/processrequest';
+            
+            error_log("Initiating STK Push to {$url} for {$phone}, Amount: {$amount}, Shortcode: {$this->config['business_shortcode']}");
+            error_log("Using token: " . substr($accessToken, 0, 20) . "...");
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, MPESA_ENVIRONMENT === 'production');
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Authorization: Bearer ' . $accessToken,
                 'Content-Type: application/json'
@@ -89,19 +128,49 @@ class PaymentService
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
             
+            error_log("STK Push Response: HTTP {$httpCode}, Body: {$response}");
+            
             if ($httpCode == 200) {
-                return json_decode($response, true);
+                $result = json_decode($response, true);
+                if (isset($result['ResponseCode']) && $result['ResponseCode'] == '0') {
+                    error_log("✅ STK Push successful: " . json_encode($result));
+                    return $result;
+                } else {
+                    error_log('❌ M-Pesa STK Push failed: ' . $response);
+                    return false;
+                }
             } else {
-                error_log('M-Pesa STK Push failed: ' . $response);
+                error_log("❌ M-Pesa STK Push HTTP Error {$httpCode}: {$response}, CURL: {$curlError}");
                 return false;
             }
             
         } catch (Exception $e) {
-            error_log('M-Pesa STK Push error: ' . $e->getMessage());
+            error_log('❌ M-Pesa STK Push error: ' . $e->getMessage());
             return false;
         }
+    }
+    
+    private function formatPhoneNumber($phone)
+    {
+        // Remove any non-digit characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Handle different formats
+        if (strlen($phone) == 9) {
+            // 712345678 -> 254712345678
+            return '254' . $phone;
+        } elseif (strlen($phone) == 10 && substr($phone, 0, 1) == '0') {
+            // 0712345678 -> 254712345678
+            return '254' . substr($phone, 1);
+        } elseif (strlen($phone) == 12 && substr($phone, 0, 3) == '254') {
+            // 254712345678 -> 254712345678
+            return $phone;
+        }
+        
+        return false;
     }
     
     public function processCallback($callbackData)
@@ -297,13 +366,19 @@ class PaymentService
                 'CheckoutRequestID' => $checkoutRequestId
             ];
             
-            $url = 'https://sandbox-api.safaricom.co.ke/mpesa/stkpushquery/v1/query';
+            // Use environment-specific API URL
+            $baseUrl = MPESA_ENVIRONMENT === 'production' 
+                ? 'https://api.safaricom.co.ke' 
+                : 'https://sandbox.safaricom.co.ke';
+            
+            $url = $baseUrl . '/mpesa/stkpushquery/v1/query';
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, MPESA_ENVIRONMENT === 'production');
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Authorization: Bearer ' . $accessToken,
                 'Content-Type: application/json'

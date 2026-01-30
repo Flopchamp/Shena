@@ -36,11 +36,26 @@ define('DB_CHARSET', 'utf8mb4');
 define('DB_FILE', ROOT_PATH . '/database/shena_welfare.db');
 
 // M-Pesa Configuration
+define('MPESA_ENVIRONMENT', getenv('MPESA_ENVIRONMENT') ?: 'sandbox'); // sandbox or production
 define('MPESA_CONSUMER_KEY', getenv('MPESA_CONSUMER_KEY') ?: '');
 define('MPESA_CONSUMER_SECRET', getenv('MPESA_CONSUMER_SECRET') ?: '');
-define('MPESA_BUSINESS_SHORTCODE', '4163987');
-define('MPESA_PASSKEY', getenv('MPESA_PASSKEY') ?: '');
-define('MPESA_CALLBACK_URL', getenv('MPESA_CALLBACK_URL') ?: (APP_URL . '/api/mpesa/callback'));
+
+// Sandbox shortcode for testing (174379)
+define('MPESA_SANDBOX_SHORTCODE', '174379');
+define('MPESA_SANDBOX_PASSKEY', getenv('MPESA_SANDBOX_PASSKEY') ?: 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919');
+
+// Production shortcode (4163987)
+define('MPESA_PRODUCTION_SHORTCODE', '4163987');
+define('MPESA_PRODUCTION_PASSKEY', getenv('MPESA_PRODUCTION_PASSKEY') ?: '');
+
+// Active shortcode based on environment
+define('MPESA_BUSINESS_SHORTCODE', MPESA_ENVIRONMENT === 'production' ? MPESA_PRODUCTION_SHORTCODE : MPESA_SANDBOX_SHORTCODE);
+define('MPESA_PASSKEY', MPESA_ENVIRONMENT === 'production' ? MPESA_PRODUCTION_PASSKEY : MPESA_SANDBOX_PASSKEY);
+
+// Callback URLs
+define('MPESA_STK_CALLBACK_URL', getenv('MPESA_STK_CALLBACK_URL') ?: (APP_URL . '/public/mpesa-stk-callback.php'));
+define('MPESA_C2B_CALLBACK_URL', getenv('MPESA_C2B_CALLBACK_URL') ?: (APP_URL . '/public/mpesa-c2b-callback.php'));
+define('MPESA_CALLBACK_URL', MPESA_STK_CALLBACK_URL); // Default to STK callback
 
 // Email Configuration (SMTP)
 define('MAIL_ENABLED', false);
@@ -67,7 +82,7 @@ define('ALLOWED_FILE_TYPES', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx']);
 define('UPLOAD_PATH', ROOT_PATH . '/storage/uploads');
 
 // Payment Settings
-define('REGISTRATION_FEE', 200); // Ksh. 200
+define('REGISTRATION_FEE', 10); // Ksh. 10 (Testing)
 define('REACTIVATION_FEE', 100); // Ksh. 100
 
 // Contact Information

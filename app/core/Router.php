@@ -28,6 +28,15 @@ class Router
         $this->addRoute('POST', '/register', 'AuthController@processPublicRegistration');
         $this->addRoute('GET', '/logout', 'AuthController@logout');
         
+        // Registration Complete & Payment Routes
+        $this->addRoute('GET', '/registration/complete', 'AuthController@registrationComplete');
+        $this->addRoute('POST', '/registration/pay', 'AuthController@initiateRegistrationPayment');
+        $this->addRoute('POST', '/register/initiate-payment', 'AuthController@initiatePublicRegistrationPayment');
+        
+        // Transaction Verification/Recovery
+        $this->addRoute('GET', '/verify-transaction', 'AuthController@showTransactionVerification');
+        $this->addRoute('POST', '/verify-transaction', 'AuthController@verifyTransaction');
+        
         // Legacy Registration Routes (old form - kept for backward compatibility)
         $this->addRoute('GET', '/register-old', 'AuthController@showRegister');
         $this->addRoute('POST', '/register-old/submit', 'AuthController@register');
@@ -145,6 +154,10 @@ class Router
         // API Routes
         $this->addRoute('POST', '/api/mpesa/callback', 'PaymentController@mpesaCallback');
         $this->addRoute('POST', '/api/payment/initiate', 'PaymentController@initiatePayment');
+        
+        // Payment Routes (Member & Public)
+        $this->addRoute('POST', '/payment/initiate', 'PaymentController@initiatePayment');
+        $this->addRoute('GET', '/payment/status', 'PaymentController@queryPaymentStatus');
         
         // Error Routes
         $this->addRoute('GET', '/error/404', 'ErrorController@notFound');

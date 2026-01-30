@@ -194,10 +194,16 @@ include VIEWS_PATH . '/layouts/header.php';
                         <!-- Payment Information -->
                         <div class="alert alert-info">
                             <h6><i class="fas fa-info-circle"></i> Payment Information</h6>
-                            <p class="mb-0">
-                                After registration, you will receive instructions to pay the registration fee of 
-                                <strong>KES 200</strong> via M-Pesa Paybill <strong>4163987</strong>. 
-                                Your account will be activated once payment is confirmed.
+                            <p class="mb-2">
+                                After registration, you can pay the registration fee of 
+                                <strong>KES 200</strong> using:
+                            </p>
+                            <ul class="mb-0">
+                                <li><strong>STK Push</strong> - Instant payment prompt to your phone (Recommended)</li>
+                                <li><strong>M-Pesa Paybill</strong> - Manual payment via M-Pesa to shortcode <strong><?php echo MPESA_BUSINESS_SHORTCODE; ?></strong></li>
+                            </ul>
+                            <p class="mb-0 mt-2">
+                                <small class="text-muted">Your account will be activated once payment is confirmed.</small>
                             </p>
                         </div>
                         
