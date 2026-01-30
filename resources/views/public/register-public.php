@@ -199,6 +199,26 @@
             margin-bottom: 20px;
         }
         
+        /* Invalid field styling */
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #dc3545 !important;
+            background-color: #fff5f5 !important;
+            animation: shake 0.5s;
+        }
+        
+        .form-control.is-invalid:focus,
+        .form-select.is-invalid:focus {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
         .btn-navigation {
             padding: 12px 30px;
             font-size: 1rem;
@@ -314,7 +334,7 @@
         
         <!-- Registration Body -->
         <div class="registration-body">
-            <form id="registrationForm" method="POST" action="/register/process">
+            <form id="registrationForm" method="POST" action="/register">
                 
                 <!-- Step 1: Package Selection -->
                 <div class="form-section active" data-section="1">
@@ -572,11 +592,20 @@
             const packageList = document.getElementById('packageList');
             packageList.innerHTML = '';
             
+            let hasVisiblePackages = false;
+            
             packages.forEach(pkg => {
-                // Apply age filter
-                if (ageFilter && pkg.max_entry_age && parseInt(ageFilter) > pkg.max_entry_age) {
-                    return;
+                // Apply age filter - check if user's age is within package age range
+                if (ageFilter) {
+                    const age = parseInt(ageFilter);
+                    if (pkg.age_min && pkg.age_max) {
+                        if (age < pkg.age_min || age > pkg.age_max) {
+                            return; // Skip this package
+                        }
+                    }
                 }
+                
+                hasVisiblePackages = true;
                 
                 const card = document.createElement('div');
                 card.className = 'package-card';
@@ -584,12 +613,23 @@
                 card.onclick = () => selectPackage(pkg.id);
                 
                 let features = `
-                    <li><i class="fas fa-check-circle"></i> Coverage: KES ${pkg.coverage_amount.toLocaleString()}</li>
-                    <li><i class="fas fa-check-circle"></i> ${pkg.dependent_type || 'Self only'}</li>
+                    <li><i class="fas fa-check-circle"></i> Monthly: KES ${pkg.monthly_contribution.toLocaleString()}</li>
                 `;
                 
-                if (pkg.max_entry_age) {
-                    features += `<li><i class="fas fa-info-circle"></i> Entry age limit: ${pkg.max_entry_age} years</li>`;
+                if (pkg.age_min && pkg.age_max) {
+                    features += `<li><i class="fas fa-info-circle"></i> Age range: ${pkg.age_min}-${pkg.age_max} years</li>`;
+                }
+                
+                if (pkg.max_children) {
+                    features += `<li><i class="fas fa-child"></i> Up to ${pkg.max_children} children</li>`;
+                }
+                
+                if (pkg.max_parents) {
+                    features += `<li><i class="fas fa-users"></i> Up to ${pkg.max_parents} parents</li>`;
+                }
+                
+                if (pkg.max_inlaws) {
+                    features += `<li><i class="fas fa-users"></i> Up to ${pkg.max_inlaws} in-laws</li>`;
                 }
                 
                 card.innerHTML = `
@@ -602,6 +642,10 @@
                 
                 packageList.appendChild(card);
             });
+            
+            if (!hasVisiblePackages && ageFilter) {
+                packageList.innerHTML = '<p class="text-center text-muted">No packages available for the selected age. Please adjust your age.</p>';
+            }
         }
         
         // Filter packages by age
@@ -711,6 +755,48 @@
             document.querySelector(`[data-section="${section}"]`).classList.add('active');
         }
         
+        // Function to repopulate form with old values
+        function repopulateForm(oldValues) {
+            if (!oldValues) return;
+            
+            // Iterate through old values and set form fields
+            for (const [key, value] of Object.entries(oldValues)) {
+                const field = document.querySelector(`[name="${key}"]`);
+                if (field) {
+                    if (field.type === 'radio' || field.type === 'checkbox') {
+                        if (field.value === value) {
+                            field.checked = true;
+                        }
+                    } else {
+                        field.value = value;
+                    }
+                }
+            }
+        }
+        
+        // Function to highlight error field
+        function highlightErrorField(fieldName) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.classList.add('is-invalid');
+                field.style.borderColor = '#dc3545';
+                field.style.backgroundColor = '#fff5f5';
+                
+                // Scroll to the error field
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Focus on the field
+                setTimeout(() => field.focus(), 500);
+                
+                // Remove error styling after user starts typing
+                field.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                    this.style.borderColor = '';
+                    this.style.backgroundColor = '';
+                }, { once: true });
+            }
+        }
+        
         // Form submission
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -721,10 +807,16 @@
                 return;
             }
             
+            // Disable submit button to prevent double submission
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
             // Submit form
             const formData = new FormData(this);
             
-            fetch('/register/process', {
+            fetch('/register', {
                 method: 'POST',
                 body: formData
             })
@@ -736,12 +828,45 @@
                     updateStepIndicator();
                     showSection(4);
                 } else {
+                    // Restore form values
+                    if (data.old_values) {
+                        repopulateForm(data.old_values);
+                    }
+                    
+                    // Highlight error field if specified
+                    if (data.field) {
+                        highlightErrorField(data.field);
+                        
+                        // Navigate to the step containing the error field
+                        const errorField = document.querySelector(`[name="${data.field}"]`);
+                        if (errorField) {
+                            const section = errorField.closest('.form-section');
+                            if (section) {
+                                const stepNum = parseInt(section.dataset.section);
+                                if (stepNum !== currentStep) {
+                                    currentStep = stepNum;
+                                    updateStepIndicator();
+                                    showSection(stepNum);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Show error message
                     alert('Registration failed: ' + data.message);
+                    
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
             })
             .catch(error => {
                 alert('An error occurred. Please try again.');
                 console.error(error);
+                
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             });
         });
     </script>

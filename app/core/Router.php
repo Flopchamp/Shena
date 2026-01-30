@@ -24,11 +24,15 @@ class Router
         // Authentication Routes
         $this->addRoute('GET', '/login', 'AuthController@showLogin');
         $this->addRoute('POST', '/login', 'AuthController@login');
-        $this->addRoute('GET', '/register', 'AuthController@showRegister');
-        $this->addRoute('POST', '/register', 'AuthController@register');
+        $this->addRoute('GET', '/register', 'AuthController@showPublicRegistration');
+        $this->addRoute('POST', '/register', 'AuthController@processPublicRegistration');
         $this->addRoute('GET', '/logout', 'AuthController@logout');
         
-        // Public Registration Routes
+        // Legacy Registration Routes (old form - kept for backward compatibility)
+        $this->addRoute('GET', '/register-old', 'AuthController@showRegister');
+        $this->addRoute('POST', '/register-old/submit', 'AuthController@register');
+        
+        // Public Registration Routes (alias)
         $this->addRoute('GET', '/register-public', 'AuthController@showPublicRegistration');
         $this->addRoute('POST', '/register/process', 'AuthController@processPublicRegistration');
         

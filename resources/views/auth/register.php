@@ -123,14 +123,14 @@ include VIEWS_PATH . '/layouts/header.php';
                                         <div class="card-body">
                                             <div class="form-check">
                                                 <input
-                                                    class="form-check-input"
+                                                    class="form-check-input <?php echo hasError('package') ? 'is-invalid shake' : ''; ?>"
                                                     type="radio"
                                                     name="package"
                                                     id="package_<?php echo $key; ?>"
                                                     value="<?php echo $key; ?>"
-                                                    <?php echo $key === 'individual_below_70' ? 'checked' : ''; ?>
+                                                    <?php echo (old('package', 'individual_below_70') === $key) ? 'checked' : ''; ?>
                                                 >
-                                                <label class="form-check-label" for="package_<?php echo $key; ?>">
+                                                <label class="form-check-label <?php echo hasError('package') ? 'error-field-label' : ''; ?>" for="package_<?php echo $key; ?>">
                                                     <strong><?php echo e($package['name']); ?></strong>
                                                     <?php if (!empty($package['category']) && $package['category'] === 'executive'): ?>
                                                         <i class="fas fa-crown text-warning"></i>
@@ -248,13 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             errorField.focus();
         }, 300);
-    }
-    
-    // Restore selected package if present
-    const selectedPackage = '<?php echo e(old('package', 'individual_below_70')); ?>';
-    const packageInput = document.querySelector('input[name="package"][value="' + selectedPackage + '"]');
-    if (packageInput) {
-        packageInput.checked = true;
     }
 });
 </script>

@@ -188,6 +188,8 @@ class AuthController extends BaseController
             foreach ($required as $field) {
                 if (empty($userData[$field])) {
                     $_SESSION['error'] = 'Please fill in all required fields.';
+                    $_SESSION['old_input'] = array_merge($userData, $memberData);
+                    unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
                     $this->redirect('/register');
                     return;
                 }
@@ -196,6 +198,9 @@ class AuthController extends BaseController
             // Validate email
             if (!$this->validateEmail($userData['email'])) {
                 $_SESSION['error'] = 'Please enter a valid email address.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'email';
                 $this->redirect('/register');
                 return;
             }
@@ -203,6 +208,9 @@ class AuthController extends BaseController
             // Validate phone
             if (!$this->validatePhone($userData['phone'])) {
                 $_SESSION['error'] = 'Please enter a valid Kenyan phone number.';
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                $_SESSION['error_field'] = 'phone';
                 $this->redirect('/register');
                 return;
             }
@@ -262,6 +270,9 @@ class AuthController extends BaseController
                 } catch (Exception $e) {
                     error_log('Age calculation error: ' . $e->getMessage());
                     $_SESSION['error'] = 'Invalid date of birth.';
+                    $_SESSION['old_input'] = array_merge($userData, $memberData);
+                    unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                    $_SESSION['error_field'] = 'date_of_birth';
                     $this->redirect('/register');
                     return;
                 }
@@ -291,6 +302,9 @@ class AuthController extends BaseController
                 }
                 if ($age === null) {
                     $_SESSION['error'] = 'Date of birth is required to determine eligibility and package.';
+                    $_SESSION['old_input'] = array_merge($userData, $memberData);
+                    unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                    $_SESSION['error_field'] = 'date_of_birth';
                     $this->db->getConnection()->rollback();
                     $this->redirect('/register');
                     return;
@@ -302,6 +316,9 @@ class AuthController extends BaseController
                 
                 if (empty($packageKey) || !isset($membership_packages[$packageKey])) {
                     $_SESSION['error'] = 'Please select a valid membership package.';
+                    $_SESSION['old_input'] = array_merge($userData, $memberData);
+                    unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                    $_SESSION['error_field'] = 'package';
                     $this->db->getConnection()->rollback();
                     $this->redirect('/register');
                     return;
@@ -362,6 +379,11 @@ class AuthController extends BaseController
             error_log('Registration error: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
             $_SESSION['error'] = 'Registration failed: ' . ($e->getMessage() ?: 'Please try again.');
+            // Preserve form values even on unexpected errors
+            if (isset($userData) && isset($memberData)) {
+                $_SESSION['old_input'] = array_merge($userData, $memberData);
+                unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+            }
             $this->redirect('/register');
         }
     }
@@ -381,9 +403,17 @@ class AuthController extends BaseController
     {
         global $membership_packages;
         
+        // Convert packages array to include IDs (using array keys as IDs)
+        $packagesWithIds = [];
+        foreach ($membership_packages as $key => $package) {
+            $package['id'] = $key;
+            $package['key'] = $key; // Keep the key for backward compatibility
+            $packagesWithIds[] = $package;
+        }
+        
         $data = [
             'title' => 'Join Shena Companion - Public Registration',
-            'packages' => $membership_packages,
+            'packages' => $packagesWithIds,
             'csrf_token' => $this->generateCsrfToken()
         ];
         
@@ -411,7 +441,7 @@ class AuthController extends BaseController
             }
             
             // Sanitize inputs
-            $packageId = intval($_POST['package_id']);
+            $packageId = $this->sanitizeInput($_POST['package_id'] ?? '');
             $firstName = $this->sanitizeInput($_POST['first_name']);
             $lastName = $this->sanitizeInput($_POST['last_name']);
             $nationalId = $this->sanitizeInput($_POST['national_id']);
@@ -449,31 +479,63 @@ class AuthController extends BaseController
             // Get package details
             global $membership_packages;
             $package = null;
-            foreach ($membership_packages as $pkg) {
-                if ($pkg['id'] == $packageId) {
-                    $package = $pkg;
-                    break;
-                }
+            
+            // Package ID is the array key
+            if (isset($membership_packages[$packageId])) {
+                $package = $membership_packages[$packageId];
             }
             
             if (!$package) {
-                throw new Exception('Invalid package selected');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid package selected',
+                    'old_values' => $_POST
+                ]);
+                return;
             }
             
             // Validate age against package limits
-            if (isset($package['max_entry_age']) && $age > $package['max_entry_age']) {
-                throw new Exception("You exceed the maximum entry age ({$package['max_entry_age']}) for this package");
+            if (isset($package['age_max']) && $age > $package['age_max']) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => "You exceed the maximum age ({$package['age_max']}) for this package",
+                    'field' => 'date_of_birth',
+                    'old_values' => $_POST
+                ]);
+                return;
+            }
+            
+            if (isset($package['age_min']) && $age < $package['age_min']) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => "You are below the minimum age ({$package['age_min']}) for this package",
+                    'field' => 'date_of_birth',
+                    'old_values' => $_POST
+                ]);
+                return;
             }
             
             // Check if email or national ID already exists
             $existingUser = $this->userModel->findByEmail($email);
             if ($existingUser) {
-                throw new Exception('Email address already registered');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email address already registered',
+                    'field' => 'email',
+                    'old_values' => $_POST
+                ]);
+                return;
             }
             
             $existingMember = $this->memberModel->findByNationalId($nationalId);
             if ($existingMember) {
-                throw new Exception('National ID already registered');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'National ID already registered',
+                    'field' => 'national_id',
+                    'old_values' => $_POST
+                ]);
+                return;
             }
             
             $this->db->getConnection()->beginTransaction();
@@ -590,9 +652,15 @@ class AuthController extends BaseController
             
         } catch (Exception $e) {
             error_log('Public registration error: ' . $e->getMessage());
+            
+            // Prepare old values without sensitive data
+            $oldValues = $_POST ?? [];
+            unset($oldValues['csrf_token']);
+            
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'old_values' => $oldValues
             ]);
         }
     }
