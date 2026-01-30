@@ -429,6 +429,10 @@ class Member extends BaseModel
         // Update member status to active
         $updateData = ['status' => 'active'];
 
+        // Policy Section 11: Reset maturity period to 4 months upon reactivation
+        $updateData['maturity_ends'] = date('Y-m-d', strtotime('+4 months'));
+        $updateData['reactivated_at'] = date('Y-m-d H:i:s');
+
         // Extend coverage by one year from today if coverage has expired
         if (!empty($member['coverage_ends']) && $member['coverage_ends'] < date('Y-m-d')) {
             $updateData['coverage_ends'] = date('Y-m-d', strtotime('+1 year'));

@@ -51,10 +51,10 @@ define('MAIL_PASSWORD', getenv('MAIL_PASSWORD') ?: '');
 define('MAIL_FROM_EMAIL', 'noreply@shenacompanion.org');
 define('MAIL_FROM_NAME', APP_NAME);
 
-// Twilio SMS Configuration
-define('TWILIO_SID', getenv('TWILIO_SID') ?: '');
-define('TWILIO_AUTH_TOKEN', getenv('TWILIO_AUTH_TOKEN') ?: '');
-define('TWILIO_PHONE_NUMBER', '+1234567890');
+// HostPinnacle SMS Configuration
+define('HOSTPINNACLE_USER_ID', getenv('HOSTPINNACLE_USER_ID') ?: '');
+define('HOSTPINNACLE_API_KEY', getenv('HOSTPINNACLE_API_KEY') ?: '');
+define('HOSTPINNACLE_SENDER_ID', getenv('HOSTPINNACLE_SENDER_ID') ?: 'SHENA');
 
 // Security Settings - CRITICAL: Change these in production
 define('ENCRYPTION_KEY', getenv('ENCRYPTION_KEY') ?: bin2hex(random_bytes(16)));

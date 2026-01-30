@@ -85,8 +85,9 @@ include VIEWS_PATH . '/layouts/member-header.php';
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Cause of Death</label>
-                        <textarea name="cause_of_death" class="form-control" rows="2"></textarea>
+                        <label class="form-label">Cause of Death <span class="text-danger">*</span></label>
+                        <textarea name="cause_of_death" class="form-control" rows="2" required></textarea>
+                        <small class="form-text text-muted">Required for claim verification. Excluded causes include: self-medication, drug/substance abuse, criminal acts, riots/war, hazardous activities.</small>
                     </div>
                     <h6 class="mt-4">Claim Details</h6>
                     <div class="row">

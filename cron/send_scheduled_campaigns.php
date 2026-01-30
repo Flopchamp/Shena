@@ -4,7 +4,8 @@
  * Run this script every 5-10 minutes via cron
  * 
  * Usage: php cron/send_scheduled_campaigns.php
- * Cron: */10 * * * * cd /path/to/Shena && php cron/send_scheduled_campaigns.php >> storage/logs/cron-campaigns.log 2>&1
+ * Cron: (star)/10 * * * * cd /path/to/Shena && php cron/send_scheduled_campaigns.php >> storage/logs/cron-campaigns.log 2>&1
+ * (Replace (star) with actual asterisk character)
  */
 
 define('ROOT_PATH', dirname(__DIR__));

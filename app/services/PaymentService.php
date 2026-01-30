@@ -159,11 +159,43 @@ class PaymentService
                     $memberId = $confirmedPayment['member_id'];
                     $paymentType = $confirmedPayment['payment_type'] ?? 'monthly';
                     
-                    // -- Automate Reactivation Logic --
-                    // Check if member is defaulted or payment is explicitly for reactivation
+                    // Get member and user models
                     $memberModel = new Member();
                     $member = $memberModel->find($memberId);
                     
+                    // -- Handle Registration Fee Payment --
+                    if ($member && $paymentType === 'registration') {
+                        // Verify total registration fee paid (KES 200)
+                        $registrationFeeRequired = defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200;
+                        
+                        $allRegistrationPayments = $paymentModel->findAll([
+                            'member_id' => $memberId,
+                            'payment_type' => 'registration',
+                            'status' => 'completed'
+                        ]);
+                        
+                        $totalPaid = 0;
+                        foreach ($allRegistrationPayments as $regPayment) {
+                            $totalPaid += $regPayment['amount'];
+                        }
+                        
+                        // Auto-activate if full registration fee is paid
+                        if ($totalPaid >= $registrationFeeRequired && $member['status'] === 'inactive') {
+                            $memberModel->update($memberId, [
+                                'status' => 'active',
+                                'coverage_ends' => date('Y-m-d', strtotime('+1 year'))
+                            ]);
+                            
+                            // Also activate user account
+                            $userModel = new User();
+                            $userModel->update($member['user_id'], ['status' => 'active']);
+                            
+                            error_log("Member #{$memberId} automatically activated after registration fee payment of KES {$totalPaid}.");
+                        }
+                    }
+                    
+                    // -- Automate Reactivation Logic --
+                    // Check if member is defaulted or payment is explicitly for reactivation
                     if ($member && ($member['status'] === 'defaulted' || $paymentType === 'reactivation')) {
                          // Calculate Arrears
                          // Arrears = (Months since coverage ended) * Monthly Contribution

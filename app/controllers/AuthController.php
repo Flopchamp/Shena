@@ -328,6 +328,7 @@ class AuthController extends BaseController
                     'next_of_kin_phone' => $memberData['next_of_kin_phone'] ?? '',
                     'package' => $packageCategory,
                     'monthly_contribution' => $monthlyContribution,
+                    'maturity_ends' => $maturityEnds,
                     'status' => 'inactive',
                     'created_at' => date('Y-m-d H:i:s')
                 ];

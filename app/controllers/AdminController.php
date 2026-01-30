@@ -172,11 +172,44 @@ class AdminController extends BaseController
             $memberId = $id ?? ($_POST['member_id'] ?? 0);
             
             if ($memberId) {
+                $member = $this->memberModel->find($memberId);
+                
+                if (!$member) {
+                    $_SESSION['error'] = 'Member not found.';
+                    $this->redirect('/admin/members');
+                    return;
+                }
+                
+                // Verify registration fee payment (KES 200) per policy Section 5
+                $paymentModel = new Payment();
+                $registrationFeeRequired = defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200;
+                
+                // Check if registration fee has been paid
+                $registrationPayments = $paymentModel->findAll([
+                    'member_id' => $memberId,
+                    'payment_type' => 'registration',
+                    'status' => 'completed'
+                ]);
+                
+                $totalRegistrationPaid = 0;
+                foreach ($registrationPayments as $payment) {
+                    $totalRegistrationPaid += $payment['amount'];
+                }
+                
+                if ($totalRegistrationPaid < $registrationFeeRequired) {
+                    $outstanding = $registrationFeeRequired - $totalRegistrationPaid;
+                    $_SESSION['error'] = "Cannot activate member. Registration fee of KES " . number_format($registrationFeeRequired) . " not paid. Outstanding: KES " . number_format($outstanding);
+                    $this->redirect('/admin/members');
+                    return;
+                }
+                
                 // Update member status
-                $this->memberModel->update($memberId, ['status' => 'active']);
+                $this->memberModel->update($memberId, [
+                    'status' => 'active',
+                    'coverage_ends' => date('Y-m-d', strtotime('+1 year'))
+                ]);
                 
                 // Update user status
-                $member = $this->memberModel->find($memberId);
                 if ($member) {
                     $this->userModel->update($member['user_id'], ['status' => 'active']);
                 }

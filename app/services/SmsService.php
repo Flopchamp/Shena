@@ -1,6 +1,6 @@
 <?php
 /**
- * SMS Service - Handles SMS sending via Twilio
+ * SMS Service - Handles SMS sending via HostPinnacle
  */
 class SmsService 
 {
@@ -9,9 +9,9 @@ class SmsService
     public function __construct()
     {
         $this->config = [
-            'sid' => TWILIO_SID,
-            'auth_token' => TWILIO_AUTH_TOKEN,
-            'phone_number' => TWILIO_PHONE_NUMBER
+            'user_id' => HOSTPINNACLE_USER_ID,
+            'api_key' => HOSTPINNACLE_API_KEY,
+            'sender_id' => HOSTPINNACLE_SENDER_ID
         ];
     }
     
@@ -21,13 +21,20 @@ class SmsService
             // Format phone number for Kenyan numbers
             $to = $this->formatPhoneNumber($to);
             
-            // Twilio API endpoint
-            $url = "https://api.twilio.com/2010-04-01/Accounts/{$this->config['sid']}/Messages.json";
+            // HostPinnacle API endpoint
+            $url = "https://sms.hostpinnacle.co.ke/api/services/sendsms/";
             
+            // HostPinnacle API parameters
             $data = [
-                'From' => $this->config['phone_number'],
-                'To' => $to,
-                'Body' => $message
+                'userid' => $this->config['user_id'],
+                'password' => $this->config['api_key'],
+                'mobile' => $to,
+                'msg' => $message,
+                'senderid' => $this->config['sender_id'],
+                'sendMethod' => 'quick',
+                'msgType' => 'text',
+                'duplicatecheck' => 'true',
+                'output' => 'json'
             ];
             
             $postData = http_build_query($data);
@@ -37,7 +44,7 @@ class SmsService
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERPWD, $this->config['sid'] . ':' . $this->config['auth_token']);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/x-www-form-urlencoded'
             ]);
@@ -46,10 +53,18 @@ class SmsService
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             
-            if ($httpCode == 201) {
-                return json_decode($response, true);
+            if ($httpCode == 200) {
+                $result = json_decode($response, true);
+                
+                // HostPinnacle returns success with status code 200
+                if (isset($result['status']) && $result['status'] == '200') {
+                    return $result;
+                } else {
+                    error_log('SMS sending failed: ' . $response);
+                    return false;
+                }
             } else {
-                error_log('SMS sending failed: ' . $response);
+                error_log('SMS sending failed: HTTP Code ' . $httpCode . ', Response: ' . $response);
                 return false;
             }
             
@@ -141,26 +156,27 @@ class SmsService
         $phone = preg_replace('/[^0-9]/', '', $phone);
         
         // Handle Kenyan phone number formats
+        // HostPinnacle accepts 254XXXXXXXXX format (without +)
         if (substr($phone, 0, 3) === '254') {
             // Already in international format
-            return '+' . $phone;
+            return $phone;
         } elseif (substr($phone, 0, 1) === '0') {
             // Local format starting with 0
-            return '+254' . substr($phone, 1);
+            return '254' . substr($phone, 1);
         } elseif (strlen($phone) === 9) {
             // 9 digits without country code or leading 0
-            return '+254' . $phone;
+            return '254' . $phone;
         }
         
         // Return as is if format is unclear
-        return '+' . $phone;
+        return $phone;
     }
     
     public function validatePhoneNumber($phone)
     {
         $formatted = $this->formatPhoneNumber($phone);
         
-        // Kenyan phone numbers should be +254 followed by 9 digits
-        return preg_match('/^\+254[17][0-9]{8}$/', $formatted);
+        // Kenyan phone numbers should be 254 followed by 9 digits
+        return preg_match('/^254[17][0-9]{8}$/', $formatted);
     }
 }

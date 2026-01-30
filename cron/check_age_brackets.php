@@ -82,8 +82,29 @@ try {
                 $expectedPackageName = 'Executive Above 70';
             }
         }
+        elseif ($packageType === 'couple') {
+            // Couple packages: pricing based on primary member's age
+            if ($age < 70) {
+                $expectedAmount = 200.0;
+                $expectedPackageName = 'Couple Below 70';
+            } else {
+                $expectedAmount = 550.0; // Above 70
+                $expectedPackageName = 'Couple Above 70';
+            }
+        }
+        elseif ($packageType === 'family') {
+            // Family packages: pricing based on primary member's age
+            // Note: This is simplified - actual package may vary by dependents included
+            if ($age < 70) {
+                $expectedAmount = 300.0; // Base for family below 70
+                $expectedPackageName = 'Family Below 70';
+            } else {
+                $expectedAmount = 650.0; // Base for family above 70
+                $expectedPackageName = 'Family Above 70';
+            }
+        }
         else {
-            // Skipping complex couple/family logic for MVP auto-check
+            // Unknown package type
             continue; 
         }
         
