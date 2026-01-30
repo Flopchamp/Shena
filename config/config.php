@@ -31,7 +31,7 @@ define('APP_URL', getenv('APP_URL') ?: 'http://localhost');
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'shena_welfare_db');
 define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_PASS', getenv('DB_PASS') ?: '4885');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_FILE', ROOT_PATH . '/database/shena_welfare.db');
 

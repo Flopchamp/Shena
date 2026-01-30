@@ -303,28 +303,38 @@ class MemberController extends BaseController
                 return;
             }
             
+            // Service-based claim data per SHENA Policy 2026
             $claimData = [
                 'member_id' => $member['id'],
                 'beneficiary_id' => (int)($_POST['beneficiary_id'] ?? 0),
                 'deceased_name' => $this->sanitizeInput($_POST['deceased_name'] ?? ''),
                 'deceased_id_number' => $this->sanitizeInput($_POST['deceased_id_number'] ?? ''),
+                'date_of_birth' => $_POST['date_of_birth'] ?? null,
                 'date_of_death' => $_POST['date_of_death'] ?? '',
                 'place_of_death' => $this->sanitizeInput($_POST['place_of_death'] ?? ''),
                 'cause_of_death' => $this->sanitizeInput($_POST['cause_of_death'] ?? ''),
                 'mortuary_name' => $this->sanitizeInput($_POST['mortuary_name'] ?? ''),
                 'mortuary_bill_amount' => (float)($_POST['mortuary_bill_amount'] ?? 0),
-                'claim_amount' => (float)($_POST['claim_amount'] ?? 0),
+                'mortuary_days_count' => (int)($_POST['mortuary_days_count'] ?? 0),
+                'service_delivery_type' => 'standard_services', // Default to service delivery
                 'notes' => $this->sanitizeInput($_POST['notes'] ?? '')
             ];
             
-            // Validate required fields
-            $required = ['beneficiary_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death', 'claim_amount'];
+            // Validate required fields (no claim_amount required for service-based)
+            $required = ['beneficiary_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death'];
             foreach ($required as $field) {
                 if (empty($claimData[$field])) {
                     $_SESSION['error'] = 'Please fill in all required fields.';
                     $this->redirect('/claims');
                     return;
                 }
+            }
+            
+            // Validate mortuary days (max 14 per policy)
+            if ($claimData['mortuary_days_count'] > 14) {
+                $_SESSION['error'] = 'Mortuary preservation is covered for a maximum of 14 days per policy.';
+                $this->redirect('/claims');
+                return;
             }
             
             // Validate beneficiary belongs to member
@@ -335,29 +345,64 @@ class MemberController extends BaseController
                 return;
             }
             
-            // Persist core claim details
+            // Check member eligibility per policy Section 9
+            // Must be active, maturity period completed, not in default
+            if ($member['status'] === 'defaulted') {
+                $_SESSION['error'] = 'Cannot submit claim. Membership is in default status. Please clear outstanding contributions.';
+                $this->redirect('/claims');
+                return;
+            }
+            
+            if ($member['status'] !== 'active') {
+                $_SESSION['error'] = 'Cannot submit claim. Membership must be active.';
+                $this->redirect('/claims');
+                return;
+            }
+            
+            // Check maturity period
+            if (!empty($member['maturity_ends'])) {
+                $maturityDate = new DateTime($member['maturity_ends']);
+                $today = new DateTime();
+                
+                if ($today < $maturityDate) {
+                    $daysRemaining = $today->diff($maturityDate)->days;
+                    $_SESSION['error'] = "Cannot submit claim. Maturity period not completed. {$daysRemaining} days remaining.";
+                    $this->redirect('/claims');
+                    return;
+                }
+            }
+            
+            // Submit claim
             $claimId = $this->claimModel->submitClaim($claimData);
 
-            // Handle required and optional claim documents according to policy
+            // Handle required claim documents per policy Section 8
+            // Required: ID copy, Chief letter, Mortuary invoice
             $claimDocumentModel = new ClaimDocument();
 
-            $fileFields = [
-                'id_copy' => 'id_copy',
-                'chief_letter' => 'chief_letter',
-                'mortuary_invoice' => 'mortuary_invoice',
-                'death_certificate' => 'death_certificate'
+            $documentFields = [
+                'id_copy' => ['required' => true, 'label' => 'ID/Birth Certificate Copy'],
+                'chief_letter' => ['required' => true, 'label' => 'Chief Letter'],
+                'mortuary_invoice' => ['required' => true, 'label' => 'Mortuary Invoice'],
+                'death_certificate' => ['required' => false, 'label' => 'Death Certificate']
             ];
 
-            foreach ($fileFields as $inputName => $documentType) {
+            foreach ($documentFields as $inputName => $config) {
                 if (!isset($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
+                    if ($config['required']) {
+                        // Delete the claim if required document missing
+                        $this->claimModel->delete($claimId);
+                        $_SESSION['error'] = "Required document missing: {$config['label']}. Please upload all required documents.";
+                        $this->redirect('/claims');
+                        return;
+                    }
                     continue;
                 }
 
                 $uploadResult = uploadFile($_FILES[$inputName], 'claims/' . $claimId);
                 if ($uploadResult === false) {
-                    // If a mandatory document fails upload, abort and show error
-                    if (in_array($documentType, ['id_copy', 'chief_letter', 'mortuary_invoice'])) {
-                        $_SESSION['error'] = 'Failed to upload required document: ' . $documentType . '. Please try again.';
+                    if ($config['required']) {
+                        $this->claimModel->delete($claimId);
+                        $_SESSION['error'] = "Failed to upload required document: {$config['label']}. Please try again.";
                         $this->redirect('/claims');
                         return;
                     }
@@ -366,7 +411,7 @@ class MemberController extends BaseController
 
                 $claimDocumentModel->addDocument([
                     'claim_id' => $claimId,
-                    'document_type' => $documentType,
+                    'document_type' => $inputName,
                     'file_name' => $uploadResult['file_name'],
                     'file_path' => $uploadResult['file_path'],
                     'file_size' => $uploadResult['file_size'],
@@ -376,14 +421,20 @@ class MemberController extends BaseController
             }
             
             // Send notification email to admin
-            $emailService = new EmailService();
-            $emailService->sendClaimNotificationEmail($member, $claimData);
+            if (class_exists('EmailService')) {
+                try {
+                    $emailService = new EmailService();
+                    $emailService->sendClaimNotificationEmail($member, $claimData);
+                } catch (Exception $e) {
+                    error_log('Email notification failed: ' . $e->getMessage());
+                }
+            }
             
-            $_SESSION['success'] = 'Claim submitted successfully. You will be notified of the status via email.';
+            $_SESSION['success'] = 'Claim submitted successfully. SHENA Companion will review your claim and contact you within 1-3 business days.';
             
         } catch (Exception $e) {
             error_log('Submit claim error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Failed to submit claim. Please try again.';
+            $_SESSION['error'] = 'Failed to submit claim: ' . $e->getMessage();
         }
         
         $this->redirect('/claims');
@@ -474,6 +525,332 @@ class MemberController extends BaseController
         
         $this->redirect('/beneficiaries');
     }
+    
+    /**
+     * Search members by member number, ID number, or name
+     * Used for reconciliation and admin searches
+     */
+    public function search()
+    {
+        $query = $_GET['q'] ?? '';
+        
+        if (empty($query)) {
+            $this->json([]);
+            return;
+        }
+        
+        // Search by member number, ID number, or name
+        $members = $this->memberModel->search($query);
+        $this->json($members);
+    }
+    
+    /**
+     * View package upgrade page
+     */
+    public function viewUpgrade()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/member/dashboard');
+            return;
+        }
+        
+        // Check if upgrade is possible
+        if ($member['package'] === 'premium') {
+            $_SESSION['info'] = 'You are already on the Premium package.';
+            $this->redirect('/member/dashboard');
+            return;
+        }
+        
+        require_once 'app/services/PlanUpgradeService.php';
+        $upgradeService = new PlanUpgradeService();
+        
+        // Check for pending upgrades
+        $pendingUpgrades = $upgradeService->getMemberPendingUpgrades($member['id']);
+        
+        // Calculate upgrade cost
+        try {
+            $calculation = $upgradeService->calculateUpgradeCost($member['id']);
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            $this->redirect('/member/dashboard');
+            return;
+        }
+        
+        // Get upgrade history
+        $upgradeHistory = $upgradeService->getMemberUpgradeHistory($member['id']);
+        
+        $this->view('member/upgrade', [
+            'member' => $member,
+            'calculation' => $calculation,
+            'pendingUpgrades' => $pendingUpgrades,
+            'upgradeHistory' => $upgradeHistory
+        ]);
+    }
+    
+    /**
+     * Request package upgrade
+     */
+    public function requestUpgrade()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Invalid request method'], 405);
+            return;
+        }
+        
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $this->json(['error' => 'Member not found'], 404);
+            return;
+        }
+        
+        require_once 'app/services/PlanUpgradeService.php';
+        $upgradeService = new PlanUpgradeService();
+        
+        try {
+            // Check for existing pending upgrades
+            $pendingUpgrades = $upgradeService->getMemberPendingUpgrades($member['id']);
+            if (!empty($pendingUpgrades)) {
+                $this->json(['error' => 'You already have a pending upgrade request'], 400);
+                return;
+            }
+            
+            // Create upgrade request
+            $upgradeRequestId = $upgradeService->createUpgradeRequest($member['id'], 'premium');
+            
+            // Initiate M-Pesa payment
+            $phoneNumber = $_POST['phone_number'] ?? $member['phone'];
+            $paymentResponse = $upgradeService->initiateUpgradePayment($upgradeRequestId, $phoneNumber);
+            
+            $this->json([
+                'success' => true,
+                'message' => $paymentResponse['message'],
+                'upgrade_request_id' => $upgradeRequestId,
+                'checkout_request_id' => $paymentResponse['checkout_request_id'],
+                'amount' => $paymentResponse['amount']
+            ]);
+            
+        } catch (Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Check upgrade payment status
+     */
+    public function checkUpgradeStatus()
+    {
+        $upgradeRequestId = $_GET['upgrade_request_id'] ?? null;
+        
+        if (!$upgradeRequestId) {
+            $this->json(['error' => 'Upgrade request ID is required'], 400);
+            return;
+        }
+        
+        require_once 'app/services/PlanUpgradeService.php';
+        $upgradeService = new PlanUpgradeService();
+        
+        try {
+            $request = $upgradeService->getUpgradeRequest($upgradeRequestId);
+            
+            if (!$request) {
+                $this->json(['error' => 'Upgrade request not found'], 404);
+                return;
+            }
+            
+            // Verify this upgrade belongs to the logged-in member
+            $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+            if ($request['member_id'] != $member['id']) {
+                $this->json(['error' => 'Unauthorized'], 403);
+                return;
+            }
+            
+            $this->json([
+                'success' => true,
+                'status' => $request['status'],
+                'upgrade_request' => $request
+            ]);
+            
+        } catch (Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Cancel upgrade request
+     */
+    public function cancelUpgrade()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Invalid request method'], 405);
+            return;
+        }
+        
+        $upgradeRequestId = $_POST['upgrade_request_id'] ?? null;
+        
+        if (!$upgradeRequestId) {
+            $this->json(['error' => 'Upgrade request ID is required'], 400);
+            return;
+        }
+        
+        require_once 'app/services/PlanUpgradeService.php';
+        $upgradeService = new PlanUpgradeService();
+        
+        try {
+            $request = $upgradeService->getUpgradeRequest($upgradeRequestId);
+            
+            // Verify this upgrade belongs to the logged-in member
+            $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+            if ($request['member_id'] != $member['id']) {
+                $this->json(['error' => 'Unauthorized'], 403);
+                return;
+            }
+            
+            $upgradeService->cancelUpgrade($upgradeRequestId, 'Cancelled by member');
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Upgrade request cancelled successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * View notification settings page
+     */
+    public function viewNotificationSettings()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/dashboard');
+            return;
+        }
+        
+        // Get notification preferences
+        $db = Database::getInstance();
+        $stmt = $db->getConnection()->prepare("
+            SELECT * FROM notification_preferences WHERE member_id = ?
+        ");
+        $stmt->execute([$member['id']]);
+        $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Default preferences if none exist
+        if (!$preferences) {
+            $preferences = [
+                'email_payment_reminders' => 1,
+                'email_payment_confirmations' => 1,
+                'email_claim_updates' => 1,
+                'email_newsletters' => 1,
+                'sms_payment_reminders' => 1,
+                'sms_payment_confirmations' => 1,
+                'sms_claim_updates' => 1,
+                'sms_important_alerts' => 1,
+                'notification_frequency' => 'immediate',
+                'marketing_communications' => 0
+            ];
+        }
+        
+        $data = [
+            'member' => $member,
+            'preferences' => $preferences,
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+        
+        $this->view('member.notification-settings', $data);
+    }
+    
+    /**
+     * Update notification preferences
+     */
+    public function updateNotificationSettings()
+    {
+        try {
+            $this->validateCsrf();
+            
+            $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+            
+            if (!$member) {
+                $_SESSION['error'] = 'Member profile not found.';
+                $this->redirect('/dashboard');
+                return;
+            }
+            
+            $db = Database::getInstance();
+            
+            // Prepare preferences data
+            $preferences = [
+                'email_payment_reminders' => isset($_POST['email_payment_reminders']) ? 1 : 0,
+                'email_payment_confirmations' => isset($_POST['email_payment_confirmations']) ? 1 : 0,
+                'email_claim_updates' => isset($_POST['email_claim_updates']) ? 1 : 0,
+                'email_newsletters' => isset($_POST['email_newsletters']) ? 1 : 0,
+                'sms_payment_reminders' => isset($_POST['sms_payment_reminders']) ? 1 : 0,
+                'sms_payment_confirmations' => isset($_POST['sms_payment_confirmations']) ? 1 : 0,
+                'sms_claim_updates' => isset($_POST['sms_claim_updates']) ? 1 : 0,
+                'sms_important_alerts' => 1, // Always enabled
+                'notification_frequency' => $_POST['notification_frequency'] ?? 'immediate',
+                'marketing_communications' => isset($_POST['marketing_communications']) ? 1 : 0
+            ];
+            
+            // Check if preferences exist
+            $stmt = $db->getConnection()->prepare("
+                SELECT id FROM notification_preferences WHERE member_id = ?
+            ");
+            $stmt->execute([$member['id']]);
+            $exists = $stmt->fetch();
+            
+            if ($exists) {
+                // Update existing preferences
+                $stmt = $db->getConnection()->prepare("
+                    UPDATE notification_preferences SET
+                        email_payment_reminders = :email_payment_reminders,
+                        email_payment_confirmations = :email_payment_confirmations,
+                        email_claim_updates = :email_claim_updates,
+                        email_newsletters = :email_newsletters,
+                        sms_payment_reminders = :sms_payment_reminders,
+                        sms_payment_confirmations = :sms_payment_confirmations,
+                        sms_claim_updates = :sms_claim_updates,
+                        sms_important_alerts = :sms_important_alerts,
+                        notification_frequency = :notification_frequency,
+                        marketing_communications = :marketing_communications,
+                        updated_at = NOW()
+                    WHERE member_id = :member_id
+                ");
+                $preferences['member_id'] = $member['id'];
+                $stmt->execute($preferences);
+            } else {
+                // Insert new preferences
+                $stmt = $db->getConnection()->prepare("
+                    INSERT INTO notification_preferences (
+                        member_id, email_payment_reminders, email_payment_confirmations,
+                        email_claim_updates, email_newsletters, sms_payment_reminders,
+                        sms_payment_confirmations, sms_claim_updates, sms_important_alerts,
+                        notification_frequency, marketing_communications
+                    ) VALUES (
+                        :member_id, :email_payment_reminders, :email_payment_confirmations,
+                        :email_claim_updates, :email_newsletters, :sms_payment_reminders,
+                        :sms_payment_confirmations, :sms_claim_updates, :sms_important_alerts,
+                        :notification_frequency, :marketing_communications
+                    )
+                ");
+                $preferences['member_id'] = $member['id'];
+                $stmt->execute($preferences);
+            }
+            
+            $_SESSION['success'] = 'Notification preferences updated successfully!';
+            
+        } catch (Exception $e) {
+            error_log('Notification settings update error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to update preferences. Please try again.';
+        }
+        
+        $this->redirect('/member/notification-settings');
+    }
 }
-
-

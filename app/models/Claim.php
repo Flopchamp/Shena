@@ -47,9 +47,9 @@ class Claim extends BaseModel
     
     public function submitClaim($data)
     {
-        // Align required fields with database schema and policy booklet
-        // Schema columns: deceased_name, deceased_id_number, date_of_death, place_of_death, claim_amount, etc.
-        $requiredFields = ['member_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death', 'claim_amount'];
+        // Service-based claim submission per SHENA Companion Policy 2026
+        // Required fields: deceased details and mortuary information
+        $requiredFields = ['member_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field])) {
                 throw new Exception("Missing required field: {$field}");
@@ -73,38 +73,180 @@ class Claim extends BaseModel
             }
         }
         
+        // Set service delivery defaults
+        $data['service_delivery_type'] = $data['service_delivery_type'] ?? 'standard_services';
+        $data['mortuary_days_count'] = $data['mortuary_days_count'] ?? 0;
+        
+        // Validate mortuary days (max 14 per policy)
+        if (isset($data['mortuary_days_count']) && $data['mortuary_days_count'] > 14) {
+            throw new Exception("Mortuary preservation coverage limited to 14 days per policy");
+        }
+        
         $data['created_at'] = date('Y-m-d H:i:s');
-        // New claims start in "submitted" status, matching admin dashboards and policy
         $data['status'] = 'submitted';
         
-        return $this->create($data);
+        $claimId = $this->create($data);
+        
+        // Initialize service checklist for standard services
+        if ($data['service_delivery_type'] === 'standard_services') {
+            $checklistModel = new ClaimServiceChecklist();
+            $checklistModel->initializeChecklist($claimId);
+        }
+        
+        return $claimId;
     }
     
-    public function approveClaim($claimId, $approvedAmount = null, $notes = null)
+    /**
+     * Approve claim for standard service delivery
+     * Per policy: Mortuary bill, body dressing, coffin, transportation, equipment
+     */
+    public function approveClaimForServices($claimId, $deliveryDate = null, $notes = null)
     {
         $data = [
             'status' => 'approved',
+            'service_delivery_type' => 'standard_services',
+            'services_delivery_date' => $deliveryDate ?? date('Y-m-d'),
             'approved_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
-        
-        // If admin did not specify an approved amount, default to the claimed amount
-        if ($approvedAmount === null) {
-            $existing = $this->find($claimId);
-            if ($existing && isset($existing['claim_amount'])) {
-                $approvedAmount = $existing['claim_amount'];
-            }
-        }
-        
-        if ($approvedAmount !== null) {
-            $data['approved_amount'] = $approvedAmount;
-        }
         
         if ($notes) {
             $data['processing_notes'] = $notes;
         }
         
         return $this->update($claimId, $data);
+    }
+    
+    /**
+     * Approve claim for cash alternative (KSH 20,000)
+     * Per policy Section 12: Only in exceptional circumstances with mutual agreement
+     */
+    public function approveClaimForCashAlternative($claimId, $reason, $requestedBy, $approvedBy)
+    {
+        // Validate request
+        $cashAltModel = new ClaimCashAlternative();
+        $validation = $cashAltModel->validateRequest($claimId, $reason, $requestedBy);
+        
+        if ($validation !== true) {
+            throw new Exception("Validation failed: " . implode(", ", $validation));
+        }
+        
+        // Update claim
+        $data = [
+            'status' => 'approved',
+            'service_delivery_type' => 'cash_alternative',
+            'cash_alternative_amount' => 20000.00,
+            'approved_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        $this->update($claimId, $data);
+        
+        // Create cash alternative agreement
+        $cashAltModel->createAgreement([
+            'claim_id' => $claimId,
+            'reason_category' => $this->determineReasonCategory($reason),
+            'detailed_reason' => $reason,
+            'requested_by' => $requestedBy,
+            'approved_by' => $approvedBy,
+            'amount_paid' => 20000.00
+        ]);
+        
+        return true;
+    }
+    
+    /**
+     * Legacy method - kept for backward compatibility
+     */
+    public function approveClaim($claimId, $approvedAmount = null, $notes = null)
+    {
+        // Default to service delivery
+        return $this->approveClaimForServices($claimId, null, $notes);
+    }
+    
+    /**
+     * Update service delivery status
+     */
+    public function updateServiceDeliveryStatus($claimId, $serviceType, $completed = true)
+    {
+        $validServices = ['mortuary_bill_settled', 'body_dressing_completed', 'coffin_delivered', 
+                         'transportation_arranged', 'equipment_delivered'];
+        
+        if (!in_array($serviceType, $validServices)) {
+            throw new Exception("Invalid service type: {$serviceType}");
+        }
+        
+        return $this->update($claimId, [$serviceType => $completed]);
+    }
+    
+    /**
+     * Get claim service delivery checklist
+     */
+    public function getClaimServiceChecklist($claimId)
+    {
+        $checklistModel = new ClaimServiceChecklist();
+        return $checklistModel->getClaimChecklist($claimId);
+    }
+    
+    /**
+     * Complete claim after all services delivered
+     */
+    public function completeClaim($claimId, $completionNotes = null)
+    {
+        $claim = $this->find($claimId);
+        
+        if (!$claim) {
+            throw new Exception("Claim not found");
+        }
+        
+        // Check if cash alternative
+        if ($claim['service_delivery_type'] === 'cash_alternative') {
+            $cashAltModel = new ClaimCashAlternative();
+            $agreement = $cashAltModel->getByClaimId($claimId);
+            
+            if (!$agreement || !$agreement['agreement_signed']) {
+                throw new Exception("Cash alternative agreement must be signed before completion");
+            }
+            
+            if (!$agreement['paid_at']) {
+                throw new Exception("Cash payment must be processed before completion");
+            }
+        } else {
+            // Check if all services completed
+            $checklistModel = new ClaimServiceChecklist();
+            if (!$checklistModel->areAllServicesCompleted($claimId)) {
+                throw new Exception("All services must be completed before marking claim as completed");
+            }
+        }
+        
+        $data = [
+            'status' => 'completed',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        if ($completionNotes) {
+            $data['processing_notes'] = ($claim['processing_notes'] ?? '') . "\\n" . $completionNotes;
+        }
+        
+        return $this->update($claimId, $data);
+    }
+    
+    /**
+     * Determine reason category for cash alternative
+     */
+    private function determineReasonCategory($reason)
+    {
+        $reason = strtolower($reason);
+        
+        if (strpos($reason, 'security') !== false || strpos($reason, 'risk') !== false) {
+            return 'security_risk';
+        } elseif (strpos($reason, 'client') !== false || strpos($reason, 'request') !== false) {
+            return 'client_request';
+        } elseif (strpos($reason, 'logistic') !== false || strpos($reason, 'transport') !== false) {
+            return 'logistical_issue';
+        }
+        
+        return 'other';
     }
     
     public function rejectClaim($claimId, $reason)

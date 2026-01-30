@@ -119,8 +119,9 @@
                                 <th>Claim ID</th>
                                 <th>Member</th>
                                 <th>Deceased Name</th>
-                                <th>Claim Amount</th>
+                                <th>Service Type</th>
                                 <th>Status</th>
+                                <th>Progress</th>
                                 <th>Submitted</th>
                                 <th>Actions</th>
                             </tr>
@@ -144,7 +145,15 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <strong>KES <?php echo number_format($claim['claim_amount'], 2); ?></strong>
+                                    <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-money-bill"></i> Cash (KES 20,000)
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-hands-helping"></i> Standard Services
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span class="badge badge-<?php 
@@ -156,8 +165,30 @@
                                             default => 'secondary'
                                         };
                                     ?>">
-                                        <?php echo ucfirst($claim['status']); ?>
+                                        <?php echo ucfirst(str_replace('_', ' ', $claim['status'])); ?>
                                     </span>
+                                </td>
+                                <td>
+                                    <?php if (in_array($claim['status'], ['approved', 'services_in_progress'])): ?>
+                                        <?php
+                                        $completed_services = 0;
+                                        $total_services = 5;
+                                        if ($claim['mortuary_bill_settled']) $completed_services++;
+                                        if ($claim['body_dressing_completed']) $completed_services++;
+                                        if ($claim['coffin_delivered']) $completed_services++;
+                                        if ($claim['transportation_arranged']) $completed_services++;
+                                        if ($claim['equipment_delivered']) $completed_services++;
+                                        $progress = ($completed_services / $total_services) * 100;
+                                        ?>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-<?php echo $progress == 100 ? 'success' : 'info'; ?>" 
+                                                 style="width: <?php echo $progress; ?>%">
+                                                <?php echo $completed_services; ?>/<?php echo $total_services; ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">N/A</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
                                 <td>
@@ -166,12 +197,17 @@
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <?php if ($claim['status'] === 'pending'): ?>
-                                        <button type="button" class="btn btn-success btn-sm" onclick="approveClaim(<?php echo $claim['id']; ?>)">
-                                            <i class="fas fa-check"></i>
+                                        <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#approveModal<?php echo $claim['id']; ?>">
+                                            <i class="fas fa-check"></i> Approve
                                         </button>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="rejectClaim(<?php echo $claim['id']; ?>)">
                                             <i class="fas fa-times"></i>
                                         </button>
+                                        <?php endif; ?>
+                                        <?php if (in_array($claim['status'], ['approved', 'services_in_progress'])): ?>
+                                        <a href="/admin/claims/track/<?php echo $claim['id']; ?>" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-tasks"></i> Track Services
+                                        </a>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -253,6 +289,107 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Approve Claim Modal -->
+                            <?php if ($claim['status'] === 'pending'): ?>
+                            <div class="modal fade" id="approveModal<?php echo $claim['id']; ?>" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-success text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-check-circle"></i> Approve Claim #<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?>
+                                            </h5>
+                                            <button type="button" class="close text-white" data-dismiss="modal">
+                                                <span>&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="alert alert-info">
+                                                <strong>Member:</strong> <?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?><br>
+                                                <strong>Deceased:</strong> <?php echo htmlspecialchars($claim['deceased_name']); ?><br>
+                                                <strong>Mortuary Days:</strong> <?php echo $claim['mortuary_days_count'] ?? 14; ?> days
+                                            </div>
+                                            
+                                            <h6 class="font-weight-bold">Select Service Delivery Type:</h6>
+                                            
+                                            <!-- Standard Services Option -->
+                                            <div class="card mb-3 border-success">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="approval_type<?php echo $claim['id']; ?>" 
+                                                               id="standardServices<?php echo $claim['id']; ?>" value="standard" checked>
+                                                        <label class="form-check-label font-weight-bold" for="standardServices<?php echo $claim['id']; ?>">
+                                                            <i class="fas fa-hands-helping text-success"></i> Standard Services
+                                                        </label>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-2">
+                                                        Per SHENA Policy Section 3, provide:
+                                                        <ul class="mb-0">
+                                                            <li>Mortuary bill payment (up to 14 days)</li>
+                                                            <li>Body dressing</li>
+                                                            <li>Executive coffin</li>
+                                                            <li>Transportation</li>
+                                                            <li>Equipment (lowering gear, trolley, gazebo, 100 chairs)</li>
+                                                        </ul>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Cash Alternative Option -->
+                                            <div class="card border-warning">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="approval_type<?php echo $claim['id']; ?>" 
+                                                               id="cashAlternative<?php echo $claim['id']; ?>" value="cash">
+                                                        <label class="form-check-label font-weight-bold" for="cashAlternative<?php echo $claim['id']; ?>">
+                                                            <i class="fas fa-money-bill text-warning"></i> Cash Alternative (KES 20,000)
+                                                        </label>
+                                                    </div>
+                                                    <small class="text-muted d-block mt-2">
+                                                        Per Policy Section 12, only for exceptional circumstances
+                                                    </small>
+                                                    
+                                                    <div id="cashReasonSection<?php echo $claim['id']; ?>" class="mt-3" style="display: none;">
+                                                        <label class="font-weight-bold">Reason for Cash Alternative: *</label>
+                                                        <select class="form-control" id="cashReason<?php echo $claim['id']; ?>">
+                                                            <option value="">Select reason...</option>
+                                                            <option value="member_preference">Member's explicit preference</option>
+                                                            <option value="remote_location">Remote location - services unavailable</option>
+                                                            <option value="cultural_religious">Cultural/religious requirements</option>
+                                                            <option value="urgent_burial">Urgent burial needed</option>
+                                                            <option value="other">Other exceptional circumstances</option>
+                                                        </select>
+                                                        
+                                                        <div id="cashReasonOther<?php echo $claim['id']; ?>" class="mt-2" style="display: none;">
+                                                            <textarea class="form-control" placeholder="Please specify the reason..." rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group mt-3">
+                                                <label class="font-weight-bold">Admin Notes:</label>
+                                                <textarea class="form-control" id="adminNotes<?php echo $claim['id']; ?>" rows="2" 
+                                                          placeholder="Add any notes about this approval..."></textarea>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">Service Delivery Date:</label>
+                                                <input type="date" class="form-control" id="deliveryDate<?php echo $claim['id']; ?>" 
+                                                       min="<?php echo date('Y-m-d'); ?>" value="<?php echo date('Y-m-d'); ?>">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                            <button type="button" class="btn btn-success" onclick="submitApproval(<?php echo $claim['id']; ?>)">
+                                                <i class="fas fa-check"></i> Approve Claim
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -361,19 +498,118 @@
 </div>
 
 <script>
-function approveClaim(claimId) {
-    const notes = prompt('Admin notes (optional):');
-    if (confirm('Approve this claim?')) {
-        // Implementation for approving claim
-        window.location.href = `/admin/claims/approve/${claimId}?notes=${encodeURIComponent(notes || '')}`;
+// Handle cash alternative radio button
+document.addEventListener('DOMContentLoaded', function() {
+    const radios = document.querySelectorAll('input[name^="approval_type"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const claimId = this.name.replace('approval_type', '');
+            const cashReasonSection = document.getElementById('cashReasonSection' + claimId);
+            
+            if (this.value === 'cash' && this.checked) {
+                cashReasonSection.style.display = 'block';
+            } else {
+                cashReasonSection.style.display = 'none';
+            }
+        });
+    });
+    
+    // Handle "Other" reason selection
+    const reasonSelects = document.querySelectorAll('select[id^="cashReason"]');
+    reasonSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const claimId = this.id.replace('cashReason', '');
+            const otherSection = document.getElementById('cashReasonOther' + claimId);
+            
+            if (this.value === 'other') {
+                otherSection.style.display = 'block';
+            } else {
+                otherSection.style.display = 'none';
+            }
+        });
+    });
+});
+
+function submitApproval(claimId) {
+    const approvalType = document.querySelector(`input[name="approval_type${claimId}"]:checked`).value;
+    const adminNotes = document.getElementById(`adminNotes${claimId}`).value;
+    const deliveryDate = document.getElementById(`deliveryDate${claimId}`).value;
+    
+    let url, formData;
+    
+    if (approvalType === 'cash') {
+        // Cash alternative approval
+        const cashReason = document.getElementById(`cashReason${claimId}`).value;
+        
+        if (!cashReason) {
+            alert('Please select a reason for cash alternative');
+            return;
+        }
+        
+        let reasonText = cashReason;
+        if (cashReason === 'other') {
+            const otherTextarea = document.querySelector(`#cashReasonOther${claimId} textarea`);
+            if (!otherTextarea.value.trim()) {
+                alert('Please specify the reason for cash alternative');
+                return;
+            }
+            reasonText = otherTextarea.value.trim();
+        }
+        
+        if (!confirm('Approve this claim for KES 20,000 cash alternative?\n\nReason: ' + reasonText)) {
+            return;
+        }
+        
+        url = '/admin/claims/approve-cash';
+        formData = new FormData();
+        formData.append('claim_id', claimId);
+        formData.append('cash_alternative_reason', reasonText);
+        formData.append('admin_notes', adminNotes);
+        formData.append('services_delivery_date', deliveryDate);
+        
+    } else {
+        // Standard services approval
+        if (!confirm('Approve this claim for standard service delivery?')) {
+            return;
+        }
+        
+        url = '/admin/claims/approve';
+        formData = new FormData();
+        formData.append('claim_id', claimId);
+        formData.append('admin_notes', adminNotes);
+        formData.append('services_delivery_date', deliveryDate);
     }
+    
+    // Submit the form
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Claim approved successfully!');
+            location.reload();
+        } else {
+            alert(data.message || 'Error approving claim');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing the approval');
+    });
 }
 
 function rejectClaim(claimId) {
     const reason = prompt('Reason for rejection:');
     if (reason) {
-        // Implementation for rejecting claim
-        window.location.href = `/admin/claims/reject/${claimId}?reason=${encodeURIComponent(reason)}`;
+        if (confirm('Reject this claim?')) {
+            // Implementation for rejecting claim
+            window.location.href = `/admin/claims/reject/${claimId}?reason=${encodeURIComponent(reason)}`;
+        }
     }
 }
 </script>

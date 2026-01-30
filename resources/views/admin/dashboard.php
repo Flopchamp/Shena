@@ -97,7 +97,42 @@
             </div>
         </div>
     </div>
-
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-bolt mr-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/members" class="btn btn-primary btn-block">
+                                <i class="fas fa-users mr-2"></i>Manage Members
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/claims" class="btn btn-info btn-block">
+                                <i class="fas fa-file-medical mr-2"></i>Process Claims
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/payments/reconciliation" class="btn btn-warning btn-block">
+                                <i class="fas fa-balance-scale mr-2"></i>Reconcile Payments
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/communications" class="btn btn-success btn-block">
+                                <i class="fas fa-envelope mr-2"></i>Send Messages
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Recent Activity Section -->
     <div class="row">
         <!-- Recent Members -->

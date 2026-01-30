@@ -264,9 +264,24 @@ class AdminController extends BaseController
         
         $this->view('admin.claims', $data);
     }
+    
+    /**
+     * View Completed Claims
+     */
+    public function viewCompletedClaims()
+    {
+        $this->requireAdminAccess();
+        
+        $data = [
+            'title' => 'Completed Claims - Admin',
+            'claims' => $this->claimModel->getAllClaimsWithDetails(['status' => 'completed'])
+        ];
+        
+        $this->view('admin.claims-completed', $data);
+    }
 
     /**
-     * Approve Claim
+     * Approve Claim for Standard Services (Default)
      */
     public function approveClaim()
     {
@@ -274,72 +289,256 @@ class AdminController extends BaseController
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $claimId = $_POST['claim_id'] ?? 0;
+            $deliveryDate = $_POST['services_delivery_date'] ?? date('Y-m-d');
             $notes = $_POST['notes'] ?? '';
-            $approvedAmount = isset($_POST['approved_amount']) ? (float)$_POST['approved_amount'] : null;
             
             if ($claimId) {
                 try {
-                    // Load claim and member details
                     $claim = $this->claimModel->find($claimId);
                     if (!$claim) {
                         throw new Exception('Claim not found.');
                     }
 
-                    $member = $this->memberModel->getMemberWithUser($claim['member_id']);
+                    $member = $this->memberModel->find($claim['member_id']);
                     if (!$member) {
                         throw new Exception('Associated member not found.');
                     }
 
-                    // Refresh member status based on coverage and grace period rules before eligibility check
-                    $member = $this->memberModel->refreshStatusFromCoverage($member['id']);
-
-                    // Enforce policy-based claim eligibility (maturity, default status, coverage window, exclusions)
-                    $eligibility = validateClaimEligibility($member, $claim);
-                    if (empty($eligibility['success'])) {
-                        throw new Exception($eligibility['message'] ?? 'Claim is not eligible under current policy rules.');
+                    // Validate claim eligibility per policy Section 9
+                    if ($member['status'] === 'defaulted') {
+                        throw new Exception('Cannot approve claim. Member is in default status.');
                     }
-
-                    // Ensure all required claim documents are present
-                    $claimDocumentModel = new ClaimDocument();
-                    $docStatus = $claimDocumentModel->checkClaimDocumentCompleteness($claimId);
-                    if (empty($docStatus['complete'])) {
-                        $missingList = !empty($docStatus['missing']) ? implode(', ', $docStatus['missing']) : 'required';
-                        throw new Exception('Required claim documents are missing: ' . $missingList);
+                    
+                    if ($member['status'] !== 'active') {
+                        throw new Exception('Cannot approve claim. Member must be active.');
                     }
-
-                    // Determine settlement type according to admin choice and policy
-                    $settlementType = isset($_POST['settlement_type']) ? $_POST['settlement_type'] : 'services';
-                    $settlementType = in_array($settlementType, ['services', 'cash']) ? $settlementType : 'services';
-
-                    if ($settlementType === 'cash') {
-                        // Apply fixed KES 20,000 cash alternative as per policy booklet
-                        $approvedAmount = 20000.00;
-                        $notes = trim(($notes ? $notes . "\n" : '') . 'Settled as KES 20,000 cash alternative.');
-                    }
-
-                    // Approve claim with optional approved amount and notes
-                    if ($this->claimModel->approveClaim($claimId, $approvedAmount, $notes)) {
-                        // Persist settlement metadata
-                        $updateData = ['settlement_type' => $settlementType];
-                        if ($settlementType === 'cash') {
-                            $updateData['cash_settlement_amount'] = $approvedAmount ?? 20000.00;
-                            $updateData['settlement_reason'] = $_POST['settlement_reason'] ?? 'Cash alternative selected by mutual agreement.';
+                    
+                    // Check maturity period completion
+                    if (!empty($member['maturity_ends'])) {
+                        $maturityDate = new DateTime($member['maturity_ends']);
+                        $today = new DateTime();
+                        
+                        if ($today < $maturityDate) {
+                            throw new Exception('Cannot approve claim. Maturity period not completed.');
                         }
-                        $this->claimModel->update($claimId, $updateData);
-
-                        $_SESSION['success'] = 'Claim approved successfully.';
-                    } else {
-                        throw new Exception('Failed to update claim status.');
                     }
+                    
+                    // Check required documents per policy Section 8
+                    $claimDocumentModel = new ClaimDocument();
+                    $documents = $claimDocumentModel->getClaimDocuments($claimId);
+                    $requiredDocs = ['id_copy', 'chief_letter', 'mortuary_invoice'];
+                    $uploadedTypes = array_column($documents, 'document_type');
+                    
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $uploadedTypes)) {
+                            throw new Exception("Required document missing: {$docType}");
+                        }
+                    }
+
+                    // Approve for standard service delivery
+                    $this->claimModel->approveClaimForServices($claimId, $deliveryDate, $notes);
+                    
+                    // Send notification to member
+                    if (class_exists('EmailService')) {
+                        try {
+                            $emailService = new EmailService();
+                            $emailService->sendClaimApprovalEmail($member, $claim);
+                        } catch (Exception $e) {
+                            error_log('Email notification failed: ' . $e->getMessage());
+                        }
+                    }
+                    
+                    $message = 'Claim approved for standard service delivery. Proceed to arrange services.';
+                    
+                    // Check if AJAX request
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true, 'message' => $message]);
+                        exit();
+                    }
+                    
+                    $_SESSION['success'] = $message;
                 } catch (Exception $e) {
                     error_log('Claim approval error: ' . $e->getMessage());
-                    $_SESSION['error'] = 'Failed to approve claim: ' . $e->getMessage();
+                    $errorMessage = 'Failed to approve claim: ' . $e->getMessage();
+                    
+                    // Check if AJAX request
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $errorMessage]);
+                        exit();
+                    }
+                    
+                    $_SESSION['error'] = $errorMessage;
                 }
             }
         }
         
-        header('Location: /admin/claims');
-        exit();
+        $this->redirect('/admin/claims');
+    }
+    
+    /**
+     * Approve Claim for Cash Alternative (KSH 20,000)
+     * Per Policy Section 12: Only in exceptional circumstances
+     */
+    public function approveClaimCashAlternative()
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $claimId = $_POST['claim_id'] ?? 0;
+            $reason = $_POST['cash_alternative_reason'] ?? '';
+            $requestedBy = $_POST['requested_by'] ?? 'company';
+            
+            if ($claimId) {
+                try {
+                    $claim = $this->claimModel->find($claimId);
+                    if (!$claim) {
+                        throw new Exception('Claim not found.');
+                    }
+                    
+                    if (strlen($reason) < 20) {
+                        throw new Exception('Detailed reason required (minimum 20 characters).');
+                    }
+                    
+                    // Approve for cash alternative
+                    $this->claimModel->approveClaimForCashAlternative(
+                        $claimId,
+                        $reason,
+                        $requestedBy,
+                        $_SESSION['user_id']
+                    );
+                    
+                    $message = 'Claim approved for KSH 20,000 cash alternative. Agreement must be signed before payment.';
+                    
+                    // Check if AJAX request
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true, 'message' => $message]);
+                        exit();
+                    }
+                    
+                    $_SESSION['success'] = $message;
+                    
+                } catch (Exception $e) {
+                    error_log('Cash alternative approval error: ' . $e->getMessage());
+                    $errorMessage = 'Failed to approve cash alternative: ' . $e->getMessage();
+                    
+                    // Check if AJAX request
+                    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $errorMessage]);
+                        exit();
+                    }
+                    
+                    $_SESSION['error'] = $errorMessage;
+                }
+            }
+        }
+        
+        $this->redirect('/admin/claims');
+    }
+    
+    /**
+     * Track Service Delivery for Approved Claims
+     */
+    public function trackServiceDelivery($claimId = null)
+    {
+        $this->requireAdminAccess();
+        
+        if (!$claimId && isset($_GET['claim_id'])) {
+            $claimId = (int)$_GET['claim_id'];
+        }
+        
+        if (!$claimId) {
+            $_SESSION['error'] = 'Invalid claim ID.';
+            $this->redirect('/admin/claims');
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Update service completion status
+            $serviceType = $_POST['service_type'] ?? '';
+            $completed = isset($_POST['completed']) ? (bool)$_POST['completed'] : true;
+            $serviceNotes = $_POST['service_notes'] ?? '';
+            
+            try {
+                $checklistModel = new ClaimServiceChecklist();
+                $checklistModel->markServiceCompleted($claimId, $serviceType, $_SESSION['user_id'], $serviceNotes);
+                
+                // Update main claim table
+                $fieldMap = [
+                    'mortuary_bill' => 'mortuary_bill_settled',
+                    'body_dressing' => 'body_dressing_completed',
+                    'coffin' => 'coffin_delivered',
+                    'transportation' => 'transportation_arranged',
+                    'equipment' => 'equipment_delivered'
+                ];
+                
+                if (isset($fieldMap[$serviceType])) {
+                    $this->claimModel->updateServiceDeliveryStatus($claimId, $fieldMap[$serviceType], $completed);
+                }
+                
+                $_SESSION['success'] = 'Service delivery status updated.';
+                
+            } catch (Exception $e) {
+                error_log('Service tracking error: ' . $e->getMessage());
+                $_SESSION['error'] = 'Failed to update service status: ' . $e->getMessage();
+            }
+            
+            $this->redirect('/admin/claims/track/' . $claimId);
+            return;
+        }
+        
+        // Load claim and service checklist
+        $claim = $this->claimModel->find($claimId);
+        if (!$claim) {
+            $_SESSION['error'] = 'Claim not found.';
+            $this->redirect('/admin/claims');
+            return;
+        }
+        
+        $checklistModel = new ClaimServiceChecklist();
+        $checklist = $checklistModel->getClaimChecklist($claimId);
+        $completionPercentage = $checklistModel->getCompletionPercentage($claimId);
+        
+        $data = [
+            'title' => 'Track Service Delivery - Claim #' . $claimId,
+            'claim' => $claim,
+            'checklist' => $checklist,
+            'completion_percentage' => $completionPercentage
+        ];
+        
+        $this->view('admin.claims-track-services', $data);
+    }
+    
+    /**
+     * Complete Claim After All Services Delivered
+     */
+    public function completeClaim()
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $claimId = $_POST['claim_id'] ?? 0;
+            $completionNotes = $_POST['completion_notes'] ?? '';
+            
+            if ($claimId) {
+                try {
+                    $this->claimModel->completeClaim($claimId, $completionNotes);
+                    $_SESSION['success'] = 'Claim marked as completed successfully.';
+                } catch (Exception $e) {
+                    error_log('Complete claim error: ' . $e->getMessage());
+                    $_SESSION['error'] = 'Failed to complete claim: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        $this->redirect('/admin/claims');
     }
 
     /**
@@ -656,6 +855,385 @@ class AdminController extends BaseController
         }
         
         $this->redirect('/admin/settings');
+    }
+
+    /**
+     * M-Pesa Configuration Page
+     */
+    public function viewMpesaConfig()
+    {
+        $this->requireAdminAccess();
+        
+        $db = Database::getInstance()->getConnection();
+        
+        // Get current configuration
+        $stmt = $db->query("SELECT * FROM mpesa_config ORDER BY id DESC LIMIT 1");
+        $config = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $data = [
+            'title' => 'M-Pesa Configuration - ' . APP_NAME,
+            'config' => $config ?: []
+        ];
+        
+        $this->view('admin.mpesa-config', $data);
+    }
+
+    /**
+     * Update M-Pesa Configuration
+     */
+    public function updateMpesaConfig()
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/mpesa-config');
+            return;
+        }
+        
+        // CSRF validation
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
+            $_SESSION['error'] = 'Invalid request';
+            $this->redirect('/admin/mpesa-config');
+            return;
+        }
+        
+        $db = Database::getInstance()->getConnection();
+        
+        $environment = $_POST['environment'] ?? 'sandbox';
+        $consumerKey = $_POST['consumer_key'] ?? '';
+        $consumerSecret = $_POST['consumer_secret'] ?? '';
+        $shortCode = $_POST['short_code'] ?? '';
+        $passKey = $_POST['pass_key'] ?? '';
+        $callbackUrl = $_POST['callback_url'] ?? '';
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        
+        try {
+            // Check if configuration exists
+            $stmt = $db->query("SELECT id FROM mpesa_config LIMIT 1");
+            $exists = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($exists) {
+                // Update existing
+                $stmt = $db->prepare("
+                    UPDATE mpesa_config SET
+                        environment = ?,
+                        consumer_key = ?,
+                        consumer_secret = ?,
+                        short_code = ?,
+                        pass_key = ?,
+                        callback_url = ?,
+                        is_active = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
+                ");
+                $stmt->execute([
+                    $environment, $consumerKey, $consumerSecret, 
+                    $shortCode, $passKey, $callbackUrl, $isActive, $exists['id']
+                ]);
+            } else {
+                // Insert new
+                $stmt = $db->prepare("
+                    INSERT INTO mpesa_config (
+                        environment, consumer_key, consumer_secret, 
+                        short_code, pass_key, callback_url, is_active
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $environment, $consumerKey, $consumerSecret, 
+                    $shortCode, $passKey, $callbackUrl, $isActive
+                ]);
+            }
+            
+            $_SESSION['success'] = 'M-Pesa configuration updated successfully';
+            
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error updating configuration: ' . $e->getMessage();
+        }
+        
+        $this->redirect('/admin/mpesa-config');
+    }
+
+    /**
+     * Plan Upgrades Management Page
+     */
+    public function viewPlanUpgrades()
+    {
+        $this->requireAdminAccess();
+        
+        $db = Database::getInstance()->getConnection();
+        
+        // Get statistics
+        $stats = [
+            'pending' => 0,
+            'completed' => 0,
+            'cancelled' => 0,
+            'total_revenue' => 0
+        ];
+        
+        $stmt = $db->query("
+            SELECT 
+                status,
+                COUNT(*) as count,
+                SUM(prorated_amount) as total
+            FROM plan_upgrade_requests
+            WHERE payment_status = 'completed'
+            GROUP BY status
+        ");
+        
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $stats[$row['status']] = $row['count'];
+            if ($row['status'] === 'completed') {
+                $stats['total_revenue'] = $row['total'];
+            }
+        }
+        
+        // Build filter query
+        $where = ['1=1'];
+        $params = [];
+        
+        if (!empty($_GET['status'])) {
+            $where[] = 'pur.status = ?';
+            $params[] = $_GET['status'];
+        }
+        
+        if (!empty($_GET['from_date'])) {
+            $where[] = 'DATE(pur.requested_at) >= ?';
+            $params[] = $_GET['from_date'];
+        }
+        
+        if (!empty($_GET['to_date'])) {
+            $where[] = 'DATE(pur.requested_at) <= ?';
+            $params[] = $_GET['to_date'];
+        }
+        
+        // Get upgrade requests
+        $sql = "
+            SELECT 
+                pur.*,
+                m.first_name, m.last_name, m.membership_number,
+                CONCAT(m.first_name, ' ', m.last_name) as member_name
+            FROM plan_upgrade_requests pur
+            JOIN members m ON pur.member_id = m.id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY pur.requested_at DESC
+            LIMIT 100
+        ";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $data = [
+            'title' => 'Plan Upgrade Management - ' . APP_NAME,
+            'stats' => $stats,
+            'upgrades' => $upgrades
+        ];
+        
+        $this->view('admin.plan-upgrades', $data);
+    }
+
+    /**
+     * Complete Plan Upgrade
+     */
+    public function completePlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+        
+        $db = Database::getInstance()->getConnection();
+        
+        try {
+            $db->beginTransaction();
+            
+            // Get upgrade request
+            $stmt = $db->prepare("
+                SELECT * FROM plan_upgrade_requests 
+                WHERE id = ? AND status = 'pending' AND payment_status = 'completed'
+            ");
+            $stmt->execute([$id]);
+            $upgrade = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$upgrade) {
+                throw new Exception('Upgrade request not found or not eligible for completion');
+            }
+            
+            // Update member package
+            $stmt = $db->prepare("UPDATE members SET package = ? WHERE id = ?");
+            $stmt->execute([$upgrade['to_package'], $upgrade['member_id']]);
+            
+            // Update upgrade status
+            $stmt = $db->prepare("
+                UPDATE plan_upgrade_requests 
+                SET status = 'completed', processed_at = NOW(), processed_by = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$_SESSION['user_id'], $id]);
+            
+            // Insert into upgrade history
+            $stmt = $db->prepare("
+                INSERT INTO plan_upgrade_history (
+                    member_id, from_package, to_package, 
+                    amount, upgrade_date, processed_by
+                ) VALUES (?, ?, ?, ?, NOW(), ?)
+            ");
+            $stmt->execute([
+                $upgrade['member_id'],
+                $upgrade['from_package'],
+                $upgrade['to_package'],
+                $upgrade['prorated_amount'],
+                $_SESSION['user_id']
+            ]);
+            
+            $db->commit();
+            $_SESSION['success'] = 'Upgrade completed successfully';
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            $_SESSION['error'] = 'Error completing upgrade: ' . $e->getMessage();
+        }
+        
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
+     * Cancel Plan Upgrade and Refund
+     */
+    public function cancelPlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+        
+        $db = Database::getInstance()->getConnection();
+        
+        try {
+            $db->beginTransaction();
+            
+            // Get upgrade request
+            $stmt = $db->prepare("SELECT * FROM plan_upgrade_requests WHERE id = ?");
+            $stmt->execute([$id]);
+            $upgrade = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$upgrade) {
+                throw new Exception('Upgrade request not found');
+            }
+            
+            // Update upgrade status
+            $stmt = $db->prepare("
+                UPDATE plan_upgrade_requests 
+                SET status = 'cancelled', processed_at = NOW(), processed_by = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$_SESSION['user_id'], $id]);
+            
+            // Record refund transaction if payment was completed
+            if ($upgrade['payment_status'] === 'completed') {
+                $stmt = $db->prepare("
+                    INSERT INTO financial_transactions (
+                        transaction_type, amount, member_id, 
+                        upgrade_request_id, status, description
+                    ) VALUES (
+                        'refund', ?, ?, ?, 'completed', 
+                        'Refund for cancelled plan upgrade'
+                    )
+                ");
+                $stmt->execute([
+                    $upgrade['prorated_amount'],
+                    $upgrade['member_id'],
+                    $id
+                ]);
+            }
+            
+            $db->commit();
+            $_SESSION['success'] = 'Upgrade cancelled and refund processed';
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            $_SESSION['error'] = 'Error cancelling upgrade: ' . $e->getMessage();
+        }
+        
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
+     * Financial Dashboard
+     */
+    public function viewFinancialDashboard()
+    {
+        $this->requireAdminAccess();
+        
+        $db = Database::getInstance()->getConnection();
+        
+        // Date range from filters or default to current month
+        $fromDate = $_GET['from_date'] ?? date('Y-m-01');
+        $toDate = $_GET['to_date'] ?? date('Y-m-d');
+        
+        // Get KPIs
+        $stmt = $db->prepare("
+            SELECT 
+                SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
+                SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
+                SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
+                SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
+                COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
+                COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
+            FROM financial_transactions
+            WHERE DATE(transaction_date) BETWEEN ? AND ?
+            AND status = 'completed'
+        ");
+        $stmt->execute([$fromDate, $toDate]);
+        $kpis = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
+                               ($kpis['total_commissions'] + $kpis['total_refunds']);
+        $kpis['revenue_change'] = 0; // Calculate vs previous period if needed
+        $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
+        
+        // Get monthly summary
+        $stmt = $db->query("
+            SELECT * FROM vw_financial_summary
+            ORDER BY month DESC
+            LIMIT 12
+        ");
+        $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get top agents
+        $stmt = $db->query("
+            SELECT * FROM vw_agent_leaderboard
+            LIMIT 10
+        ");
+        $topAgents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get recent transactions
+        $stmt = $db->prepare("
+            SELECT 
+                ft.*,
+                CONCAT(m.first_name, ' ', m.last_name) as member_name
+            FROM financial_transactions ft
+            LEFT JOIN members m ON ft.member_id = m.id
+            WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
+            ORDER BY ft.transaction_date DESC
+            LIMIT 20
+        ");
+        $stmt->execute([$fromDate, $toDate]);
+        $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $data = [
+            'title' => 'Financial Dashboard - ' . APP_NAME,
+            'kpis' => $kpis,
+            'monthly_summary' => $monthlySummary,
+            'top_agents' => $topAgents,
+            'recent_transactions' => $recentTransactions
+        ];
+        
+        $this->view('admin.financial-dashboard', $data);
     }
 }
 ?>

@@ -44,6 +44,16 @@ class Router
         $this->addRoute('GET', '/claims', 'MemberController@claims');
         $this->addRoute('POST', '/claims', 'MemberController@submitClaim');
         
+        // Member Plan Upgrade Routes
+        $this->addRoute('GET', '/member/upgrade', 'MemberController@viewUpgrade');
+        $this->addRoute('POST', '/member/upgrade/request', 'MemberController@requestUpgrade');
+        $this->addRoute('GET', '/member/upgrade/status', 'MemberController@checkUpgradeStatus');
+        $this->addRoute('POST', '/member/upgrade/cancel', 'MemberController@cancelUpgrade');
+        
+        // Member Notification Settings Routes
+        $this->addRoute('GET', '/member/notification-settings', 'MemberController@viewNotificationSettings');
+        $this->addRoute('POST', '/member/notification-settings', 'MemberController@updateNotificationSettings');
+        
         // Admin Routes (Super Admin & Manager)
         $this->addRoute('GET', '/admin-login', 'AdminController@showLogin');
         $this->addRoute('POST', '/admin-login', 'AdminController@login');
@@ -59,7 +69,15 @@ class Router
         $this->addRoute('POST', '/admin/member/{id}/deactivate', 'AdminController@deactivateMember');
         $this->addRoute('GET', '/admin/payments', 'AdminController@payments');
         $this->addRoute('GET', '/admin/claims', 'AdminController@claims');
+        $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
+        $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/{id}/approve', 'AdminController@approveClaim');
+        $this->addRoute('POST', '/admin/claims/approve-cash', 'AdminController@approveClaimCashAlternative');
+        $this->addRoute('POST', '/admin/claims/{id}/approve-cash', 'AdminController@approveClaimCashAlternative');
+        $this->addRoute('GET', '/admin/claims/track/{id}', 'AdminController@trackServiceDelivery');
+        $this->addRoute('POST', '/admin/claims/track/{id}', 'AdminController@trackServiceDelivery');
+        $this->addRoute('POST', '/admin/claims/complete', 'AdminController@completeClaim');
+        $this->addRoute('POST', '/admin/claims/{id}/complete', 'AdminController@completeClaim');
         $this->addRoute('POST', '/admin/claims/{id}/reject', 'AdminController@rejectClaim');
         $this->addRoute('GET', '/admin/reports', 'AdminController@reports');
         $this->addRoute('GET', '/admin/communications', 'AdminController@communications');
@@ -68,6 +86,25 @@ class Router
         $this->addRoute('POST', '/admin/communications/send-sms', 'AdminController@sendSMS');
         $this->addRoute('GET', '/admin/settings', 'AdminController@settings');
         $this->addRoute('POST', '/admin/settings', 'AdminController@updateSettings');
+        
+        // Phase 4: M-Pesa Configuration Routes
+        $this->addRoute('GET', '/admin/mpesa-config', 'AdminController@viewMpesaConfig');
+        $this->addRoute('POST', '/admin/mpesa-config', 'AdminController@updateMpesaConfig');
+        
+        // Phase 4: Plan Upgrades Management Routes
+        $this->addRoute('GET', '/admin/plan-upgrades', 'AdminController@viewPlanUpgrades');
+        $this->addRoute('POST', '/admin/plan-upgrades/complete/{id}', 'AdminController@completePlanUpgrade');
+        $this->addRoute('POST', '/admin/plan-upgrades/cancel/{id}', 'AdminController@cancelPlanUpgrade');
+        
+        // Phase 4: Financial Dashboard Routes
+        $this->addRoute('GET', '/admin/financial-dashboard', 'AdminController@viewFinancialDashboard');
+        
+        // Payment Reconciliation Routes (Admin Only) - Phase 2
+        $this->addRoute('GET', '/admin/payments/reconciliation', 'PaymentController@viewReconciliation');
+        $this->addRoute('GET', '/admin/payments/unmatched', 'PaymentController@viewUnmatchedPayments');
+        $this->addRoute('GET', '/admin/payments/{id}/matches', 'PaymentController@getPotentialMatches');
+        $this->addRoute('POST', '/admin/payments/reconcile', 'PaymentController@manualReconcile');
+        $this->addRoute('GET', '/admin/payments/reconciliation-stats', 'PaymentController@getReconciliationStats');
         
         // Agent Management Routes (Admin Only)
         $this->addRoute('GET', '/admin/agents', 'AgentController@index');

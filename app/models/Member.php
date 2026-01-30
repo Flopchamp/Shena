@@ -477,4 +477,52 @@ class Member extends BaseModel
         
         return $this->db->fetchAll($sql, $params);
     }
+    
+    /**
+     * Find member by ID number (for payment reconciliation)
+     */
+    public function findByIdNumber($idNumber)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE id_number = :id_number LIMIT 1";
+        return $this->db->fetch($sql, ['id_number' => $idNumber]);
+    }
+    
+    /**
+     * Find member by member number (for payment reconciliation)
+     */
+    public function findByMemberNumber($memberNumber)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE member_number = :member_number LIMIT 1";
+        return $this->db->fetch($sql, ['member_number' => $memberNumber]);
+    }
+    
+    /**
+     * Find member by phone number (for payment reconciliation)
+     */
+    public function findByPhone($phone)
+    {
+        $sql = "SELECT m.* FROM {$this->table} m
+                JOIN users u ON m.user_id = u.id
+                WHERE u.phone = :phone
+                LIMIT 1";
+        return $this->db->fetch($sql, ['phone' => $phone]);
+    }
+    
+    /**
+     * Search members by multiple criteria
+     */
+    public function search($searchTerm)
+    {
+        $query = "SELECT m.*, u.first_name, u.last_name, u.phone, u.email
+                  FROM members m
+                  JOIN users u ON m.user_id = u.id
+                  WHERE m.member_number LIKE :search
+                  OR m.id_number LIKE :search
+                  OR u.first_name LIKE :search
+                  OR u.last_name LIKE :search
+                  OR CONCAT(u.first_name, ' ', u.last_name) LIKE :search
+                  LIMIT 10";
+        
+        return $this->db->fetchAll($query, ['search' => "%{$searchTerm}%"]);
+    }
 }

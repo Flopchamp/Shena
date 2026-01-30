@@ -6,12 +6,14 @@ class PaymentController extends BaseController
 {
     private $paymentService;
     private $memberModel;
+    private $reconciliationService;
     
     public function __construct()
     {
         parent::__construct();
         $this->paymentService = new PaymentService();
         $this->memberModel = new Member();
+        $this->reconciliationService = new PaymentReconciliationService();
     }
     
     public function initiatePayment()
@@ -163,5 +165,116 @@ class PaymentController extends BaseController
         }
         
         return false; // Invalid format
+    }
+    
+    /**
+     * View reconciliation page (admin only)
+     */
+    public function viewReconciliation()
+    {
+        $this->requireRole(['super_admin', 'manager']);
+        $this->view('admin/payments-reconciliation');
+    }
+    
+    /**
+     * View unmatched payments for manual reconciliation
+     * Admin only
+     */
+    public function viewUnmatchedPayments()
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+        
+        $unmatchedPayments = $this->reconciliationService->getUnmatchedPayments();
+        
+        $this->json($unmatchedPayments);
+    }
+    
+    /**
+     * Get potential member matches for unmatched payment
+     * Admin only
+     */
+    public function getPotentialMatches($paymentId)
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+        
+        $matches = $this->reconciliationService->findPotentialMatches($paymentId);
+        
+        $this->json([
+            'success' => true,
+            'matches' => $matches,
+            'count' => count($matches)
+        ]);
+    }
+    
+    /**
+     * Manually reconcile payment with member
+     * Admin only
+     */
+    public function manualReconcile()
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Method not allowed'], 405);
+            return;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $paymentId = $input['payment_id'] ?? 0;
+        $memberId = $input['member_id'] ?? 0;
+        $notes = $input['notes'] ?? '';
+        $userId = $_SESSION['user_id'] ?? 0;
+        
+        if (!$paymentId || !$memberId) {
+            $this->json(['error' => 'Payment ID and Member ID required'], 400);
+            return;
+        }
+        
+        $success = $this->reconciliationService->manualReconciliation($paymentId, $memberId, $userId, $notes);
+        
+        if ($success) {
+            $this->json([
+                'success' => true,
+                'message' => 'Payment successfully reconciled with member account'
+            ]);
+        } else {
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to reconcile payment'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get reconciliation statistics
+     * Admin only
+     */
+    public function getReconciliationStats()
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+        
+        $stats = $this->reconciliationService->getReconciliationStats();
+        
+        $this->json([
+            'success' => true,
+            'stats' => $stats
+        ]);
     }
 }

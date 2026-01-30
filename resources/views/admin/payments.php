@@ -7,6 +7,9 @@
             <i class="fas fa-money-bill-wave mr-2"></i>Payments Management
         </h1>
         <div class="btn-group">
+            <a href="/admin/payments/reconciliation" class="btn btn-warning">
+                <i class="fas fa-balance-scale mr-2"></i>Reconciliation
+            </a>
             <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
                 <i class="fas fa-filter mr-2"></i>Filter
             </button>
