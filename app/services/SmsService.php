@@ -22,7 +22,7 @@ class SmsService
             $to = $this->formatPhoneNumber($to);
             
             // HostPinnacle API endpoint
-            $url = "https://sms.hostpinnacle.co.ke/api/services/sendsms/";
+            $url = "https://sms.hostpinnacle.co.ke/api/services/sendsms";
             
             // HostPinnacle API parameters
             $data = [
@@ -58,19 +58,19 @@ class SmsService
                 
                 // HostPinnacle returns success with status code 200
                 if (isset($result['status']) && $result['status'] == '200') {
-                    return $result;
+                    return ['success' => true, 'data' => $result];
                 } else {
                     error_log('SMS sending failed: ' . $response);
-                    return false;
+                    return ['success' => false, 'error' => 'SMS failed: ' . ($result['message'] ?? 'Unknown error')];
                 }
             } else {
                 error_log('SMS sending failed: HTTP Code ' . $httpCode . ', Response: ' . $response);
-                return false;
+                return ['success' => false, 'error' => 'HTTP Error ' . $httpCode];
             }
             
         } catch (Exception $e) {
             error_log('SMS sending error: ' . $e->getMessage());
-            return false;
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
     

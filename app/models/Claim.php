@@ -366,7 +366,6 @@ class Claim extends BaseModel
         $sql = "SELECT 
                     c.*,
                     m.member_number,
-                    m.package_id,
                     u.first_name,
                     u.last_name,
                     u.email,

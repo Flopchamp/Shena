@@ -21,8 +21,9 @@ include VIEWS_PATH . '/layouts/member-header.php';
                         <tr>
                             <th>Claim ID</th>
                             <th>Deceased Name</th>
+                            <th>Relationship</th>
                             <th>Date of Death</th>
-                            <th>Claim Amount</th>
+                            <th>Service Type</th>
                             <th>Status</th>
                             <th>Submitted</th>
                             <th>Actions</th>
@@ -31,11 +32,18 @@ include VIEWS_PATH . '/layouts/member-header.php';
                     <tbody>
                         <?php foreach ($claims as $claim): ?>
                         <tr>
-                            <td>#<?php echo $claim['id']; ?></td>
+                            <td>#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></td>
                             <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
+                            <td><?php echo !empty($claim['relationship_to_deceased']) ? ucfirst($claim['relationship_to_deceased']) : 'N/A'; ?></td>
                             <td><?php echo !empty($claim['date_of_death']) ? date('M j, Y', strtotime($claim['date_of_death'])) : 'N/A'; ?></td>
-                            <td><?php echo number_format($claim['claim_amount'], 2); ?></td>
-                            <td><span class="badge bg-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>"><?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?></span></td>
+                            <td>
+                                <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-money-bill"></i> Cash (KES 20,000)</span>
+                                <?php else: ?>
+                                    <span class="badge bg-success"><i class="fas fa-hands-helping"></i> Funeral Services</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><span class="badge bg-<?php echo $claim['status'] === 'approved' ? 'success' : ($claim['status'] === 'rejected' ? 'danger' : 'warning'); ?>"><?php echo !empty($claim['status']) ? ucfirst(str_replace('_', ' ', $claim['status'])) : 'Pending'; ?></span></td>
                             <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
                             <td>
                                 <button class="btn btn-sm btn-info" onclick="viewClaim(<?php echo $claim['id']; ?>)">View</button>
@@ -63,24 +71,46 @@ include VIEWS_PATH . '/layouts/member-header.php';
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Service-Based Claims:</strong> SHENA provides comprehensive funeral services including mortuary bills (max 14 days), body dressing, executive coffin, transportation, and equipment (lowering gear, trolley, gazebo, 100 chairs).
+                    </div>
                     <h6>Deceased Information</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Deceased Name</label>
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input type="text" name="deceased_name" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">ID Number</label>
+                            <label class="form-label">ID/Birth Certificate Number <span class="text-danger">*</span></label>
                             <input type="text" name="deceased_id_number" class="form-control" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Date of Death</label>
+                            <label class="form-label">Relationship to Deceased <span class="text-danger">*</span></label>
+                            <select name="relationship_to_deceased" class="form-select" required>
+                                <option value="">Select relationship</option>
+                                <option value="self">Self</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="parent">Parent</option>
+                                <option value="child">Child</option>
+                                <option value="sibling">Sibling</option>
+                                <option value="dependent">Registered Dependent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control">
+                            <small class="form-text text-muted">Optional, for dependent age verification</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Death <span class="text-danger">*</span></label>
                             <input type="date" name="date_of_death" class="form-control" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Place of Death</label>
+                            <label class="form-label">Place of Death <span class="text-danger">*</span></label>
                             <input type="text" name="place_of_death" class="form-control" required>
                         </div>
                     </div>
@@ -89,20 +119,28 @@ include VIEWS_PATH . '/layouts/member-header.php';
                         <textarea name="cause_of_death" class="form-control" rows="2" required></textarea>
                         <small class="form-text text-muted">Required for claim verification. Excluded causes include: self-medication, drug/substance abuse, criminal acts, riots/war, hazardous activities.</small>
                     </div>
-                    <h6 class="mt-4">Claim Details</h6>
+                    <h6 class="mt-4">Mortuary & Service Details</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Mortuary Name</label>
-                            <input type="text" name="mortuary_name" class="form-control">
+                            <label class="form-label">Mortuary Name <span class="text-danger">*</span></label>
+                            <input type="text" name="mortuary_name" class="form-control" required>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Number of Days in Mortuary <span class="text-danger">*</span></label>
+                            <input type="number" name="mortuary_days_count" class="form-control" min="0" max="14" required>
+                            <small class="form-text text-muted">Maximum 14 days covered per policy</small>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Mortuary Bill Amount</label>
                             <input type="number" name="mortuary_bill_amount" class="form-control" step="0.01">
+                            <small class="form-text text-muted">For reference and verification</small>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Claim Amount</label>
-                        <input type="number" name="claim_amount" class="form-control" step="0.01" required>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Mortuary Bill Reference/Invoice #</label>
+                            <input type="text" name="mortuary_bill_reference" class="form-control">
+                        </div>
                     </div>
                     <h6 class="mt-4">Required Documents</h6>
                     <p class="text-muted small">

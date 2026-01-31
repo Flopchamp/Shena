@@ -50,6 +50,7 @@ class Router
         $this->addRoute('GET', '/profile', 'MemberController@profile');
         $this->addRoute('POST', '/profile', 'MemberController@updateProfile');
         $this->addRoute('GET', '/payments', 'MemberController@payments');
+        $this->addRoute('POST', '/payments/verify-transaction', 'MemberController@verifyTransaction');
         $this->addRoute('GET', '/beneficiaries', 'MemberController@beneficiaries');
         $this->addRoute('POST', '/beneficiaries', 'MemberController@addBeneficiary');
         $this->addRoute('POST', '/beneficiaries/delete', 'MemberController@deleteBeneficiary');
@@ -97,6 +98,23 @@ class Router
         $this->addRoute('POST', '/admin/send-message', 'AdminController@sendMessage');
         $this->addRoute('POST', '/admin/communications/send-email', 'AdminController@sendEmail');
         $this->addRoute('POST', '/admin/communications/send-sms', 'AdminController@sendSMS');
+        
+        // SMS Campaign Management Routes (integrated in communications)
+        $this->addRoute('POST', '/admin/communications/create-campaign', 'BulkSmsController@createCampaign');
+        $this->addRoute('POST', '/admin/communications/send-campaign', 'BulkSmsController@sendCampaign');
+        $this->addRoute('POST', '/admin/communications/cancel-campaign', 'BulkSmsController@cancelCampaign');
+        $this->addRoute('POST', '/admin/communications/process-queue', 'BulkSmsController@processQueue');
+        $this->addRoute('POST', '/admin/communications/quick-sms', 'BulkSmsController@quickSms');
+        $this->addRoute('POST', '/admin/communications/send-now', 'BulkSmsController@sendNow');
+        $this->addRoute('POST', '/admin/communications/edit-campaign', 'BulkSmsController@editCampaign');
+        $this->addRoute('POST', '/admin/communications/pause-campaign', 'BulkSmsController@pauseCampaign');
+        $this->addRoute('POST', '/admin/communications/reschedule', 'BulkSmsController@reschedule');
+        $this->addRoute('POST', '/admin/communications/send-queue-item', 'BulkSmsController@sendQueueItem');
+        $this->addRoute('POST', '/admin/communications/retry-queue-item', 'BulkSmsController@retryQueueItem');
+        $this->addRoute('POST', '/admin/communications/delete-queue-item', 'BulkSmsController@deleteQueueItem');
+        $this->addRoute('GET', '/admin/communications/campaign/{id}', 'BulkSmsController@viewCampaign');
+        $this->addRoute('GET', '/admin/communications/templates', 'BulkSmsController@templates');
+        
         $this->addRoute('GET', '/admin/settings', 'AdminController@settings');
         $this->addRoute('POST', '/admin/settings', 'AdminController@updateSettings');
         
@@ -150,6 +168,11 @@ class Router
         $this->addRoute('POST', '/admin/bulk-sms/send/{id}', 'BulkSmsController@send');
         $this->addRoute('POST', '/admin/bulk-sms/delete/{id}', 'BulkSmsController@delete');
         $this->addRoute('GET', '/admin/bulk-sms/preview-recipients', 'BulkSmsController@previewRecipients');
+        
+        // Settings Routes (Admin & Manager)
+        $this->addRoute('GET', '/admin/notification-settings', 'SettingsController@index');
+        $this->addRoute('POST', '/admin/settings/update', 'SettingsController@update');
+        $this->addRoute('POST', '/admin/settings/test-fallback', 'SettingsController@testFallback');
         
         // API Routes
         $this->addRoute('POST', '/api/mpesa/callback', 'PaymentController@mpesaCallback');

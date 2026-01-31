@@ -528,7 +528,7 @@ class AdminController extends BaseController
         }
         
         // Load claim and service checklist
-        $claim = $this->claimModel->find($claimId);
+        $claim = $this->claimModel->getClaimDetails($claimId);
         if (!$claim) {
             $_SESSION['error'] = 'Claim not found.';
             $this->redirect('/admin/claims');
@@ -638,23 +638,53 @@ class AdminController extends BaseController
     }
 
     /**
-     * Communications Center
+     * Communications Center with SMS Campaigns
      */
     public function communications()
     {
         $this->requireAdminAccess();
         
+        // Load BulkSmsService for campaign management
+        require_once __DIR__ . '/../services/BulkSmsService.php';
+        $bulkSmsService = new BulkSmsService();
+        
         $type = $_GET['type'] ?? 'all';
         $status = $_GET['status'] ?? 'all';
+        
+        // Get campaigns
+        $filters = [
+            'status' => $_GET['campaign_status'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? ''
+        ];
+        $campaigns = $bulkSmsService->getAllCampaigns($filters);
+        
+        // Get queue items
+        $queue_items = $bulkSmsService->getQueueItems(50);
+        
+        // Get templates
+        $templates = $bulkSmsService->getTemplates();
+        
+        // Get statistics
+        $stats = [
+            'active_campaigns' => $bulkSmsService->getActiveCampaignCount(),
+            'sent_today' => $bulkSmsService->getSentCountToday(),
+            'queue_pending' => $bulkSmsService->getQueuePendingCount(),
+            'sms_credits' => $bulkSmsService->getSmsCredits()
+        ];
         
         $data = [
             'title' => 'Communications - Admin',
             'type' => $type,
             'status' => $status,
-            'communications' => $this->getRecentCommunications($type, $status)
+            'communications' => $this->getRecentCommunications($type, $status),
+            'campaigns' => $campaigns,
+            'queue_items' => $queue_items,
+            'templates' => $templates,
+            'stats' => $stats
         ];
         
-        $this->view('admin.communications', $data);
+        $this->view('admin.sms-campaigns', $data);
     }
 
     /**
