@@ -7,10 +7,13 @@
             <i class="fas fa-money-bill-wave mr-2"></i>Payments Management
         </h1>
         <div class="btn-group">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal">
+                <i class="fas fa-search-dollar mr-2"></i>Verify Payment
+            </button>
             <a href="/admin/payments/reconciliation" class="btn btn-warning">
                 <i class="fas fa-balance-scale mr-2"></i>Reconciliation
             </a>
-            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fas fa-filter mr-2"></i>Filter
             </button>
             <div class="dropdown-menu">
@@ -169,8 +172,16 @@
                                 <td><?php echo date('M j, Y H:i', strtotime($payment['created_at'])); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#paymentModal<?php echo $payment['id']; ?>">
+                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $payment['id']; ?>">
                                             <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal"
+                                                data-payment-id="<?php echo (int)$payment['id']; ?>"
+                                                data-member-id="<?php echo (int)($payment['member_id'] ?? 0); ?>"
+                                                data-amount="<?php echo htmlspecialchars($payment['amount']); ?>"
+                                                data-checkout-id="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>"
+                                                data-receipt="<?php echo htmlspecialchars($payment['transaction_id'] ?? ''); ?>">
+                                            <i class="fas fa-search"></i>
                                         </button>
                                         <?php if ($payment['status'] === 'pending'): ?>
                                         <button type="button" class="btn btn-success btn-sm" onclick="confirmPayment(<?php echo $payment['id']; ?>)">
@@ -190,9 +201,7 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title">Payment Details</h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
                                             <div class="row">
@@ -216,7 +225,16 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-warning" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#verifyPaymentModal"
+                                                data-member-id="<?php echo $payment['member_id']; ?>"
+                                                data-amount="<?php echo $payment['amount']; ?>"
+                                                data-checkout-id="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>"
+                                                data-receipt="<?php echo htmlspecialchars($payment['transaction_id'] ?? ''); ?>">
+                                                <i class="fas fa-check-circle mr-1"></i>Verify Payment
+                                            </button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                         </div>
                                     </div>
                                 </div>
@@ -236,6 +254,96 @@
     </div>
 </div>
 
+<!-- Verify Payment Modal -->
+<div class="modal fade" id="verifyPaymentModal" tabindex="-1" aria-labelledby="verifyPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifyPaymentModalLabel">Verify Payment (Paybill or STK)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="verifyPaymentForm">
+                <?php if (isset($_SESSION['csrf_token'])): ?>
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                <?php endif; ?>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        Use this to verify a Paybill payment (by receipt) or STK push (by Checkout Request ID) when a member reports missing payment.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Method</label>
+                            <select class="form-control" name="method" id="verifyMethod" required>
+                                <option value="stk">STK Push</option>
+                                <option value="paybill">Paybill</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Payment Type</label>
+                            <select class="form-control" name="payment_type">
+                                <option value="monthly">Monthly</option>
+                                <option value="registration">Registration</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Amount (KES)</label>
+                            <input type="number" class="form-control" name="amount" min="1" step="1" placeholder="e.g. 200">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3" id="stkField">
+                            <label class="form-label">Checkout Request ID (STK)</label>
+                            <input type="text" class="form-control" name="checkout_request_id" id="checkoutRequestId" placeholder="ws_CO_...">
+                        </div>
+                        <div class="col-md-6 mb-3" id="paybillField" style="display:none;">
+                            <label class="form-label">M-Pesa Receipt Number (Paybill)</label>
+                            <input type="text" class="form-control" name="mpesa_receipt_number" id="mpesaReceiptNumber" placeholder="ABC123XYZ">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Search Member</label>
+                        <div style="position: relative;">
+                            <input type="text" class="form-control" id="memberSearchInput" 
+                                placeholder="Type member name, number, ID number, or phone..." autocomplete="off">
+                            <div id="memberSearchResults" class="list-group" style="position: absolute; z-index: 1000; width: 100%; display: none; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Member ID</label>
+                            <input type="number" class="form-control" name="member_id" id="verifyMemberId" placeholder="Member ID" readonly>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Member Number</label>
+                            <input type="text" class="form-control" name="member_number" id="verifyMemberNumber" placeholder="M-000123" readonly>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">ID Number</label>
+                            <input type="text" class="form-control" name="id_number" id="verifyIdNumber" placeholder="ID Number" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="Verification notes"></textarea>
+                    </div>
+
+                    <div id="verifyPaymentResult"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Verify & Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 function confirmPayment(paymentId) {
     if (confirm('Confirm this payment as completed?')) {
@@ -251,6 +359,156 @@ function failPayment(paymentId) {
         window.location.href = `/admin/payments/fail/${paymentId}?reason=${encodeURIComponent(reason)}`;
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const verifyModal = document.getElementById('verifyPaymentModal');
+    const verifyForm = document.getElementById('verifyPaymentForm');
+    const verifyMethod = document.getElementById('verifyMethod');
+    const stkField = document.getElementById('stkField');
+    const paybillField = document.getElementById('paybillField');
+    const resultBox = document.getElementById('verifyPaymentResult');
+    
+    // Member autocomplete
+    const searchInput = document.getElementById('memberSearchInput');
+    const searchResults = document.getElementById('memberSearchResults');
+    const memberIdInput = document.getElementById('verifyMemberId');
+    const memberNumberInput = document.getElementById('verifyMemberNumber');
+    const idNumberInput = document.getElementById('verifyIdNumber');
+    let searchTimeout = null;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch('/admin/payments/search-members?q=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+                    
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(member => {
+                            const item = document.createElement('button');
+                            item.type = 'button';
+                            item.className = 'list-group-item list-group-item-action';
+                            item.innerHTML = `
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${member.name}</h6>
+                                    <small>${member.member_number}</small>
+                                </div>
+                                <small class="text-muted">ID: ${member.id_number} | Phone: ${member.phone}</small>
+                            `;
+                            item.addEventListener('click', function() {
+                                memberIdInput.value = member.id;
+                                memberNumberInput.value = member.member_number;
+                                idNumberInput.value = member.id_number;
+                                searchInput.value = member.label;
+                                searchResults.style.display = 'none';
+                            });
+                            searchResults.appendChild(item);
+                        });
+                        searchResults.style.display = 'block';
+                    } else {
+                        const noResults = document.createElement('div');
+                        noResults.className = 'list-group-item text-muted';
+                        noResults.textContent = 'No members found';
+                        searchResults.appendChild(noResults);
+                        searchResults.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    console.error('Search error:', err);
+                    searchResults.style.display = 'none';
+                });
+        }, 300);
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    function toggleMethodFields() {
+        if (verifyMethod.value === 'paybill') {
+            stkField.style.display = 'none';
+            paybillField.style.display = 'block';
+        } else {
+            stkField.style.display = 'block';
+            paybillField.style.display = 'none';
+        }
+    }
+
+    if (verifyMethod) {
+        verifyMethod.addEventListener('change', toggleMethodFields);
+        toggleMethodFields();
+    }
+
+    verifyModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        if (!button) {
+            // Clear all fields when opening fresh
+            verifyForm.reset();
+            searchInput.value = '';
+            memberIdInput.value = '';
+            memberNumberInput.value = '';
+            idNumberInput.value = '';
+            resultBox.innerHTML = '';
+            return;
+        }
+        const memberId = button.getAttribute('data-member-id') || '';
+        const amount = button.getAttribute('data-amount') || '';
+        const checkoutId = button.getAttribute('data-checkout-id') || '';
+        const receipt = button.getAttribute('data-receipt') || '';
+
+        // Populate form fields
+        memberIdInput.value = memberId;
+        document.querySelector('input[name="amount"]').value = amount;
+        document.getElementById('checkoutRequestId').value = checkoutId;
+        document.getElementById('mpesaReceiptNumber').value = receipt;
+        
+        // Set appropriate method based on what data is available
+        if (receipt) {
+            verifyMethod.value = 'paybill';
+        } else if (checkoutId) {
+            verifyMethod.value = 'stk';
+        }
+        toggleMethodFields();
+        
+        resultBox.innerHTML = '';
+    });
+
+    verifyForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        resultBox.innerHTML = '<div class="alert alert-info">Verifying payment...</div>';
+
+        const formData = new FormData(verifyForm);
+
+        fetch('/admin/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resultBox.innerHTML = '<div class="alert alert-success">' + (data.message || 'Payment verified') + '</div>';
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                resultBox.innerHTML = '<div class="alert alert-danger">' + (data.error || data.message || 'Verification failed') + '</div>';
+            }
+        })
+        .catch(() => {
+            resultBox.innerHTML = '<div class="alert alert-danger">Verification request failed</div>';
+        });
+    });
+});
 </script>
 
 <?php include_once 'admin-footer.php'; ?>

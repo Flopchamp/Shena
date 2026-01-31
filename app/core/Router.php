@@ -82,6 +82,10 @@ class Router
         $this->addRoute('POST', '/admin/member/{id}/activate', 'AdminController@activateMember');
         $this->addRoute('POST', '/admin/member/{id}/deactivate', 'AdminController@deactivateMember');
         $this->addRoute('GET', '/admin/payments', 'AdminController@payments');
+        $this->addRoute('POST', '/admin/payments/verify', 'PaymentController@verifyAdminPayment');
+        $this->addRoute('GET', '/admin/payments/search-members', 'PaymentController@searchMembers');
+        $this->addRoute('GET', '/admin/payments/confirm/{id}', 'PaymentController@confirmPayment');
+        $this->addRoute('GET', '/admin/payments/fail/{id}', 'PaymentController@failPayment');
         $this->addRoute('GET', '/admin/claims', 'AdminController@claims');
         $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
         $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
@@ -114,6 +118,18 @@ class Router
         $this->addRoute('POST', '/admin/communications/delete-queue-item', 'BulkSmsController@deleteQueueItem');
         $this->addRoute('GET', '/admin/communications/campaign/{id}', 'BulkSmsController@viewCampaign');
         $this->addRoute('GET', '/admin/communications/templates', 'BulkSmsController@templates');
+        
+        // Email Campaign Management Routes
+        $this->addRoute('GET', '/admin/email-campaigns', 'BulkEmailController@index');
+        $this->addRoute('POST', '/admin/email-campaigns/create', 'BulkEmailController@createCampaign');
+        $this->addRoute('POST', '/admin/email-campaigns/send', 'BulkEmailController@sendCampaign');
+        $this->addRoute('POST', '/admin/email-campaigns/cancel', 'BulkEmailController@cancelCampaign');
+        $this->addRoute('POST', '/admin/email-campaigns/pause', 'BulkEmailController@pauseCampaign');
+        $this->addRoute('POST', '/admin/email-campaigns/reschedule', 'BulkEmailController@reschedule');
+        $this->addRoute('POST', '/admin/email-campaigns/retry-failed', 'BulkEmailController@retryFailed');
+        $this->addRoute('POST', '/admin/email-campaigns/quick-email', 'BulkEmailController@quickEmail');
+        $this->addRoute('GET', '/admin/email-campaigns/campaign/{id}', 'BulkEmailController@viewCampaign');
+        $this->addRoute('GET', '/admin/email-campaigns/templates', 'BulkEmailController@templates');
         
         $this->addRoute('GET', '/admin/settings', 'AdminController@settings');
         $this->addRoute('POST', '/admin/settings', 'AdminController@updateSettings');

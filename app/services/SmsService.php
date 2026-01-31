@@ -18,6 +18,12 @@ class SmsService
     public function sendSms($to, $message)
     {
         try {
+            // Check if SMS credentials are configured
+            if (empty($this->config['user_id']) || empty($this->config['api_key'])) {
+                error_log('SMS not sent: HostPinnacle credentials not configured');
+                return ['success' => false, 'error' => 'SMS credentials not configured'];
+            }
+            
             // Format phone number for Kenyan numbers
             $to = $this->formatPhoneNumber($to);
             

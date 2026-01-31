@@ -425,6 +425,9 @@
         
         <!-- Registration Body -->
         <div class="registration-body">
+            <!-- Error Alert Container -->
+            <div id="errorAlertContainer"></div>
+            
             <form id="registrationForm" method="POST" action="/register">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
                 
@@ -934,6 +937,28 @@
             }
         }
         
+        // Function to show error message
+        function showErrorMessage(message) {
+            const container = document.getElementById('errorAlertContainer');
+            container.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+        
+        // Function to show success message
+        function showSuccessMessage(message) {
+            const container = document.getElementById('errorAlertContainer');
+            container.innerHTML = `
+                <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                    <i class="fas fa-check-circle"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+        
         // Payment tab switching
         function switchPaymentTab(tab) {
             // Update tab styling
@@ -1170,11 +1195,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Clear any error messages
+                    document.getElementById('errorAlertContainer').innerHTML = '';
+                    
                     // Show confirmation step
                     currentStep = 4;
                     updateStepIndicator();
                     showSection(4);
                 } else {
+                    // Show error message at top
+                    showErrorMessage(data.message);
+                    
                     // Restore form values
                     if (data.old_values) {
                         repopulateForm(data.old_values);
@@ -1199,8 +1230,8 @@
                         }
                     }
                     
-                    // Show error message
-                    alert('Registration failed: ' + data.message);
+                    // Scroll to top to show error
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                     
                     // Re-enable submit button
                     submitBtn.disabled = false;
@@ -1208,7 +1239,7 @@
                 }
             })
             .catch(error => {
-                alert('An error occurred. Please try again.');
+                showErrorMessage('An unexpected error occurred. Please try again.');
                 console.error(error);
                 
                 // Re-enable submit button
