@@ -1,51 +1,88 @@
     </main>
 
     <!-- Footer -->
-    <footer>
+    <footer style="background: linear-gradient(135deg, #2D1A4A 0%, #1A0F2E 100%); color: white; padding: 70px 0 30px;">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5><i class="fas fa-heart"></i> Shena Companion</h5>
-                    <p>Providing affordable funeral services and burial expense coverage to our community members.</p>
-                    <div class="social-links">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+            <div class="row g-5">
+                <!-- Brand Section -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="mb-4">
+                        <img src="/public/images/shena-logo.png" alt="SHENA" style="height: 50px; width: auto; filter: brightness(0) invert(1);">
+                    </div>
+                    <p style="color: rgba(255, 255, 255, 0.6); font-size: 0.85rem; line-height: 1.7; font-style: italic;">
+                        "We Are Royal" - Setting a new standard in funeral cover and welfare services within Kisumu City and its environs.
+                    </p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" style="width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; transition: all 0.3s;">
+                            <i class="fab fa-facebook-f" style="font-size: 16px;"></i>
+                        </a>
+                        <a href="#" style="width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; transition: all 0.3s;">
+                            <i class="fas fa-share-alt" style="font-size: 16px;"></i>
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <h6>Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/about" class="text-white-50">About Us</a></li>
-                        <li><a href="/membership" class="text-white-50">Membership</a></li>
-                        <li><a href="/services" class="text-white-50">Services</a></li>
-                        <li><a href="/contact" class="text-white-50">Contact</a></li>
+
+                <!-- Navigation Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="mb-4" style="font-weight: 600; letter-spacing: 1.5px; font-size: 0.75rem; color: #C9A659;">NAVIGATION</h6>
+                    <ul class="list-unstyled" style="line-height: 2.2;">
+                        <li><a href="/about" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About Our Mission</a></li>
+                        <li><a href="/membership" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Welfare Packages</a></li>
+                        <li><a href="/claims" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Claims Process</a></li>
+                        <li><a href="/login" style="color: rgba(255, 255, 255, 0.65); text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Portal Login</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4">
-                    <h6>Contact Information</h6>
-                    <ul class="list-unstyled text-white-50">
-                        <li><i class="fas fa-phone"></i> +254 700 000 000</li>
-                        <li><i class="fas fa-envelope"></i> info@shenacompanion.org</li>
-                        <li><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</li>
+
+                <!-- Contact Information -->
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="mb-4" style="font-weight: 600; letter-spacing: 1.5px; font-size: 0.75rem; color: #C9A659;">CONNECT WITH US</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-3 d-flex align-items-start gap-3">
+                            <i class="fas fa-map-marker-alt" style="color: #C9A659; font-size: 16px; margin-top: 3px;"></i>
+                            <span style="color: rgba(255, 255, 255, 0.65); font-size: 0.9rem; line-height: 1.6;">
+                                Main Office, Kisumu City,<br>
+                                P.O. Box 4018, Kisumu, Kenya
+                            </span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center gap-3">
+                            <i class="fas fa-phone" style="color: #C9A659; font-size: 16px;"></i>
+                            <span style="color: rgba(255, 255, 255, 0.65); font-size: 0.9rem;">
+                                0748585067 / 0748585071
+                            </span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center gap-3">
+                            <i class="fas fa-envelope" style="color: #C9A659; font-size: 16px;"></i>
+                            <span style="color: rgba(255, 255, 255, 0.65); font-size: 0.9rem;">info@shenacompanion.ac.ke</span>
+                        </li>
                     </ul>
-                    <div class="mt-3">
-                        <h6>M-Pesa Paybill</h6>
-                        <div class="bg-primary p-2 rounded text-center">
-                            <strong>4163987</strong>
+                </div>
+
+                <!-- Payments Section -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="mb-4" style="font-weight: 600; letter-spacing: 1.5px; font-size: 0.75rem; color: #C9A659;">PAYMENTS</h6>
+                    <p style="color: rgba(255, 255, 255, 0.5); font-size: 0.8rem; margin-bottom: 15px;">
+                        LIPA NA M-PESA PAYBILL
+                    </p>
+                    <div class="text-center p-4" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid rgba(201, 166, 89, 0.2);">
+                        <div style="font-size: 3.5rem; font-weight: 700; color: white; line-height: 1; margin-bottom: 8px;">
+                            4163987
+                        </div>
+                        <div style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 15px;">
+                            Account Name or ID Number
+                        </div>
+                        <div style="font-size: 0.75rem; color: #C9A659; font-weight: 600; letter-spacing: 1px;">
+                            REGISTRATION: KES 200
                         </div>
                     </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="mb-0 text-white-50">&copy; <?php echo date('Y'); ?> Shena Companion Welfare Association. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="#" class="text-white-50 me-3">Privacy Policy</a>
-                    <a href="#" class="text-white-50">Terms of Service</a>
-                </div>
+
+            <!-- Copyright Bar -->
+            <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 50px 0 25px;">
+            <div class="text-center">
+                <p class="mb-0" style="color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; letter-spacing: 0.5px;">
+                    © <?php echo date('Y'); ?> SHENA COMPANION WELFARE ASSOCIATION. ROYAL CARE GUARANTEED
+                </p>
             </div>
         </div>
     </footer>

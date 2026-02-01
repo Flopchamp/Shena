@@ -176,29 +176,6 @@
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label for="password" class="form-label">Password</label>
-                            <div style="position: relative;">
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Minimum 8 characters" required minlength="8">
-                                <button type="button" onclick="togglePassword('password')" style="position: absolute; right: 12px; top: 12px; background: none; border: none; color: #6B7280; cursor: pointer;">
-                                    <i class="fas fa-eye" id="password-toggle-icon"></i>
-                                </button>
-                            </div>
-                            <small style="color: #6B7280; font-size: 0.75rem;">At least 8 characters</small>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <label for="confirm_password" class="form-label">Confirm Password</label>
-                            <div style="position: relative;">
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="8">
-                                <button type="button" onclick="togglePassword('confirm_password')" style="position: absolute; right: 12px; top: 12px; background: none; border: none; color: #6B7280; cursor: pointer;">
-                                    <i class="fas fa-eye" id="confirm_password-toggle-icon"></i>
-                                </button>
-                            </div>
-                            <small id="password-match" style="color: #6B7280; font-size: 0.75rem;"></small>
-                        </div>
-                    </div>
-                    
                     <div class="action-buttons">
                         <button type="button" class="btn-continue" onclick="nextStep()">
                             Continue to Package <i class="fas fa-arrow-right"></i>
@@ -372,17 +349,6 @@
 </div>
 
 <script>
-// Prevent form submission on Enter key
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registrationForm');
-    form.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-            e.preventDefault();
-            return false;
-        }
-    });
-});
-
 let currentStep = 1;
 const totalSteps = 4;
 
@@ -445,24 +411,6 @@ function nextStep() {
             return;
         }
         
-        // Validate password match on step 1
-        if (currentStep === 1) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            
-            if (password.length < 8) {
-                alert('Password must be at least 8 characters long');
-                document.getElementById('password').style.borderColor = '#ef4444';
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                document.getElementById('confirm_password').style.borderColor = '#ef4444';
-                return;
-            }
-        }
-        
         if (currentStep === 2 && !document.getElementById('package_id').value) {
             alert('Please select a package');
             return;
@@ -497,120 +445,42 @@ function selectPackage(packageId, element) {
     document.getElementById('package_id').value = packageId;
 }
 
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = document.getElementById(fieldId + '-toggle-icon');
+// Form submission
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
     
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        field.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
-
-// Form submission - only on final step
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (currentStep !== totalSteps) {
-            // Not on final step, prevent submission
-            console.log('Form submission prevented - not on final step');
-            return false;
-        }
-        
-        const formData = new FormData(this);
-        
-        fetch('/register', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success page instead of alert
-                document.querySelector('.form-section').innerHTML = `
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
-                            <i class="fas fa-check" style="font-size: 2.5rem; color: white;"></i>
-                        </div>
-                        <h2 class="playfair" style="color: #7F3D9E; font-size: 2.5rem; margin-bottom: 15px;">Application Submitted Successfully!</h2>
-                        <p style="color: #6B7280; font-size: 1.1rem; margin-bottom: 10px;">${data.message}</p>
-                        <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 25px; border-radius: 15px; margin: 30px 0;">
-                            <div style="font-size: 0.85rem; color: #6B7280; margin-bottom: 5px;">Your Member Number</div>
-                            <div style="font-size: 2rem; font-weight: 700; color: #7F3D9E;">${data.member_number}</div>
-                        </div>
-                        <p style="color: #6B7280; margin-bottom: 30px;">Check your email for login credentials and next steps.</p>
-                        <a href="/login" class="btn-continue" style="display: inline-flex; text-decoration: none;">
-                            Go to Login <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                `;
-                // Optionally redirect after a delay
-                setTimeout(() => {
-                    if (data.redirect) {
-                        window.location.href = data.redirect;
-                    }
-                }, 5000);
-            } else {
-                alert('Error: ' + (data.message || 'Registration failed'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
-    });
+    const formData = new FormData(this);
     
-    // Auto-format phone number
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 0 && !value.startsWith('0') && !value.startsWith('254')) {
-                value = '0' + value;
-            }
-            e.target.value = value.slice(0, 10);
-        });
-    }
-    
-    // Password validation
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirm_password');
-    const passwordMatch = document.getElementById('password-match');
-    
-    function validatePassword() {
-        if (confirmPasswordInput.value === '') {
-            passwordMatch.textContent = '';
-            confirmPasswordInput.style.borderColor = '#E5E7EB';
-            return true;
-        }
-        
-        if (passwordInput.value === confirmPasswordInput.value) {
-            passwordMatch.textContent = '✓ Passwords match';
-            passwordMatch.style.color = '#10b981';
-            confirmPasswordInput.style.borderColor = '#10b981';
-            return true;
+    fetch('/register', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Registration successful! Redirecting...');
+            window.location.href = data.redirect || '/dashboard';
         } else {
-            passwordMatch.textContent = '✗ Passwords do not match';
-            passwordMatch.style.color = '#ef4444';
-            confirmPasswordInput.style.borderColor = '#ef4444';
-            return false;
+            alert('Error: ' + (data.message || 'Registration failed'));
         }
-    }
-    
-    if (passwordInput && confirmPasswordInput) {
-        passwordInput.addEventListener('input', validatePassword);
-        confirmPasswordInput.addEventListener('input', validatePassword);
-    }
-    
-    // Initialize
-    updateProgress();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
 });
+
+// Auto-format phone number
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 0 && !value.startsWith('0') && !value.startsWith('254')) {
+        value = '0' + value;
+    }
+    e.target.value = value.slice(0, 10);
+});
+
+// Initialize
+updateProgress();
 </script>
 
 <?php include VIEWS_PATH . '/layouts/footer.php'; ?>

@@ -1,266 +1,250 @@
 <?php include VIEWS_PATH . '/layouts/header.php'; ?>
 
 <!-- Contact Hero Section -->
-<section class="hero-section">
+<section style="padding: 80px 0; background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1600&q=80') center/cover no-repeat; border-radius: 30px; margin: 40px auto; max-width: 95%;">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Contact Us</h1>
-                <p class="lead mb-4">Get in touch with our friendly team. We're here to help you 24/7 with any questions or assistance you need.</p>
-            </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-phone fa-10x opacity-75"></i>
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center text-white">
+                <h1 class="mb-4" style="font-size: 4rem; font-weight: 700; font-family: 'Playfair Display', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    Get in Touch
+                </h1>
+                <p style="font-size: 1.1rem; font-style: italic; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                    We are here to support the SHENA Companion community. Your voice matters to us.
+                </p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Contact Information Section -->
-<section class="py-5">
+<!-- Contact Information Cards -->
+<section style="padding: 80px 0; background: #F7F7F9;">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-phone fa-3x text-primary mb-3"></i>
-                        <h5>24/7 Emergency Hotline</h5>
-                        <p class="text-muted">Call us anytime for immediate assistance</p>
-                        <h4 class="text-primary">0748 585 067 / 0748 585 071</h4>
-                        <small class="text-muted">Available round the clock</small>
+        <!-- Three Info Cards -->
+        <div class="row g-4 mb-5">
+            <!-- Office Address -->
+            <div class="col-lg-4">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 60px; height: 60px; background: #F3E8FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i class="fas fa-map-marker-alt" style="color: #7F3D9E; font-size: 1.5rem;"></i>
                     </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Office Address
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        P.O. Box 40148,<br>
+                        40100-Kisumu, Kenya
+                    </p>
                 </div>
             </div>
-            
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-envelope fa-3x text-success mb-3"></i>
-                        <h5>Email Support</h5>
-                        <p class="text-muted">Send us your questions and concerns</p>
-                        <h6 class="text-success">info@shenacompanion.ac.ke</h6>
-                        <small class="text-muted">We respond within 24 hours</small>
+
+            <!-- Phone Numbers -->
+            <div class="col-lg-4">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 60px; height: 60px; background: #F3E8FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i class="fas fa-phone" style="color: #7F3D9E; font-size: 1.5rem;"></i>
                     </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Phone Numbers
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin-bottom: 12px;">
+                        0748 585 067<br>
+                        0748 585 071
+                    </p>
+                    <span style="background: #F3E8FF; color: #7F3D9E; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;">
+                        24/7 EMERGENCY
+                    </span>
                 </div>
             </div>
-            
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-map-marker-alt fa-3x text-danger mb-3"></i>
-                        <h5>Visit Our Office</h5>
-                        <p class="text-muted">Come see us at our main office</p>
-                        <address class="text-danger">
-                            <strong>SHENA Companion Welfare Association</strong><br>
-                            P.O. Box 4018<br>
-                            40100 - Kisumu
-                        </address>
-                        <small class="text-muted">Mon-Fri: 8:00 AM - 5:00 PM</small>
+
+            <!-- Digital Channels -->
+            <div class="col-lg-4">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 60px; height: 60px; background: #F3E8FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i class="fas fa-at" style="color: #7F3D9E; font-size: 1.5rem;"></i>
                     </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Digital Channels
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        info@shenacompanion.org<br>
+                        www.shenacompanion.org
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- M-Pesa Payment Information -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-4">M-Pesa Payment Information</h2>
-                <p class="lead mb-4">Make your payments conveniently through M-Pesa</p>
-                
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="row align-items-center">
+        <!-- Contact Form & M-Pesa Support -->
+        <div class="row g-5">
+            <!-- Left: Contact Form -->
+            <div class="col-lg-7">
+                <div style="background: white; border-radius: 20px; padding: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <h2 class="mb-4" style="font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; color: #1A1A1A;">
+                        Send a Message
+                    </h2>
+
+                    <form action="/contact/submit" method="POST">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <i class="fas fa-mobile-alt fa-4x text-success mb-3"></i>
-                                <h4>M-Pesa Paybill</h4>
+                                <label for="fullName" style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" name="full_name" placeholder="John Doe" required style="border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;">
                             </div>
                             <div class="col-md-6">
-                                <div class="bg-success text-white p-4 rounded">
-                                    <h2 class="mb-2">4163987</h2>
-                                    <p class="mb-0">Use your Member Number as Account Number</p>
-                                </div>
+                                <label for="phoneNumber" style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phone" placeholder="+254 7XX XXX XXX" required style="border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;">
                             </div>
                         </div>
-                        
-                        <hr>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-4">
-                                <h6><i class="fas fa-user-plus text-primary"></i> Registration Fee</h6>
-                                <p class="text-muted">KES 200 (one-time, non-refundable)</p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="emailAddress" style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Email Address</label>
+                                <input type="email" class="form-control" id="emailAddress" name="email" placeholder="john@example.com" required style="border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;">
                             </div>
-                            <div class="col-md-4">
-                                <h6><i class="fas fa-calendar text-success"></i> Monthly Contributions</h6>
-                                <p class="text-muted">According to your selected package</p>
+                            <div class="col-md-6">
+                                <label for="subject" style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" placeholder="Inquiry" required style="border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;">
                             </div>
-                            <div class="col-md-4">
-                                <h6><i class="fas fa-redo text-warning"></i> Reactivation Fee</h6>
-                                <p class="text-muted">KES 100 + all outstanding contributions</p>
-                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="message" style="color: #1A1A1A; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px;">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" placeholder="How can we help you?" required style="border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn" style="background-color: #7F3D9E; color: white; padding: 14px 40px; border-radius: 10px; font-weight: 700; border: none; width: auto; display: inline-flex; align-items: center; gap: 8px;">
+                            Submit Message <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: M-Pesa Support Card -->
+            <div class="col-lg-5">
+                <div style="background: linear-gradient(135deg, #9C27B0 0%, #7F3D9E 100%); border-radius: 20px; padding: 50px 40px; height: 100%; box-shadow: 0 10px 40px rgba(127, 61, 158, 0.3); display: flex; flex-direction: column; justify-content: center;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 30px;">
+                        <i class="fas fa-mobile-alt" style="color: white; font-size: 2rem;"></i>
+                        <h3 style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: white; margin: 0;">
+                            M-Pesa Support
+                        </h3>
+                    </div>
+
+                    <p style="color: rgba(255,255,255,0.9); font-style: italic; font-size: 1rem; margin-bottom: 40px;">
+                        Quickly support our welfare initiatives via Lipa na M-Pesa.
+                    </p>
+
+                    <!-- Paybill Number -->
+                    <div style="background: rgba(255,255,255,0.15); border-radius: 15px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(10px);">
+                        <p style="color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px;">
+                            PAYBILL NUMBER
+                        </p>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <h2 style="font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 700; color: white; margin: 0; letter-spacing: 4px;">
+                                4163987
+                            </h2>
+                            <button onclick="navigator.clipboard.writeText('4163987')" style="background: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fas fa-copy" style="color: #7F3D9E;"></i>
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Account Name -->
+                    <div style="background: rgba(255,255,255,0.15); border-radius: 15px; padding: 25px; margin-bottom: 40px; backdrop-filter: blur(10px);">
+                        <p style="color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px;">
+                            ACCOUNT NAME
+                        </p>
+                        <h4 style="font-weight: 700; color: white; margin: 0; font-size: 1.5rem; letter-spacing: 1px;">
+                            SHENA COMPANION
+                        </h4>
+                    </div>
+
+                    <!-- Tagline -->
+                    <p style="color: rgba(255,255,255,0.9); font-style: italic; font-size: 1.1rem; text-align: center; margin: 0;">
+                        "We Are Royal"
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Contact Form Section -->
-<section class="py-5">
+<!-- Office Location Section -->
+<section style="padding: 80px 0; background: white;">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="text-center mb-5">Send Us a Message</h2>
-                
-                <?php if (isset($_SESSION['success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i> <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-                
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <form action="/contact" method="POST">
-                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label">Phone Number</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="+254 700 000 000">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="subject" class="form-label">Subject</label>
-                                    <select class="form-select" id="subject" name="subject">
-                                        <option value="">Select a subject</option>
-                                        <option value="General Inquiry">General Inquiry</option>
-                                        <option value="Membership Question">Membership Question</option>
-                                        <option value="Payment Issue">Payment Issue</option>
-                                        <option value="Claim Support">Claim Support</option>
-                                        <option value="Technical Support">Technical Support</option>
-                                        <option value="Emergency">Emergency</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="message" name="message" rows="5" placeholder="Please describe how we can help you..." required></textarea>
-                            </div>
-                            
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-primary btn-lg px-5">
-                                    <i class="fas fa-paper-plane"></i> Send Message
-                                </button>
-                            </div>
-                        </form>
+        <h2 class="mb-5" style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; color: #1A1A1A;">
+            Office Location
+        </h2>
+
+        <div style="background: #E5E7EB; border-radius: 20px; overflow: hidden; position: relative; height: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+            <div id="map" style="width: 100%; height: 100%; border-radius: 20px;"></div>
+            
+            <!-- Map Marker Info Card -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none;">
+                <div style="background: white; border-radius: 12px; padding: 20px 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); text-align: center; pointer-events: auto;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <div style="width: 40px; height: 40px; background: #7F3D9E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-map-marker-alt" style="color: white; font-size: 1.2rem;"></i>
+                        </div>
+                        <div style="text-align: left;">
+                            <h5 style="margin: 0; font-weight: 700; color: #1A1A1A; font-size: 1.1rem;">SHENA Companion HQ</h5>
+                            <p style="margin: 0; color: #6B7280; font-size: 0.85rem;">P.O. Box 4018, Kisumu</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Map Overlay Text -->
+            <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 12px 24px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 999;">
+                <p style="margin: 0; color: #1A1A1A; font-size: 0.9rem; font-weight: 600;">Interactive Map View of Kisumu</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- FAQ Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="text-center mb-5">Frequently Asked Questions</h2>
-                
-                <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faq1">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
-                                How do I become a member?
-                            </button>
-                        </h2>
-                        <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Simply register online, pay the KES 200 registration fee via M-Pesa, and wait for admin approval. Once approved, you can start making monthly contributions.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faq2">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
-                                What happens if I miss a payment?
-                            </button>
-                        </h2>
-                                <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Your membership remains active for a maximum grace period of 2 consecutive months (60 days) after a missed contribution. If you fail to pay for more than 2 months, your account goes into default and cover is suspended. You can reactivate by paying all outstanding contributions plus a KES 100 reactivation fee and serving a fresh 4-month maturity period.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faq3">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
-                                How do I make a claim?
-                            </button>
-                        </h2>
-                                <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Notify SHENA Companion immediately by phone or by visiting our office, then log in to your member dashboard and submit a claim. You must provide: copy of the deceased's ID or birth certificate, a letter from the area chief, and the mortuary invoice. Claims are verified (including maturity and payment status) and once approved we arrange services directly with the mortuary and family.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faq4">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
-                                Can I change my membership package?
-                            </button>
-                        </h2>
-                        <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Yes, you can upgrade your package at any time. Contact our support team or visit your member dashboard to make changes. Downgrades may have waiting periods.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
-<!-- Emergency Contact Section -->
-<section class="py-5 bg-danger text-white">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-4"><i class="fas fa-exclamation-triangle"></i> Emergency?</h2>
-                <p class="lead mb-4">If you have an emergency and need immediate assistance, call our 24/7 hotline now.</p>
-                <a href="tel:0748585067" class="btn btn-light btn-lg">
-                    <i class="fas fa-phone"></i> Call Now: 0748 585 067 / 0748 585 071
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // Initialize the map
+    var map = L.map('map', {
+        center: [-0.0917, 34.7680], // Kisumu coordinates
+        zoom: 13,
+        scrollWheelZoom: false
+    });
+
+    // Add OpenStreetMap tiles with custom styling
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Custom marker icon
+    var customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background: #7F3D9E; width: 40px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"><i class="fas fa-map-marker-alt" style="color: white; font-size: 20px; position: absolute; top: 8px; left: 12px; transform: rotate(45deg);"></i></div>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+    });
+
+    // Add marker
+    var marker = L.marker([-0.0917, 34.7680], {icon: customIcon}).addTo(map);
+
+    // Add popup to marker
+    marker.bindPopup('<div style="text-align: center;"><strong style="color: #7F3D9E;">SHENA Companion HQ</strong><br>P.O. Box 4018<br>40100 - Kisumu, Kenya</div>');
+
+    // Open popup by default
+    marker.openPopup();
+
+    // Enable scroll zoom on click
+    map.on('click', function() {
+        map.scrollWheelZoom.enable();
+    });
+
+    // Disable scroll zoom on mouse out
+    map.on('mouseout', function() {
+        map.scrollWheelZoom.disable();
+    });
+</script>
 
 <?php include VIEWS_PATH . '/layouts/footer.php'; ?>
