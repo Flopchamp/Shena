@@ -1,15 +1,19 @@
 <?php include VIEWS_PATH . '/layouts/header.php'; ?>
 
 <!-- About Hero Section -->
-<section class="hero-section">
+<section style="position: relative; min-height: 500px; display: flex; align-items: center; background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80') center/cover no-repeat;">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">About Shena Companion Welfare Association</h1>
-                <p class="lead mb-4">Established to provide compassionate support and affordable funeral services to our community members during their most difficult times.</p>
-            </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-hands-helping fa-10x opacity-75"></i>
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center text-white">
+                <h1 class="mb-4" style="font-size: 3.5rem; font-weight: 700; font-family: 'Playfair Display', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    Our Story & Purpose
+                </h1>
+                <p class="lead mb-5" style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 40px; line-height: 1.6; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                    Standing with families in Kisumu during their times of greatest need, providing dignity and a shoulder to lean on.
+                </p>
+                <a href="#our-impact" class="btn btn-lg" style="background-color: #7F3D9E; color: white; padding: 14px 40px; border-radius: 30px; font-weight: 600; border: none; box-shadow: 0 4px 12px rgba(127, 61, 158, 0.4); text-decoration: none;">
+                    Discover Our Impact
+                </a>
             </div>
         </div>
     </div>
