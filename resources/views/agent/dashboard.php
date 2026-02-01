@@ -1,303 +1,697 @@
-<?php $page = 'dashboard'; include __DIR__ . '/../layouts/agent-header.php'; ?>
+<?php 
+$page = 'dashboard'; 
+include __DIR__ . '/../layouts/agent-header.php';
 
-<div class="page-header">
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <h2 class="mb-0">
-                <i class="fas fa-tachometer-alt text-primary"></i> Agent Dashboard
-            </h2>
-            <p class="text-muted mb-0">Welcome back, <?php echo htmlspecialchars($agent['first_name'] . ' ' . $agent['last_name']); ?>!</p>
+// Sample data - replace with actual database queries
+$agent = [
+    'first_name' => 'Sarah',
+    'last_name' => 'Jenkins',
+    'agent_number' => 'GOLD TIER AGENT',
+    'total_members' => 1284,
+    'members_growth' => 12,
+    'active_policies' => 1150,
+    'policies_growth' => 5.2,
+    'monthly_commission' => 12450,
+    'commission_growth' => 18,
+    'agent_rank' => 14,
+    'rank_progress' => 85
+];
+
+$members = [
+    [
+        'initials' => 'TM',
+        'name' => 'Thabo Mbeki',
+        'role' => 'Primary Member',
+        'member_number' => 'SH-882910',
+        'policy_plan' => 'Family Premium Plus',
+        'join_date' => '12 Jan 2023',
+        'status' => 'ACTIVE',
+        'status_class' => 'success'
+    ],
+    [
+        'initials' => 'PN',
+        'name' => 'Patience Ndlovu',
+        'role' => 'Solo Member',
+        'member_number' => 'SH-992123',
+        'policy_plan' => 'Standard Solo',
+        'join_date' => '05 Sep 2023',
+        'status' => 'MATURITY',
+        'status_class' => 'warning'
+    ],
+    [
+        'initials' => 'JM',
+        'name' => 'John Molefe',
+        'role' => 'Manager Plan',
+        'member_number' => 'SH-771223',
+        'policy_plan' => 'Senior Care',
+        'join_date' => '22 Oct 2022',
+        'status' => 'DEFAULTED',
+        'status_class' => 'danger'
+    ],
+    [
+        'initials' => 'SK',
+        'name' => 'Sipho Khumalo',
+        'role' => 'Primary Member',
+        'member_number' => 'SH-881290',
+        'policy_plan' => 'Family Premium',
+        'join_date' => '15 Aug 2023',
+        'status' => 'ACTIVE',
+        'status_class' => 'success'
+    ]
+];
+?>
+
+<style>
+/* Agent Dashboard Styles */
+.agent-dashboard-container {
+    padding: 30px 30px 40px 25px;
+    background: #F8F9FA;
+    min-height: calc(100vh - 80px);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.dashboard-title-section h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.dashboard-title-section p {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-export {
+    background: white;
+    color: #4B5563;
+    border: 1px solid #D1D5DB;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-export:hover {
+    background: #F9FAFB;
+    border-color: #9CA3AF;
+}
+
+.btn-new-registration {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-new-registration:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card-agent {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card-agent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-agent.rank-card {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+}
+
+.stat-icon-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-icon {
+    font-size: 20px;
+    color: #9CA3AF;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rank-card .stat-icon {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.rank-card .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 8px 0;
+}
+
+.rank-card .stat-value {
+    color: white;
+    font-size: 48px;
+}
+
+.stat-growth {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #059669;
+}
+
+.stat-growth i {
+    font-size: 12px;
+}
+
+.rank-card .stat-growth {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-description {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 4px;
+}
+
+.rank-card .stat-description {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.rank-progress {
+    margin-top: 16px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.rank-progress-bar {
+    height: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Member Portfolio Section */
+.portfolio-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.portfolio-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0;
+}
+
+.portfolio-tabs {
+    display: flex;
+    gap: 16px;
+}
+
+.portfolio-tab {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6B7280;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.portfolio-tab.active {
+    color: #7F20B0;
+    background: #F3E8FF;
+}
+
+.portfolio-tab:hover:not(.active) {
+    color: #4B5563;
+    background: #F9FAFB;
+}
+
+.filter-btn {
+    background: white;
+    border: 1px solid #D1D5DB;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    border-color: #9CA3AF;
+    color: #4B5563;
+}
+
+/* Member Table */
+.member-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.member-table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #E5E7EB;
+    text-align: left;
+}
+
+.member-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.member-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.member-table tbody td {
+    padding: 16px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.member-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.member-details h6 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0 0 2px 0;
+}
+
+.member-details p {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin: 0;
+}
+
+.member-number {
+    font-size: 13px;
+    color: #4B5563;
+}
+
+.policy-plan {
+    font-size: 13px;
+    color: #4B5563;
+}
+
+.join-date {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.active {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+.status-badge.maturity {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-badge.defaulted {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.status-badge i {
+    font-size: 8px;
+}
+
+.action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    background: white;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #F9FAFB;
+    border-color: #D1D5DB;
+    color: #4B5563;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #E5E7EB;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #6B7280;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.page-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    background: white;
+    color: #4B5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.page-btn:hover:not(.active) {
+    background: #F9FAFB;
+    border-color: #9CA3AF;
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border-color: transparent;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .agent-dashboard-container {
+        padding: 20px 15px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .dashboard-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn-export,
+    .btn-new-registration {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .portfolio-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .portfolio-tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .member-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+</style>
+
+<div class="agent-dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-title-section">
+            <h1>Agent Performance</h1>
+            <p>Overview of your activity and member portfolio</p>
         </div>
-        <div class="col-md-4 text-end">
-            <span class="badge bg-<?php echo $agent['status'] === 'active' ? 'success' : 'warning'; ?> fs-6">
-                <i class="fas fa-circle" style="font-size: 8px;"></i> <?php echo !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending'; ?>
-            </span>
+        <div class="dashboard-actions">
+            <button class="btn-export">
+                <i class="fas fa-download"></i>
+                Export Data
+            </button>
+            <button class="btn-new-registration" onclick="location.href='/agent/register-member'">
+                <i class="fas fa-user-plus"></i>
+                New Registration
+            </button>
         </div>
     </div>
-</div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-left-primary" style="border-left: 4px solid #667eea;">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #667eea;">
-                            Total Members
-                        </div>
-                        <div class="h3 mb-0 font-weight-bold text-gray-800">
-                            <?php echo number_format($stats['total_members'] ?? 0); ?>
-                        </div>
-                        <small class="text-muted">Registered by you</small>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x" style="color: #667eea; opacity: 0.3;"></i>
-                    </div>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <!-- Total Members -->
+        <div class="stat-card-agent">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-users stat-icon"></i>
+                <span class="stat-label">Total Members</span>
+            </div>
+            <div class="stat-value"><?php echo number_format($agent['total_members']); ?></div>
+            <div class="stat-growth">
+                <i class="fas fa-arrow-up"></i>
+                +<?php echo $agent['members_growth']; ?>%
+            </div>
+            <div class="stat-description">Active registrations this year</div>
+        </div>
+
+        <!-- Active Policies -->
+        <div class="stat-card-agent">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-shield-alt stat-icon"></i>
+                <span class="stat-label">Active Policies</span>
+            </div>
+            <div class="stat-value"><?php echo number_format($agent['active_policies']); ?></div>
+            <div class="stat-growth">
+                <i class="fas fa-arrow-up"></i>
+                +<?php echo $agent['policies_growth']; ?>%
+            </div>
+            <div class="stat-description">Current premium-paying members</div>
+        </div>
+
+        <!-- Monthly Commission -->
+        <div class="stat-card-agent">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-coins stat-icon"></i>
+                <span class="stat-label">Monthly Comm.</span>
+            </div>
+            <div class="stat-value">R <?php echo number_format($agent['monthly_commission']); ?></div>
+            <div class="stat-growth">
+                <i class="fas fa-arrow-up"></i>
+                +<?php echo $agent['commission_growth']; ?>%
+            </div>
+            <div class="stat-description">Next payout: 28 Oct 2023</div>
+        </div>
+
+        <!-- Agent Rank -->
+        <div class="stat-card-agent rank-card">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-trophy stat-icon"></i>
+                <span class="stat-label">Agent Rank</span>
+            </div>
+            <div class="stat-value">#<?php echo $agent['agent_rank']; ?></div>
+            <div class="rank-progress">
+                <div class="rank-progress-bar" style="width: <?php echo $agent['rank_progress']; ?>%;"></div>
+            </div>
+            <div class="stat-description"><?php echo $agent['rank_progress']; ?>% to Platinum</div>
+        </div>
+    </div>
+
+    <!-- Member Portfolio -->
+    <div class="portfolio-section">
+        <div class="portfolio-header">
+            <h2>Member Portfolio</h2>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="portfolio-tabs">
+                    <button class="portfolio-tab active">All Members</button>
+                    <button class="portfolio-tab">Pending</button>
+                    <button class="portfolio-tab">Claims</button>
                 </div>
+                <button class="filter-btn">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
             </div>
         </div>
-    </div>
 
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-left-success" style="border-left: 4px solid #28a745;">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Active Members
-                        </div>
-                        <div class="h3 mb-0 font-weight-bold text-gray-800">
-                            <?php echo number_format($stats['active_members'] ?? 0); ?>
-                        </div>
-                        <small class="text-muted">Currently active</small>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-check fa-2x" style="color: #28a745; opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-left-warning" style="border-left: 4px solid #ffc107;">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Pending Commission
-                        </div>
-                        <div class="h3 mb-0 font-weight-bold text-gray-800">
-                            KES <?php echo number_format($stats['pending_commission'] ?? 0, 2); ?>
-                        </div>
-                        <small class="text-muted">Awaiting approval</small>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-clock fa-2x" style="color: #ffc107; opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-left-info" style="border-left: 4px solid #17a2b8;">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            This Month
-                        </div>
-                        <div class="h3 mb-0 font-weight-bold text-gray-800">
-                            <?php echo number_format($stats['recent_registrations'] ?? 0); ?>
-                        </div>
-                        <small class="text-muted">New registrations</small>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-calendar-plus fa-2x" style="color: #17a2b8; opacity: 0.3;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-bolt"></i> Quick Actions
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <a href="/agent/register-member" class="btn btn-agent-primary w-100">
-                            <i class="fas fa-user-plus"></i> Register New Member
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/agent/members" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-users"></i> View All Members
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/agent/commissions" class="btn btn-outline-success w-100">
-                            <i class="fas fa-money-bill-wave"></i> View Commissions
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="/agent/profile" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-user-edit"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Recent Members -->
-    <div class="col-lg-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-users"></i> Recent Member Registrations</span>
-                <a href="/agent/members" class="btn btn-sm btn-outline-primary">View All</a>
-            </div>
-            <div class="card-body">
-                <?php if (empty($recent_members)): ?>
-                    <div class="text-center py-4">
-                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No recent registrations</p>
-                        <a href="/agent/register-member" class="btn btn-sm btn-agent-primary">
-                            <i class="fas fa-user-plus"></i> Register Your First Member
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($recent_members as $member): ?>
-                            <div class="list-group-item px-0 border-0 border-bottom">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            <i class="fas fa-user-circle text-muted"></i>
-                                            <?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?>
-                                        </h6>
-                                        <small class="text-muted">
-                                            <i class="fas fa-id-card"></i> <?php echo htmlspecialchars($member['member_number']); ?>
-                                            • <i class="fas fa-phone"></i> <?php echo htmlspecialchars($member['phone']); ?>
-                                        </small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar"></i> <?php echo date('M d, Y', strtotime($member['created_at'])); ?>
-                                        </small>
-                                    </div>
-                                    <span class="badge bg-<?php echo $member['status'] === 'active' ? 'success' : ($member['status'] === 'inactive' ? 'secondary' : 'warning'); ?>">
-                                        <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
-                                    </span>
-                                </div>
+        <table class="member-table">
+            <thead>
+                <tr>
+                    <th>MEMBER</th>
+                    <th>ID NUMBER</th>
+                    <th>POLICY PLAN</th>
+                    <th>JOIN DATE</th>
+                    <th>STATUS</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($members as $member): ?>
+                <tr>
+                    <td>
+                        <div class="member-info">
+                            <div class="member-avatar"><?php echo $member['initials']; ?></div>
+                            <div class="member-details">
+                                <h6><?php echo htmlspecialchars($member['name']); ?></h6>
+                                <p><?php echo htmlspecialchars($member['role']); ?></p>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
+                        </div>
+                    </td>
+                    <td class="member-number"><?php echo htmlspecialchars($member['member_number']); ?></td>
+                    <td class="policy-plan"><?php echo htmlspecialchars($member['policy_plan']); ?></td>
+                    <td class="join-date"><?php echo htmlspecialchars($member['join_date']); ?></td>
+                    <td>
+                        <span class="status-badge <?php echo $member['status_class']; ?>">
+                            <i class="fas fa-circle"></i>
+                            <?php echo $member['status']; ?>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn" title="More Actions">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-    <!-- Recent Commissions -->
-    <div class="col-lg-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-money-bill-wave"></i> Recent Commissions</span>
-                <a href="/agent/commissions" class="btn btn-sm btn-outline-success">View All</a>
-            </div>
-            <div class="card-body">
-                <?php if (empty($recent_commissions)): ?>
-                    <div class="text-center py-4">
-                        <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No commissions yet</p>
-                        <small class="text-muted">Register members to start earning commissions</small>
-                    </div>
-                <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($recent_commissions as $commission): ?>
-                            <div class="list-group-item px-0 border-0 border-bottom">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            KES <?php echo number_format($commission['commission_amount'], 2); ?>
-                                        </h6>
-                                        <small class="text-muted">
-                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($commission['member_name'] ?? 'Member'); ?>
-                                            • <?php echo htmlspecialchars($commission['member_number'] ?? 'N/A'); ?>
-                                        </small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar"></i> <?php echo date('M d, Y', strtotime($commission['created_at'])); ?>
-                                        </small>
-                                    </div>
-                                    <span class="badge bg-<?php 
-                                        echo $commission['status'] === 'paid' ? 'success' : 
-                                             ($commission['status'] === 'pending' ? 'warning' : 'secondary'); 
-                                    ?>">
-                                        <?php echo !empty($commission['status']) ? ucfirst($commission['status']) : 'Pending'; ?>
-                                    </span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<?php include __DIR__ . '/../layouts/agent-footer.php'; ?>
-                <div class="card-body">
-                    <?php if (empty($recent_commissions)): ?>
-                        <p class="text-muted">No recent commissions</p>
-                    <?php else: ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($recent_commissions as $commission): ?>
-                                <div class="list-group-item px-0">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">KES <?= number_format($commission['commission_amount'], 2) ?></h6>
-                                            <small class="text-muted">
-                                                <?= htmlspecialchars($commission['member_name']) ?> •
-                                                <?= date('M j, Y', strtotime($commission['created_at'])) ?>
-                                            </small>
-                                        </div>
-                                        <span class="badge bg-<?= $commission['status'] === 'paid' ? 'success' : ($commission['status'] === 'approved' ? 'info' : 'warning') ?>">
-                                            <?= !empty($commission['status']) ? ucfirst($commission['status']) : 'Pending' ?>
-                                        </span>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <a href="/agent/members" class="btn btn-outline-primary w-100 mb-2">
-                                <i class="fas fa-users"></i><br>
-                                View Members
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/agent/commissions" class="btn btn-outline-success w-100 mb-2">
-                                <i class="fas fa-money-bill-wave"></i><br>
-                                View Commissions
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/agent/profile" class="btn btn-outline-info w-100 mb-2">
-                                <i class="fas fa-user-edit"></i><br>
-                                Update Profile
-                            </a>
-                        </div>
-                        <div class="col-md-3">
-                            <a href="/logout" class="btn btn-outline-secondary w-100 mb-2">
-                                <i class="fas fa-sign-out-alt"></i><br>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <div class="pagination-wrapper">
+            <div class="pagination-info">Showing 4 of 1,284 members</div>
+            <div class="pagination-controls">
+                <button class="page-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </div>
