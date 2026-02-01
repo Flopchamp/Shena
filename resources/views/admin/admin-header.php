@@ -109,6 +109,8 @@
                                 Dashboard
                             </a>
                         </li>
+                        
+                        <!-- Member Management Section -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="/admin/members">
                                 <i class="fas fa-users"></i>
@@ -116,23 +118,75 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false) ? 'active' : ''; ?>" href="/admin/payments">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/agents') !== false) ? 'active' : ''; ?>" href="/admin/agents">
+                                <i class="fas fa-user-tie"></i>
+                                Agents
+                            </a>
+                        </li>
+                        
+                        <!-- Financial Section -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false && strpos($_SERVER['REQUEST_URI'], 'reconciliation') === false) ? 'active' : ''; ?>" href="/admin/payments">
                                 <i class="fas fa-money-bill-wave"></i>
                                 Payments
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/claims') !== false) ? 'active' : ''; ?>" href="/admin/claims">
-                                <i class="fas fa-file-medical"></i>
-                                Claims
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/payments/reconciliation') !== false) ? 'active' : ''; ?>" href="/admin/payments/reconciliation">
+                                <i class="fas fa-balance-scale"></i>
+                                Reconciliation
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false) ? 'active' : ''; ?>" href="/admin/communications">
-                                <i class="fas fa-envelope"></i>
-                                Communications
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/financial-dashboard') !== false) ? 'active' : ''; ?>" href="/admin/financial-dashboard">
+                                <i class="fas fa-chart-line"></i>
+                                Financial Dashboard
                             </a>
                         </li>
+                        
+                        <!-- Claims Section -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/claims') !== false && strpos($_SERVER['REQUEST_URI'], 'completed') === false) ? 'active' : ''; ?>" href="/admin/claims">
+                                <i class="fas fa-file-medical"></i>
+                                Active Claims
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/claims/completed') !== false) ? 'active' : ''; ?>" href="/admin/claims/completed">
+                                <i class="fas fa-check-circle"></i>
+                                Completed Claims
+                            </a>
+                        </li>
+                        
+                        <!-- Membership Services -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/plan-upgrades') !== false) ? 'active' : ''; ?>" href="/admin/plan-upgrades">
+                                <i class="fas fa-level-up-alt"></i>
+                                Plan Upgrades
+                            </a>
+                        </li>
+                        
+                        <!-- Communications Section -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false) ? 'active' : ''; ?>" href="/admin/communications">
+                                <i class="fas fa-envelope"></i>
+                                Quick Messages
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false) ? 'active' : ''; ?>" href="/admin/email-campaigns">
+                                <i class="fas fa-mail-bulk"></i>
+                                Email Campaigns
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/bulk-sms') !== false) ? 'active' : ''; ?>" href="/admin/bulk-sms">
+                                <i class="fas fa-sms"></i>
+                                SMS Campaigns
+                            </a>
+                        </li>
+                        
+                        <!-- Reports & Settings -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false) ? 'active' : ''; ?>" href="/admin/reports">
                                 <i class="fas fa-chart-bar"></i>
@@ -140,11 +194,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false) ? 'active' : ''; ?>" href="/admin/settings">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/mpesa-config') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notification-settings') !== false) ? 'active' : ''; ?>" href="/admin/settings">
                                 <i class="fas fa-cog"></i>
                                 Settings
                             </a>
                         </li>
+                        
                         <li class="nav-item mt-3">
                             <hr class="text-white-50">
                             <a class="nav-link" href="/logout">

@@ -157,7 +157,7 @@ class Router
         $this->addRoute('GET', '/admin/agents', 'AgentController@index');
         $this->addRoute('GET', '/admin/agents/create', 'AgentController@create');
         $this->addRoute('POST', '/admin/agents/store', 'AgentController@store');
-        $this->addRoute('GET', '/admin/agents/view/{id}', 'AgentController@view');
+        $this->addRoute('GET', '/admin/agents/view/{id}', 'AgentController@show');
         $this->addRoute('GET', '/admin/agents/edit/{id}', 'AgentController@edit');
         $this->addRoute('POST', '/admin/agents/update/{id}', 'AgentController@update');
         $this->addRoute('POST', '/admin/agents/status/{id}', 'AgentController@updateStatus');

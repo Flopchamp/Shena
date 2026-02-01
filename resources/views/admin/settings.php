@@ -152,6 +152,33 @@
     
     <!-- Settings Help -->
     <div class="col-lg-4">
+        <!-- Quick Configuration Links -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-cogs me-2"></i>Quick Configuration</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="/admin/mpesa-config" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-mobile-alt text-success me-2"></i>M-Pesa Configuration</span>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                    <a href="/admin/notification-settings" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-bell text-warning me-2"></i>Notification Settings</span>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                    <a href="/admin/email-campaigns" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-mail-bulk text-info me-2"></i>Email Campaigns</span>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                    <a href="/admin/bulk-sms" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-sms text-primary me-2"></i>SMS Campaigns</span>
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Settings Help</h6>

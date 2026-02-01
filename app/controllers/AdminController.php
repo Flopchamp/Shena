@@ -1039,7 +1039,6 @@ class AdminController extends BaseController
                 COUNT(*) as count,
                 SUM(prorated_amount) as total
             FROM plan_upgrade_requests
-            WHERE payment_status = 'completed'
             GROUP BY status
         ");
         
@@ -1073,10 +1072,11 @@ class AdminController extends BaseController
         $sql = "
             SELECT 
                 pur.*,
-                m.first_name, m.last_name, m.membership_number,
-                CONCAT(m.first_name, ' ', m.last_name) as member_name
+                u.first_name, u.last_name, m.member_number,
+                CONCAT(u.first_name, ' ', u.last_name) as member_name
             FROM plan_upgrade_requests pur
             JOIN members m ON pur.member_id = m.id
+            JOIN users u ON m.user_id = u.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY pur.requested_at DESC
             LIMIT 100
@@ -1278,7 +1278,8 @@ class AdminController extends BaseController
         $stmt = $db->prepare("
             SELECT 
                 ft.*,
-                CONCAT(m.first_name, ' ', m.last_name) as member_name
+                m.member_number,
+                m.package
             FROM financial_transactions ft
             LEFT JOIN members m ON ft.member_id = m.id
             WHERE DATE(ft.transaction_date) BETWEEN ? AND ?

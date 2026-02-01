@@ -108,24 +108,66 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 col-sm-4 mb-3">
                             <a href="/admin/members" class="btn btn-primary btn-block">
-                                <i class="fas fa-users mr-2"></i>Manage Members
+                                <i class="fas fa-users mr-2"></i>Members
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 col-sm-4 mb-3">
                             <a href="/admin/claims" class="btn btn-info btn-block">
                                 <i class="fas fa-file-medical mr-2"></i>Process Claims
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 col-sm-4 mb-3">
                             <a href="/admin/payments/reconciliation" class="btn btn-warning btn-block">
-                                <i class="fas fa-balance-scale mr-2"></i>Reconcile Payments
+                                <i class="fas fa-balance-scale mr-2"></i>Reconciliation
                             </a>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/agents" class="btn btn-secondary btn-block">
+                                <i class="fas fa-user-tie mr-2"></i>Agents
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/plan-upgrades" class="btn btn-dark btn-block">
+                                <i class="fas fa-level-up-alt mr-2"></i>Upgrades
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/email-campaigns" class="btn btn-success btn-block">
+                                <i class="fas fa-mail-bulk mr-2"></i>Email Campaigns
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/bulk-sms" class="btn btn-success btn-block">
+                                <i class="fas fa-sms mr-2"></i>SMS Campaigns
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
                             <a href="/admin/communications" class="btn btn-success btn-block">
-                                <i class="fas fa-envelope mr-2"></i>Send Messages
+                                <i class="fas fa-envelope mr-2"></i>Quick Messages
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/financial-dashboard" class="btn btn-primary btn-block">
+                                <i class="fas fa-chart-line mr-2"></i>Financial
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/claims/completed" class="btn btn-success btn-block">
+                                <i class="fas fa-check-circle mr-2"></i>Completed Claims
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/reports" class="btn btn-info btn-block">
+                                <i class="fas fa-chart-bar mr-2"></i>Reports
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 mb-3">
+                            <a href="/admin/settings" class="btn btn-secondary btn-block">
+                                <i class="fas fa-cog mr-2"></i>Settings
                             </a>
                         </div>
                     </div>
@@ -314,6 +356,178 @@
                                 <i class="fas fa-envelope fa-2x mb-2"></i><br>
                                 Send Messages
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Features Grid -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-gradient-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-grip-horizontal me-2"></i>All Features & Modules
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Member Management -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-primary h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/members" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-users text-primary fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Members</h6>
+                                        <small class="text-muted">Manage member accounts</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Agents -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-secondary h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/agents" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-user-tie text-secondary fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Agents</h6>
+                                        <small class="text-muted">Manage agents & commissions</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payments -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-success h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/payments" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-money-bill-wave text-success fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Payments</h6>
+                                        <small class="text-muted">View all payments</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Reconciliation -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-warning h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/payments/reconciliation" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-balance-scale text-warning fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Reconciliation</h6>
+                                        <small class="text-muted">Match & verify payments</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Active Claims -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-info h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/claims" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-file-medical text-info fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Active Claims</h6>
+                                        <small class="text-muted">Process & approve claims</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Completed Claims -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-success h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/claims/completed" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-check-circle text-success fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Completed Claims</h6>
+                                        <small class="text-muted">View claim history</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Plan Upgrades -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-primary h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/plan-upgrades" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-level-up-alt text-primary fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Plan Upgrades</h6>
+                                        <small class="text-muted">Process upgrade requests</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Messages -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-success h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/communications" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-envelope text-success fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Quick Messages</h6>
+                                        <small class="text-muted">Send email/SMS instantly</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Campaigns -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-info h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/email-campaigns" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-mail-bulk text-info fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Email Campaigns</h6>
+                                        <small class="text-muted">Bulk email management</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SMS Campaigns -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-primary h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/bulk-sms" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-sms text-primary fa-lg mb-2"></i>
+                                        <h6 class="mb-0">SMS Campaigns</h6>
+                                        <small class="text-muted">Bulk SMS management</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Financial Dashboard -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-success h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/financial-dashboard" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-chart-line text-success fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Financial Dashboard</h6>
+                                        <small class="text-muted">Financial analytics</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reports -->
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card border-left-warning h-100">
+                                <div class="card-body py-2">
+                                    <a href="/admin/reports" class="text-decoration-none text-dark d-block">
+                                        <i class="fas fa-chart-bar text-warning fa-lg mb-2"></i>
+                                        <h6 class="mb-0">Reports</h6>
+                                        <small class="text-muted">Generate system reports</small>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
