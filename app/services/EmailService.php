@@ -2,6 +2,9 @@
 /**
  * Email Service - Handles email sending via SMTP
  */
+
+require_once __DIR__ . '/../core/Database.php';
+
 class EmailService 
 {
     private $config;
@@ -21,7 +24,13 @@ class EmailService
     public function sendEmail($to, $subject, $body, $isHtml = true)
     {
         try {
-            // Using PHPMailer-like approach with native PHP mail
+            // Configure SMTP settings using ini_set
+            ini_set('SMTP', $this->config['host']);
+            ini_set('smtp_port', $this->config['port']);
+            
+            // If SMTP authentication is required, use a different approach
+            // For now, we'll try to use mail() with configured settings
+            
             $headers = [
                 'From: ' . $this->config['from_name'] . ' <' . $this->config['from_email'] . '>',
                 'Reply-To: ' . $this->config['from_email'],
@@ -35,11 +44,41 @@ class EmailService
             
             $headerString = implode("\r\n", $headers);
             
-            return mail($to, $subject, $body, $headerString);
+            $result = @mail($to, $subject, $body, $headerString);
+            
+            if (!$result) {
+                error_log("Email failed to: {$to}, subject: {$subject}");
+                // Log to database for fallback/tracking
+                $this->logEmailAttempt($to, $subject, $body, 'failed');
+                return false;
+            }
+            
+            // Log successful send
+            $this->logEmailAttempt($to, $subject, $body, 'sent');
+            return true;
             
         } catch (Exception $e) {
             error_log('Email sending failed: ' . $e->getMessage());
+            $this->logEmailAttempt($to, $subject, $body, 'failed', $e->getMessage());
             return false;
+        }
+    }
+    
+    /**
+     * Log email attempt to database
+     */
+    private function logEmailAttempt($to, $subject, $body, $status, $error = null)
+    {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare("
+                INSERT INTO notification_logs 
+                (notification_type, recipient, recipient_type, subject, message, status, error_message, sent_at)
+                VALUES ('email', ?, 'email', ?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$to, $subject, $body, $status, $error]);
+        } catch (Exception $e) {
+            error_log('Failed to log email attempt: ' . $e->getMessage());
         }
     }
     
@@ -318,29 +357,37 @@ class EmailService
     {
         $subject = 'Registration Successful - Shena Companion';
         
+        // Extract data with defaults to prevent undefined key warnings
+        $name = $data['name'] ?? 'Member';
+        $memberNumber = $data['member_number'] ?? 'N/A';
+        $packageName = $data['package_name'] ?? $data['package'] ?? 'N/A';
+        $monthlyContribution = $data['monthly_contribution'] ?? $data['monthly_amount'] ?? 0;
+        $maturityDate = $data['maturity_date'] ?? 'N/A';
+        $maturityMonths = $data['maturity_months'] ?? 4;
+        
         $body = "
         <html>
         <body>
             <h2>Shena Companion Welfare Association</h2>
             <h3>✅ Registration Successful!</h3>
-            <p>Dear {$data['name']},</p>
+            <p>Dear {$name},</p>
             <p>Thank you for registering with Shena Companion Welfare Association.</p>
             
             <p><strong>Your Membership Details:</strong></p>
             <ul>
-                <li><strong>Member Number:</strong> {$data['member_number']}</li>
-                <li><strong>Package:</strong> {$data['package_name']}</li>
-                <li><strong>Monthly Contribution:</strong> KES " . number_format($data['monthly_contribution']) . "</li>
-                <li><strong>Maturity Date:</strong> {$data['maturity_date']}</li>
+                <li><strong>Member Number:</strong> {$memberNumber}</li>
+                <li><strong>Package:</strong> {$packageName}</li>
+                <li><strong>Monthly Contribution:</strong> KES " . number_format($monthlyContribution) . "</li>
+                <li><strong>Maturity Date:</strong> {$maturityDate}</li>
             </ul>
             
-            <p><strong>Important:</strong> Your coverage will become active after {$data['maturity_months']} months (maturity period) of consistent contributions.</p>
+            <p><strong>Important:</strong> Your coverage will become active after {$maturityMonths} months (maturity period) of consistent contributions.</p>
             
             <p><strong>First Payment:</strong><br>
             Please make your first monthly contribution payment.<br>
             M-Pesa Paybill: <strong>" . MPESA_BUSINESS_SHORTCODE . "</strong><br>
             Account Number: Your ID Number<br>
-            Amount: KES " . number_format($data['monthly_contribution']) . "</p>
+            Amount: KES " . number_format($monthlyContribution) . "</p>
             
             <p>Welcome to our family!</p>
             <p>Best regards,<br>Shena Companion Welfare Association</p>

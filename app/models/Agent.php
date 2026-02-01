@@ -420,6 +420,19 @@ class Agent extends BaseModel
     }
     
     /**
+     * Check if agent exists by email
+     * 
+     * @param string $email Email address
+     * @return bool True if exists
+     */
+    public function existsByEmail($email)
+    {
+        $sql = "SELECT COUNT(*) as count FROM agents WHERE email = ?";
+        $result = $this->db->query($sql, [$email])->fetch();
+        return $result['count'] > 0;
+    }
+    
+    /**
      * Update agent member count
      * 
      * @param int $agentId Agent ID

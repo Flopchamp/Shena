@@ -33,6 +33,26 @@ include VIEWS_PATH . '/layouts/header.php';
     .shake {
         animation: shake 0.5s;
     }
+    .package-option {
+        transition: opacity 0.3s ease;
+    }
+    .package-disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    #ageFilterMessage {
+        animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <div class="container mt-5">
@@ -116,9 +136,15 @@ include VIEWS_PATH . '/layouts/header.php';
                             Select the package that best matches your family structure and age group.
                             All packages include the full set of last respect services described in the policy booklet.
                         </p>
-                        <div class="row">
+                        <div id="ageFilterMessage" class="alert alert-warning d-none mb-3">
+                            <i class="fas fa-info-circle"></i> <span id="ageFilterText"></span>
+                        </div>
+                        <div class="row" id="packagesContainer">
                             <?php foreach ($packages as $key => $package): ?>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6 mb-3 package-option" 
+                                     data-package-id="<?php echo $key; ?>"
+                                     data-age-min="<?php echo isset($package['age_min']) ? (int)$package['age_min'] : 0; ?>"
+                                     data-age-max="<?php echo isset($package['age_max']) ? (int)$package['age_max'] : 999; ?>">
                                     <div class="card">
                                         <div class="card-body">
                                             <div class="form-check">
@@ -230,6 +256,96 @@ include VIEWS_PATH . '/layouts/header.php';
 document.addEventListener('DOMContentLoaded', function() {
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirm_password');
+    const registrationForm = document.querySelector('form[action="/register"]');
+    const submitButton = registrationForm.querySelector('button[type="submit"]');
+    const dateOfBirthInput = document.getElementById('date_of_birth');
+    const ageFilterMessage = document.getElementById('ageFilterMessage');
+    const ageFilterText = document.getElementById('ageFilterText');
+    const packageOptions = document.querySelectorAll('.package-option');
+    
+    // Function to calculate age from date of birth
+    function calculateAge(dateOfBirth) {
+        if (!dateOfBirth) return null;
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+    
+    // Function to filter packages based on age
+    function filterPackagesByAge() {
+        const dateOfBirth = dateOfBirthInput.value;
+        if (!dateOfBirth) {
+            // Show all packages if no date entered
+            packageOptions.forEach(option => {
+                option.style.display = '';
+                option.classList.remove('package-disabled');
+            });
+            ageFilterMessage.classList.add('d-none');
+            return;
+        }
+        
+        const age = calculateAge(dateOfBirth);
+        
+        if (age === null || age < 18) {
+            ageFilterMessage.classList.remove('d-none');
+            ageFilterMessage.classList.remove('alert-warning');
+            ageFilterMessage.classList.add('alert-danger');
+            ageFilterText.textContent = age < 18 ? 
+                'You must be at least 18 years old to register.' : 
+                'Please enter a valid date of birth.';
+            packageOptions.forEach(option => option.style.display = 'none');
+            return;
+        }
+        
+        let eligibleCount = 0;
+        packageOptions.forEach(option => {
+            const ageMin = parseInt(option.dataset.ageMin) || 0;
+            const ageMax = parseInt(option.dataset.ageMax) || 999;
+            
+            if (age >= ageMin && age <= ageMax) {
+                option.style.display = '';
+                option.classList.remove('package-disabled');
+                eligibleCount++;
+            } else {
+                option.style.display = 'none';
+                option.classList.add('package-disabled');
+                // Uncheck if this package was selected
+                const radio = option.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    radio.checked = false;
+                }
+            }
+        });
+        
+        // Show filter message
+        if (eligibleCount === 0) {
+            ageFilterMessage.classList.remove('d-none');
+            ageFilterMessage.classList.remove('alert-warning');
+            ageFilterMessage.classList.add('alert-danger');
+            ageFilterText.textContent = `No packages available for age ${age}. Please contact support.`;
+        } else if (eligibleCount < packageOptions.length) {
+            ageFilterMessage.classList.remove('d-none');
+            ageFilterMessage.classList.remove('alert-danger');
+            ageFilterMessage.classList.add('alert-warning');
+            ageFilterText.textContent = `Showing ${eligibleCount} package(s) eligible for age ${age} years.`;
+        } else {
+            ageFilterMessage.classList.add('d-none');
+        }
+    }
+    
+    // Listen for date of birth changes
+    dateOfBirthInput.addEventListener('change', filterPackagesByAge);
+    dateOfBirthInput.addEventListener('blur', filterPackagesByAge);
+    
+    // Filter on page load if date is already entered
+    if (dateOfBirthInput.value) {
+        filterPackagesByAge();
+    }
     
     function validatePasswordMatch() {
         if (confirmPassword.value && password.value !== confirmPassword.value) {
@@ -243,6 +359,103 @@ document.addEventListener('DOMContentLoaded', function() {
     
     password.addEventListener('input', validatePasswordMatch);
     confirmPassword.addEventListener('input', validatePasswordMatch);
+    
+    // Handle form submission via AJAX
+    registrationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Disable submit button
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Clear any previous errors
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid', 'shake');
+        });
+        document.querySelectorAll('.error-field-label').forEach(el => {
+            el.classList.remove('error-field-label');
+        });
+        document.querySelectorAll('.alert-danger').forEach(el => el.remove());
+        
+        try {
+            const formData = new FormData(registrationForm);
+            
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Show success message
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show';
+                successAlert.innerHTML = `
+                    <i class="fas fa-check-circle"></i> ${result.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                registrationForm.insertBefore(successAlert, registrationForm.firstChild);
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Reset form after short delay
+                setTimeout(() => {
+                    registrationForm.reset();
+                }, 2000);
+            } else {
+                // Show error message
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                errorAlert.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i> ${result.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                registrationForm.insertBefore(errorAlert, registrationForm.firstChild);
+                
+                // Highlight error field if specified
+                if (result.field) {
+                    const errorField = document.getElementById(result.field) || 
+                                     document.querySelector(`[name="${result.field}"]`);
+                    if (errorField) {
+                        errorField.classList.add('is-invalid', 'shake');
+                        const label = document.querySelector(`label[for="${result.field}"]`);
+                        if (label) {
+                            label.classList.add('error-field-label');
+                        }
+                        
+                        // Scroll to error field
+                        setTimeout(() => {
+                            errorField.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                            errorField.focus();
+                        }, 300);
+                    }
+                }
+                
+                // Scroll to top to show error message
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i> An unexpected error occurred. Please try again.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            registrationForm.insertBefore(errorAlert, registrationForm.firstChild);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        }
+    });
     
     // Scroll to first error field if present
     const errorField = document.querySelector('.is-invalid');

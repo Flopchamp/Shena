@@ -2,24 +2,48 @@
 /**
  * Bulk SMS Service
  * Handles bulk SMS messaging campaigns with queue management
+ * Now with automatic email fallback when SMS fails
  * 
  * @package Shena\Services
  */
 
 require_once __DIR__ . '/../models/NotificationPreference.php';
 require_once __DIR__ . '/SmsService.php';
+require_once __DIR__ . '/NotificationService.php';
 
 class BulkSmsService
 {
     private $db;
     private $smsService;
+    private $notificationService;
     private $notificationPreference;
+    private $emailFallbackEnabled;
     
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
         $this->smsService = new SmsService();
+        $this->notificationService = new NotificationService();
         $this->notificationPreference = new NotificationPreference();
+        
+        // Load email fallback setting from database
+        $this->emailFallbackEnabled = $this->getEmailFallbackSetting();
+    }
+    
+    /**
+     * Get email fallback setting from database
+     */
+    private function getEmailFallbackSetting()
+    {
+        try {
+            $sql = "SELECT setting_value FROM settings WHERE setting_key = 'email_fallback_enabled'";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ? (bool)$result['setting_value'] : true; // Default to enabled
+        } catch (Exception $e) {
+            return true; // Default to enabled if setting doesn't exist
+        }
     }
     
     /**
@@ -188,6 +212,7 @@ class BulkSmsService
         
         $sentCount = 0;
         $failedCount = 0;
+        $emailFallbackCount = 0;
         
         foreach ($recipients as $recipient) {
             try {
@@ -196,22 +221,66 @@ class BulkSmsService
                     continue; // Skip for now, will retry later
                 }
                 
-                // Send SMS
-                $result = $this->smsService->sendSms(
-                    $recipient['recipient_value'],
-                    $campaign['message']
-                );
+                // Get user email for potential fallback
+                $userEmail = $this->getUserEmail($recipient['user_id']);
                 
-                if ($result['success']) {
-                    $this->updateRecipientStatus($recipient['id'], 'sent');
-                    $sentCount++;
-                } else {
-                    $this->updateRecipientStatus(
-                        $recipient['id'], 
-                        'failed', 
-                        $result['error'] ?? 'Unknown error'
+                // Try to send SMS, with email fallback if enabled
+                if ($this->emailFallbackEnabled && $userEmail) {
+                    // Use NotificationService with automatic fallback
+                    $recipientData = [
+                        'phone' => $recipient['recipient_value'],
+                        'email' => $userEmail,
+                        'name' => $this->getUserName($recipient['user_id'])
+                    ];
+                    
+                    $result = $this->notificationService->send(
+                        $recipientData,
+                        $campaign['message'],
+                        $campaign['title'], // Email subject
+                        null, // Use default email body format
+                        true // Enable fallback
                     );
-                    $failedCount++;
+                    
+                    if ($result['success']) {
+                        $deliveryMethod = $result['method']; // 'sms' or 'email'
+                        $this->updateRecipientStatus(
+                            $recipient['id'], 
+                            'sent', 
+                            null, 
+                            $deliveryMethod
+                        );
+                        
+                        if ($deliveryMethod === 'email') {
+                            $emailFallbackCount++;
+                        }
+                        $sentCount++;
+                    } else {
+                        $this->updateRecipientStatus(
+                            $recipient['id'], 
+                            'failed', 
+                            $result['error'] ?? 'Unknown error'
+                        );
+                        $failedCount++;
+                    }
+                    
+                } else {
+                    // Standard SMS only (no fallback)
+                    $result = $this->smsService->sendSms(
+                        $recipient['recipient_value'],
+                        $campaign['message']
+                    );
+                    
+                    if ($result['success']) {
+                        $this->updateRecipientStatus($recipient['id'], 'sent', null, 'sms');
+                        $sentCount++;
+                    } else {
+                        $this->updateRecipientStatus(
+                            $recipient['id'], 
+                            'failed', 
+                            $result['error'] ?? 'Unknown error'
+                        );
+                        $failedCount++;
+                    }
                 }
                 
                 // Rate limiting - small delay between messages
@@ -236,6 +305,7 @@ class BulkSmsService
             'success' => true,
             'sent_count' => $sentCount,
             'failed_count' => $failedCount,
+            'email_fallback_count' => $emailFallbackCount,
             'pending_count' => $pendingCount
         ];
     }
@@ -338,14 +408,17 @@ class BulkSmsService
      * @param string $errorMessage Optional error message
      * @return bool Success status
      */
-    private function updateRecipientStatus($recipientId, $status, $errorMessage = null)
+    private function updateRecipientStatus($recipientId, $status, $errorMessage = null, $deliveryMethod = null)
     {
         $sql = "UPDATE bulk_message_recipients 
-                SET status = ?, sent_at = NOW(), error_message = ? 
+                SET status = ?, sent_at = NOW(), error_message = ?, 
+                    delivery_method = ?,
+                    email_fallback_sent = IF(delivery_method = 'email', 1, 0),
+                    email_sent_at = IF(delivery_method = 'email', NOW(), NULL)
                 WHERE id = ?";
         
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$status, $errorMessage, $recipientId]);
+        return $stmt->execute([$status, $errorMessage, $deliveryMethod, $recipientId]);
     }
     
     /**
@@ -428,5 +501,201 @@ class BulkSmsService
         $stmt->execute([$bulkMessageId]);
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get active campaign count
+     */
+    public function getActiveCampaignCount()
+    {
+        $sql = "SELECT COUNT(*) as count FROM bulk_messages 
+                WHERE status IN ('sending', 'scheduled')";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] ?? 0;
+    }
+    
+    /**
+     * Get messages sent today
+     */
+    public function getSentCountToday()
+    {
+        $sql = "SELECT COUNT(*) as count FROM bulk_message_recipients 
+                WHERE status = 'sent' AND DATE(sent_at) = CURDATE()";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] ?? 0;
+    }
+    
+    /**
+     * Get queue pending count
+     */
+    public function getQueuePendingCount()
+    {
+        $sql = "SELECT COUNT(*) as count FROM sms_queue WHERE status = 'pending'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] ?? 0;
+    }
+    
+    /**
+     * Get SMS credits balance
+     */
+    public function getSmsCredits()
+    {
+        $sql = "SELECT balance FROM sms_credits LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['balance'] ?? 0;
+    }
+    
+    /**
+     * Get queue items
+     */
+    public function getQueueItems($limit = 50)
+    {
+        $sql = "SELECT * FROM sms_queue ORDER BY priority DESC, created_at ASC LIMIT ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get SMS templates
+     */
+    public function getTemplates()
+    {
+        $sql = "SELECT * FROM sms_templates WHERE is_active = 1 ORDER BY category, name";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Cancel campaign
+     */
+    public function cancelCampaign($campaignId)
+    {
+        $sql = "UPDATE bulk_messages SET status = 'cancelled' WHERE id = ? 
+                AND status IN ('draft', 'scheduled')";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$campaignId]);
+    }
+    
+    /**
+     * Update scheduled_at
+     */
+    public function updateScheduledAt($campaignId, $scheduledAt)
+    {
+        $sql = "UPDATE bulk_messages SET scheduled_at = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$scheduledAt, $campaignId]);
+    }
+    
+    /**
+     * Get campaign recipients (updated to include email)
+     */
+    public function getCampaignRecipients($campaignId, $status = null)
+    {
+        $sql = "SELECT bmr.*, u.first_name, u.last_name, u.phone, u.email,
+                       bmr.delivery_method, bmr.email_fallback_sent, bmr.email_sent_at
+                FROM bulk_message_recipients bmr
+                JOIN users u ON bmr.user_id = u.id
+                WHERE bmr.bulk_message_id = ?";
+        
+        $params = [$campaignId];
+        
+        if ($status) {
+            $sql .= " AND bmr.status = ?";
+            $params[] = $status;
+        }
+        
+        $sql .= " ORDER BY bmr.id ASC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get user email
+     */
+    private function getUserEmail($userId)
+    {
+        $sql = "SELECT email FROM users WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['email'] : null;
+    }
+    
+    /**
+     * Get user full name
+     */
+    private function getUserName($userId)
+    {
+        $sql = "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['full_name'] : 'Member';
+    }
+    
+    /**
+     * Process SMS queue
+     */
+    public function processQueue($batchSize = 100)
+    {
+        $sql = "SELECT * FROM sms_queue 
+                WHERE status = 'pending' 
+                AND (scheduled_at IS NULL OR scheduled_at <= NOW())
+                ORDER BY priority DESC, created_at ASC
+                LIMIT ?";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$batchSize]);
+        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $sentCount = 0;
+        $failedCount = 0;
+        
+        foreach ($items as $item) {
+            try {
+                $result = $this->smsService->sendSms($item['phone_number'], $item['message']);
+                
+                if ($result['success']) {
+                    $this->updateQueueStatus($item['id'], 'sent');
+                    $sentCount++;
+                } else {
+                    $this->updateQueueStatus($item['id'], 'failed', $result['error'] ?? 'Unknown error');
+                    $failedCount++;
+                }
+                
+                usleep(100000); // 100ms delay between messages
+                
+            } catch (Exception $e) {
+                $this->updateQueueStatus($item['id'], 'failed', $e->getMessage());
+                $failedCount++;
+            }
+        }
+        
+        return [
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount
+        ];
+    }
+    
+    /**
+     * Update queue item status
+     */
+    private function updateQueueStatus($queueId, $status, $errorMessage = null)
+    {
+        $sql = "UPDATE sms_queue SET status = ?, sent_at = NOW(), error_message = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$status, $errorMessage, $queueId]);
     }
 }

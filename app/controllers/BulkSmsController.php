@@ -7,17 +7,20 @@
  */
 
 require_once __DIR__ . '/../services/BulkSmsService.php';
+require_once __DIR__ . '/../services/SmsService.php';
 require_once __DIR__ . '/../models/Member.php';
 
 class BulkSmsController extends BaseController
 {
     private $bulkSmsService;
+    private $smsService;
     private $memberModel;
     
     public function __construct()
     {
         parent::__construct();
         $this->bulkSmsService = new BulkSmsService();
+        $this->smsService = new SmsService();
         $this->memberModel = new Member();
     }
     
@@ -34,13 +37,32 @@ class BulkSmsController extends BaseController
             'date_to' => $_GET['date_to'] ?? ''
         ];
         
+        // Get campaigns
         $campaigns = $this->bulkSmsService->getAllCampaigns($filters);
         
-        $this->render('admin/bulk-sms/index', [
+        // Get queue items
+        $queue_items = $this->bulkSmsService->getQueueItems(50);
+        
+        // Get templates
+        $templates = $this->bulkSmsService->getTemplates();
+        
+        // Get statistics
+        $stats = [
+            'active_campaigns' => $this->bulkSmsService->getActiveCampaignCount(),
+            'sent_today' => $this->bulkSmsService->getSentCountToday(),
+            'queue_pending' => $this->bulkSmsService->getQueuePendingCount(),
+            'sms_credits' => $this->bulkSmsService->getSmsCredits()
+        ];
+        
+        $data = [
+            'title' => 'SMS Campaigns - Shena Companion',
             'campaigns' => $campaigns,
-            'filters' => $filters,
-            'pageTitle' => 'Bulk SMS Campaigns'
-        ]);
+            'queue_items' => $queue_items,
+            'templates' => $templates,
+            'stats' => $stats
+        ];
+        
+        $this->view('admin.sms-campaigns', $data);
     }
     
     /**
@@ -317,5 +339,510 @@ class BulkSmsController extends BaseController
         }
         
         return $errors;
+    }
+    
+    /**
+     * Create new campaign (for SMS campaigns view)
+     */
+    public function createCampaign()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+            
+            $this->validateCsrf();
+            
+            // Validate inputs
+            $title = $this->sanitizeInput($_POST['title'] ?? '');
+            $message = $this->sanitizeInput($_POST['message'] ?? '');
+            $targetAudience = $_POST['target_audience'] ?? '';
+            $action = $_POST['action'] ?? 'draft'; // draft or send
+            $sendTime = $_POST['send_time'] ?? 'now';
+            $scheduledAt = $_POST['scheduled_at'] ?? null;
+            
+            if (empty($title) || empty($message) || empty($targetAudience)) {
+                throw new Exception('Title, message, and target audience are required');
+            }
+            
+            if (strlen($message) > 160) {
+                throw new Exception('Message must be 160 characters or less');
+            }
+            
+            // Handle custom filters
+            $customFilters = null;
+            if ($targetAudience === 'custom') {
+                $customFilters = [
+                    'package' => $_POST['filter_package'] ?? null,
+                    'status' => $_POST['filter_status'] ?? null,
+                    'joined_after' => $_POST['filter_joined_after'] ?? null,
+                    'joined_before' => $_POST['filter_joined_before'] ?? null,
+                ];
+            }
+            
+            // Prepare campaign data
+            $campaignData = [
+                'title' => $title,
+                'message' => $message,
+                'target_audience' => $targetAudience,
+                'custom_filters' => $customFilters,
+                'scheduled_at' => ($sendTime === 'scheduled' && $scheduledAt) ? $scheduledAt : null
+            ];
+            
+            // Create campaign
+            $campaignId = $this->bulkSmsService->createCampaign($campaignData, $_SESSION['user_id']);
+            
+            if (!$campaignId) {
+                throw new Exception('Failed to create campaign');
+            }
+            
+            // Get recipients
+            $recipients = $this->bulkSmsService->getRecipients($targetAudience, $customFilters ?? []);
+            
+            if (empty($recipients)) {
+                throw new Exception('No recipients found for the selected audience');
+            }
+            
+            // Queue recipients
+            $this->bulkSmsService->queueRecipients($campaignId, $recipients);
+            
+            // If action is 'send', start sending immediately
+            if ($action === 'send' && $sendTime === 'now') {
+                $this->bulkSmsService->sendCampaign($campaignId);
+                $_SESSION['success'] = 'Campaign created and sending started! (' . count($recipients) . ' recipients)';
+            } elseif ($sendTime === 'scheduled') {
+                $_SESSION['success'] = 'Campaign scheduled successfully for ' . date('M j, Y H:i', strtotime($scheduledAt));
+            } else {
+                $_SESSION['success'] = 'Campaign saved as draft';
+            }
+            
+            $this->redirect('/admin/communications');
+            
+        } catch (Exception $e) {
+            error_log('Campaign creation error: ' . $e->getMessage());
+            $_SESSION['error'] = $e->getMessage();
+            $this->redirect('/admin/communications');
+        }
+    }
+    
+    /**
+     * Send campaign (JSON response)
+     */
+    public function sendCampaign()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $campaignId = $input['campaign_id'] ?? 0;
+            
+            if (!$campaignId) {
+                throw new Exception('Campaign ID is required');
+            }
+            
+            $result = $this->bulkSmsService->sendCampaign($campaignId);
+            
+            if ($result['success']) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Campaign sending started',
+                    'sent_count' => $result['sent_count'],
+                    'failed_count' => $result['failed_count'],
+                    'pending_count' => $result['pending_count']
+                ]);
+            } else {
+                throw new Exception($result['error'] ?? 'Failed to send campaign');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Send campaign error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Cancel campaign (JSON response)
+     */
+    public function cancelCampaign()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $campaignId = $input['campaign_id'] ?? 0;
+            
+            if (!$campaignId) {
+                throw new Exception('Campaign ID is required');
+            }
+            
+            $result = $this->bulkSmsService->cancelCampaign($campaignId);
+            
+            if ($result) {
+                $this->json(['success' => true, 'message' => 'Campaign cancelled successfully']);
+            } else {
+                throw new Exception('Failed to cancel campaign');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Cancel campaign error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Process SMS queue (JSON response)
+     */
+    public function processQueue()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $result = $this->bulkSmsService->processQueue(100);
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Queue processed',
+                'sent_count' => $result['sent_count'],
+                'failed_count' => $result['failed_count']
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Process queue error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Send quick SMS
+     */
+    public function quickSms()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+            
+            $this->validateCsrf();
+            
+            $phone = $this->sanitizeInput($_POST['phone'] ?? '');
+            $message = $this->sanitizeInput($_POST['message'] ?? '');
+            $priority = $_POST['priority'] ?? 'normal';
+            
+            // Validate phone number
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            if (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
+                $phone = '254' . substr($phone, 1);
+            }
+            
+            if (!preg_match('/^254[17][0-9]{8}$/', $phone)) {
+                throw new Exception('Invalid phone number format');
+            }
+            
+            if (empty($message) || strlen($message) > 160) {
+                throw new Exception('Message must be between 1 and 160 characters');
+            }
+            
+            // Send SMS
+            require_once __DIR__ . '/../services/SmsService.php';
+            $smsService = new SmsService();
+            $result = $smsService->sendSms($phone, $message);
+            
+            if ($result['success']) {
+                $_SESSION['success'] = 'SMS sent successfully to ' . $phone;
+            } else {
+                throw new Exception($result['error'] ?? 'Failed to send SMS');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Quick SMS error: ' . $e->getMessage());
+            $_SESSION['error'] = $e->getMessage();
+        }
+        
+        $this->redirect('/admin/communications');
+    }
+    
+    /**
+     * Send scheduled campaign now (JSON response)
+     */
+    public function sendNow()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $campaignId = $input['campaign_id'] ?? 0;
+            
+            if (!$campaignId) {
+                throw new Exception('Campaign ID is required');
+            }
+            
+            // Update scheduled_at to null and send
+            $this->bulkSmsService->updateScheduledAt($campaignId, null);
+            $result = $this->bulkSmsService->sendCampaign($campaignId);
+            
+            if ($result['success']) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Campaign is being sent now',
+                    'sent_count' => $result['sent_count']
+                ]);
+            } else {
+                throw new Exception($result['error'] ?? 'Failed to send campaign');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Send now error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * View campaign details
+     */
+    public function viewCampaign($id)
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        
+        $campaign = $this->bulkSmsService->getCampaignById($id);
+        
+        if (!$campaign) {
+            $_SESSION['error'] = 'Campaign not found';
+            $this->redirect('/admin/communications');
+            return;
+        }
+        
+        $recipients = $this->bulkSmsService->getCampaignRecipients($id);
+        
+        // Redirect back to communications with campaign details in session
+        $_SESSION['campaign_view'] = [
+            'campaign' => $campaign,
+            'recipients' => $recipients
+        ];
+        
+        $this->redirect('/admin/communications#campaigns');
+    }
+    
+    /**
+     * Show SMS templates
+     */
+    public function templates()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        
+        $templates = $this->bulkSmsService->getTemplates();
+        
+        // Store in session and redirect back
+        $_SESSION['templates_view'] = $templates;
+        $this->redirect('/admin/communications#campaigns');
+    }
+    
+    /**
+     * Edit campaign (stub for future implementation)
+     */
+    public function editCampaign()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $campaignId = $input['campaign_id'] ?? 0;
+        
+        // TODO: Implement edit functionality
+        $this->json([
+            'success' => false,
+            'message' => 'Edit feature coming soon. Please create a new campaign instead.'
+        ]);
+    }
+    
+    /**
+     * Pause campaign
+     */
+    public function pauseCampaign()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $campaignId = $input['campaign_id'] ?? 0;
+            
+            if (!$campaignId) {
+                throw new Exception('Campaign ID is required');
+            }
+            
+            // Update campaign status to paused
+            $sql = "UPDATE bulk_messages SET status = 'paused', updated_at = NOW() 
+                    WHERE id = ? AND status = 'sending'";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$campaignId]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->json(['success' => true, 'message' => 'Campaign paused']);
+            } else {
+                throw new Exception('Campaign not found or cannot be paused');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Pause campaign error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Reschedule campaign
+     */
+    public function reschedule()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $campaignId = $input['campaign_id'] ?? 0;
+            $scheduledAt = $input['scheduled_at'] ?? null;
+            
+            if (!$campaignId || !$scheduledAt) {
+                throw new Exception('Campaign ID and schedule time are required');
+            }
+            
+            $sql = "UPDATE bulk_messages SET scheduled_at = ?, updated_at = NOW() 
+                    WHERE id = ? AND status IN ('scheduled', 'draft')";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$scheduledAt, $campaignId]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->json(['success' => true, 'message' => 'Campaign rescheduled']);
+            } else {
+                throw new Exception('Campaign not found or cannot be rescheduled');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Reschedule error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Send individual queue item
+     */
+    public function sendQueueItem()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $itemId = $input['item_id'] ?? 0;
+            
+            if (!$itemId) {
+                throw new Exception('Queue item ID is required');
+            }
+            
+            // Get queue item
+            $sql = "SELECT * FROM sms_queue WHERE id = ? AND status = 'pending'";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$itemId]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$item) {
+                throw new Exception('Queue item not found or already processed');
+            }
+            
+            // Send SMS
+            $result = $this->smsService->sendSms($item['phone_number'], $item['message']);
+            
+            if ($result && $result['success']) {
+                $sql = "UPDATE sms_queue SET status = 'sent', sent_at = NOW() WHERE id = ?";
+                $stmt = $this->db->getConnection()->prepare($sql);
+                $stmt->execute([$itemId]);
+                
+                $this->json(['success' => true, 'message' => 'SMS sent successfully']);
+            } else {
+                $error = $result['error'] ?? 'Unknown error';
+                $sql = "UPDATE sms_queue SET status = 'failed', error_message = ?, retry_count = retry_count + 1 WHERE id = ?";
+                $stmt = $this->db->getConnection()->prepare($sql);
+                $stmt->execute([$error, $itemId]);
+                
+                throw new Exception('Failed to send SMS: ' . $error);
+            }
+            
+        } catch (Exception $e) {
+            error_log('Send queue item error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Retry failed queue item
+     */
+    public function retryQueueItem()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $itemId = $input['item_id'] ?? 0;
+            
+            if (!$itemId) {
+                throw new Exception('Queue item ID is required');
+            }
+            
+            // Reset status to pending
+            $sql = "UPDATE sms_queue SET status = 'pending', error_message = NULL 
+                    WHERE id = ? AND status = 'failed' AND retry_count < max_retries";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$itemId]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->json(['success' => true, 'message' => 'Item queued for retry']);
+            } else {
+                throw new Exception('Cannot retry this item (max retries reached or not failed)');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Retry queue item error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Delete queue item
+     */
+    public function deleteQueueItem()
+    {
+        $this->requireRole(['admin', 'super_admin', 'manager']);
+        header('Content-Type: application/json');
+        
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $itemId = $input['item_id'] ?? 0;
+            
+            if (!$itemId) {
+                throw new Exception('Queue item ID is required');
+            }
+            
+            $sql = "DELETE FROM sms_queue WHERE id = ? AND status IN ('pending', 'failed')";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([$itemId]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->json(['success' => true, 'message' => 'Queue item deleted']);
+            } else {
+                throw new Exception('Queue item not found or cannot be deleted');
+            }
+            
+        } catch (Exception $e) {
+            error_log('Delete queue item error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

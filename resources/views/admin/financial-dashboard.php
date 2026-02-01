@@ -159,8 +159,10 @@
                                     <h3 class="mb-0">KES <?php echo number_format($data['kpis']['net_revenue'] ?? 0, 0); ?></h3>
                                     <small>
                                         <?php 
-                                        $margin = $data['kpis']['revenue'] > 0 ? 
-                                            round(($data['kpis']['net_revenue'] / $data['kpis']['total_revenue']) * 100, 1) : 0;
+                                        $totalRevenue = $data['kpis']['total_revenue'] ?? 0;
+                                        $netRevenue = $data['kpis']['net_revenue'] ?? 0;
+                                        $margin = $totalRevenue > 0 ? 
+                                            round(($netRevenue / $totalRevenue) * 100, 1) : 0;
                                         echo $margin; 
                                         ?>% margin
                                     </small>
@@ -218,9 +220,9 @@
                                         <?php if (!empty($data['top_agents'])): ?>
                                             <?php foreach ($data['top_agents'] as $agent): ?>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($agent['agent_name']); ?></td>
-                                                    <td class="text-right"><?php echo $agent['total_members']; ?></td>
-                                                    <td class="text-right">KES <?php echo number_format($agent['total_commissions'], 0); ?></td>
+                                                    <td><?php echo htmlspecialchars($agent['agent_name'] ?? 'N/A'); ?></td>
+                                                    <td class="text-right"><?php echo $agent['total_members'] ?? 0; ?></td>
+                                                    <td class="text-right">KES <?php echo number_format($agent['total_commissions'] ?? 0, 0); ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php else: ?>

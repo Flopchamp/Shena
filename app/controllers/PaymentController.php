@@ -166,6 +166,32 @@ class PaymentController extends BaseController
         
         return false; // Invalid format
     }
+
+    /**
+     * Resolve member ID from member number or ID number if provided
+     */
+    private function resolveMemberId($memberId, $memberNumber, $idNumber)
+    {
+        if (!empty($memberId)) {
+            return (int)$memberId;
+        }
+
+        if (!empty($memberNumber)) {
+            $member = $this->memberModel->findByMemberNumber($memberNumber);
+            if ($member) {
+                return (int)$member['id'];
+            }
+        }
+
+        if (!empty($idNumber)) {
+            $member = $this->memberModel->findByIdNumber($idNumber);
+            if ($member) {
+                return (int)$member['id'];
+            }
+        }
+
+        return 0;
+    }
     
     /**
      * View reconciliation page (admin only)
@@ -256,6 +282,302 @@ class PaymentController extends BaseController
                 'message' => 'Failed to reconcile payment'
             ], 500);
         }
+    }
+
+    /**
+     * Admin: Verify payment by Paybill receipt or STK Checkout Request ID
+     */
+    public function verifyAdminPayment()
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Method not allowed'], 405);
+            return;
+        }
+
+        $input = $_POST;
+        if (empty($input)) {
+            $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        }
+
+        $method = strtolower(trim($input['method'] ?? ''));
+        $checkoutRequestId = trim($input['checkout_request_id'] ?? '');
+        $mpesaReceipt = trim($input['mpesa_receipt_number'] ?? '');
+        $memberId = $this->resolveMemberId(
+            $input['member_id'] ?? 0,
+            trim($input['member_number'] ?? ''),
+            trim($input['id_number'] ?? '')
+        );
+        $amount = $input['amount'] ?? null;
+        $paymentType = trim($input['payment_type'] ?? 'monthly');
+        $notes = trim($input['notes'] ?? '');
+        $userId = $_SESSION['user_id'] ?? 0;
+
+        if ($method === 'stk') {
+            if (empty($checkoutRequestId)) {
+                $this->json(['error' => 'Checkout Request ID is required for STK verification'], 400);
+                return;
+            }
+
+            $status = $this->paymentService->queryTransactionStatus($checkoutRequestId);
+            if (!$status) {
+                $this->json(['error' => 'Failed to query STK transaction status'], 500);
+                return;
+            }
+
+            $resultCode = $status['ResultCode'] ?? null;
+            if (!in_array((string)$resultCode, ['0', '00'], true)) {
+                $this->json([
+                    'error' => 'STK verification failed',
+                    'status' => $status
+                ], 400);
+                return;
+            }
+
+            $paymentModel = new Payment();
+            $existing = $paymentModel->findAll(['transaction_reference' => $checkoutRequestId]);
+
+            if (!empty($existing)) {
+                $payment = $existing[0];
+                if ($payment['status'] === 'completed') {
+                    $this->json([
+                        'success' => true,
+                        'message' => 'Payment already completed',
+                        'payment_id' => $payment['id']
+                    ]);
+                    return;
+                }
+
+                if ($memberId && empty($payment['member_id'])) {
+                    $paymentModel->update($payment['id'], ['member_id' => $memberId]);
+                }
+
+                if (!empty($mpesaReceipt)) {
+                    $paymentModel->update($payment['id'], ['transaction_id' => $mpesaReceipt]);
+                }
+
+                $paymentModel->confirmPayment($payment['id'], $mpesaReceipt ?: null);
+
+                $this->json([
+                    'success' => true,
+                    'message' => 'STK payment verified and completed',
+                    'payment_id' => $payment['id']
+                ]);
+                return;
+            }
+
+            if (!$memberId || !$amount) {
+                $this->json(['error' => 'Member ID and amount are required to post this STK payment'], 400);
+                return;
+            }
+
+            $paymentId = $paymentModel->recordPayment([
+                'member_id' => $memberId,
+                'amount' => $amount,
+                'payment_type' => $paymentType,
+                'payment_method' => 'mpesa',
+                'status' => 'pending',
+                'transaction_reference' => $checkoutRequestId,
+                'transaction_id' => $mpesaReceipt ?: null,
+                'notes' => $notes
+            ]);
+
+            $paymentModel->confirmPayment($paymentId, $mpesaReceipt ?: null);
+
+            $this->json([
+                'success' => true,
+                'message' => 'STK payment verified and posted',
+                'payment_id' => $paymentId
+            ]);
+            return;
+        }
+
+        if ($method === 'paybill') {
+            if (empty($mpesaReceipt)) {
+                $this->json(['error' => 'M-Pesa receipt number is required for Paybill verification'], 400);
+                return;
+            }
+
+            $result = $this->reconciliationService->verifyPaybillReceipt(
+                $mpesaReceipt,
+                $memberId,
+                $userId,
+                $notes,
+                $paymentType
+            );
+
+            if ($result['success']) {
+                $this->json($result);
+            } else {
+                $this->json(['error' => $result['message'] ?? 'Verification failed'], 400);
+            }
+            return;
+        }
+
+        $this->json(['error' => 'Invalid verification method'], 400);
+    }
+    
+    /**
+     * Search members for autocomplete
+     * Admin only - Returns member suggestions
+     */
+    public function searchMembers()
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $this->json(['error' => 'Unauthorized'], 403);
+            return;
+        }
+
+        $query = trim($_GET['q'] ?? '');
+        if (strlen($query) < 2) {
+            $this->json(['results' => []]);
+            return;
+        }
+
+        try {
+            $db = $this->db->getConnection();
+            $stmt = $db->prepare("
+                SELECT 
+                    m.id,
+                    m.member_number,
+                    u.first_name,
+                    u.last_name,
+                    u.id_number,
+                    u.phone_number
+                FROM members m
+                INNER JOIN users u ON m.user_id = u.id
+                WHERE 
+                    m.status = 'active'
+                    AND (
+                        m.member_number LIKE :query
+                        OR u.first_name LIKE :query
+                        OR u.last_name LIKE :query
+                        OR u.id_number LIKE :query
+                        OR u.phone_number LIKE :query
+                        OR CONCAT(u.first_name, ' ', u.last_name) LIKE :query
+                    )
+                LIMIT 15
+            ");
+            
+            $searchTerm = '%' . $query . '%';
+            $stmt->execute(['query' => $searchTerm]);
+            $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $results = array_map(function($member) {
+                return [
+                    'id' => $member['id'],
+                    'member_number' => $member['member_number'],
+                    'name' => $member['first_name'] . ' ' . $member['last_name'],
+                    'id_number' => $member['id_number'],
+                    'phone' => $member['phone_number'],
+                    'label' => sprintf(
+                        '%s - %s (%s)',
+                        $member['member_number'],
+                        $member['first_name'] . ' ' . $member['last_name'],
+                        $member['id_number']
+                    )
+                ];
+            }, $members);
+
+            $this->json(['results' => $results]);
+        } catch (Exception $e) {
+            error_log('Member search error: ' . $e->getMessage());
+            $this->json(['results' => []]);
+        }
+    }
+
+    /**
+     * Manually confirm a payment
+     * Admin only
+     */
+    public function confirmPayment($id)
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $_SESSION['error'] = 'Unauthorized access';
+            header('Location: /admin/payments');
+            exit;
+        }
+
+        try {
+            $paymentModel = new Payment();
+            $payment = $paymentModel->find($id);
+            
+            if (!$payment) {
+                $_SESSION['error'] = 'Payment not found';
+                header('Location: /admin/payments');
+                exit;
+            }
+
+            if ($payment['status'] === 'completed') {
+                $_SESSION['info'] = 'Payment already confirmed';
+                header('Location: /admin/payments');
+                exit;
+            }
+
+            $paymentModel->confirmPayment($id);
+            $_SESSION['success'] = 'Payment confirmed successfully';
+            
+        } catch (Exception $e) {
+            error_log('Confirm payment error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to confirm payment';
+        }
+
+        header('Location: /admin/payments');
+        exit;
+    }
+
+    /**
+     * Mark a payment as failed
+     * Admin only
+     */
+    public function failPayment($id)
+    {
+        // Require admin access
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['super_admin', 'manager'])) {
+            $_SESSION['error'] = 'Unauthorized access';
+            header('Location: /admin/payments');
+            exit;
+        }
+
+        try {
+            $reason = $_GET['reason'] ?? 'Manual failure by admin';
+            
+            $paymentModel = new Payment();
+            $payment = $paymentModel->find($id);
+            
+            if (!$payment) {
+                $_SESSION['error'] = 'Payment not found';
+                header('Location: /admin/payments');
+                exit;
+            }
+
+            if ($payment['status'] === 'failed') {
+                $_SESSION['info'] = 'Payment already marked as failed';
+                header('Location: /admin/payments');
+                exit;
+            }
+
+            $paymentModel->update($id, [
+                'status' => 'failed',
+                'notes' => ($payment['notes'] ?? '') . "\nFailed: " . $reason
+            ]);
+            
+            $_SESSION['success'] = 'Payment marked as failed';
+            
+        } catch (Exception $e) {
+            error_log('Fail payment error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to update payment status';
+        }
+
+        header('Location: /admin/payments');
+        exit;
     }
     
     /**
