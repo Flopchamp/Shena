@@ -1,194 +1,204 @@
 <?php include VIEWS_PATH . '/layouts/header.php'; ?>
 
 <!-- Hero Section -->
-<section class="hero-section">
+<section class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1600&q=80') center/cover no-repeat; min-height: 600px; display: flex; align-items: center;">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-10">
+                <h1 class="mb-4" style="color: white; font-size: 3.5rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-family: 'Playfair Display', serif;">
+                    Dignified Send-off,<br>Lasting Support.
+                </h1>
+                <p class="lead mb-5" style="color: rgba(255, 255, 255, 0.95); font-size: 1.1rem; max-width: 700px; margin: 0 auto; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                    A dedicated welfare association serving the Kisumu community with professional funeral cover and compassionate support.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="/register" class="btn btn-lg" style="background-color: #7F3D9E; color: white; padding: 14px 40px; border-radius: 30px; font-weight: 600; border: none; box-shadow: 0 4px 12px rgba(127, 61, 158, 0.4);">
+                        Join Association
+                    </a>
+                    <a href="/about" class="btn btn-lg" style="background-color: white; color: #7F3D9E; padding: 14px 40px; border-radius: 30px; font-weight: 600; border: none; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);">
+                        Our Benefits
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Professional Care & Services Section -->
+<section class="section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="mb-3">Professional Care & Services</h2>
+            <p style="color: var(--shena-medium-gray); max-width: 600px; margin: 0 auto;">
+                Providing a comprehensive range of services with the highest standard of respect and royal attention.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Mortuary Service -->
+            <div class="col-lg col-md-4 col-sm-6">
+                <div class="shena-service-card">
+                    <div class="service-icon">
+                        <i class="far fa-building"></i>
+                    </div>
+                    <h4 class="service-title">Mortuary</h4>
+                    <p class="service-description">
+                        Professional preservation and care at leading facilities.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Dressing Service -->
+            <div class="col-lg col-md-4 col-sm-6">
+                <div class="shena-service-card">
+                    <div class="service-icon">
+                        <i class="far fa-user"></i>
+                    </div>
+                    <h4 class="service-title">Dressing</h4>
+                    <p class="service-description">
+                        Gentle grooming and preparation with utmost respect.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Transport Service -->
+            <div class="col-lg col-md-4 col-sm-6">
+                <div class="shena-service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h4 class="service-title">Transport</h4>
+                    <p class="service-description">
+                        Modern, reliable hearse for a dignified journey.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Coffins Service -->
+            <div class="col-lg col-md-4 col-sm-6">
+                <div class="shena-service-card">
+                    <div class="service-icon">
+                        <i class="far fa-square"></i>
+                    </div>
+                    <h4 class="service-title">Coffins</h4>
+                    <p class="service-description">
+                        Executive high-quality designs befitting final standards.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Logistics Service -->
+            <div class="col-lg col-md-4 col-sm-6">
+                <div class="shena-service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h4 class="service-title">Logistics</h4>
+                    <p class="service-description">
+                        Full event support including premium tents and chairs.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why We Are The Royal Choice Section -->
+<section class="section section-light">
     <div class="container">
         <div class="row align-items-center">
+            <!-- Left Column: Content -->
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="badge bg-light text-purple mb-3" style="color: var(--shena-primary-purple); border: 2px solid var(--shena-primary-purple); padding: 8px 16px; font-weight: 600;">
+                    OUR EXCELLENCE
+                </div>
+                <h2 class="mb-4">
+                    Why We Are<br>
+                    <span style="color: var(--shena-primary-purple);">The Royal Choice</span>
+                </h2>
+                <p class="mb-4" style="color: var(--shena-medium-gray); line-height: 1.8;">
+                    SHENA Companion stands as a pillar of strength for the Kisumu community. We combine traditional values with modern professionalism to ensure peace of mind for our members.
+                </p>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(127, 61, 158, 0.1);">
+                                    <i class="fas fa-clock" style="color: var(--shena-primary-purple); font-size: 20px;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-2">Immediate Response</h5>
+                                <p style="color: var(--shena-medium-gray); font-size: 0.9rem;">
+                                    Our team available 24/7 to handle claims immediately.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(127, 61, 158, 0.1);">
+                                    <i class="fas fa-users" style="color: var(--shena-primary-purple); font-size: 20px;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-2">Community Spirit</h5>
+                                <p style="color: var(--shena-medium-gray); font-size: 0.9rem;">
+                                    Built by and for the residents of Kisumu City.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="/about" class="btn btn-outline-purple">
+                    Learn More About Us
+                </a>
+            </div>
+
+            <!-- Right Column: Image with Badge -->
             <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Welcome to Shena Companion Welfare Association</h1>
-                <p class="lead mb-4">Providing affordable funeral services and burial expense coverage to our community members. Join us today and secure your family's future.</p>
-                <div class="d-flex gap-3">
-                    <a href="/register" class="btn btn-primary btn-lg">
-                        <i class="fas fa-user-plus"></i> Join Now
-                    </a>
-                    <a href="/about" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-info-circle"></i> Learn More
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-heart fa-10x opacity-75"></i>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="row text-center mb-5">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold">Why Choose Shena Companion?</h2>
-                <p class="lead">We provide comprehensive welfare services designed to support you and your family during difficult times.</p>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=800" 
+                         alt="Sunset over water" 
+                         class="img-fluid rounded-3 shadow-lg"
+                         style="width: 100%; height: auto;">
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-4">
+                        <div class="bg-white rounded-3 p-4 shadow-lg text-center" style="min-width: 200px;">
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--shena-primary-purple); line-height: 1;">
+                                100%
+                            </div>
+                            <div style="font-size: 0.9rem; font-weight: 600; color: var(--shena-primary-purple); letter-spacing: 1px;">
+                                CLAIMS HONORED
+                            </div>
+                        </div>
                     </div>
-                    <h4>Comprehensive Coverage</h4>
-                    <p>Full coverage for mortuary bills, body dressing, transportation, and burial expenses for you and your beneficiaries.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-money-bill-wave fa-3x text-success"></i>
-                    </div>
-                    <h4>Affordable Payments</h4>
-                    <p>Low monthly contributions starting from KES 500. Multiple package options to suit your needs and budget.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-mobile-alt fa-3x text-info"></i>
-                    </div>
-                    <h4>Easy M-Pesa Payments</h4>
-                    <p>Convenient payments through M-Pesa Paybill 4163987. No need to visit our offices - pay from anywhere, anytime.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-clock fa-3x text-warning"></i>
-                    </div>
-                    <h4>Grace Period</h4>
-                    <p>Generous grace periods (4-5 months) based on age. We understand life's challenges and provide flexibility.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-users fa-3x text-danger"></i>
-                    </div>
-                    <h4>Family Packages</h4>
-                    <p>Special packages for couples and families with attractive discounts. Cover your entire family under one plan.</p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="feature-box bg-light">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-headset fa-3x text-secondary"></i>
-                    </div>
-                    <h4>24/7 Support</h4>
-                    <p>Round-the-clock customer support. Our team is always ready to assist you during your time of need.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Membership Packages Preview -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row text-center mb-5">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold">Membership Packages</h2>
-                <p class="lead">Choose from our flexible membership packages designed to meet your family's needs.</p>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h5>Individual</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <h3 class="text-primary">From KES 500<small class="text-muted">/month</small></h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Personal coverage</li>
-                            <li><i class="fas fa-check text-success"></i> Age-based pricing</li>
-                            <li><i class="fas fa-check text-success"></i> Grace period included</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-success text-white text-center">
-                        <h5>Couple</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <h3 class="text-success">KES 800<small class="text-muted">/month</small></h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Covers both spouses</li>
-                            <li><i class="fas fa-check text-success"></i> 10% discount</li>
-                            <li><i class="fas fa-check text-success"></i> Shared benefits</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-info text-white text-center">
-                        <h5>Family</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <h3 class="text-info">KES 1,200<small class="text-muted">/month</small></h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Up to 6 members</li>
-                            <li><i class="fas fa-check text-success"></i> 15% discount</li>
-                            <li><i class="fas fa-check text-success"></i> Best value for families</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card h-100 shadow-sm border-warning">
-                    <div class="card-header bg-warning text-dark text-center">
-                        <h5><i class="fas fa-crown"></i> Executive</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <h3 class="text-warning">KES 2,000<small class="text-muted">/month</small></h3>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Premium services</li>
-                            <li><i class="fas fa-check text-success"></i> Priority processing</li>
-                            <li><i class="fas fa-check text-success"></i> Enhanced benefits</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="text-center mt-4">
-            <a href="/membership" class="btn btn-primary btn-lg">
-                <i class="fas fa-eye"></i> View Detailed Packages
-            </a>
-        </div>
-    </div>
-</section>
-
-<!-- Call to Action -->
-<section class="py-5">
+<!-- Call to Action Section -->
+<section class="cta-section" style="background: linear-gradient(135deg, var(--shena-primary-purple) 0%, #5d2d7a 100%); padding: 80px 0;">
     <div class="container">
         <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="display-5 fw-bold mb-4">Ready to Join Our Community?</h2>
-                <p class="lead mb-4">Take the first step towards securing your family's future. Registration is quick, easy, and affordable.</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="/register" class="btn btn-primary btn-lg">
-                        <i class="fas fa-user-plus"></i> Register Now - Only KES 200
+            <div class="col-lg-8 mx-auto text-center text-white">
+                <h2 class="mb-4" style="font-size: 2.5rem; font-weight: 600;">
+                    Step into Royal Protection
+                </h2>
+                <p class="lead mb-5" style="opacity: 0.95; font-size: 1.1rem;">
+                    Secure your future and that of your loved ones today. Joining SHENA Companion is a commitment to dignity and community welfare.
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="/register" class="btn btn-shena-gold btn-lg">
+                        Get Started Now
                     </a>
-                    <a href="/contact" class="btn btn-outline-primary btn-lg">
-                        <i class="fas fa-phone"></i> Contact Us
+                    <a href="/contact" class="btn btn-outline-light btn-lg">
+                        Talk to an Agent
                     </a>
                 </div>
             </div>
