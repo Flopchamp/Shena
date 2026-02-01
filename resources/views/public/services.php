@@ -1,212 +1,168 @@
 <?php include VIEWS_PATH . '/layouts/header.php'; ?>
 
 <!-- Services Hero Section -->
-<section class="hero-section">
+<section style="position: relative; min-height: 500px; display: flex; align-items: center; background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1464639351491-a172c2aa2911?w=1600&q=80') center/cover no-repeat;">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Our Services</h1>
-                <p class="lead mb-4">Comprehensive funeral and welfare services designed to support you and your family during difficult times.</p>
-            </div>
-            <div class="col-lg-6 text-center">
-                <i class="fas fa-service fa-10x opacity-75"></i>
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center text-white">
+                <h1 class="mb-4" style="font-size: 3.5rem; font-weight: 700; font-family: 'Playfair Display', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    Our Compassionate Services
+                </h1>
+                <p class="lead mb-5" style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 40px; line-height: 1.6; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                    Providing dignified send-offs and professional support during your most difficult times with grace and respect.
+                </p>
+                <a href="/membership" class="btn btn-lg" style="background-color: #7F3D9E; color: white; padding: 14px 40px; border-radius: 30px; font-weight: 600; border: none; box-shadow: 0 4px 12px rgba(127, 61, 158, 0.4); text-decoration: none;">
+                    View Our Packages
+                </a>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Core Services Section -->
-<section class="py-5">
+<!-- Core Welfare Services Section -->
+<section style="padding: 80px 0; background: #F7F7F9;">
     <div class="container">
-        <div class="row text-center mb-5">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold">What We Offer</h2>
-                <p class="lead">Our comprehensive services are designed to provide complete support during your time of need.</p>
+        <!-- Section Header -->
+        <div class="mb-5">
+            <p style="color: #7F3D9E; font-size: 0.85rem; font-weight: 600; letter-spacing: 1.5px; margin-bottom: 12px;">
+                DETAILED OFFERINGS
+            </p>
+            <h2 class="mb-5" style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; color: #1A1A1A;">
+                Core Welfare Services
+            </h2>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="row g-4 mb-5">
+            <!-- Mortuary Bill -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-briefcase-medical" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Mortuary Bill
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        Full coverage for mortuary storage for up to 14 days, ensuring a peaceful transition period.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Body Dressing -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-check-circle" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Body Dressing
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        Professional and respectful body preparation by our team of experts, handled with the utmost care.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Body Transportation -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-truck" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Body Transportation
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        Secure and well-maintained specialized vehicles for dignified transit from morgue to the final resting place.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Executive Coffin -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-box" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Executive Coffin
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        A selection of high-quality coffins featuring refined craftsmanship and elegant finishes.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Burial Gear -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-tent" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Burial Gear
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        Complete provision of lowering gear, trolleys, and high-quality gazebo tents for the service.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Seating -->
+            <div class="col-lg-4 col-md-6">
+                <div style="background: white; border-radius: 20px; padding: 40px 30px; height: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="width: 70px; height: 70px; background: #F3E8FF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                        <i class="fas fa-chair" style="color: #7F3D9E; font-size: 2rem;"></i>
+                    </div>
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #1A1A1A;">
+                        Seating
+                    </h3>
+                    <p style="color: #6B7280; line-height: 1.7; font-size: 0.95rem; margin: 0;">
+                        Organized seating arrangement with 100 comfortable chairs to accommodate family and mourners.
+                    </p>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-home fa-3x text-primary"></i>
+        <!-- Service Terms & Conditions -->
+        <div style="background: linear-gradient(135deg, #F3E8FF 0%, #EDE9FE 100%); border-radius: 20px; padding: 40px; border-left: 5px solid #7F3D9E; position: relative;">
+            <div style="display: flex; gap: 24px; align-items: start;">
+                <div style="flex-shrink: 0;">
+                    <div style="width: 60px; height: 60px; background: #7F3D9E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-info" style="color: white; font-size: 1.5rem;"></i>
                     </div>
-                    <h4>Mortuary Services</h4>
-                    <p>Complete mortuary care including body preservation, preparation, and professional handling with dignity and respect.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Body preservation</li>
-                        <li><i class="fas fa-check text-success"></i> Professional preparation</li>
-                        <li><i class="fas fa-check text-success"></i> Viewing arrangements</li>
-                    </ul>
                 </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-truck fa-3x text-success"></i>
-                    </div>
-                    <h4>Transportation</h4>
-                    <p>Reliable transportation services for the deceased from hospital to mortuary and from mortuary to burial site.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Hospital to mortuary</li>
-                        <li><i class="fas fa-check text-success"></i> Mortuary to burial site</li>
-                        <li><i class="fas fa-check text-success"></i> Professional hearses</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-tshirt fa-3x text-info"></i>
-                    </div>
-                    <h4>Body Dressing</h4>
-                    <p>Professional body dressing and preparation services to ensure your loved one looks dignified for their final journey.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Professional dressing</li>
-                        <li><i class="fas fa-check text-success"></i> Makeup and preparation</li>
-                        <li><i class="fas fa-check text-success"></i> Dignified presentation</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-box fa-3x text-warning"></i>
-                    </div>
-                    <h4>Coffin Services</h4>
-                    <p>Quality coffins and caskets available in various styles and materials to suit your preferences and budget.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Various styles available</li>
-                        <li><i class="fas fa-check text-success"></i> Quality materials</li>
-                        <li><i class="fas fa-check text-success"></i> Affordable options</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-file-alt fa-3x text-danger"></i>
-                    </div>
-                    <h4>Documentation Support</h4>
-                    <p>Assistance with all necessary paperwork and documentation required for funeral arrangements and burial permits.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> Burial permits</li>
-                        <li><i class="fas fa-check text-success"></i> Death certificates</li>
-                        <li><i class="fas fa-check text-success"></i> Legal documentation</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="feature-box bg-light h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-headset fa-3x text-secondary"></i>
-                    </div>
-                    <h4>24/7 Support</h4>
-                    <p>Round-the-clock customer support and emergency response team to assist you whenever you need us most.</p>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success"></i> 24/7 availability</li>
-                        <li><i class="fas fa-check text-success"></i> Emergency response</li>
-                        <li><i class="fas fa-check text-success"></i> Professional guidance</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Service Process Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-5">How Our Service Works</h2>
-                <div class="row">
-                    <div class="col-md-3 mb-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                <span class="fw-bold">1</span>
-                            </div>
-                            <h5 class="mt-3">Contact Us</h5>
-                            <p class="text-muted">Call our 24/7 hotline to report the incident and begin the process.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                <span class="fw-bold">2</span>
-                            </div>
-                            <h5 class="mt-3">Immediate Response</h5>
-                            <p class="text-muted">Our team responds immediately to handle transportation and initial arrangements.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                <span class="fw-bold">3</span>
-                            </div>
-                            <h5 class="mt-3">Documentation</h5>
-                            <p class="text-muted">We assist with all necessary paperwork and legal requirements.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                <span class="fw-bold">4</span>
-                            </div>
-                            <h5 class="mt-3">Final Arrangements</h5>
-                            <p class="text-muted">Complete preparation and coordination of the funeral service.</p>
-                        </div>
-                    </div>
+                <div style="flex: 1;">
+                    <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; color: #1A1A1A;">
+                        Service Terms & Conditions
+                    </h3>
+                    <p style="color: #4A5568; line-height: 1.7; font-size: 1rem; margin-bottom: 16px;">
+                        Please note that SHENA Companion covers mortuary fees for a maximum of 14 days. <strong style="color: #7F3D9E;">Members are responsible</strong> for all hospital and morgue admission fees upon arrival at the facility.
+                    </p>
+                    <a href="/membership" style="color: #7F3D9E; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem;">
+                        View Full Terms <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Contact Section -->
-<section class="py-5">
+<!-- CTA Section -->
+<section style="padding: 80px 0; background: white;">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <h2 class="mb-4">Need Our Services?</h2>
-                <p class="lead mb-4">Our experienced team is ready to assist you 24/7. Contact us immediately for support.</p>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <i class="fas fa-phone fa-2x text-primary mb-3"></i>
-                                <h5>24/7 Hotline</h5>
-                                <p class="text-primary fw-bold">+254 700 000 000</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <i class="fas fa-envelope fa-2x text-success mb-3"></i>
-                                <h5>Email Support</h5>
-                                <p class="text-success fw-bold">support@shenacompanion.org</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <i class="fas fa-map-marker-alt fa-2x text-danger mb-3"></i>
-                                <h5>Visit Us</h5>
-                                <p class="text-danger fw-bold">Nairobi, Kenya</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="/contact" class="btn btn-primary btn-lg">
-                        <i class="fas fa-phone"></i> Contact Us Now
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div style="background: linear-gradient(135deg, #9C27B0 0%, #7F3D9E 50%, #5E35B1 100%); border-radius: 30px; padding: 60px 50px; text-align: center; box-shadow: 0 20px 60px rgba(127, 61, 158, 0.3);">
+                    <h2 class="mb-4" style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; line-height: 1.2; color: white;">
+                        Ready to secure your family's peace of mind?
+                    </h2>
+                    <p class="mb-5" style="font-size: 1.2rem; line-height: 1.6; max-width: 700px; margin: 0 auto 40px; opacity: 0.95; color: white;">
+                        Join SHENA Companion today and ensure a dignified farewell for your loved ones with our comprehensive welfare services.
+                    </p>
+                    <a href="/register" class="btn btn-lg" style="background-color: #C9A659; color: #1A1A1A; padding: 16px 50px; border-radius: 10px; font-weight: 700; font-size: 1.1rem; border: none; box-shadow: 0 8px 20px rgba(201, 166, 89, 0.3); text-decoration: none; text-transform: uppercase; letter-spacing: 1px;">
+                        REGISTER NOW
                     </a>
                 </div>
             </div>
