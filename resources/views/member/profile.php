@@ -2,86 +2,426 @@
 <?php
 $page = 'profile';
 include VIEWS_PATH . '/layouts/member-header.php';
+
+// Sample data - replace with actual database queries
+$member = [
+    'full_name' => 'Johnathan Doe',
+    'first_name' => 'Johnathan',
+    'last_name' => 'Doe',
+    'member_number' => 'SH-99238',
+    'phone' => '+254 700 000 000',
+    'email' => 'john.doe@example.com',
+    'national_id' => '32904581',
+    'address' => 'Apt 4B, Harmony Towers, Westlands, Nairobi',
+    'next_of_kin_name' => 'Jane Doe',
+    'next_of_kin_relationship' => 'Spouse',
+    'next_of_kin_phone' => '+254 711 222 333',
+    'package_name' => 'Couples Below 70 Years',
+    'membership_tier' => 'Platinum Member',
+    'coverage_amount' => 1500000,
+    'is_covered' => true
+];
 ?>
 
-<div class="container py-4">
-    <h2 class="mb-4"><i class="fas fa-user-edit"></i> Profile Management</h2>
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Update Profile</h5>
+<style>
+/* Settings Page Styles */
+.settings-container {
+    padding: 30px 30px 40px 25px;
+    background: #F8F9FA;
+    min-height: calc(100vh - 80px);
+}
+
+.settings-header {
+    margin-bottom: 32px;
+}
+
+.settings-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.settings-header p {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Personal Information Section */
+.personal-info-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.section-title-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.section-title-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.section-title-content p {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 0;
+}
+
+.btn-save-changes {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-save-changes:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+}
+
+/* Form Styles */
+.settings-form .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4B5563;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.settings-form .form-control,
+.settings-form .form-select {
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #1F2937;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.settings-form .form-control:focus,
+.settings-form .form-select:focus {
+    border-color: #7F20B0;
+    box-shadow: 0 0 0 3px rgba(127, 32, 176, 0.1);
+    outline: none;
+}
+
+.settings-form .form-control::placeholder {
+    color: #9CA3AF;
+}
+
+.settings-form textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Bottom Grid */
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Next of Kin Card */
+.next-of-kin-card,
+.active-package-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header-settings {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.card-header-settings h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0;
+}
+
+.card-header-settings p {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 4px 0 0 0;
+}
+
+/* Active Package Card */
+.active-package-card {
+    position: relative;
+}
+
+.package-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.current-plan-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #7F20B0;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.package-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1F2937;
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+
+.coverage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #7F20B0;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.coverage-badge i {
+    font-size: 16px;
+}
+
+.btn-upgrade {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-upgrade:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 20px 15px;
+    }
+
+    .personal-info-section,
+    .next-of-kin-card,
+    .active-package-card {
+        padding: 24px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .btn-save-changes {
+        width: 100%;
+    }
+}
+</style>
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>Account Settings</h1>
+        <p>Manage your personal profile and preferences</p>
+    </div>
+
+    <!-- Personal Information Section -->
+    <div class="personal-info-section">
+        <div class="section-header">
+            <div class="section-title-wrapper">
+                <div class="section-icon">
+                    <i class="fas fa-user"></i>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="/profile">
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" value="<?php echo htmlspecialchars($member->first_name); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" value="<?php echo htmlspecialchars($member->last_name); ?>" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($member->email); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" name="phone" class="form-control" value="<?php echo htmlspecialchars($member->phone); ?>" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea name="address" class="form-control" rows="2"><?php echo htmlspecialchars($member->address ?? ''); ?></textarea>
-                        </div>
-                        <h5 class="mt-4">Next of Kin</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Next of Kin Name</label>
-                                <input type="text" name="next_of_kin" class="form-control" value="<?php echo htmlspecialchars($member->next_of_kin ?? ''); ?>">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Next of Kin Phone</label>
-                                <input type="tel" name="next_of_kin_phone" class="form-control" value="<?php echo htmlspecialchars($member->next_of_kin_phone ?? ''); ?>">
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary">Update Profile</button>
-                            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
+                <div class="section-title-content">
+                    <h2>Personal Information</h2>
+                    <p>Update your primary contact and identification details</p>
                 </div>
             </div>
+            <button type="submit" form="profileForm" class="btn-save-changes">
+                Save Changes
+            </button>
         </div>
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Change Password</h5>
+
+        <form method="POST" action="/profile" id="profileForm" class="settings-form">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+            
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="full_name" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['full_name']); ?>" required>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="/profile/password">
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                        <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <input type="password" name="current_password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <input type="password" name="new_password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm Password</label>
-                            <input type="password" name="confirm_password" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-warning w-100">Change Password</button>
-                    </form>
+                <div class="col-md-6">
+                    <label class="form-label">National ID / Passport</label>
+                    <input type="text" name="national_id" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['national_id']); ?>" required>
                 </div>
             </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['phone']); ?>" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['email']); ?>" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Residential Address</label>
+                <textarea name="address" class="form-control" rows="3" required><?php echo htmlspecialchars($member['address']); ?></textarea>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bottom Grid: Next of Kin + Active Package -->
+    <div class="bottom-grid">
+        <!-- Next of Kin Card -->
+        <div class="next-of-kin-card">
+            <div class="card-header-settings">
+                <div class="section-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div>
+                    <h3>Next of Kin</h3>
+                    <p>Primary Emergency Contact</p>
+                </div>
+            </div>
+
+            <form method="POST" action="/profile/next-of-kin" class="settings-form">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="next_of_kin_name" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['next_of_kin_name']); ?>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Relationship</label>
+                    <select name="next_of_kin_relationship" class="form-select" required>
+                        <option value="Spouse" <?php echo $member['next_of_kin_relationship'] == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
+                        <option value="Parent" <?php echo $member['next_of_kin_relationship'] == 'Parent' ? 'selected' : ''; ?>>Parent</option>
+                        <option value="Child" <?php echo $member['next_of_kin_relationship'] == 'Child' ? 'selected' : ''; ?>>Child</option>
+                        <option value="Sibling" <?php echo $member['next_of_kin_relationship'] == 'Sibling' ? 'selected' : ''; ?>>Sibling</option>
+                        <option value="Friend" <?php echo $member['next_of_kin_relationship'] == 'Friend' ? 'selected' : ''; ?>>Friend</option>
+                        <option value="Other" <?php echo $member['next_of_kin_relationship'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="next_of_kin_phone" class="form-control" 
+                           value="<?php echo htmlspecialchars($member['next_of_kin_phone']); ?>" required>
+                </div>
+            </form>
+        </div>
+
+        <!-- Active Package Card -->
+        <div class="active-package-card">
+            <div class="card-header-settings">
+                <div class="package-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div>
+                    <h3>Active Package</h3>
+                    <p>Your current subscription</p>
+                </div>
+            </div>
+
+            <div class="current-plan-label">CURRENT PLAN</div>
+            <div class="package-name"><?php echo htmlspecialchars($member['package_name']); ?></div>
+            
+            <?php if ($member['is_covered']): ?>
+            <div class="coverage-badge">
+                <i class="fas fa-check-circle"></i>
+                Fully Covered
+            </div>
+            <?php endif; ?>
+
+            <button type="button" class="btn-upgrade" onclick="location.href='/packages'">
+                <i class="fas fa-arrow-up"></i>
+                UPGRADE PACKAGE
+            </button>
         </div>
     </div>
 </div>
