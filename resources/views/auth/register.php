@@ -9,257 +9,1144 @@ function hasError($field) {
     return isset($_SESSION['error_field']) && $_SESSION['error_field'] === $field;
 }
 
+// Get current step from session or default to 1
+$currentStep = $_SESSION['registration_step'] ?? 1;
+
 include VIEWS_PATH . '/layouts/header.php'; 
 ?>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    .is-invalid {
-        border-color: #dc3545 !important;
-        background-color: #fff5f5 !important;
+    * {
+        font-family: 'Manrope', sans-serif;
     }
-    .is-invalid:focus {
-        border-color: #dc3545 !important;
-        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    
+    body {
+        background: #F7F7F9;
     }
-    .error-field-label {
-        color: #dc3545 !important;
+    
+    .playfair {
+        font-family: 'Playfair Display', serif;
+    }
+    
+    .registration-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .registration-header h1 {
+        font-family: 'Playfair Display', serif;
+        color: #7F3D9E;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .registration-header p {
+        color: #6B7280;
+        font-size: 1rem;
+    }
+    
+    .progress-section {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        position: relative;
+    }
+    
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 30px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #E5E7EB;
+        z-index: 0;
+    }
+    
+    .step-indicator .progress-bar-fill {
+        position: absolute;
+        top: 30px;
+        left: 0;
+        height: 3px;
+        background: #7F3D9E;
+        z-index: 1;
+        transition: width 0.3s ease;
+    }
+    
+    .step-item {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .step-number {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid #E5E7EB;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #9CA3AF;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .step-item.active .step-number,
+    .step-item.completed .step-number {
+        background: #7F3D9E;
+        border-color: #7F3D9E;
+        color: white;
+    }
+    
+    .step-label {
+        font-size: 0.9rem;
+        color: #6B7280;
+        font-weight: 500;
+    }
+    
+    .step-item.active .step-label {
+        color: #7F3D9E;
+        font-weight: 700;
+    }
+    
+    .main-content {
+        display: flex;
+        gap: 30px;
+    }
+    
+    .form-section {
+        flex: 1;
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .payment-sidebar {
+        width: 320px;
+        flex-shrink: 0;
+    }
+    
+    .payment-card {
+        background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(127, 61, 158, 0.15);
+        text-align: center;
+    }
+    
+    .payment-icon {
+        width: 60px;
+        height: 60px;
+        background: white;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .payment-icon i {
+        font-size: 1.8rem;
+        color: #7F3D9E;
+    }
+    
+    .payment-card h3 {
+        font-family: 'Playfair Display', serif;
+        color: #7F3D9E;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .payment-detail {
+        background: white;
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .payment-detail-label {
+        font-size: 0.75rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    
+    .payment-detail-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #7F3D9E;
+    }
+    
+    .qr-code {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 20px;
+    }
+    
+    .qr-code img {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .qr-note {
+        font-size: 0.75rem;
+        color: #7F3D9E;
+        font-style: italic;
+        margin-top: 10px;
+    }
+    
+    .section-header {
+        background: #7F3D9E;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .section-header i {
+        font-size: 1.5rem;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
         font-weight: 600;
     }
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    
+    .section-header .required-badge {
+        margin-left: auto;
+        background: rgba(255,255,255,0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .shake {
-        animation: shake 0.5s;
+    
+    .form-label {
+        color: #1A1A1A;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-size: 0.75rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+    }
+    
+    .btn-save {
+        background: white;
+        border: 2px solid #E5E7EB;
+        color: #6B7280;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        border-color: #7F3D9E;
+        color: #7F3D9E;
+    }
+    
+    .btn-continue {
+        flex: 1;
+        background: #7F3D9E;
+        border: none;
+        color: white;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .btn-continue:hover {
+        background: #6B3587;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.3);
+    }
+    
+    .package-card {
+        border: 3px solid #E5E7EB;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .package-card:hover {
+        border-color: #7F3D9E;
+        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.15);
+    }
+    
+    .package-card.selected {
+        border-color: #7F3D9E;
+        background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 30%);
+        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.2);
+    }
+    
+    .package-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #7F3D9E 0%, #9C27B0 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+    
+    .package-icon i {
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .package-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #7F3D9E;
+        margin-bottom: 10px;
+    }
+    
+    .package-price {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    
+    .package-price-label {
+        color: #6B7280;
+        font-size: 0.9rem;
+    }
+    
+    .package-price-value {
+        font-weight: 700;
+        color: #1A1A1A;
+        font-size: 1rem;
+    }
+    
+    .btn-select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 2px solid #7F3D9E;
+        background: white;
+        color: #7F3D9E;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+    
+    .package-card.selected .btn-select {
+        background: #7F3D9E;
+        color: white;
+    }
+    
+    .info-note {
+        background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+        padding: 20px;
+        border-radius: 15px;
+        border-left: 4px solid #7F3D9E;
+        margin: 30px 0;
+    }
+    
+    .info-note i {
+        color: #7F3D9E;
+        margin-right: 10px;
+    }
+    
+    .help-section {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .help-section h4 {
+        font-size: 0.85rem;
+        color: #92400E;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+    
+    .help-contact {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #78350F;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    @media (max-width: 992px) {
+        .main-content {
+            flex-direction: column-reverse;
+        }
+        
+        .payment-sidebar {
+            width: 100%;
+        }
+    }
+    
+    .dependents-section {
+        background: #7F3D9E;
+        color: white;
+        padding: 20px 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .dependents-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+    
+    .dependents-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .dependents-subtitle {
+        font-size: 0.75rem;
+        background: rgba(255,255,255,0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .dependent-form-row {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .btn-add-dependent {
+        background: rgba(255,255,255,0.2);
+        border: 2px dashed rgba(255,255,255,0.4);
+        color: white;
+        padding: 12px;
+        border-radius: 10px;
+        width: 100%;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-dependent:hover {
+        background: rgba(255,255,255,0.3);
+        border-color: rgba(255,255,255,0.6);
+    }
+    
+    .calculator-card {
+        background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(127, 61, 158, 0.15);
+        margin-bottom: 20px;
+    }
+    
+    .calculator-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .calculator-icon {
+        width: 45px;
+        height: 45px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .calculator-icon i {
+        color: #7F3D9E;
+        font-size: 1.3rem;
+    }
+    
+    .calculator-title {
+        font-family: 'Playfair Display', serif;
+        color: #7F3D9E;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .calc-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(127, 61, 158, 0.2);
+    }
+    
+    .calc-row:last-child {
+        border-bottom: none;
+        padding-top: 15px;
+        margin-top: 10px;
+        border-top: 2px solid #7F3D9E;
+    }
+    
+    .calc-label {
+        color: #6B7280;
+        font-size: 0.95rem;
+    }
+    
+    .calc-value {
+        font-weight: 700;
+        color: #7F3D9E;
+        font-size: 1rem;
+    }
+    
+    .calc-row:last-child .calc-value {
+        font-size: 1.8rem;
+    }
+    
+    .policy-info {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 15px;
+    }
+    
+    .policy-info h5 {
+        font-size: 0.75rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    
+    .policy-info ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .policy-info li {
+        padding: 8px 0;
+        border-bottom: 1px solid #F3F4F6;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+    
+    .policy-info li:last-child {
+        border-bottom: none;
+    }
+    
+    .policy-info strong {
+        color: #7F3D9E;
+    }
+    
+    .paybill-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .paybill-card h5 {
+        font-size: 0.75rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    
+    .paybill-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #7F3D9E;
+        margin-bottom: 10px;
+    }
+    
+    .paybill-note {
+        font-size: 0.85rem;
+        color: #6B7280;
+        font-style: italic;
+    }
+    
+    .summary-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .summary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #E5E7EB;
+        margin-bottom: 20px;
+    }
+    
+    .summary-header h3 {
+        font-family: 'Playfair Display', serif;
+        color: #7F3D9E;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .edit-btn {
+        background: none;
+        border: none;
+        color: #7F3D9E;
+        font-size: 0.85rem;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    
+    .summary-section {
+        margin-bottom: 25px;
+    }
+    
+    .summary-section h4 {
+        font-size: 0.75rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    
+    .summary-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 12px;
+    }
+    
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .summary-label {
+        font-size: 0.85rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .summary-value {
+        font-size: 1rem;
+        color: #1A1A1A;
+        font-weight: 600;
+    }
+    
+    .package-badge {
+        background: linear-gradient(135deg, #7F3D9E 0%, #9C27B0 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .package-badge-icon {
+        width: 45px;
+        height: 45px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .package-badge-content h5 {
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    
+    .package-badge-content p {
+        margin: 0;
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    
+    .dependents-list {
+        background: #F9FAFB;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    
+    .dependent-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    
+    .dependent-item:last-child {
+        border-bottom: none;
+    }
+    
+    .dependent-number {
+        width: 30px;
+        height: 30px;
+        background: #7F3D9E;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    
+    .dependent-name {
+        flex: 1;
+        font-weight: 600;
+        color: #1A1A1A;
+    }
+    
+    .dependent-age {
+        color: #6B7280;
+        font-size: 0.9rem;
+    }
+    
+    .fee-card {
+        background: linear-gradient(135deg, #7F3D9E 0%, #6B3587 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .fee-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .fee-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .fee-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .fee-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .fee-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .fee-instructions {
+        background: rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .mpesa-code-input {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 20px;
+    }
+    
+    .mpesa-code-input label {
+        color: #7F3D9E;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .mpesa-code-input input {
+        background: #F9FAFB;
+        border: 2px solid #E5E7EB;
+        padding: 15px;
+        border-radius: 10px;
+        width: 100%;
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    
+    .mpesa-code-input .form-text {
+        color: #6B7280;
+        font-size: 0.75rem;
+        text-align: center;
+        margin-top: 10px;
+    }
+    
+    .terms-checkbox {
+        background: #F9FAFB;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .terms-checkbox .form-check {
+        display: flex;
+        align-items: start;
+        gap: 12px;
+    }
+    
+    .terms-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+    
+    .terms-checkbox label {
+        font-size: 0.9rem;
+        color: #4B5563;
+        line-height: 1.6;
+    }
+    
+    .terms-checkbox a {
+        color: #7F3D9E;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .terms-checkbox a:hover {
+        text-decoration: underline;
+    }
+    
+    .btn-complete {
+        background: linear-gradient(135deg, #7F3D9E 0%, #9C27B0 100%);
+        border: none;
+        color: white;
+        padding: 18px 40px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-complete:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(127, 61, 158, 0.4);
+    }
+    
+    .btn-back {
+        background: white;
+        border: 2px solid #E5E7EB;
+        color: #6B7280;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 </style>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="fas fa-user-plus"></i> Member Registration</h4>
-                    <small>Registration Fee: KES 200</small>
+<div class="registration-container">
+    <!-- Header -->
+    <div class="registration-header text-center mb-4">
+        <h1 class="playfair">Online Registration</h1>
+        <p>Become a member of the SHENA Companion welfare association today.</p>
+    </div>
+    
+    <!-- Progress Section -->
+    <div class="progress-section">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <div style="color: #7F3D9E; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 5px;">Current Step</div>
+                <h2 class="playfair" style="color: #1A1A1A; font-size: 1.8rem; margin: 0;">Step 1: Personal Details</h2>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: #7F3D9E; font-size: 3rem; font-weight: 700; line-height: 1;">25%</div>
+                <div style="color: #6B7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.3px;">Completion</div>
+            </div>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="progress-bar-fill" style="width: 25%;"></div>
+            <div class="step-item active completed">
+                <div class="step-number"><i class="fas fa-user"></i></div>
+                <div class="step-label">1. Personal</div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-label">2. Package</div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-label">3. Dependents</div>
+            </div>
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <div class="step-label">4. Payment</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Form Section -->
+        <div class="form-section">
+            <form method="POST" action="/register/step1" id="step1Form">
+                <input type="hidden" name="csrf_token" value="<?php echo e($csrf_token); ?>">
+                
+                <!-- Personal Information Section -->
+                <div class="section-header">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <h3>Personal Information</h3>
+                    </div>
+                    <span class="required-badge">Required</span>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="/register">
-                        <input type="hidden" name="csrf_token" value="<?php echo e($csrf_token); ?>">
-                        
-                        <!-- Personal Information -->
-                        <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="first_name" class="form-label <?php echo hasError('first_name') ? 'error-field-label' : ''; ?>">First Name *</label>
-                                <input type="text" class="form-control <?php echo hasError('first_name') ? 'is-invalid shake' : ''; ?>" id="first_name" name="first_name" value="<?php echo e(old('first_name')); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="last_name" class="form-label <?php echo hasError('last_name') ? 'error-field-label' : ''; ?>">Last Name *</label>
-                                <input type="text" class="form-control <?php echo hasError('last_name') ? 'is-invalid shake' : ''; ?>" id="last_name" name="last_name" value="<?php echo e(old('last_name')); ?>" required>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label <?php echo hasError('email') ? 'error-field-label' : ''; ?>">Email Address *</label>
-                                <input type="email" class="form-control <?php echo hasError('email') ? 'is-invalid shake' : ''; ?>" id="email" name="email" value="<?php echo e(old('email')); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="phone" class="form-label <?php echo hasError('phone') ? 'error-field-label' : ''; ?>">Phone Number *</label>
-                                <input type="tel" class="form-control <?php echo hasError('phone') ? 'is-invalid shake' : ''; ?>" id="phone" name="phone" value="<?php echo e(old('phone')); ?>" placeholder="+254..." required>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="id_number" class="form-label <?php echo hasError('id_number') ? 'error-field-label' : ''; ?>">National ID Number *</label>
-                                <input type="text" class="form-control <?php echo hasError('id_number') ? 'is-invalid shake' : ''; ?>" id="id_number" name="id_number" value="<?php echo e(old('id_number')); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="date_of_birth" class="form-label <?php echo hasError('date_of_birth') ? 'error-field-label' : ''; ?>">Date of Birth</label>
-                                <input type="date" class="form-control <?php echo hasError('date_of_birth') ? 'is-invalid shake' : ''; ?>" id="date_of_birth" name="date_of_birth" value="<?php echo e(old('date_of_birth')); ?>">
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="gender" class="form-label <?php echo hasError('gender') ? 'error-field-label' : ''; ?>">Gender *</label>
-                                <select class="form-select <?php echo hasError('gender') ? 'is-invalid shake' : ''; ?>" id="gender" name="gender" required>
-                                    <option value="">Select Gender</option>
-                                    <option value="male" <?php echo old('gender') === 'male' ? 'selected' : ''; ?>>Male</option>
-                                    <option value="female" <?php echo old('gender') === 'female' ? 'selected' : ''; ?>>Female</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="address" class="form-label <?php echo hasError('address') ? 'error-field-label' : ''; ?>">Address</label>
-                                <input type="text" class="form-control <?php echo hasError('address') ? 'is-invalid shake' : ''; ?>" id="address" name="address" value="<?php echo e(old('address')); ?>">
-                            </div>
-                        </div>
-                        
-                        <!-- Next of Kin Information -->
-                        <h5 class="border-bottom pb-2 mb-3 mt-4">Next of Kin Information</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="next_of_kin" class="form-label <?php echo hasError('next_of_kin') ? 'error-field-label' : ''; ?>">Next of Kin Name</label>
-                                <input type="text" class="form-control <?php echo hasError('next_of_kin') ? 'is-invalid shake' : ''; ?>" id="next_of_kin" name="next_of_kin" value="<?php echo e(old('next_of_kin')); ?>">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="next_of_kin_phone" class="form-label <?php echo hasError('next_of_kin_phone') ? 'error-field-label' : ''; ?>">Next of Kin Phone</label>
-                                <input type="tel" class="form-control <?php echo hasError('next_of_kin_phone') ? 'is-invalid shake' : ''; ?>" id="next_of_kin_phone" name="next_of_kin_phone" value="<?php echo e(old('next_of_kin_phone')); ?>">
-                            </div>
-                        </div>
-                        
-                        <!-- Membership Package -->
-                        <h5 class="border-bottom pb-2 mb-3 mt-4">Membership Package</h5>
-                        <p class="text-muted">
-                            Select the package that best matches your family structure and age group.
-                            All packages include the full set of last respect services described in the policy booklet.
-                        </p>
-                        <div class="row">
-                            <?php foreach ($packages as $key => $package): ?>
-                                <div class="col-md-6 mb-3">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <div class="form-check">
-                                                <input
-                                                    class="form-check-input <?php echo hasError('package') ? 'is-invalid shake' : ''; ?>"
-                                                    type="radio"
-                                                    name="package"
-                                                    id="package_<?php echo $key; ?>"
-                                                    value="<?php echo $key; ?>"
-                                                    <?php echo (old('package', 'individual_below_70') === $key) ? 'checked' : ''; ?>
-                                                >
-                                                <label class="form-check-label <?php echo hasError('package') ? 'error-field-label' : ''; ?>" for="package_<?php echo $key; ?>">
-                                                    <strong><?php echo e($package['name']); ?></strong>
-                                                    <?php if (!empty($package['category']) && $package['category'] === 'executive'): ?>
-                                                        <i class="fas fa-crown text-warning"></i>
-                                                    <?php endif; ?>
-                                                </label>
-                                            </div>
-                                            <div class="mt-2">
-                                                <small class="text-muted d-block">
-                                                    Monthly contribution:
-                                                    <strong>KES <?php echo number_format($package['monthly_contribution'], 2); ?></strong>
-                                                </small>
-                                                <?php if (isset($package['age_min']) && isset($package['age_max'])): ?>
-                                                    <small class="text-muted d-block">
-                                                        Eligible ages: <?php echo (int)$package['age_min']; ?> - <?php echo (int)$package['age_max']; ?> years
-                                                    </small>
-                                                <?php endif; ?>
-                                                <?php if (isset($package['max_children']) || isset($package['max_parents']) || isset($package['max_inlaws'])): ?>
-                                                    <small class="text-muted d-block">
-                                                        Coverage:
-                                                        <?php if (isset($package['max_children'])): ?>
-                                                            up to <?php echo (int)$package['max_children']; ?> children;
-                                                        <?php endif; ?>
-                                                        <?php if (isset($package['max_parents'])): ?>
-                                                            up to <?php echo (int)$package['max_parents']; ?> parents;
-                                                        <?php endif; ?>
-                                                        <?php if (isset($package['max_inlaws'])): ?>
-                                                            up to <?php echo (int)$package['max_inlaws']; ?> in-laws;
-                                                        <?php endif; ?>
-                                                    </small>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                        <!-- Password -->
-                        <h5 class="border-bottom pb-2 mb-3 mt-4">Account Security</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="password" class="form-label <?php echo hasError('password') ? 'error-field-label' : ''; ?>">Password *</label>
-                                <input type="password" class="form-control <?php echo hasError('password') ? 'is-invalid shake' : ''; ?>" id="password" name="password" required>
-                                <div class="form-text">Minimum 8 characters</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="confirm_password" class="form-label <?php echo hasError('confirm_password') ? 'error-field-label' : ''; ?>">Confirm Password *</label>
-                                <input type="password" class="form-control <?php echo hasError('confirm_password') ? 'is-invalid shake' : ''; ?>" id="confirm_password" name="confirm_password" required>
-                            </div>
-                        </div>
-                        
-                        <!-- Terms and Conditions -->
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="terms" required>
-                            <label class="form-check-label" for="terms">
-                                I agree to the <a href="#" target="_blank">Terms and Conditions</a> and 
-                                <a href="#" target="_blank">Privacy Policy</a> *
-                            </label>
-                        </div>
-                        
-                        <!-- Payment Information -->
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle"></i> Payment Information</h6>
-                            <p class="mb-2">
-                                After registration, you can pay the registration fee of 
-                                <strong>KES 200</strong> using:
-                            </p>
-                            <ul class="mb-0">
-                                <li><strong>STK Push</strong> - Instant payment prompt to your phone (Recommended)</li>
-                                <li><strong>M-Pesa Paybill</strong> - Manual payment via M-Pesa to shortcode <strong><?php echo MPESA_BUSINESS_SHORTCODE; ?></strong></li>
-                            </ul>
-                            <p class="mb-0 mt-2">
-                                <small class="text-muted">Your account will be activated once payment is confirmed.</small>
-                            </p>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-user-plus"></i> Register Now
-                            </button>
-                        </div>
-                    </form>
-                    
-                    <hr>
-                    
-                    <div class="text-center">
-                        <p>Already have an account? <a href="/login">Login here</a></p>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="full_name" class="form-label">Full Name (As per ID)</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="e.g. John Doe" value="<?php echo e(old('full_name')); ?>" required>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label for="id_number" class="form-label">National ID Number</label>
+                        <input type="text" class="form-control" id="id_number" name="id_number" placeholder="12345678" value="<?php echo e(old('id_number')); ?>" required>
                     </div>
                 </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="phone" class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="0712 345 678" value="<?php echo e(old('phone')); ?>" required>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label for="address" class="form-label">Residential Address</label>
+                        <input type="text" class="form-control" id="address" name="address" placeholder="Town, Estate, House No." value="<?php echo e(old('address')); ?>" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="<?php echo e(old('email')); ?>" required>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="<?php echo e(old('date_of_birth')); ?>" required>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn-save">
+                        <i class="fas fa-save"></i> Save Progress
+                    </button>
+                    <button type="submit" class="btn-continue">
+                        Continue to Package
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Payment Sidebar -->
+        <div class="payment-sidebar">
+            <div class="payment-card">
+                <div class="payment-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <h3>Payment Portal</h3>
+                
+                <div class="payment-detail">
+                    <div class="payment-detail-label">Lipa na M-Pesa Paybill</div>
+                    <div class="payment-detail-value">4163987</div>
+                </div>
+                
+                <div class="payment-detail">
+                    <div class="payment-detail-label">Account Name</div>
+                    <div style="font-size: 1.3rem; font-weight: 700; color: #7F3D9E;">SHENA</div>
+                </div>
+                
+                <div class="qr-code">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=4163987" alt="QR Code">
+                    <div class="qr-note">"Scan QR to Pay"</div>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed rgba(127, 61, 158, 0.3);">
+                    <div style="font-size: 0.85rem; color: #7F3D9E; font-style: italic; text-align: center;">
+                        "Excellence in Every Action"
+                    </div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #7F3D9E; text-align: center; margin-top: 5px;">
+                        We Are Royal
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Registration Help -->
+            <div class="help-section">
+                <h4>Registration Help</h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px;">
+                    <i class="fas fa-phone-alt"></i>
+                    <div class="help-contact">+254 748 585 067</div>
+                </div>
+                <div style="font-size: 0.85rem; color: #92400E;">Customer Support</div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Real-time password confirmation validation
+// Form validation and interactions
 document.addEventListener('DOMContentLoaded', function() {
-    const password = document.getElementById('password');
-    const confirmPassword = document.getElementById('confirm_password');
-    
-    function validatePasswordMatch() {
-        if (confirmPassword.value && password.value !== confirmPassword.value) {
-            confirmPassword.setCustomValidity('Passwords do not match');
-            confirmPassword.classList.add('is-invalid');
-        } else {
-            confirmPassword.setCustomValidity('');
-            confirmPassword.classList.remove('is-invalid');
-        }
+    // Auto-format phone number
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('0') && !value.startsWith('254')) {
+                value = '0' + value;
+            }
+            e.target.value = value.slice(0, 10);
+        });
     }
     
-    password.addEventListener('input', validatePasswordMatch);
-    confirmPassword.addEventListener('input', validatePasswordMatch);
+    // Save progress functionality
+    const saveButtons = document.querySelectorAll('.btn-save');
+    saveButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Save form data to localStorage
+            const form = this.closest('form');
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            localStorage.setItem('registrationProgress', JSON.stringify(data));
+            
+            // Show success message
+            alert('Progress saved successfully!');
+        });
+    });
     
-    // Scroll to first error field if present
-    const errorField = document.querySelector('.is-invalid');
-    if (errorField) {
-        setTimeout(function() {
-            errorField.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-            errorField.focus();
-        }, 300);
+    // Load saved progress if available
+    const savedData = localStorage.getItem('registrationProgress');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        Object.keys(data).forEach(key => {
+            const input = document.querySelector(`[name="${key}"]`);
+            if (input && !input.value) {
+                input.value = data[key];
+            }
+        });
     }
 });
 </script>
 
-<?php 
-// Clear old input after displaying
-unset($_SESSION['old_input'], $_SESSION['error_field']);
-include VIEWS_PATH . '/layouts/footer.php'; 
-?>
+<?php include VIEWS_PATH . '/layouts/footer.php'; ?>
