@@ -1,0 +1,271 @@
+/**
+ * SHENA Companion - Main Stylesheet
+ * Combines all design system components
+ * Version 1.2.0 - February 2026
+ */
+
+/* Import Design System */
+@import url('./shena-variables.css');
+@import url('./shena-typography.css');
+@import url('./shena-buttons.css');
+@import url('./shena-forms.css');
+@import url('./shena-components.css');
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--shena-white);
+  overflow-x: hidden;
+}
+
+/* ========================================
+   LAYOUT
+   ======================================== */
+
+.container {
+  width: 100%;
+  max-width: 1299px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+.section {
+  padding: var(--space-lg) 0;
+}
+
+.section-light {
+  background-color: var(--shena-light-gray);
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+
+.navbar {
+  background-color: var(--shena-white);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-sm) 0;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.navbar-brand {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--shena-primary-purple) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-brand:hover {
+  color: #6A3085 !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--shena-dark-text);
+  font-weight: var(--font-medium);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-base);
+  font-size: var(--text-base);
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: var(--shena-primary-purple);
+  background-color: rgba(127, 61, 158, 0.1);
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+
+footer {
+  background: linear-gradient(135deg, #2A1A4D 0%, #1A0F2E 100%);
+  color: var(--shena-white);
+  padding: var(--space-lg) 0 var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+footer h5, footer h6 {
+  color: var(--shena-white);
+  font-family: var(--font-body);
+  margin-bottom: var(--space-sm);
+}
+
+footer a {
+  color: rgba(255, 255, 255, 0.7);
+  transition: var(--transition-base);
+}
+
+footer a:hover {
+  color: var(--shena-accent-gold);
+}
+
+footer .social-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: var(--transition-base);
+}
+
+footer .social-links a:hover {
+  background-color: var(--shena-primary-purple);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   UTILITIES
+   ======================================== */
+
+/* Spacing */
+.mt-xs { margin-top: var(--space-xs); }
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+
+.mb-xs { margin-bottom: var(--space-xs); }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+
+.py-xs { padding-top: var(--space-xs); padding-bottom: var(--space-xs); }
+.py-sm { padding-top: var(--space-sm); padding-bottom: var(--space-sm); }
+.py-md { padding-top: var(--space-md); padding-bottom: var(--space-md); }
+.py-lg { padding-top: var(--space-lg); padding-bottom: var(--space-lg); }
+
+/* Backgrounds */
+.bg-purple { background-color: var(--shena-primary-purple); }
+.bg-gold { background-color: var(--shena-accent-gold); }
+.bg-light { background-color: var(--shena-light-gray); }
+
+/* Text Alignment */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* Display */
+.d-flex { display: flex; }
+.d-block { display: block; }
+.d-none { display: none; }
+
+/* Flex */
+.flex-column { flex-direction: column; }
+.align-items-center { align-items: center; }
+.justify-content-center { justify-content: center; }
+.justify-content-between { justify-content: space-between; }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* Borders */
+.rounded { border-radius: var(--radius-sm); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* Sections */
+.section {
+  padding: 80px 0;
+}
+
+.section-light {
+  background-color: #f8f9fa;
+}
+
+/* Hero Section */
+.hero-section {
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 0;
+  position: relative;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.hero-section .container {
+  position: relative;
+  z-index: 2;
+}
+
+/* CTA Section */
+.cta-section {
+  padding: 80px 0;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--space-sm);
+  }
+  
+  h1, .h1 {
+    font-size: var(--text-4xl);
+  }
+  
+  h2, .h2 {
+    font-size: var(--text-3xl);
+  }
+  
+  .hero-section {
+    min-height: 400px;
+    padding: var(--space-md) 0;
+  }
+  
+  .section {
+    padding: var(--space-md) 0;
+  }
+}
+
+@media (max-width: 576px) {
+  h1, .h1 {
+    font-size: var(--text-3xl);
+  }
+  
+  .btn-lg {
+    padding: 12px 24px;
+    font-size: var(--text-base);
+  }
+}
+
+/* ========================================
+   FOOTER HOVER EFFECTS
+   ======================================== */
+
+footer a {
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--shena-accent-gold) !important;
+  opacity: 1 !important;
+}

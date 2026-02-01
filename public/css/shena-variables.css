@@ -1,0 +1,98 @@
+/**
+ * SHENA Companion Design System - CSS Variables
+ * Version 1.2.0 - Updated: Feb 2026
+ * Based on Official Style Guide & Developer Handoff
+ */
+
+:root {
+  /* ========================================
+     COLOR PALETTE
+     ======================================== */
+  
+  /* Primary Brand Colors */
+  --shena-primary-purple: #7F3D9E;
+  --shena-accent-gold: #C9A659;
+  --shena-secondary-purple: #8514BD;
+  
+  /* Neutral Colors */
+  --shena-white: #FFFFFF;
+  --shena-light-gray: #F3F4F6;
+  --shena-lighter-gray: #E5E7EB;
+  --shena-medium-gray: #9CA3AF;
+  --shena-dark-text: #1F2937;
+  --shena-darker-text: #111827;
+  
+  /* Status Colors */
+  --shena-success: #10B981;
+  --shena-warning: #F59E0B;
+  --shena-danger: #EF4444;
+  --shena-info: #3B82F6;
+  
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+  
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Font Sizes */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* ========================================
+     SPACING SYSTEM
+     ======================================== */
+  
+  --space-xs: 0.5rem;      /* 8px */
+  --space-sm: 1rem;        /* 16px */
+  --space-md: 2rem;        /* 32px */
+  --space-lg: 4rem;        /* 64px */
+  --space-xl: 6rem;        /* 96px */
+  
+  /* ========================================
+     BORDER RADIUS
+     ======================================== */
+  
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-full: 9999px;
+  
+  /* ========================================
+     SHADOWS
+     ======================================== */
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(127, 61, 158, 0.2);
+  --shadow-xl: 0 12px 24px rgba(127, 61, 158, 0.15);
+  
+  /* ========================================
+     Z-INDEX LAYERS
+     ======================================== */
+  
+  --z-base: 1;
+  --z-dropdown: 40;
+  --z-sticky: 50;
+  --z-modal: 100;
+  
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+  
+  --transition-base: all 0.3s ease;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -1,0 +1,162 @@
+/**
+ * SHENA Companion - Button Library
+ * Primary Purple | Gold CTA | Secondary Outline | Icon Only
+ */
+
+/* Base Button Styles */
+.btn {
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-smooth);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: var(--text-base);
+  text-decoration: none;
+}
+
+/* Primary Purple Button */
+.btn-shena-primary,
+.btn-primary {
+  background-color: var(--shena-primary-purple);
+  color: var(--shena-white);
+  border: none;
+}
+
+.btn-shena-primary:hover,
+.btn-primary:hover {
+  background-color: #6A3085;
+  color: var(--shena-white);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
+}
+
+.btn-shena-primary:active,
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-shena-primary:disabled,
+.btn-primary:disabled {
+  background-color: var(--shena-lighter-gray);
+  color: var(--shena-medium-gray);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Gold CTA Button */
+.btn-shena-gold {
+  background-color: var(--shena-accent-gold);
+  color: var(--shena-darker-text);
+  border: none;
+}
+
+.btn-shena-gold:hover {
+  background-color: #B89548;
+  color: var(--shena-white);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 166, 89, 0.3);
+}
+
+.btn-shena-gold:disabled {
+  background-color: var(--shena-lighter-gray);
+  color: var(--shena-medium-gray);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary Outline Button */
+.btn-shena-outline,
+.btn-outline-primary,
+.btn-outline-purple {
+  background-color: transparent;
+  color: var(--shena-primary-purple);
+  border: 2px solid var(--shena-primary-purple);
+  padding: 10px 24px;
+}
+
+.btn-shena-outline:hover,
+.btn-outline-primary:hover {
+  background-color: var(--shena-primary-purple);
+  color: var(--shena-white);
+  border-color: var(--shena-primary-purple);
+}
+
+.btn-outline-light {
+  background-color: transparent;
+  color: var(--shena-white);
+  border: 2px solid var(--shena-white);
+  padding: 10px 24px;
+}
+
+.btn-outline-light:hover {
+  background-color: var(--shena-white);
+  color: var(--shena-primary-purple);
+  border-color: var(--shena-white);
+}
+
+/* Icon Only Button */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background-color: var(--shena-primary-purple);
+  color: var(--shena-white);
+}
+
+.btn-icon:hover {
+  background-color: #6A3085;
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: var(--text-sm);
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: var(--text-lg);
+}
+
+/* Button Groups */
+.btn-group .btn {
+  margin-right: 0.5rem;
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0;
+}
+
+/* Loading State */
+.btn-loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
