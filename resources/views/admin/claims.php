@@ -227,9 +227,18 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <h6>Claim Information</h6>
-                                                    <p><strong>Claim Amount:</strong> KES <?php echo number_format($claim['claim_amount'], 2); ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : 'warning'; ?>"><?php echo ucfirst($claim['status']); ?></span></p>
+                                                    <p><strong>Service Type:</strong> 
+                                                        <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
+                                                            <span class="badge badge-warning">Cash Alternative (KES 20,000)</span>
+                                                        <?php else: ?>
+                                                            <span class="badge badge-success">Standard Services</span>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : 'warning'; ?>"><?php echo ucfirst(str_replace('_', ' ', $claim['status'])); ?></span></p>
                                                     <p><strong>Date Submitted:</strong> <?php echo date('M j, Y H:i', strtotime($claim['created_at'])); ?></p>
+                                                    <?php if (!empty($claim['services_delivery_date'])): ?>
+                                                    <p><strong>Service Delivery Date:</strong> <?php echo date('M j, Y', strtotime($claim['services_delivery_date'])); ?></p>
+                                                    <?php endif; ?>
                                                     <?php if (!empty($claim['processed_at'])): ?>
                                                     <p><strong>Date Processed:</strong> <?php echo date('M j, Y H:i', strtotime($claim['processed_at'])); ?></p>
                                                     <?php endif; ?>
@@ -250,7 +259,10 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <p><strong>Full Name:</strong> <?php echo htmlspecialchars($claim['deceased_name']); ?></p>
-                                                            <p><strong>Relationship:</strong> <?php echo ucfirst($claim['relationship_to_deceased']); ?></p>
+                                                            <?php if (!empty($claim['deceased_id_number'])): ?>
+                                                            <p><strong>ID Number:</strong> <?php echo htmlspecialchars($claim['deceased_id_number']); ?></p>
+                                                            <?php endif; ?>
+                                                            <p><strong>Relationship:</strong> <?php echo ucfirst($claim['relationship_to_deceased'] ?? 'N/A'); ?></p>
                                                             <p><strong>Date of Death:</strong> <?php echo date('M j, Y', strtotime($claim['date_of_death'])); ?></p>
                                                         </div>
                                                         <div class="col-md-6">
@@ -260,11 +272,48 @@
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <?php if (!empty($claim['description'])): ?>
+                                            
                                             <hr>
-                                            <h6>Additional Information</h6>
-                                            <p><?php echo nl2br(htmlspecialchars($claim['description'])); ?></p>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h6>Mortuary Details</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <p><strong>Mortuary Name:</strong> <?php echo htmlspecialchars($claim['mortuary_name'] ?? 'N/A'); ?></p>
+                                                            <p><strong>Days in Mortuary:</strong> <?php echo $claim['mortuary_days_count'] ?? 0; ?> days</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <?php if (!empty($claim['mortuary_bill_amount'])): ?>
+                                                            <p><strong>Bill Amount:</strong> KES <?php echo number_format($claim['mortuary_bill_amount'], 2); ?></p>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($claim['mortuary_bill_reference'])): ?>
+                                                            <p><strong>Bill Reference:</strong> <?php echo htmlspecialchars($claim['mortuary_bill_reference']); ?></p>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <?php if ($claim['service_delivery_type'] === 'standard_services'): ?>
+                                            <hr>
+                                            <h6>Service Delivery Checklist</h6>
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-<?php echo $claim['mortuary_bill_settled'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Mortuary Bill Payment</li>
+                                                <li><i class="fas fa-<?php echo $claim['body_dressing_completed'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Body Dressing</li>
+                                                <li><i class="fas fa-<?php echo $claim['coffin_delivered'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Executive Coffin</li>
+                                                <li><i class="fas fa-<?php echo $claim['transportation_arranged'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Transportation</li>
+                                                <li><i class="fas fa-<?php echo $claim['equipment_delivered'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Equipment (Lowering gear, trolley, gazebo, 100 chairs)</li>
+                                            </ul>
+                                            <?php endif; ?>
+                                            
+                                            <?php if ($claim['service_delivery_type'] === 'cash_alternative' && !empty($claim['cash_alternative_reason'])): ?>
+                                            <hr>
+                                            <h6>Cash Alternative Details</h6>
+                                            <div class="alert alert-warning">
+                                                <strong>Reason:</strong> <?php echo nl2br(htmlspecialchars($claim['cash_alternative_reason'])); ?><br>
+                                                <strong>Amount:</strong> KES 20,000.00
+                                            </div>
                                             <?php endif; ?>
 
                                             <?php if (!empty($claim['supporting_documents'])): ?>
@@ -275,11 +324,11 @@
                                             </a></p>
                                             <?php endif; ?>
 
-                                            <?php if (!empty($claim['admin_notes'])): ?>
+                                            <?php if (!empty($claim['admin_notes']) || !empty($claim['processing_notes'])): ?>
                                             <hr>
                                             <h6>Admin Notes</h6>
                                             <div class="alert alert-info">
-                                                <?php echo nl2br(htmlspecialchars($claim['admin_notes'])); ?>
+                                                <?php echo nl2br(htmlspecialchars($claim['admin_notes'] ?? $claim['processing_notes'] ?? '')); ?>
                                             </div>
                                             <?php endif; ?>
                                         </div>
@@ -417,42 +466,44 @@
             </div>
             <form method="POST" action="/admin/claims/create" enctype="multipart/form-data">
                 <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Service-Based Claims:</strong> Claims default to standard funeral services. Cash alternative (KES 20,000) only for exceptional circumstances per policy.
+                    </div>
+                    
+                    <h6 class="font-weight-bold">Member Selection</h6>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
-                                <label>Member *</label>
-                                <select name="member_id" class="form-control" required>
+                                <label>Member <span class="text-danger">*</span></label>
+                                <select name="member_id" class="form-control" id="memberSelect" required>
                                     <option value="">Select Member</option>
-                                    <!-- Members will be populated here -->
+                                    <?php if (isset($members)): ?>
+                                        <?php foreach ($members as $m): ?>
+                                            <option value="<?php echo $m['id']; ?>" 
+                                                    data-name="<?php echo htmlspecialchars($m['first_name'] . ' ' . $m['last_name']); ?>"
+                                                    data-number="<?php echo htmlspecialchars($m['member_number']); ?>">
+                                                <?php echo htmlspecialchars($m['member_number'] . ' - ' . $m['first_name'] . ' ' . $m['last_name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Claim Amount *</label>
-                                <input type="number" name="claim_amount" class="form-control" step="0.01" required>
                             </div>
                         </div>
                     </div>
                     
+                    <hr>
+                    <h6 class="font-weight-bold">Deceased Information</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Deceased Name *</label>
+                                <label>Full Name <span class="text-danger">*</span></label>
                                 <input type="text" name="deceased_name" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Relationship to Deceased *</label>
-                                <select name="relationship_to_deceased" class="form-control" required>
-                                    <option value="">Select Relationship</option>
-                                    <option value="spouse">Spouse</option>
-                                    <option value="parent">Parent</option>
-                                    <option value="child">Child</option>
-                                    <option value="sibling">Sibling</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                <label>ID/Birth Certificate Number <span class="text-danger">*</span></label>
+                                <input type="text" name="deceased_id_number" class="form-control" required>
                             </div>
                         </div>
                     </div>
@@ -460,37 +511,100 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Date of Death *</label>
+                                <label>Relationship to Deceased <span class="text-danger">*</span></label>
+                                <select name="relationship_to_deceased" class="form-control" required>
+                                    <option value="">Select Relationship</option>
+                                    <option value="self">Self</option>
+                                    <option value="spouse">Spouse</option>
+                                    <option value="parent">Parent</option>
+                                    <option value="child">Child</option>
+                                    <option value="sibling">Sibling</option>
+                                    <option value="dependent">Registered Dependent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" name="date_of_birth" class="form-control">
+                                <small class="form-text text-muted">For dependent age verification</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Date of Death <span class="text-danger">*</span></label>
                                 <input type="date" name="date_of_death" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Place of Death</label>
-                                <input type="text" name="place_of_death" class="form-control">
+                                <label>Place of Death <span class="text-danger">*</span></label>
+                                <input type="text" name="place_of_death" class="form-control" required>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>Cause of Death</label>
-                        <input type="text" name="cause_of_death" class="form-control">
+                        <label>Cause of Death <span class="text-danger">*</span></label>
+                        <textarea name="cause_of_death" class="form-control" rows="2" required></textarea>
+                        <small class="form-text text-muted">Required for policy exclusion verification</small>
                     </div>
                     
+                    <hr>
+                    <h6 class="font-weight-bold">Mortuary & Service Details</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Mortuary Name <span class="text-danger">*</span></label>
+                                <input type="text" name="mortuary_name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Days in Mortuary <span class="text-danger">*</span></label>
+                                <input type="number" name="mortuary_days_count" class="form-control" min="0" max="14" value="14" required>
+                                <small class="form-text text-muted">Maximum 14 days per policy</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Mortuary Bill Amount</label>
+                                <input type="number" name="mortuary_bill_amount" class="form-control" step="0.01">
+                                <small class="form-text text-muted">For reference and verification</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Bill Reference/Invoice #</label>
+                                <input type="text" name="mortuary_bill_reference" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6 class="font-weight-bold">Required Documents</h6>
                     <div class="form-group">
                         <label>Supporting Documents</label>
-                        <input type="file" name="supporting_documents" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="form-text text-muted">Upload death certificate, medical reports, etc. (PDF, JPG, PNG)</small>
+                        <input type="file" name="supporting_documents" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                        <small class="form-text text-muted">ID/Birth Certificate, Chief's Letter, Mortuary Invoice, Death Certificate (optional)</small>
                     </div>
                     
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Additional information about the claim..."></textarea>
+                        <label>Admin Notes</label>
+                        <textarea name="admin_notes" class="form-control" rows="3" placeholder="Additional notes about this claim..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Claim</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Claim
+                    </button>
                 </div>
             </form>
         </div>

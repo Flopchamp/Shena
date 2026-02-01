@@ -27,7 +27,7 @@ include VIEWS_PATH . '/layouts/member-header.php';
             <div class="card shadow-sm border-0 bg-info text-white">
                 <div class="card-body">
                     <h6>Monthly Contribution</h6>
-                    <h3>KES <?php echo number_format($member->monthly_contribution, 2); ?></h3>
+                    <h3>KES <?php echo number_format($member['monthly_contribution'] ?? 0, 2); ?></h3>
                 </div>
             </div>
         </div>
@@ -35,9 +35,16 @@ include VIEWS_PATH . '/layouts/member-header.php';
     <div class="card shadow-sm border-0">
         <div class="card-header d-flex justify-content-between align-items-center bg-white">
             <h5 class="mb-0"><i class="fas fa-history"></i> Payment History</h5>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                <i class="fas fa-plus"></i> Make Payment
-            </button>
+            <div>
+                <?php if ($pending_count > 0): ?>
+                <button class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#verifyTransactionModal">
+                    <i class="fas fa-check-circle"></i> Verify Transaction
+                </button>
+                <?php endif; ?>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <i class="fas fa-plus"></i> Make Payment
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <?php if (!empty($payments)): ?>
@@ -121,7 +128,7 @@ include VIEWS_PATH . '/layouts/member-header.php';
                         <div class="mb-3">
                             <label class="form-label">Amount</label>
                             <input type="number" class="form-control" id="amount" 
-                                   value="<?php echo $member->monthly_contribution; ?>" 
+                                   value="<?php echo $member['monthly_contribution'] ?? 0; ?>" 
                                    min="1" step="0.01" required readonly>
                         </div>
                         
@@ -157,8 +164,8 @@ include VIEWS_PATH . '/layouts/member-header.php';
                     <div class="card bg-light">
                         <div class="card-body">
                             <p class="mb-2"><strong>Paybill Number:</strong> <span class="text-primary fs-5"><?php echo MPESA_BUSINESS_SHORTCODE; ?></span></p>
-                            <p class="mb-2"><strong>Account Number:</strong> <span class="text-success fs-6"><?php echo $member->member_number; ?></span></p>
-                            <p class="mb-0"><strong>Amount:</strong> <span class="text-danger fs-6">KES <?php echo number_format($member->monthly_contribution, 2); ?></span></p>
+                            <p class="mb-2"><strong>Account Number:</strong> <span class="text-success fs-6"><?php echo $member['member_number'] ?? ''; ?></span></p>
+                            <p class="mb-0"><strong>Amount:</strong> <span class="text-danger fs-6">KES <?php echo number_format($member['monthly_contribution'] ?? 0, 2); ?></span></p>
                         </div>
                     </div>
                     <hr>
@@ -168,13 +175,64 @@ include VIEWS_PATH . '/layouts/member-header.php';
                         <li>Select <strong>Lipa na M-Pesa</strong></li>
                         <li>Select <strong>Pay Bill</strong></li>
                         <li>Enter Business Number: <strong><?php echo MPESA_BUSINESS_SHORTCODE; ?></strong></li>
-                        <li>Enter Account Number: <strong><?php echo $member->member_number; ?></strong></li>
-                        <li>Enter Amount: <strong><?php echo number_format($member->monthly_contribution, 2); ?></strong></li>
+                        <li>Enter Account Number: <strong><?php echo $member['member_number'] ?? ''; ?></strong></li>
+                        <li>Enter Amount: <strong><?php echo number_format($member['monthly_contribution'] ?? 0, 2); ?></strong></li>
                         <li>Enter your M-Pesa PIN and confirm</li>
                     </ol>
                     <p class="text-muted small mt-3">
                         <i class="fas fa-info-circle"></i> Payment will reflect automatically in your account within a few minutes.
                     </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Verify Transaction Modal -->
+<div class="modal fade" id="verifyTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-check-circle"></i> Verify M-Pesa Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> If you completed a payment but it shows as pending or failed, verify it here using your M-Pesa transaction code.
+                </div>
+                
+                <form id="verifyTransactionForm">
+                    <div class="mb-3">
+                        <label class="form-label">M-Pesa Transaction Code <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control text-uppercase" id="transactionCode" 
+                               placeholder="e.g., RCH12ABC34" required maxlength="15">
+                        <small class="text-muted">Check your M-Pesa message for the transaction code</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number Used <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="verifyPhoneNumber" 
+                               placeholder="07XXXXXXXX or 2547XXXXXXXX" required
+                               value="<?php echo $member['phone'] ?? ''; ?>">
+                        <small class="text-muted">Enter the phone number you paid from</small>
+                    </div>
+                    
+                    <div class="alert alert-warning small">
+                        <strong>Note:</strong> This will search for your pending or failed payments within the last 7 days that match your transaction code and phone number.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning w-100" id="verifyBtn">
+                        <i class="fas fa-search"></i> Verify Transaction
+                    </button>
+                </form>
+                
+                <div id="verifyStatus" class="mt-3" style="display: none;">
+                    <div class="alert">
+                        <span id="verifyMessage"></span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -228,7 +286,7 @@ document.getElementById('stkPushForm')?.addEventListener('submit', async functio
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                member_id: <?php echo $member->id; ?>,
+                member_id: <?php echo $member['id'] ?? 0; ?>,
                 phone_number: phoneNumber,
                 amount: amount,
                 payment_type: paymentType
@@ -316,6 +374,73 @@ function pollPaymentStatus(checkoutRequestId) {
         }
     }, 1000);
 }
+
+// Transaction Verification Form
+document.getElementById('verifyTransactionForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('verifyBtn');
+    const statusDiv = document.getElementById('verifyStatus');
+    const statusMsg = document.getElementById('verifyMessage');
+    
+    const transactionCode = document.getElementById('transactionCode').value.trim();
+    const phoneNumber = document.getElementById('verifyPhoneNumber').value.trim();
+    
+    // Validate inputs
+    if (!transactionCode || transactionCode.length < 8) {
+        alert('Please enter a valid M-Pesa transaction code');
+        return;
+    }
+    
+    if (!phoneNumber || phoneNumber.length < 9) {
+        alert('Please enter a valid phone number');
+        return;
+    }
+    
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    statusDiv.style.display = 'none';
+    
+    try {
+        const formData = new FormData();
+        formData.append('transaction_code', transactionCode);
+        formData.append('phone_number', phoneNumber);
+        
+        const response = await fetch('/payments/verify-transaction', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        statusDiv.style.display = 'block';
+        
+        if (data.success) {
+            statusDiv.querySelector('.alert').className = 'alert alert-success';
+            statusMsg.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+            
+            // Reload page after 2 seconds
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            statusDiv.querySelector('.alert').className = 'alert alert-danger';
+            statusMsg.innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.message || 'Verification failed');
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-search"></i> Verify Transaction';
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        statusDiv.style.display = 'block';
+        statusDiv.querySelector('.alert').className = 'alert alert-danger';
+        statusMsg.innerHTML = '<i class="fas fa-times-circle"></i> Network error. Please try again.';
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Verify Transaction';
+    }
+});
 </script>
 
 <?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>

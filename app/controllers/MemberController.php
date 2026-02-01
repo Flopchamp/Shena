@@ -175,6 +175,135 @@ class MemberController extends BaseController
         $this->view('member.payments', $data);
     }
     
+    /**
+     * Verify pending/failed M-Pesa transaction
+     */
+    public function verifyTransaction()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+            if (!$member) {
+                $this->json(['success' => false, 'message' => 'Member not found'], 404);
+                return;
+            }
+            
+            $transactionCode = $_POST['transaction_code'] ?? '';
+            $phoneNumber = $_POST['phone_number'] ?? '';
+            
+            // Validate inputs
+            if (empty($transactionCode)) {
+                $this->json(['success' => false, 'message' => 'Please enter M-Pesa transaction code'], 400);
+                return;
+            }
+            
+            if (empty($phoneNumber)) {
+                $this->json(['success' => false, 'message' => 'Please enter your phone number'], 400);
+                return;
+            }
+            
+            // Format phone number
+            $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+            if (strlen($phoneNumber) === 10 && substr($phoneNumber, 0, 1) === '0') {
+                $phoneNumber = '254' . substr($phoneNumber, 1);
+            }
+            
+            // Format transaction code (remove spaces, uppercase)
+            $transactionCode = strtoupper(preg_replace('/\s+/', '', $transactionCode));
+            
+            // Search for payment record for this member
+            $sql = "SELECT * FROM payments 
+                    WHERE member_id = :member_id
+                    AND (mpesa_receipt_number = :code OR transaction_reference LIKE :code_pattern)
+                    AND phone_number LIKE :phone
+                    AND status IN ('pending', 'failed', 'initiated')
+                    ORDER BY created_at DESC 
+                    LIMIT 1";
+            
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute([
+                ':member_id' => $member['id'],
+                ':code' => $transactionCode,
+                ':code_pattern' => '%' . $transactionCode . '%',
+                ':phone' => '%' . substr($phoneNumber, -9) . '%'
+            ]);
+            
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$payment) {
+                // Try alternative search - by phone and recent pending payments for this member
+                $sql = "SELECT * FROM payments 
+                        WHERE member_id = :member_id
+                        AND phone_number LIKE :phone
+                        AND status IN ('pending', 'failed', 'initiated')
+                        AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                        ORDER BY created_at DESC 
+                        LIMIT 1";
+                
+                $stmt = $this->db->getConnection()->prepare($sql);
+                $stmt->execute([
+                    ':member_id' => $member['id'],
+                    ':phone' => '%' . substr($phoneNumber, -9) . '%'
+                ]);
+                $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            
+            if (!$payment) {
+                $this->json([
+                    'success' => false, 
+                    'message' => 'No matching pending payment found. Please verify your transaction code and phone number.'
+                ], 404);
+                return;
+            }
+            
+            // Update payment status
+            $this->db->getConnection()->beginTransaction();
+            
+            try {
+                // Update payment record
+                $updatePayment = "UPDATE payments SET 
+                                status = 'completed',
+                                mpesa_receipt_number = :receipt,
+                                transaction_date = NOW(),
+                                verified_at = NOW(),
+                                verified_by = 'manual_verification'
+                              WHERE id = :id";
+                
+                $stmt = $this->db->getConnection()->prepare($updatePayment);
+                $stmt->execute([
+                    ':receipt' => $transactionCode,
+                    ':id' => $payment['id']
+                ]);
+                
+                // Update member last payment date
+                $updateMember = "UPDATE members SET 
+                               last_payment_date = NOW()
+                             WHERE id = :id";
+                
+                $stmt = $this->db->getConnection()->prepare($updateMember);
+                $stmt->execute([':id' => $member['id']]);
+                
+                $this->db->getConnection()->commit();
+                
+                $this->json([
+                    'success' => true,
+                    'message' => 'Payment verified successfully! Your account has been updated.',
+                    'amount' => $payment['amount']
+                ]);
+                
+            } catch (Exception $e) {
+                $this->db->getConnection()->rollBack();
+                error_log('Transaction verification error: ' . $e->getMessage());
+                $this->json(['success' => false, 'message' => 'Failed to verify payment'], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log('Verify transaction error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'An error occurred'], 500);
+        }
+    }
+    
     public function beneficiaries()
     {
         $member = $this->memberModel->findByUserId($_SESSION['user_id']);

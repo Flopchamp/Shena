@@ -29,6 +29,7 @@
 					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'payments' ? ' active' : ''; ?>" href="/payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
 					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'beneficiaries' ? ' active' : ''; ?>" href="/beneficiaries"><i class="fas fa-users"></i> Beneficiaries</a></li>
 					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'claims' ? ' active' : ''; ?>" href="/claims"><i class="fas fa-file-medical"></i> Claims</a></li>
+					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'upgrade' ? ' active' : ''; ?>" href="/member/upgrade"><i class="fas fa-level-up-alt"></i> Upgrade Plan</a></li>
 					<li class="nav-item"><a class="nav-link<?php echo ($page ?? '') === 'profile' ? ' active' : ''; ?>" href="/profile"><i class="fas fa-user-edit"></i> Profile</a></li>
 				</ul>
 				<span class="navbar-text me-3">Welcome, <?php echo htmlspecialchars($member['first_name'] ?? 'Member'); ?></span>

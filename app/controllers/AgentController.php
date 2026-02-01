@@ -100,14 +100,21 @@ class AgentController extends BaseController
         
         if (!empty($errors)) {
             $_SESSION['old_input'] = $_POST;
-            $_SESSION['errors'] = $errors;
+            $_SESSION['error'] = 'Please correct the following errors: ' . implode(', ', $errors);
             redirect('/admin/agents/create');
             return;
         }
         
         // Check if agent already exists
         if ($this->agentModel->existsByNationalId($_POST['national_id'])) {
-            $this->setFlashMessage('An agent with this National ID already exists', 'error');
+            $_SESSION['error'] = 'An agent with this National ID already exists in the system.';
+            redirect('/admin/agents/create');
+            return;
+        }
+        
+        // Check if email already exists
+        if ($this->agentModel->existsByEmail($_POST['email'])) {
+            $_SESSION['error'] = 'An agent with this email address already exists in the system.';
             redirect('/admin/agents/create');
             return;
         }
@@ -123,7 +130,7 @@ class AgentController extends BaseController
         $userId = $this->userModel->create($userData);
         
         if (!$userId) {
-            $this->setFlashMessage('Failed to create user account', 'error');
+            $_SESSION['error'] = 'Failed to create user account. Please try again or contact support.';
             redirect('/admin/agents/create');
             return;
         }
@@ -144,14 +151,27 @@ class AgentController extends BaseController
         $agentId = $this->agentModel->createAgent($agentData);
         
         if ($agentId) {
-            // Send welcome email
+            // Get the complete agent details
             $agent = $this->agentModel->getAgentById($agentId);
-            $this->emailService->sendAgentWelcomeEmail($agent, $_POST['password']);
             
-            $this->setFlashMessage('Agent registered successfully', 'success');
+            // Send welcome email with login credentials
+            $emailSent = false;
+            try {
+                $emailSent = $this->emailService->sendAgentWelcomeEmail($agent, $_POST['password']);
+            } catch (Exception $e) {
+                error_log('Failed to send agent welcome email: ' . $e->getMessage());
+            }
+            
+            // Set success message with email status
+            if ($emailSent) {
+                $_SESSION['success'] = 'Agent registered successfully! Welcome email sent to ' . $agent['email'] . ' with login credentials.';
+            } else {
+                $_SESSION['success'] = 'Agent registered successfully! However, the welcome email could not be sent. Please provide login credentials manually.';
+            }
+            
             redirect('/admin/agents/view/' . $agentId);
         } else {
-            $this->setFlashMessage('Failed to create agent profile', 'error');
+            $_SESSION['error'] = 'Failed to create agent profile. Please try again.';
             redirect('/admin/agents/create');
         }
     }

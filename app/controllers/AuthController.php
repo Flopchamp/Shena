@@ -768,6 +768,9 @@ class AuthController extends BaseController
      */
     public function processPublicRegistration()
     {
+        // Start output buffering to catch any warnings/errors
+        ob_start();
+        
         header('Content-Type: application/json');
         
         try {
@@ -796,6 +799,11 @@ class AuthController extends BaseController
             $subCounty = $this->sanitizeInput($_POST['sub_county'] ?? '');
             $postalCode = $this->sanitizeInput($_POST['postal_code'] ?? '');
             $paymentMethod = $this->sanitizeInput($_POST['payment_method']);
+            
+            // Normalize payment method - STK push is a type of M-Pesa payment
+            if ($paymentMethod === 'stk_push') {
+                $paymentMethod = 'mpesa';
+            }
             
             // Validate email
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -841,8 +849,8 @@ class AuthController extends BaseController
             if (isset($package['age_max']) && $age > $package['age_max']) {
                 echo json_encode([
                     'success' => false,
-                    'message' => "You exceed the maximum age ({$package['age_max']}) for this package",
-                    'field' => 'date_of_birth',
+                    'message' => "This package is for members aged {$package['age_min']}-{$package['age_max']} years. You are {$age} years old. Please select an appropriate package for your age group.",
+                    'field' => 'package',
                     'old_values' => $_POST
                 ]);
                 return;
@@ -851,8 +859,8 @@ class AuthController extends BaseController
             if (isset($package['age_min']) && $age < $package['age_min']) {
                 echo json_encode([
                     'success' => false,
-                    'message' => "You are below the minimum age ({$package['age_min']}) for this package",
-                    'field' => 'date_of_birth',
+                    'message' => "This package is for members aged {$package['age_min']}-{$package['age_max']} years. You are {$age} years old. Please select an appropriate package for your age group.",
+                    'field' => 'package',
                     'old_values' => $_POST
                 ]);
                 return;
@@ -983,8 +991,10 @@ class AuthController extends BaseController
                     $emailService->sendRegistrationConfirmation($email, [
                         'name' => $firstName . ' ' . $lastName,
                         'member_number' => $memberNumber,
-                        'package' => $package['name'],
-                        'monthly_amount' => $package['monthly_contribution'],
+                        'package_name' => $package['name'],
+                        'monthly_contribution' => $package['monthly_contribution'],
+                        'maturity_date' => $maturityEnds,
+                        'maturity_months' => $maturityMonths,
                         'payment_method' => $paymentMethod,
                         'temp_password' => $tempPassword,
                         'payment_deadline' => date('F j, Y', strtotime('+14 days'))
@@ -998,12 +1008,16 @@ class AuthController extends BaseController
                     error_log('Notification sending failed: ' . $e->getMessage());
                 }
                 
+                // Clear any output buffers to prevent warnings from breaking JSON
+                if (ob_get_length()) ob_clean();
+                
                 echo json_encode([
                     'success' => true,
                     'message' => 'Registration successful! Check your email for login credentials.',
                     'member_number' => $memberNumber,
                     'payment_method' => $paymentMethod
                 ]);
+                exit;
                 
             } catch (Exception $e) {
                 $this->db->getConnection()->rollback();
@@ -1017,11 +1031,15 @@ class AuthController extends BaseController
             $oldValues = $_POST ?? [];
             unset($oldValues['csrf_token']);
             
+            // Clear any output buffers to prevent warnings from breaking JSON
+            if (ob_get_length()) ob_clean();
+            
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage(),
                 'old_values' => $oldValues
             ]);
+            exit;
         }
     }
     

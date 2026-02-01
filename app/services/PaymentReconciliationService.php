@@ -308,6 +308,147 @@ class PaymentReconciliationService
             return false;
         }
     }
+
+    /**
+     * Verify a Paybill payment by M-Pesa receipt number and post it to a member
+     * @param string $transId M-Pesa receipt number
+     * @param int $memberId Member ID to post payment to
+     * @param int $userId Admin user ID performing verification
+     * @param string $notes Verification notes
+     * @param string $paymentType Payment type (monthly/registration/etc)
+     * @return array Result details
+     */
+    public function verifyPaybillReceipt($transId, $memberId, $userId, $notes = '', $paymentType = 'monthly')
+    {
+        try {
+            $transId = trim($transId);
+            if (empty($transId)) {
+                return ['success' => false, 'message' => 'Receipt number is required'];
+            }
+
+            $callback = $this->db->fetch(
+                "SELECT * FROM mpesa_c2b_callbacks WHERE trans_id = :trans_id LIMIT 1",
+                ['trans_id' => $transId]
+            );
+
+            if (!$callback) {
+                return ['success' => false, 'message' => 'No Paybill transaction found for this receipt number'];
+            }
+
+            $existingPayment = $this->db->fetch(
+                "SELECT * FROM payments WHERE mpesa_receipt_number = :receipt LIMIT 1",
+                ['receipt' => $transId]
+            );
+
+            if ($existingPayment) {
+                if ($existingPayment['status'] === 'completed') {
+                    return [
+                        'success' => true,
+                        'message' => 'Payment already verified and completed',
+                        'payment_id' => $existingPayment['id'],
+                        'already_verified' => true
+                    ];
+                }
+
+                if ($memberId && empty($existingPayment['member_id'])) {
+                    $this->db->execute(
+                        "UPDATE payments SET member_id = :member_id WHERE id = :payment_id",
+                        ['member_id' => $memberId, 'payment_id' => $existingPayment['id']]
+                    );
+                }
+
+                if (!empty($paymentType) && empty($existingPayment['payment_type'])) {
+                    $this->db->execute(
+                        "UPDATE payments SET payment_type = :payment_type WHERE id = :payment_id",
+                        ['payment_type' => $paymentType, 'payment_id' => $existingPayment['id']]
+                    );
+                }
+
+                $this->paymentModel->confirmPayment($existingPayment['id'], $transId);
+
+                $this->db->execute(
+                    "UPDATE payments SET reconciliation_status = 'manual', reconciled_at = NOW(), reconciled_by = :user_id, reconciliation_notes = :notes WHERE id = :payment_id",
+                    ['user_id' => $userId, 'notes' => $notes, 'payment_id' => $existingPayment['id']]
+                );
+
+                $this->logReconciliation($existingPayment['id'], [
+                    'action' => 'manual_verify',
+                    'previous_status' => 'unmatched',
+                    'new_status' => 'manual',
+                    'matched_member_id' => $memberId ?: $existingPayment['member_id'],
+                    'match_method' => 'paybill_receipt',
+                    'confidence_score' => 100,
+                    'reconciled_by' => $userId,
+                    'notes' => $notes
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Payment verified and completed',
+                    'payment_id' => $existingPayment['id']
+                ];
+            }
+
+            if (!$memberId) {
+                return ['success' => false, 'message' => 'Member ID is required to post this payment'];
+            }
+
+            $transactionDate = $this->parseTransTime($callback['trans_time'] ?? '');
+            $senderPhone = $this->formatPhoneNumber($callback['msisdn'] ?? '');
+            $senderName = trim(
+                ($callback['first_name'] ?? '') . ' ' .
+                ($callback['middle_name'] ?? '') . ' ' .
+                ($callback['last_name'] ?? '')
+            );
+
+            $paymentId = $this->paymentModel->recordPayment([
+                'member_id' => $memberId,
+                'amount' => $callback['trans_amount'] ?? 0,
+                'payment_type' => $paymentType ?: 'monthly',
+                'payment_method' => 'mpesa',
+                'status' => 'pending',
+                'transaction_id' => $transId,
+                'mpesa_receipt_number' => $transId,
+                'payment_date' => $transactionDate,
+                'transaction_date' => $transactionDate,
+                'sender_phone' => $senderPhone,
+                'sender_name' => $senderName,
+                'paybill_account' => $callback['bill_ref_number'] ?? '',
+                'notes' => $notes
+            ]);
+
+            $this->paymentModel->confirmPayment($paymentId, $transId);
+
+            $this->db->execute(
+                "UPDATE payments SET reconciliation_status = 'manual', reconciled_at = NOW(), reconciled_by = :user_id, reconciliation_notes = :notes WHERE id = :payment_id",
+                ['user_id' => $userId, 'notes' => $notes, 'payment_id' => $paymentId]
+            );
+
+            $this->logReconciliation($paymentId, [
+                'action' => 'manual_verify',
+                'previous_status' => 'unmatched',
+                'new_status' => 'manual',
+                'matched_member_id' => $memberId,
+                'match_method' => 'paybill_receipt',
+                'confidence_score' => 100,
+                'reconciled_by' => $userId,
+                'notes' => $notes
+            ]);
+
+            if (!empty($callback['id'])) {
+                $this->markCallbackProcessed($callback['id'], $paymentId);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Payment verified and posted successfully',
+                'payment_id' => $paymentId
+            ];
+        } catch (Exception $e) {
+            error_log('Paybill verify error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Verification failed: ' . $e->getMessage()];
+        }
+    }
     
     /**
      * Get all unmatched payments for manual reconciliation

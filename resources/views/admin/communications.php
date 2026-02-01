@@ -7,15 +7,38 @@
             <i class="fas fa-comments mr-2"></i>Communications
         </h1>
         <div class="btn-group">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#sendEmailModal">
-                <i class="fas fa-envelope mr-2"></i>Send Email
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#sendEmailModal">
+                <i class="fas fa-envelope mr-2"></i>Quick Email
             </button>
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#sendSMSModal">
-                <i class="fas fa-sms mr-2"></i>Send SMS
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#sendSMSModal">
+                <i class="fas fa-sms mr-2"></i>Quick SMS
             </button>
         </div>
     </div>
-
+    
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="communicationTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab">
+                <i class="fas fa-history mr-2"></i>History
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="email-campaigns-tab" data-toggle="tab" href="#email-campaigns" role="tab">
+                <i class="fas fa-envelope-open-text mr-2"></i>Email Campaigns
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="sms-campaigns-tab" data-toggle="tab" href="#sms-campaigns" role="tab">
+                <i class="fas fa-comment-dots mr-2"></i>SMS Campaigns
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="communicationTabsContent">
+        <!-- History Tab -->
+        <div class="tab-pane fade show active" id="history" role="tabpanel">
     <!-- Communication Statistics -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -246,6 +269,23 @@
             <?php endif; ?>
         </div>
     </div>
+        </div>
+        <!-- End History Tab -->
+        
+        <!-- Email Campaigns Tab -->
+        <div class="tab-pane fade" id="email-campaigns" role="tabpanel">
+            <iframe src="/admin/email-campaigns" style="width:100%; height:800px; border:none;" id="emailCampaignsFrame"></iframe>
+        </div>
+        
+        <!-- SMS Campaigns Tab -->
+        <div class="tab-pane fade" id="sms-campaigns" role="tabpanel">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-2"></i>
+                SMS Campaigns functionality is managed through the Bulk SMS system below.
+            </div>
+        </div>
+    </div>
+    <!-- End Tab Content -->
 </div>
 
 <!-- Send Email Modal -->
