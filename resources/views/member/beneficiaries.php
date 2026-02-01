@@ -8,27 +8,76 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
 
 <style>
 .beneficiaries-container {
-    padding: 40px;
+    padding: 30px 30px 40px 25px;
     background: #F8F9FC;
+    max-width: 100%;
+    margin: 0 0 0 0;
+}
+
+main {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 30px;
 }
 
 .page-title h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1F2937;
-    margin: 0 0 8px 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #4A1468;
+    margin: 0;
 }
 
-.page-title p {
+.search-bar {
+    position: relative;
+    width: 300px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
     font-size: 0.9rem;
-    color: #6B7280;
+    outline: none;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
+}
+
+/* Main 2/3 and 1/3 Layout */
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+.content-area {
+    width: 100%;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4A1468;
     margin: 0;
 }
 
@@ -36,7 +85,7 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
     background: #7F3D9E;
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 12px 24px;
     border-radius: 10px;
     font-weight: 600;
     font-size: 0.95rem;
@@ -44,18 +93,19 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
     transition: all 0.3s;
 }
 
 .add-dependent-btn:hover {
     background: #6B2D8A;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 30px;
+.section-description {
+    font-size: 0.9rem;
+    color: #6B7280;
+    margin: 0 0 30px 0;
 }
 
 .beneficiaries-grid {
@@ -67,7 +117,7 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
 .beneficiary-card {
     background: white;
     border-radius: 16px;
-    padding: 30px;
+    padding: 24px 28px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     position: relative;
 }
@@ -75,13 +125,13 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
 .beneficiary-header {
     display: flex;
     align-items: flex-start;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 18px;
 }
 
 .beneficiary-avatar {
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: linear-gradient(135deg, #EC4899, #F472B6);
     display: flex;
@@ -89,7 +139,7 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
     justify-content: center;
     color: white;
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     flex-shrink: 0;
 }
 
@@ -117,8 +167,8 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
 
 .status-badge-card {
     position: absolute;
-    top: 30px;
-    right: 30px;
+    top: 24px;
+    right: 28px;
 }
 
 .active-badge-card {
@@ -205,29 +255,44 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
     margin: 0;
 }
 
-.sidebar {
+/* Right Sidebar (1/3) */
+.right-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    position: sticky;
+    top: 20px;
 }
 
 .coverage-policy-card {
     background: white;
     border-radius: 20px;
     padding: 30px;
+    border-left: 4px solid #7F20B0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .policy-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 25px;
 }
 
-.policy-header i {
-    color: #F59E0B;
-    font-size: 1.3rem;
+.policy-icon {
+    width: 32px;
+    height: 32px;
+    background: #F59E0B;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.policy-icon i {
+    color: white;
+    font-size: 1rem;
 }
 
 .policy-header h3 {
@@ -290,7 +355,7 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
 }
 
 .need-help-card {
-    background: linear-gradient(135deg, #7F3D9E 0%, #5E2B7A 100%);
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
     border-radius: 20px;
     padding: 30px;
     color: white;
@@ -341,17 +406,22 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
     <div class="page-header">
         <div class="page-title">
             <h1>Manage Dependents & Beneficiaries</h1>
-            <p>Review and manage your policy beneficiaries and dependents.</p>
         </div>
-        <button class="add-dependent-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
-            <i class="fas fa-user-plus"></i> Add New Dependent
-        </button>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search dependents...">
+        </div>
     </div>
 
     <div class="content-grid">
-        <div>
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #1F2937; margin: 0 0 10px 0;">Your Covered Family</h2>
-            <p style="font-size: 0.9rem; color: #6B7280; margin: 0 0 25px 0;">Review and manage your policy beneficiaries and dependents.</p>
+        <div class="content-area">
+            <div class="section-header">
+                <h2>Your Covered Family</h2>
+                <button class="add-dependent-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                    <i class="fas fa-user-plus"></i> Add New Dependent
+                </button>
+            </div>
+            <p class="section-description">Review and manage your policy beneficiaries and dependents.</p>
             
             <div class="beneficiaries-grid">
                 <?php if (!empty($beneficiaries)): ?>
@@ -441,10 +511,12 @@ $availableSlots = $maxBeneficiaries - count($beneficiaries);
         </div>
 
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="right-sidebar">
             <div class="coverage-policy-card">
                 <div class="policy-header">
-                    <i class="fas fa-shield-alt"></i>
+                    <div class="policy-icon">
+                        <i class="fas fa-exclamation"></i>
+                    </div>
                     <h3>Coverage Policy</h3>
                 </div>
                 

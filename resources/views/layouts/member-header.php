@@ -119,7 +119,7 @@
 		
 		.top-bar {
 			background: white;
-			padding: 20px 40px;
+			padding: 20px 40px 20px 25px;
 			border-bottom: 1px solid #E5E7EB;
 			display: flex;
 			justify-content: space-between;
