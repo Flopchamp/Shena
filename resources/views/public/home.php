@@ -107,49 +107,45 @@
 </section>
 
 <!-- Why We Are The Royal Choice Section -->
-<section class="section section-light">
+<section style="padding: 80px 0; background: #F7FAFC;">
     <div class="container">
         <div class="row align-items-center">
             <!-- Left Column: Content -->
             <div class="col-lg-6 mb-4 mb-lg-0">
-                <div class="badge bg-light text-purple mb-3" style="color: var(--shena-primary-purple); border: 2px solid var(--shena-primary-purple); padding: 8px 16px; font-weight: 600;">
-                    OUR EXCELLENCE
+                <div class="mb-3">
+                    <span style="color: #7F3D9E; font-size: 0.85rem; font-weight: 600; letter-spacing: 1.5px;">OUR EXCELLENCE</span>
                 </div>
-                <h2 class="mb-4">
-                    Why We Are<br>
-                    <span style="color: var(--shena-primary-purple);">The Royal Choice</span>
+                <h2 class="mb-4" style="font-family: 'Playfair Display', serif; line-height: 1.2;">
+                    <span style="color: #2D1A4A; font-size: 2.5rem; font-weight: 400; font-style: italic;">Why We Are</span><br>
+                    <span style="color: #7F3D9E; font-size: 2.5rem; font-weight: 700;">The Royal Choice</span>
                 </h2>
-                <p class="mb-4" style="color: var(--shena-medium-gray); line-height: 1.8;">
+                <p class="mb-4" style="color: #4A5568; line-height: 1.8; font-size: 1rem;">
                     SHENA Companion stands as a pillar of strength for the Kisumu community. We combine traditional values with modern professionalism to ensure peace of mind for our members.
                 </p>
 
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
-                        <div class="d-flex align-items-start">
-                            <div class="me-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(127, 61, 158, 0.1);">
-                                    <i class="fas fa-clock" style="color: var(--shena-primary-purple); font-size: 20px;"></i>
-                                </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div>
+                                <i class="fas fa-clock" style="color: #7F3D9E; font-size: 24px;"></i>
                             </div>
                             <div>
-                                <h5 class="mb-2">Immediate Response</h5>
-                                <p style="color: var(--shena-medium-gray); font-size: 0.9rem;">
-                                    Our team available 24/7 to handle claims immediately.
+                                <h5 style="font-size: 1.05rem; font-weight: 600; color: #2D3748; margin-bottom: 8px;">Immediate Response</h5>
+                                <p style="color: #718096; font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                                    Our team is available 24/7 to handle claims immediately.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <div class="d-flex align-items-start">
-                            <div class="me-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: rgba(127, 61, 158, 0.1);">
-                                    <i class="fas fa-users" style="color: var(--shena-primary-purple); font-size: 20px;"></i>
-                                </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div>
+                                <i class="fas fa-users" style="color: #7F3D9E; font-size: 24px;"></i>
                             </div>
                             <div>
-                                <h5 class="mb-2">Community Spirit</h5>
-                                <p style="color: var(--shena-medium-gray); font-size: 0.9rem;">
+                                <h5 style="font-size: 1.05rem; font-weight: 600; color: #2D3748; margin-bottom: 8px;">Community Spirit</h5>
+                                <p style="color: #718096; font-size: 0.9rem; line-height: 1.5; margin: 0;">
                                     Built by and for the residents of Kisumu City.
                                 </p>
                             </div>
@@ -157,7 +153,7 @@
                     </div>
                 </div>
 
-                <a href="/about" class="btn btn-outline-purple">
+                <a href="/about" class="btn" style="background-color: transparent; color: #7F3D9E; padding: 12px 32px; border: 2px solid #7F3D9E; border-radius: 30px; font-weight: 600; text-decoration: none; display: inline-block;">
                     Learn More About Us
                 </a>
             </div>
@@ -165,16 +161,16 @@
             <!-- Right Column: Image with Badge -->
             <div class="col-lg-6">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=800" 
+                    <img src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=900&q=80" 
                          alt="Sunset over water" 
-                         class="img-fluid rounded-3 shadow-lg"
-                         style="width: 100%; height: auto;">
-                    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-4">
-                        <div class="bg-white rounded-3 p-4 shadow-lg text-center" style="min-width: 200px;">
-                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--shena-primary-purple); line-height: 1;">
+                         class="img-fluid" 
+                         style="width: 100%; height: auto; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+                    <div class="position-absolute" style="bottom: 30px; left: 50%; transform: translateX(-50%);">
+                        <div class="bg-white rounded-3 p-4 shadow-lg text-center" style="min-width: 220px;">
+                            <div style="font-size: 3rem; font-weight: 700; color: #7F3D9E; line-height: 1; font-style: italic; font-family: 'Playfair Display', serif;">
                                 100%
                             </div>
-                            <div style="font-size: 0.9rem; font-weight: 600; color: var(--shena-primary-purple); letter-spacing: 1px;">
+                            <div style="font-size: 0.8rem; font-weight: 600; color: #2D3748; letter-spacing: 1.5px; margin-top: 8px;">
                                 CLAIMS HONORED
                             </div>
                         </div>
@@ -186,26 +182,36 @@
 </section>
 
 <!-- Call to Action Section -->
-<section class="cta-section" style="background: linear-gradient(135deg, var(--shena-primary-purple) 0%, #5d2d7a 100%); padding: 80px 0;">
+<section style="padding: 60px 20px; background: white;">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center text-white">
-                <h2 class="mb-4" style="font-size: 2.5rem; font-weight: 600;">
-                    Step into Royal Protection
-                </h2>
-                <p class="lead mb-5" style="opacity: 0.95; font-size: 1.1rem;">
-                    Secure your future and that of your loved ones today. Joining SHENA Companion is a commitment to dignity and community welfare.
-                </p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="/register" class="btn btn-shena-gold btn-lg">
-                        Get Started Now
-                    </a>
-                    <a href="/contact" class="btn btn-outline-light btn-lg">
-                        Talk to an Agent
-                    </a>
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div style="background: linear-gradient(135deg, #7F3D9E 0%, #6B2D8A 100%); border-radius: 30px; padding: 60px 50px; box-shadow: 0 20px 60px rgba(127, 61, 158, 0.25); position: relative; overflow: hidden;">
+                    <!-- Decorative Background Circles -->
+                    <div style="position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%; top: -100px; left: -100px;"></div>
+                    <div style="position: absolute; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; bottom: -80px; right: -80px;"></div>
+                    
+                    <div class="text-center" style="position: relative; z-index: 2;">
+                        <h2 class="mb-4" style="color: white; font-size: 2.8rem; font-weight: 600; font-family: 'Playfair Display', serif; font-style: italic; line-height: 1.2;">
+                            Step into Royal Protection
+                        </h2>
+                        <p class="mb-5" style="color: rgba(255, 255, 255, 0.95); font-size: 1.05rem; max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
+                            Secure your future and that of your loved ones today. Joining SHENA Companion is a commitment to dignity and community welfare.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            <a href="/register" class="btn btn-lg" style="background: linear-gradient(135deg, #C9A659 0%, #E8C879 100%); color: #2D1A4A; padding: 14px 40px; border-radius: 30px; font-weight: 600; border: none; box-shadow: 0 4px 15px rgba(201, 166, 89, 0.4); text-decoration: none;">
+                                Get Started Now
+                            </a>
+                            <a href="/contact" class="btn btn-lg" style="background-color: transparent; color: white; padding: 14px 40px; border: 2px solid white; border-radius: 30px; font-weight: 600; text-decoration: none;">
+                                Talk to an Agent
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+</section>
     </div>
 </section>
 
