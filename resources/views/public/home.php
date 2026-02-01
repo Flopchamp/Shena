@@ -25,76 +25,79 @@
 </section>
 
 <!-- Professional Care & Services Section -->
-<section class="section">
+<section class="section" style="padding: 80px 0; background: white;">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="mb-3">Professional Care & Services</h2>
-            <p style="color: var(--shena-medium-gray); max-width: 600px; margin: 0 auto;">
+            <h2 class="mb-3" style="color: #2D1A4A; font-family: 'Playfair Display', serif; font-weight: 700; font-size: 2.5rem; position: relative; display: inline-block;">
+                Professional Care & Services
+                <span style="display: block; width: 80px; height: 3px; background: linear-gradient(90deg, #C9A659, #E8C879); margin: 15px auto 0;"></span>
+            </h2>
+            <p style="color: #718096; max-width: 650px; margin: 0 auto; font-size: 1rem; line-height: 1.6;">
                 Providing a comprehensive range of services with the highest standard of respect and royal attention.
             </p>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center">
             <!-- Mortuary Service -->
-            <div class="col-lg col-md-4 col-sm-6">
-                <div class="shena-service-card">
-                    <div class="service-icon">
-                        <i class="far fa-building"></i>
+            <div class="col-lg col-md-4 col-sm-6" style="max-width: 220px;">
+                <div class="text-center" style="padding: 20px;">
+                    <div class="mb-3">
+                        <i class="fas fa-briefcase-medical" style="color: #7F3D9E; font-size: 3.5rem;"></i>
                     </div>
-                    <h4 class="service-title">Mortuary</h4>
-                    <p class="service-description">
-                        Professional preservation and care at leading facilities.
+                    <h4 style="color: #2D3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">Mortuary</h4>
+                    <p style="color: #718096; font-size: 0.9rem; line-height: 1.6;">
+                        Professional preservation and care at Kisumu's leading facilities.
                     </p>
                 </div>
             </div>
 
             <!-- Dressing Service -->
-            <div class="col-lg col-md-4 col-sm-6">
-                <div class="shena-service-card">
-                    <div class="service-icon">
-                        <i class="far fa-user"></i>
+            <div class="col-lg col-md-4 col-sm-6" style="max-width: 220px;">
+                <div class="text-center" style="padding: 20px;">
+                    <div class="mb-3">
+                        <i class="fas fa-user-tie" style="color: #7F3D9E; font-size: 3.5rem;"></i>
                     </div>
-                    <h4 class="service-title">Dressing</h4>
-                    <p class="service-description">
-                        Gentle grooming and preparation with utmost respect.
+                    <h4 style="color: #2D3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">Dressing</h4>
+                    <p style="color: #718096; font-size: 0.9rem; line-height: 1.6;">
+                        Gentle grooming and presentation handled with total respect.
                     </p>
                 </div>
             </div>
 
             <!-- Transport Service -->
-            <div class="col-lg col-md-4 col-sm-6">
-                <div class="shena-service-card">
-                    <div class="service-icon">
-                        <i class="fas fa-truck"></i>
+            <div class="col-lg col-md-4 col-sm-6" style="max-width: 220px;">
+                <div class="text-center" style="padding: 20px;">
+                    <div class="mb-3">
+                        <i class="fas fa-truck" style="color: #7F3D9E; font-size: 3.5rem;"></i>
                     </div>
-                    <h4 class="service-title">Transport</h4>
-                    <p class="service-description">
-                        Modern, reliable hearse for a dignified journey.
+                    <h4 style="color: #2D3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">Transport</h4>
+                    <p style="color: #718096; font-size: 0.9rem; line-height: 1.6;">
+                        Modern, reliable hearses for a dignified final journey.
                     </p>
                 </div>
             </div>
 
             <!-- Coffins Service -->
-            <div class="col-lg col-md-4 col-sm-6">
-                <div class="shena-service-card">
-                    <div class="service-icon">
-                        <i class="far fa-square"></i>
+            <div class="col-lg col-md-4 col-sm-6" style="max-width: 220px;">
+                <div class="text-center" style="padding: 20px;">
+                    <div class="mb-3">
+                        <i class="fas fa-box" style="color: #7F3D9E; font-size: 3.5rem;"></i>
                     </div>
-                    <h4 class="service-title">Coffins</h4>
-                    <p class="service-description">
-                        Executive high-quality designs befitting final standards.
+                    <h4 style="color: #2D3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">Coffins</h4>
+                    <p style="color: #718096; font-size: 0.9rem; line-height: 1.6;">
+                        Executive high-quality designs crafted to royal standards.
                     </p>
                 </div>
             </div>
 
             <!-- Logistics Service -->
-            <div class="col-lg col-md-4 col-sm-6">
-                <div class="shena-service-card">
-                    <div class="service-icon">
-                        <i class="fas fa-inbox"></i>
+            <div class="col-lg col-md-4 col-sm-6" style="max-width: 220px;">
+                <div class="text-center" style="padding: 20px;">
+                    <div class="mb-3">
+                        <i class="fas fa-boxes" style="color: #7F3D9E; font-size: 3.5rem;"></i>
                     </div>
-                    <h4 class="service-title">Logistics</h4>
-                    <p class="service-description">
+                    <h4 style="color: #2D3748; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">Logistics</h4>
+                    <p style="color: #718096; font-size: 0.9rem; line-height: 1.6;">
                         Full event support including premium tents and chairs.
                     </p>
                 </div>
