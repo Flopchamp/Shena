@@ -37,9 +37,6 @@
                         <a class="nav-link <?php echo ($page ?? '') === 'packages' ? 'active' : ''; ?>" href="/membership" style="color: <?php echo ($page ?? '') === 'packages' ? '#7F3D9E' : '#000000'; ?>; font-weight: 500; padding: 0.5rem 1rem;">Packages</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo ($page ?? '') === 'claims' ? 'active' : ''; ?>" href="/claims" style="color: <?php echo ($page ?? '') === 'claims' ? '#7F3D9E' : '#000000'; ?>; font-weight: 500; padding: 0.5rem 1rem;">Claims</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link <?php echo ($page ?? '') === 'contact' ? 'active' : ''; ?>" href="/contact" style="color: <?php echo ($page ?? '') === 'contact' ? '#7F3D9E' : '#000000'; ?>; font-weight: 500; padding: 0.5rem 1rem;">Contact</a>
                     </li>
                 </ul>
@@ -57,6 +54,9 @@
                             <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </li>
                     <?php else: ?>
+                        <li class="nav-item" style="margin-right: 12px;">
+                            <a href="/login" class="btn" style="background-color: transparent; color: #7F3D9E; padding: 10px 28px; border-radius: 25px; font-weight: 500; border: 2px solid #7F3D9E; white-space: nowrap;">Login</a>
+                        </li>
                         <li class="nav-item">
                             <a href="/register" class="btn" style="background-color: #7F3D9E; color: white; padding: 10px 28px; border-radius: 25px; font-weight: 500; border: none; white-space: nowrap;">Member Portal</a>
                         </li>
