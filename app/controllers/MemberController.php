@@ -982,4 +982,71 @@ class MemberController extends BaseController
         
         $this->redirect('/member/notification-settings');
     }
+    
+    /**
+     * Display notifications page
+     */
+    public function notifications()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/login');
+            return;
+        }
+        
+        // TODO: Get notifications from database
+        // For now, we'll pass empty array and let the view handle sample data
+        $notifications = [];
+        
+        $data = [
+            'title' => 'Notifications - Shena Companion Welfare Association',
+            'member' => $member,
+            'notifications' => $notifications,
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+        
+        $this->view('member.notifications', $data);
+    }
+    
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationAsRead()
+    {
+        $this->validateCsrf();
+        // TODO: Implement notification mark as read logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $this->validateCsrf();
+        // TODO: Implement mark all as read logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Delete a notification
+     */
+    public function deleteNotification()
+    {
+        $this->validateCsrf();
+        // TODO: Implement notification delete logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Clear all notifications
+     */
+    public function clearAllNotifications()
+    {
+        $this->validateCsrf();
+        // TODO: Implement clear all notifications logic
+        echo json_encode(['success' => true]);
+    }
 }

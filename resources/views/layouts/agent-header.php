@@ -694,7 +694,7 @@
         </div>
 
         <div class="top-bar-actions">
-            <button class="icon-btn" title="Notifications">
+            <button class="icon-btn" onclick="location.href='/agent/notifications'" title="Notifications">
                 <i class="fas fa-bell"></i>
             </button>
             <button class="icon-btn" onclick="location.href='/agent/profile'" title="Settings">

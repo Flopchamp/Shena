@@ -407,6 +407,26 @@
 			margin: 0;
 		}
 
+		.icon-btn {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+			border: none;
+			background: #F9FAFB;
+			color: #6B7280;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: all 0.2s;
+			position: relative;
+		}
+
+		.icon-btn:hover {
+			background: #F3F4F6;
+			color: #7F20B0;
+		}
+
 		.logout-btn {
 			background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
 			color: white;
@@ -532,12 +552,6 @@
 						<span>Settings</span>
 					</a>
 				</li>
-				<li class="sidebar-nav-item">
-					<a href="/member/notification-settings" class="sidebar-nav-link <?php echo ($page ?? '') === 'notifications' ? 'active' : ''; ?>">
-						<i class="fas fa-bell"></i>
-						<span>Notifications</span>
-					</a>
-				</li>
 			</ul>
 			
 			<div class="member-support">
@@ -568,8 +582,9 @@
 							<input type="text" class="search-input" id="globalSearch" placeholder="Search features...">
 						</div>
 						<div class="search-results" id="searchResults" style="display: none;"></div>
-					</div>
-					<button class="logout-btn" onclick="handleLogout()">
+					</div>				<button class="icon-btn" onclick="location.href='/member/notifications'" title="Notifications">
+					<i class="fas fa-bell"></i>
+				</button>					<button class="logout-btn" onclick="handleLogout()">
 						<i class="fas fa-sign-out-alt"></i>
 						Logout
 					</button>
