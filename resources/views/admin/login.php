@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title ?? 'Administrator Sign-In'; ?> - Shena Companion</title>
+    <title><?php echo $title ?? 'Sign In'; ?> - Shena Companion</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
 
         body {
             font-family: 'Manrope', sans-serif;
-            background: #F3F4F6;
+            background: #F5F5F7;
             min-height: 100vh;
             display: flex;
             overflow: hidden;
@@ -25,93 +25,69 @@
         /* Left Panel */
         .left-panel {
             width: 50%;
-            background: linear-gradient(180deg, #6B21A8 0%, #7C3AED 50%, #6B21A8 100%);
-            padding: 60px;
+            background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 50%, #6B21A8 100%);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
             color: white;
             position: relative;
-            overflow: hidden;
+            padding: 60px 40px;
         }
 
-        .left-panel::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 500px;
-            height: 500px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            z-index: 1;
+        .logo-container {
+            text-align: center;
+            margin-bottom: 60px;
         }
 
         .logo-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(10px);
         }
 
         .logo-icon img {
-            width: 100%;
-            height: 100%;
+            width: 70%;
+            height: 70%;
             object-fit: contain;
         }
 
-        .logo-text {
+        .brand-name {
             font-family: 'Playfair Display', serif;
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .logo-text span {
-            font-weight: 300;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
-
-        .hero-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 72px;
+            font-size: 42px;
             font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 24px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
 
-        .hero-description {
-            font-size: 16px;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
-            max-width: 400px;
+        .tagline {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 400;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.95);
         }
 
-        .footer-text {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            position: relative;
-            z-index: 1;
+        .portal-label {
+            position: absolute;
+            bottom: 40px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         /* Right Panel */
         .right-panel {
             width: 50%;
-            background: #F3F4F6;
+            background: #F5F5F7;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -120,34 +96,32 @@
 
         .login-container {
             width: 100%;
-            max-width: 450px;
-        }
-
-        .login-header {
-            margin-bottom: 32px;
+            max-width: 420px;
         }
 
         .login-title {
             font-family: 'Playfair Display', serif;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
             color: #1F2937;
             margin-bottom: 8px;
         }
 
         .login-subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: #9CA3AF;
+            margin-bottom: 32px;
+            line-height: 1.5;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .form-label {
             font-size: 11px;
             font-weight: 700;
-            color: #4B5563;
+            color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 8px;
@@ -163,13 +137,14 @@
 
         .forgot-link {
             font-size: 12px;
-            color: #7C3AED;
+            color: #8B5CF6;
             text-decoration: none;
             font-weight: 600;
+            text-transform: none;
         }
 
         .forgot-link:hover {
-            color: #6B21A8;
+            color: #7C3AED;
         }
 
         .input-wrapper {
@@ -178,19 +153,19 @@
 
         .input-icon {
             position: absolute;
-            left: 16px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #7C3AED;
-            font-size: 16px;
+            color: #9CA3AF;
+            font-size: 14px;
         }
 
         .form-control {
             width: 100%;
-            padding: 14px 16px 14px 48px;
+            padding: 12px 16px 12px 42px;
             border: 1px solid #E5E7EB;
-            border-radius: 12px;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 13px;
             color: #1F2937;
             transition: all 0.2s;
             background: white;
@@ -198,37 +173,42 @@
 
         .form-control::placeholder {
             color: #D1D5DB;
+            font-size: 13px;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: #7C3AED;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
         }
 
-        .toggle-password {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #9CA3AF;
+        .remember-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .remember-wrapper input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
             cursor: pointer;
-            padding: 4px;
-            transition: color 0.2s;
+            accent-color: #8B5CF6;
         }
 
-        .toggle-password:hover {
-            color: #7C3AED;
+        .remember-wrapper label {
+            font-size: 12px;
+            color: #6B7280;
+            cursor: pointer;
+            margin: 0;
         }
 
         .btn-signin {
             width: 100%;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #7C3AED 0%, #6B21A8 100%);
+            padding: 13px 24px;
+            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             color: white;
             font-weight: 600;
             font-size: 14px;
@@ -242,58 +222,43 @@
 
         .btn-signin:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
         }
 
         .btn-signin:active {
             transform: translateY(0);
         }
 
-        .emergency-lockout {
-            margin-top: 32px;
-            text-align: center;
-        }
-
-        .lockout-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #DC2626;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .lockout-link:hover {
-            color: #B91C1C;
-        }
-
-        .footer-links {
+        .security-notice {
             display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-top: 40px;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 24px;
+            padding: 14px;
+            background: #FEF3C7;
+            border-left: 3px solid #F59E0B;
+            border-radius: 6px;
         }
 
-        .footer-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #6B7280;
-            text-decoration: none;
+        .security-notice i {
+            color: #F59E0B;
+            font-size: 14px;
+            margin-top: 2px;
         }
 
-        .footer-link:hover {
-            color: #7C3AED;
+        .security-notice p {
+            font-size: 11px;
+            color: #92400E;
+            margin: 0;
+            line-height: 1.5;
         }
 
         .alert {
             padding: 12px 16px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 20px;
             border: none;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .alert-danger {
@@ -313,12 +278,21 @@
             }
 
             .left-panel {
-                min-height: 40vh;
-                padding: 40px;
+                min-height: 35vh;
+                padding: 40px 20px;
             }
 
-            .hero-title {
-                font-size: 48px;
+            .logo-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .brand-name {
+                font-size: 32px;
+            }
+
+            .tagline {
+                font-size: 18px;
             }
 
             .right-panel {
@@ -330,34 +304,24 @@
 <body>
     <!-- Left Panel -->
     <div class="left-panel">
-        <div class="logo-section">
+        <div class="logo-container">
             <div class="logo-icon">
                 <img src="public/images/shena-logo.png" alt="SHENA Logo">
             </div>
-            <div class="logo-text">
-                SHENA <span>Companion</span>
-            </div>
+            <h1 class="brand-name">SHENA Companion</h1>
+            <p class="tagline">We Are Royal</p>
         </div>
-
-        <div class="hero-content">
-            <h1 class="hero-title">We Are<br>Royal.</h1>
-            <p class="hero-description">
-                Securing the future of administrative management with military-grade encryption and intuitive design.
-            </p>
-        </div>
-
-        <div class="footer-text">
-            © 2024 SHENA Systems  •  v6.0.2 Secure Build
+        
+        <div class="portal-label">
+            STAFF ADMINISTRATION PORTAL
         </div>
     </div>
 
     <!-- Right Panel -->
     <div class="right-panel">
         <div class="login-container">
-            <div class="login-header">
-                <h2 class="login-title">Administrator Sign-In</h2>
-                <p class="login-subtitle">Enter your credentials to access the secure portal.</p>
-            </div>
+            <h2 class="login-title">Sign In</h2>
+            <p class="login-subtitle">Please enter your administrative credential to access the portal.</p>
 
             <?php if (isset($error)): ?>
                 <div class="alert alert-danger" role="alert">
@@ -368,14 +332,14 @@
 
             <form method="POST" action="/admin/login" id="loginForm">
                 <div class="form-group">
-                    <label class="form-label">Admin ID</label>
+                    <label class="form-label">Admin Email / ID</label>
                     <div class="input-wrapper">
                         <i class="fas fa-user input-icon"></i>
                         <input type="text" 
                                class="form-control" 
                                id="username" 
                                name="username" 
-                               placeholder="E.g. ADM-9942-X" 
+                               placeholder="rensheard@neric-2025" 
                                required 
                                autocomplete="username">
                     </div>
@@ -384,7 +348,7 @@
                 <div class="form-group">
                     <div class="password-label-wrapper">
                         <label class="form-label">Password</label>
-                        <a href="/admin/forgot-password" class="forgot-link">Forget?</a>
+                        <a href="/admin/forgot-password" class="forgot-link">Forgot Password?</a>
                     </div>
                     <div class="input-wrapper">
                         <i class="fas fa-lock input-icon"></i>
@@ -392,37 +356,26 @@
                                class="form-control" 
                                id="password" 
                                name="password" 
-                               placeholder="Enter secure password" 
+                               placeholder="••••••••" 
                                required 
                                autocomplete="current-password">
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            <i class="fas fa-eye" id="toggleIcon"></i>
-                        </button>
                     </div>
                 </div>
 
+                <div class="remember-wrapper">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember this device</label>
+                </div>
+
                 <button type="submit" class="btn-signin">
-                    Authenticate & Send 2FA Code
-                    <i class="fas fa-shield-alt"></i>
+                    Sign In to Portal
+                    <i class="fas fa-arrow-right"></i>
                 </button>
             </form>
 
-            <div class="emergency-lockout">
-                <a href="/admin/emergency-lockout" class="lockout-link">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Emergency Lockout
-                </a>
-            </div>
-
-            <div class="footer-links">
-                <a href="/support" class="footer-link">
-                    <i class="fas fa-headset"></i>
-                    Support
-                </a>
-                <a href="/system-status" class="footer-link">
-                    <i class="fas fa-circle-notch"></i>
-                    System Status
-                </a>
+            <div class="security-notice">
+                <i class="fas fa-shield-alt"></i>
+                <p>All logins are authenticated and stored for security. If you suspect unauthorized access or need to report a suspicious system activity, please contact IT.</p>
             </div>
         </div>
     </div>
@@ -432,26 +385,10 @@
         // Auto-focus on username field
         document.getElementById('username').focus();
         
-        // Toggle password visibility
-        function togglePassword() {
-            const passwordField = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
-            }
-        }
-        
         // Add loading state to button on form submit
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.querySelector('.btn-signin');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Authenticating...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
             btn.disabled = true;
         });
     </script>
