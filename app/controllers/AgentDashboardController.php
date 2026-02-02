@@ -306,4 +306,156 @@ class AgentDashboardController extends BaseController
         }
 
         $this->redirect('/agent/profile');
-    }}
+    }
+
+    /**
+     * Display payouts/earnings page
+     */
+    public function payouts()
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        // Get commission statistics
+        $commissions = $this->agentModel->getAgentCommissions($agent['id']);
+        
+        // Calculate totals
+        $totalEarned = 0;
+        $pendingAmount = 0;
+        $currentBalance = 0;
+        
+        foreach ($commissions as $commission) {
+            if ($commission['status'] === 'paid') {
+                $totalEarned += $commission['commission_amount'];
+                $currentBalance += $commission['commission_amount'];
+            } elseif ($commission['status'] === 'pending' || $commission['status'] === 'approved') {
+                $pendingAmount += $commission['commission_amount'];
+            }
+        }
+
+        $data = [
+            'title' => 'Payouts & Earnings - Shena Companion Welfare Association',
+            'agent' => $agent,
+            'commissions' => $commissions,
+            'total_earned' => $totalEarned,
+            'pending_amount' => $pendingAmount,
+            'current_balance' => $currentBalance
+        ];
+
+        $this->view('agent.payouts', $data);
+    }
+
+    /**
+     * Display resources and training materials
+     */
+    public function resources()
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        $data = [
+            'title' => 'Resources - Shena Companion Welfare Association',
+            'agent' => $agent
+        ];
+
+        $this->view('agent.resources', $data);
+    }
+
+    /**
+     * Display claims related to agent's members
+     */
+    public function claims()
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        // Get claims for members registered by this agent
+        // This would need proper implementation with a claims model
+        $claims = [];
+
+        $data = [
+            'title' => 'Claims - Shena Companion Welfare Association',
+            'agent' => $agent,
+            'claims' => $claims
+        ];
+
+        $this->view('agent.claims', $data);
+    }
+
+    /**
+     * Display detailed member information
+     */
+    public function memberDetails($memberId)
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        // Get member details
+        $member = $this->memberModel->getMemberById($memberId);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/agent/members');
+            return;
+        }
+
+        // Verify this member belongs to this agent
+        if ($member['agent_id'] != $agent['id']) {
+            $_SESSION['error'] = 'You do not have access to view this member.';
+            $this->redirect('/agent/members');
+            return;
+        }
+
+        // Get member's dependents/beneficiaries
+        $dependents = $this->memberModel->getMemberDependents($memberId);
+        
+        // Get payment history
+        $paymentHistory = $this->memberModel->getMemberPaymentHistory($memberId);
+
+        $data = [
+            'title' => 'Member Details - Shena Companion Welfare Association',
+            'agent' => $agent,
+            'member' => $member,
+            'dependents' => $dependents,
+            'payment_history' => $paymentHistory
+        ];
+
+        $this->view('agent.member-details', $data);
+    }
+
+    /**
+     * Display support/contact admin page
+     */
+    public function support()
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        $data = [
+            'title' => 'Support - Shena Companion Welfare Association',
+            'agent' => $agent
+        ];
+
+        $this->view('agent.support', $data);
+    }
+}

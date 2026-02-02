@@ -173,6 +173,11 @@ class Router
         $this->addRoute('POST', '/agent/password/update', 'AgentDashboardController@updatePassword');
         $this->addRoute('GET', '/agent/members', 'AgentDashboardController@members');
         $this->addRoute('GET', '/agent/commissions', 'AgentDashboardController@commissions');
+        $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
+        $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
+        $this->addRoute('GET', '/agent/claims', 'AgentDashboardController@claims');
+        $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
+        $this->addRoute('GET', '/agent/support', 'AgentDashboardController@support');
         $this->addRoute('GET', '/agent/register-member', 'AgentDashboardController@registerMember');
         $this->addRoute('POST', '/agent/register-member/store', 'AgentDashboardController@storeRegisterMember');
         
