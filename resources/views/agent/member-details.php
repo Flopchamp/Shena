@@ -2,83 +2,78 @@
 $page = 'members'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample data - replace with actual database queries
-$member = [
-    'id' => 1,
-    'member_number' => 'SH-882910',
-    'first_name' => 'Thabo',
-    'last_name' => 'Mbeki',
-    'initials' => 'TM',
-    'status' => 'ACTIVE',
-    'location' => 'Gauteng, Johannesburg',
-    'joined_date' => 'Jan 2023',
-    'phone' => '+27 82 445 9901',
-    'email' => 't.mbeki@gmail.com',
-    'plan_name' => 'Family Premium Plus',
-    'monthly_premium' => 450.00
-];
+// Data passed from controller: $member, $dependents, $payment_history
+// Generate member initials
+$memberInitials = strtoupper(substr($member['first_name'] ?? 'M', 0, 1) . substr($member['last_name'] ?? 'M', 0, 1));
 
-$dependents = [
-    [
-        'initials' => 'LM',
-        'name' => 'Lerato Mbeki',
-        'relation' => 'Spouse',
-        'id_number' => '850212 5543 081',
-        'age' => 38
-    ],
-    [
-        'initials' => 'SM',
-        'name' => 'Sello Mbeki',
-        'relation' => 'Child',
-        'id_number' => '120815 5122 084',
-        'age' => 11
-    ],
-    [
-        'initials' => 'NM',
-        'name' => 'Neo Mbeki',
-        'relation' => 'Child',
-        'id_number' => '150310 5991 083',
-        'age' => 8
-    ],
-    [
-        'initials' => 'AM',
-        'name' => 'Anna Mbeki',
-        'relation' => 'Parent',
-        'id_number' => '620481 5012 082',
-        'age' => 61
-    ]
-];
+// Format member status for display
+$memberStatus = strtoupper($member['status'] ?? 'active');
+$statusClass = ($memberStatus === 'ACTIVE') ? 'success' : (($memberStatus === 'SUSPENDED') ? 'warning' : 'danger');
 
-$payment_history = [
-    [
-        'month' => 'October 2023',
-        'amount' => 450.00,
-        'status' => 'ON-TIME',
-        'status_class' => 'success',
-        'description' => 'Paid via Debit Order'
-    ],
-    [
-        'month' => 'September 2023',
-        'amount' => 450.00,
-        'status' => 'LATE',
-        'status_class' => 'warning',
-        'description' => 'Paid via EFT'
-    ],
-    [
-        'month' => 'August 2023',
-        'amount' => 450.00,
-        'status' => 'ON-TIME',
-        'status_class' => 'success',
-        'description' => 'Paid via Debit Order'
-    ],
-    [
-        'month' => 'July 2023',
-        'amount' => 450.00,
-        'status' => 'ON-TIME',
-        'status_class' => 'success',
-        'description' => 'Paid via Cash'
-    ]
-];
+// Format joined date
+$joinedDate = isset($member['created_at']) ? date('M Y', strtotime($member['created_at'])) : 'N/A';
+
+// Format location (county or address)
+$location = $member['county'] ?? ($member['address'] ?? 'N/A');
+
+// Get plan details
+$planName = $member['package'] ?? 'Standard Plan';
+$monthlyPremium = 0;
+
+// Set premium based on package
+switch($planName) {
+    case 'basic':
+        $monthlyPremium = 500.00;
+        $displayPlanName = 'Basic Plan';
+        break;
+    case 'standard':
+        $monthlyPremium = 1000.00;
+        $displayPlanName = 'Standard Plan';
+        break;
+    case 'premium':
+        $monthlyPremium = 2000.00;
+        $displayPlanName = 'Premium Plan';
+        break;
+    default:
+        $monthlyPremium = 1000.00;
+        $displayPlanName = ucfirst($planName);
+}
+
+// Process dependents to add initials
+if (!empty($dependents)) {
+    foreach ($dependents as &$dependent) {
+        $firstName = explode(' ', $dependent['first_name'] ?? $dependent['name'] ?? 'D')[0];
+        $lastName = explode(' ', $dependent['last_name'] ?? $dependent['name'] ?? 'D')[1] ?? $dependent['name'] ?? 'D';
+        $dependent['initials'] = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        
+        // Calculate age if date_of_birth is available
+        if (isset($dependent['date_of_birth'])) {
+            $dob = new DateTime($dependent['date_of_birth']);
+            $now = new DateTime();
+            $dependent['age'] = $now->diff($dob)->y;
+        } else {
+            $dependent['age'] = 'N/A';
+        }
+        
+        // Format ID number
+        if (isset($dependent['id_number'])) {
+            $dependent['display_id'] = $dependent['id_number'];
+        } else {
+            $dependent['display_id'] = 'N/A';
+        }
+    }
+}
+
+// Process payment history
+if (!empty($payment_history)) {
+    foreach ($payment_history as &$payment) {
+        $payment['month'] = date('F Y', strtotime($payment['created_at'] ?? $payment['payment_date'] ?? 'now'));
+        $payment['display_amount'] = $payment['amount'] ?? 0;
+        $payment['status_text'] = strtoupper($payment['status'] ?? 'pending');
+        $payment['status_class'] = ($payment['status'] === 'completed' || $payment['status'] === 'success') ? 'success' : 'warning';
+        $payment['description'] = $payment['payment_method'] ?? 'M-Pesa';
+    }
+}
 ?>
 
 <style>
@@ -703,27 +698,27 @@ $payment_history = [
     <!-- Member Header Card -->
     <div class="member-header-card">
         <div class="member-header-content">
-            <div class="member-avatar-large"><?php echo $member['initials']; ?></div>
+            <div class="member-avatar-large"><?php echo $memberInitials; ?></div>
             <div class="member-info-header">
                 <div class="member-name-row">
                     <h1 class="member-name-header"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></h1>
                     <span class="status-badge-header">
                         <i class="fas fa-circle"></i>
-                        <?php echo $member['status']; ?>
+                        <?php echo $memberStatus; ?>
                     </span>
                 </div>
                 <div class="member-meta">
                     <span class="meta-item">
                         <i class="fas fa-id-card"></i>
-                        <?php echo $member['member_number']; ?>
+                        <?php echo htmlspecialchars($member['member_number'] ?? 'N/A'); ?>
                     </span>
                     <span class="meta-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <?php echo $member['location']; ?>
+                        <?php echo htmlspecialchars($location); ?>
                     </span>
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i>
-                        Joined <?php echo $member['joined_date']; ?>
+                        Joined <?php echo $joinedDate; ?>
                     </span>
                 </div>
             </div>
@@ -751,12 +746,19 @@ $payment_history = [
                         <i class="fas fa-users section-icon-details"></i>
                         <div>
                             <h3>Dependent List</h3>
-                            <p class="section-subtitle">4 family members covered under this policy</p>
+                            <p class="section-subtitle"><?php echo count($dependents); ?> family member<?php echo count($dependents) != 1 ? 's' : ''; ?> covered under this policy</p>
                         </div>
                     </div>
                     <button class="btn-add-dependent">Add Dependent</button>
                 </div>
 
+                <?php if (empty($dependents)): ?>
+                    <div class="empty-state" style="padding: 40px 20px; text-align: center;">
+                        <i class="fas fa-users" style="font-size: 48px; color: #D1D5DB; margin-bottom: 16px;"></i>
+                        <h3 style="font-size: 16px; color: #6B7280; margin: 0 0 8px 0;">No Dependents Added</h3>
+                        <p style="font-size: 14px; color: #9CA3AF; margin: 0;">Click "Add Dependent" to add family members</p>
+                    </div>
+                <?php else: ?>
                 <table class="dependent-table">
                     <thead>
                         <tr>
@@ -772,16 +774,17 @@ $payment_history = [
                             <td>
                                 <div class="dependent-info">
                                     <div class="dependent-avatar"><?php echo $dependent['initials']; ?></div>
-                                    <span class="dependent-name"><?php echo htmlspecialchars($dependent['name']); ?></span>
+                                    <span class="dependent-name"><?php echo htmlspecialchars($dependent['first_name'] . ' ' . ($dependent['last_name'] ?? '')); ?></span>
                                 </div>
                             </td>
-                            <td class="dependent-relation"><?php echo $dependent['relation']; ?></td>
-                            <td class="dependent-id"><?php echo $dependent['id_number']; ?></td>
+                            <td class="dependent-relation"><?php echo htmlspecialchars($dependent['relationship'] ?? 'N/A'); ?></td>
+                            <td class="dependent-id"><?php echo htmlspecialchars($dependent['display_id']); ?></td>
                             <td class="dependent-age"><?php echo $dependent['age']; ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <?php endif; ?>
             </div>
 
             <!-- Contact Information & Plan Details -->
@@ -794,14 +797,14 @@ $payment_history = [
                             <i class="fas fa-phone"></i>
                             Mobile Phone
                         </div>
-                        <div class="info-value"><?php echo $member['phone']; ?></div>
+                        <div class="info-value"><?php echo htmlspecialchars($member['phone'] ?? 'N/A'); ?></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">
                             <i class="fas fa-envelope"></i>
                             Email Address
                         </div>
-                        <div class="info-value"><?php echo $member['email']; ?></div>
+                        <div class="info-value"><?php echo htmlspecialchars($member['email'] ?? 'N/A'); ?></div>
                     </div>
                 </div>
 
@@ -817,7 +820,7 @@ $payment_history = [
                             <div class="plan-icon">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <div class="info-value"><?php echo $member['plan_name']; ?></div>
+                            <div class="info-value"><?php echo htmlspecialchars($displayPlanName); ?></div>
                         </div>
                     </div>
                     <div class="info-item">
@@ -825,7 +828,7 @@ $payment_history = [
                             <i class="fas fa-money-bill-wave"></i>
                             Monthly Premium
                         </div>
-                        <div class="info-value">R <?php echo number_format($member['monthly_premium'], 2); ?> / month</div>
+                        <div class="info-value">KES <?php echo number_format($monthlyPremium, 2); ?> / month</div>
                     </div>
                 </div>
             </div>
@@ -840,20 +843,28 @@ $payment_history = [
                     <h3>Payment History</h3>
                 </div>
 
-                <?php foreach ($payment_history as $payment): ?>
-                <div class="payment-item">
-                    <div class="payment-info">
-                        <h6><?php echo $payment['month']; ?></h6>
-                        <p><?php echo $payment['description']; ?></p>
+                <?php if (empty($payment_history)): ?>
+                    <div class="empty-state" style="padding: 40px 20px; text-align: center;">
+                        <i class="fas fa-receipt" style="font-size: 48px; color: #D1D5DB; margin-bottom: 16px;"></i>
+                        <h3 style="font-size: 16px; color: #6B7280; margin: 0 0 8px 0;">No Payment History</h3>
+                        <p style="font-size: 14px; color: #9CA3AF; margin: 0;">Payment records will appear here</p>
                     </div>
-                    <div class="payment-amount-status">
-                        <div class="payment-amount">R <?php echo number_format($payment['amount'], 2); ?></div>
-                        <span class="payment-status-badge <?php echo $payment['status_class']; ?>">
-                            <?php echo $payment['status']; ?>
-                        </span>
+                <?php else: ?>
+                    <?php foreach ($payment_history as $payment): ?>
+                    <div class="payment-item">
+                        <div class="payment-info">
+                            <h6><?php echo htmlspecialchars($payment['month']); ?></h6>
+                            <p>Paid via <?php echo htmlspecialchars($payment['description']); ?></p>
+                        </div>
+                        <div class="payment-amount-status">
+                            <div class="payment-amount">KES <?php echo number_format($payment['display_amount'], 2); ?></div>
+                            <span class="payment-status-badge <?php echo $payment['status_class']; ?>">
+                                <?php echo $payment['status_text']; ?>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
 
                 <div class="download-statement">
                     <button class="btn-download-statement">Download Full Statement</button>

@@ -2,61 +2,47 @@
 $page = 'payouts'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample data - replace with actual database queries
-$agent = [
-    'current_balance' => 8240.50,
-    'pending_commissions' => 2150.00,
-    'total_earned' => 45980.00,
-    'mpesa_number' => '+254 712 345 678'
-];
+// Data passed from controller: $agent, $commissions, $total_earned, $pending_amount, $current_balance
+// Process commissions for display
+if (!empty($commissions)) {
+    foreach ($commissions as &$commission) {
+        // Format date
+        $commission['display_date'] = date('d M Y', strtotime($commission['created_at']));
+        
+        // Format status for display
+        $status = strtoupper($commission['status']);
+        $commission['display_status'] = $status;
+        
+        // Status badge class
+        switch($commission['status']) {
+            case 'paid':
+                $commission['status_class'] = 'paid';
+                break;
+            case 'pending':
+            case 'approved':
+                $commission['status_class'] = 'pending';
+                break;
+            default:
+                $commission['status_class'] = 'pending';
+        }
+        
+        // Format commission type
+        $commission['display_type'] = ucfirst(str_replace('_', ' ', $commission['commission_type']));
+    }
+    unset($commission);
+}
 
-$transactions = [
-    [
-        'date' => '24 Oct 2023',
-        'member_name' => 'Thabo Mbeki',
-        'action' => 'New Registration',
-        'amount' => 450.00,
-        'status' => 'PAID',
-        'status_class' => 'success'
-    ],
-    [
-        'date' => '22 Oct 2023',
-        'member_name' => 'Sipho Khumalo',
-        'action' => 'Monthly Renewal',
-        'amount' => 120.00,
-        'status' => 'PENDING',
-        'status_class' => 'warning'
-    ],
-    [
-        'date' => '20 Oct 2023',
-        'member_name' => 'Patience Ndlovu',
-        'action' => 'Monthly Renewal',
-        'amount' => 120.00,
-        'status' => 'PAID',
-        'status_class' => 'success'
-    ],
-    [
-        'date' => '18 Oct 2023',
-        'member_name' => 'Zama Dlamini',
-        'action' => 'New Registration',
-        'amount' => 450.00,
-        'status' => 'PENDING',
-        'status_class' => 'warning'
-    ]
-];
+// Get agent phone for M-Pesa
+$mpesa_number = $agent['phone'] ?? '+254 700 000 000';
 
-$recent_requests = [
-    [
-        'amount' => 2400.00,
-        'date' => '15 Oct 2023',
-        'status' => 'SUCCESS'
-    ],
-    [
-        'amount' => 1500.00,
-        'date' => '08 Oct 2023',
-        'status' => 'SUCCESS'
-    ]
-];
+// Get recent payout requests (filter paid commissions from last 2 months)
+$recent_requests = [];
+if (!empty($commissions)) {
+    $paid_commissions = array_filter($commissions, function($c) {
+        return $c['status'] === 'paid' && $c['paid_at'];
+    });
+    $recent_requests = array_slice($paid_commissions, 0, 3);
+}
 ?>
 
 <style>
@@ -632,7 +618,7 @@ $recent_requests = [
                 </div>
                 <span class="stat-label-payout">Current Balance</span>
             </div>
-            <div class="stat-value-payout">R <?php echo number_format($agent['current_balance'], 2); ?></div>
+            <div class="stat-value-payout">KES <?php echo number_format($current_balance ?? 0, 2); ?></div>
             <div class="stat-description-payout">Available for withdrawal</div>
         </div>
 
@@ -644,7 +630,7 @@ $recent_requests = [
                 </div>
                 <span class="stat-label-payout">Pending Commissions</span>
             </div>
-            <div class="stat-value-payout">R <?php echo number_format($agent['pending_commissions'], 2); ?></div>
+            <div class="stat-value-payout">KES <?php echo number_format($pending_amount ?? 0, 2); ?></div>
             <div class="stat-description-payout">Awaiting monthly settlement</div>
         </div>
 
@@ -656,7 +642,7 @@ $recent_requests = [
                 </div>
                 <span class="stat-label-payout">Total Earned to Date</span>
             </div>
-            <div class="stat-value-payout">R <?php echo number_format($agent['total_earned'], 2); ?></div>
+            <div class="stat-value-payout">KES <?php echo number_format($total_earned ?? 0, 2); ?></div>
             <div class="stat-description-payout">Lifetime performance</div>
         </div>
     </div>
@@ -682,36 +668,45 @@ $recent_requests = [
                 </button>
             </div>
 
+            <?php if (empty($commissions)): ?>
+                <div style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-money-bill-wave" style="font-size: 64px; color: #D1D5DB; margin-bottom: 16px;"></i>
+                    <h3 style="font-size: 18px; color: #6B7280; margin: 0 0 8px 0;">No Commissions Yet</h3>
+                    <p style="font-size: 14px; color: #9CA3AF; margin: 0;">Commission records will appear here once members are registered</p>
+                </div>
+            <?php else: ?>
             <table class="transactions-table">
                 <thead>
                     <tr>
                         <th>DATE</th>
-                        <th>MEMBER NAME</th>
-                        <th>ACTION</th>
+                        <th>MEMBER ID</th>
+                        <th>TYPE</th>
                         <th>AMOUNT</th>
                         <th>STATUS</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($transactions as $transaction): ?>
+                    <?php foreach ($commissions as $commission): ?>
                     <tr>
-                        <td class="transaction-date"><?php echo $transaction['date']; ?></td>
-                        <td class="transaction-member"><?php echo htmlspecialchars($transaction['member_name']); ?></td>
-                        <td class="transaction-action"><?php echo htmlspecialchars($transaction['action']); ?></td>
-                        <td class="transaction-amount">R <?php echo number_format($transaction['amount'], 2); ?></td>
+                        <td class="transaction-date"><?php echo htmlspecialchars($commission['display_date']); ?></td>
+                        <td class="transaction-member"><?php echo htmlspecialchars($commission['member_id'] ?? 'N/A'); ?></td>
+                        <td class="transaction-action"><?php echo htmlspecialchars($commission['display_type']); ?></td>
+                        <td class="transaction-amount">KES <?php echo number_format($commission['commission_amount'], 2); ?></td>
                         <td>
-                            <span class="transaction-status <?php echo $transaction['status_class']; ?>">
+                            <span class="transaction-status <?php echo $commission['status_class']; ?>">
                                 <i class="fas fa-circle"></i>
-                                <?php echo $transaction['status']; ?>
+                                <?php echo $commission['display_status']; ?>
                             </span>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
 
+            <?php if (!empty($commissions)): ?>
             <div class="transactions-footer">
-                <div class="pagination-info-payout">Showing last 20 transactions</div>
+                <div class="pagination-info-payout">Showing <?php echo count($commissions); ?> commission<?php echo count($commissions) != 1 ? 's' : ''; ?></div>
                 <div class="pagination-controls-payout">
                     <button class="page-btn-payout">
                         <i class="fas fa-chevron-left"></i>
@@ -723,6 +718,7 @@ $recent_requests = [
                     </button>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <!-- Withdrawal Panel -->
@@ -736,7 +732,7 @@ $recent_requests = [
 
             <div class="withdrawal-balance">
                 <div class="balance-label">Available to Withdraw</div>
-                <div class="balance-amount">R <?php echo number_format($agent['current_balance'], 2); ?></div>
+                <div class="balance-amount">KES <?php echo number_format($current_balance ?? 0, 2); ?></div>
             </div>
 
             <div class="transfer-method-section">
@@ -746,7 +742,7 @@ $recent_requests = [
                         <div class="mpesa-icon">M</div>
                         <div class="transfer-method-details">
                             <h6>M-Pesa Transfer</h6>
-                            <p><?php echo htmlspecialchars($agent['mpesa_number']); ?></p>
+                            <p><?php echo htmlspecialchars($mpesa_number); ?></p>
                         </div>
                     </div>
                     <button class="change-btn">Change</button>
@@ -754,9 +750,9 @@ $recent_requests = [
             </div>
 
             <div class="amount-input-section">
-                <div class="amount-label">Enter Amount (ZAR)</div>
+                <div class="amount-label">Enter Amount (KES)</div>
                 <div class="amount-input-wrapper">
-                    <span class="currency-symbol">R</span>
+                    <span class="currency-symbol">KES</span>
                     <input type="number" class="amount-input" value="5000" min="1" step="0.01">
                 </div>
             </div>
@@ -766,18 +762,25 @@ $recent_requests = [
             </button>
 
             <div class="recent-requests-section">
-                <div class="recent-requests-header">Recent Requests</div>
-                <?php foreach ($recent_requests as $request): ?>
-                <div class="request-item">
-                    <div>
-                        <div class="request-amount">R <?php echo number_format($request['amount'], 2); ?></div>
-                        <div class="request-date"><?php echo $request['date']; ?></div>
+                <div class="recent-requests-header">Recent Payouts</div>
+                <?php if (empty($recent_requests)): ?>
+                    <div style="text-align: center; padding: 20px; color: #9CA3AF; font-size: 13px;">
+                        <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+                        No recent payouts
                     </div>
-                    <span class="request-status">
-                        <?php echo $request['status']; ?>
-                    </span>
-                </div>
-                <?php endforeach; ?>
+                <?php else: ?>
+                    <?php foreach ($recent_requests as $request): ?>
+                    <div class="request-item">
+                        <div>
+                            <div class="request-amount">KES <?php echo number_format($request['commission_amount'], 2); ?></div>
+                            <div class="request-date"><?php echo date('d M Y', strtotime($request['paid_at'])); ?></div>
+                        </div>
+                        <span class="request-status">
+                            PAID
+                        </span>
+                    </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

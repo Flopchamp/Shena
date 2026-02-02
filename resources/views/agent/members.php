@@ -2,69 +2,67 @@
 $page = 'members'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample data - replace with actual database queries
-$members = [
-    [
-        'initials' => 'TM',
-        'name' => 'Thabo Mbeki',
-        'role' => 'Primary Member',
-        'member_number' => 'SH-882910',
-        'policy_plan' => 'Family Premium Plus',
-        'join_date' => '12 Jan 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ],
-    [
-        'initials' => 'PN',
-        'name' => 'Patience Ndlovu',
-        'role' => 'Solo Member',
-        'member_number' => 'SH-992123',
-        'policy_plan' => 'Standard Solo',
-        'join_date' => '05 Sep 2023',
-        'status' => 'MATURITY',
-        'status_class' => 'warning'
-    ],
-    [
-        'initials' => 'JM',
-        'name' => 'John Molefe',
-        'role' => 'Manager Plan',
-        'member_number' => 'SH-771223',
-        'policy_plan' => 'Senior Care',
-        'join_date' => '22 Oct 2022',
-        'status' => 'DEFAULTED',
-        'status_class' => 'danger'
-    ],
-    [
-        'initials' => 'SK',
-        'name' => 'Sipho Khumalo',
-        'role' => 'Primary Member',
-        'member_number' => 'SH-881290',
-        'policy_plan' => 'Family Premium',
-        'join_date' => '15 Aug 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ],
-    [
-        'initials' => 'MN',
-        'name' => 'Mandla Nkosi',
-        'role' => 'Primary Member',
-        'member_number' => 'SH-772345',
-        'policy_plan' => 'Family Premium Plus',
-        'join_date' => '03 Mar 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ],
-    [
-        'initials' => 'LK',
-        'name' => 'Lerato Khumalo',
-        'role' => 'Solo Member',
-        'member_number' => 'SH-883456',
-        'policy_plan' => 'Standard Solo',
-        'join_date' => '18 Jun 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ]
-];
+// Process members data from controller
+if (!empty($members)) {
+    foreach ($members as &$member) {
+        // Generate initials
+        $firstName = $member['first_name'] ?? 'M';
+        $lastName = $member['last_name'] ?? 'M';
+        $member['initials'] = strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 1));
+        
+        // Full name
+        $member['full_name'] = trim($firstName . ' ' . $lastName);
+        
+        // Format status
+        $status = strtoupper($member['status'] ?? 'pending');
+        $member['display_status'] = $status;
+        
+        // Status badge class
+        switch($status) {
+            case 'ACTIVE':
+                $member['status_class'] = 'active';
+                break;
+            case 'PENDING':
+            case 'MATURITY':
+                $member['status_class'] = 'maturity';
+                break;
+            case 'SUSPENDED':
+            case 'DEFAULTED':
+            case 'INACTIVE':
+                $member['status_class'] = 'defaulted';
+                break;
+            default:
+                $member['status_class'] = 'maturity';
+        }
+        
+        // Format join date
+        if (isset($member['created_at'])) {
+            $member['join_date'] = date('d M Y', strtotime($member['created_at']));
+        } else {
+            $member['join_date'] = 'N/A';
+        }
+        
+        // Format policy plan
+        $package = $member['package'] ?? 'standard';
+        switch($package) {
+            case 'basic':
+                $member['policy_plan'] = 'Basic Plan';
+                break;
+            case 'standard':
+                $member['policy_plan'] = 'Standard Plan';
+                break;
+            case 'premium':
+                $member['policy_plan'] = 'Premium Plan';
+                break;
+            default:
+                $member['policy_plan'] = ucfirst($package) . ' Plan';
+        }
+        
+        // Role/type
+        $member['role'] = 'Primary Member';
+    }
+    unset($member); // Break reference
+}
 ?>
 
 <style>
@@ -286,12 +284,15 @@ $members = [
     color: #059669;
 }
 
-.status-badge.maturity {
+.status-badge.maturity,
+.status-badge.pending {
     background: #FEF3C7;
     color: #D97706;
 }
 
-.status-badge.defaulted {
+.status-badge.defaulted,
+.status-badge.suspended,
+.status-badge.inactive {
     background: #FEE2E2;
     color: #DC2626;
 }
@@ -497,28 +498,28 @@ $members = [
             </thead>
             <tbody>
                 <?php foreach ($members as $member): ?>
-                <tr onclick="location.href='/agent/member-details/<?php echo $member['member_number']; ?>'">
+                <tr onclick="location.href='/agent/member-details/<?php echo $member['id']; ?>'">
                     <td>
                         <div class="member-info">
-                            <div class="member-avatar"><?php echo $member['initials']; ?></div>
+                            <div class="member-avatar"><?php echo htmlspecialchars($member['initials']); ?></div>
                             <div class="member-details">
-                                <h6><?php echo htmlspecialchars($member['name']); ?></h6>
+                                <h6><?php echo htmlspecialchars($member['full_name']); ?></h6>
                                 <p><?php echo htmlspecialchars($member['role']); ?></p>
                             </div>
                         </div>
                     </td>
-                    <td class="member-number"><?php echo htmlspecialchars($member['member_number']); ?></td>
+                    <td class="member-number"><?php echo htmlspecialchars($member['member_number'] ?? 'N/A'); ?></td>
                     <td class="policy-plan"><?php echo htmlspecialchars($member['policy_plan']); ?></td>
                     <td class="join-date"><?php echo htmlspecialchars($member['join_date']); ?></td>
                     <td>
                         <span class="status-badge <?php echo $member['status_class']; ?>">
                             <i class="fas fa-circle"></i>
-                            <?php echo $member['status']; ?>
+                            <?php echo htmlspecialchars($member['display_status']); ?>
                         </span>
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="action-btn" title="View Details" onclick="event.stopPropagation(); location.href='/agent/member-details/<?php echo $member['member_number']; ?>'">
+                            <button class="action-btn" title="View Details" onclick="event.stopPropagation(); location.href='/agent/member-details/<?php echo $member['id']; ?>'">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="action-btn" title="More Actions" onclick="event.stopPropagation();">
