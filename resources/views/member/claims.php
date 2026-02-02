@@ -1,43 +1,13 @@
-
 <?php
 $page = 'claims';
-include VIEWS_PATH . '/layouts/member-header.php';
+include __DIR__ . '/../layouts/member-header.php';
 
 // Sample data for demonstration
 $claims = $claims ?? [];
 $activeClaims = array_filter($claims, fn($c) => $c['status'] !== 'approved' && $c['status'] !== 'rejected');
 $pastClaims = array_filter($claims, fn($c) => $c['status'] === 'approved' || $c['status'] === 'rejected');
 
-// Sample active claim for demonstration
-if (empty($activeClaims)) {
-    $activeClaims = [[
-        'id' => 'CLM-2023-084',
-        'deceased_name' => 'Late Mary Doe',
-        'relationship' => 'Spouse',
-        'estimated_payout' => 5000,
-        'status' => 'in_progress',
-        'submitted_date' => '2022-09-10',
-        'current_step' => 'document_review',
-        'steps' => [
-            ['name' => 'Submitted', 'date' => 'Sep 10, 2022', 'status' => 'completed'],
-            ['name' => 'Document Review', 'status' => 'processing'],
-            ['name' => 'Approved', 'status' => 'pending'],
-            ['name' => 'Logistics Dispatched', 'status' => 'pending']
-        ],
-        'next_step' => 'Our team is currently verifying the Mortuary Invoice. This usually takes 24-48 hours. No action is required from you at this moment.'
-    ]];
-}
-
-if (empty($pastClaims)) {
-    $pastClaims = [[
-        'id' => 'CLM-2022-012',
-        'deceased_name' => 'Late Thomas Doe',
-        'relationship' => 'Parent',
-        'payout' => 3000,
-        'status' => 'approved',
-        'paid_date' => 'Jan 15, 2022'
-    ]];
-}
+// No mock data - use real data from controller
 ?>
 
 <style>
@@ -604,7 +574,7 @@ main {
                     </div>
                     <div class="claim-meta">
                         <p>ESTIMATED PAYOUT</p>
-                        <h3>$<?php echo number_format($claim['estimated_payout'] ?? 0); ?></h3>
+                        <h3>KES <?php echo number_format($claim['estimated_payout'] ?? 0, 2); ?></h3>
                         <span class="status-badge">IN PROGRESS</span>
                     </div>
                 </div>
@@ -655,7 +625,7 @@ main {
                         <h4><?php echo htmlspecialchars($claim['deceased_name'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($claim['relationship'] ?? 'N/A'); ?>)</h4>
                         <p>Claim ID: <?php echo htmlspecialchars($claim['id']); ?> • Paid <?php echo htmlspecialchars($claim['paid_date'] ?? 'N/A'); ?></p>
                     </div>
-                    <div class="past-claim-amount">$<?php echo number_format($claim['payout'] ?? 0); ?></div>
+                    <div class="past-claim-amount">KES <?php echo number_format($claim['payout'] ?? 0, 2); ?></div>
                     <div class="past-claim-arrow">
                         <i class="fas fa-chevron-right"></i>
                     </div>
@@ -782,4 +752,4 @@ main {
     </div>
 </div>
 
-<?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>

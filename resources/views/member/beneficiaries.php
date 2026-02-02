@@ -1,6 +1,7 @@
-
-<?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
 <?php 
+$page = 'beneficiaries';
+include __DIR__ . '/../layouts/member-header.php';
+
 $beneficiaries = $beneficiaries ?? [];
 $maxBeneficiaries = 5;
 $availableSlots = $maxBeneficiaries - count($beneficiaries);
@@ -646,4 +647,4 @@ function editBeneficiary(id) {
 }
 </script>
 
-<?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>

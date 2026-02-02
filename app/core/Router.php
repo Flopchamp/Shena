@@ -68,6 +68,13 @@ class Router
         $this->addRoute('GET', '/member/notification-settings', 'MemberController@viewNotificationSettings');
         $this->addRoute('POST', '/member/notification-settings', 'MemberController@updateNotificationSettings');
         
+        // Member Notifications Page
+        $this->addRoute('GET', '/member/notifications', 'MemberController@notifications');
+        $this->addRoute('POST', '/member/notifications/mark-read', 'MemberController@markNotificationAsRead');
+        $this->addRoute('POST', '/member/notifications/mark-all-read', 'MemberController@markAllNotificationsAsRead');
+        $this->addRoute('POST', '/member/notifications/delete', 'MemberController@deleteNotification');
+        $this->addRoute('POST', '/member/notifications/clear-all', 'MemberController@clearAllNotifications');
+        
         // Admin Routes (Super Admin & Manager)
         $this->addRoute('GET', '/admin-login', 'AdminController@showLogin');
         $this->addRoute('POST', '/admin-login', 'AdminController@login');
@@ -175,11 +182,17 @@ class Router
         $this->addRoute('GET', '/agent/commissions', 'AgentDashboardController@commissions');
         $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
-        $this->addRoute('GET', '/agent/claims', 'AgentDashboardController@claims');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
         $this->addRoute('GET', '/agent/support', 'AgentDashboardController@support');
         $this->addRoute('GET', '/agent/register-member', 'AgentDashboardController@registerMember');
         $this->addRoute('POST', '/agent/register-member/store', 'AgentDashboardController@storeRegisterMember');
+        
+        // Agent Notifications Page
+        $this->addRoute('GET', '/agent/notifications', 'AgentDashboardController@notifications');
+        $this->addRoute('POST', '/agent/notifications/mark-read', 'AgentDashboardController@markNotificationAsRead');
+        $this->addRoute('POST', '/agent/notifications/mark-all-read', 'AgentDashboardController@markAllNotificationsAsRead');
+        $this->addRoute('POST', '/agent/notifications/delete', 'AgentDashboardController@deleteNotification');
+        $this->addRoute('POST', '/agent/notifications/clear-all', 'AgentDashboardController@clearAllNotifications');
         
         // Bulk SMS Routes (Admin & Manager)
         $this->addRoute('GET', '/admin/bulk-sms', 'BulkSmsController@index');

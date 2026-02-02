@@ -1,7 +1,6 @@
-
 <?php
 $page = 'payments';
-include VIEWS_PATH . '/layouts/member-header.php';
+include __DIR__ . '/../layouts/member-header.php';
 
 // Sample data
 $payments = $payments ?? [];
@@ -25,64 +24,94 @@ if (empty($payments)) {
 main {
     padding: 0 !important;
     margin: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .payments-container {
-    padding: 30px 30px 40px 25px;
-    background: #F8F9FC;
+    padding: 30px;
+    background: #F8F9FA;
+    min-height: calc(100vh - 80px);
     max-width: 100%;
-    margin: 0;
+    overflow-x: hidden;
 }
 
 .page-header {
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
 .page-header h1 {
-    font-size: 1.75rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
     font-weight: 700;
     color: #1F2937;
     margin: 0 0 4px 0;
 }
 
 .page-header p {
-    font-size: 0.9rem;
+    font-size: 14px;
     color: #6B7280;
     margin: 0;
 }
 
 .main-grid {
     display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 30px;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 24px;
     align-items: start;
+    max-width: 100%;
+}
+
+@media (max-width: 1400px) {
+    .main-grid {
+        grid-template-columns: minmax(0, 1fr) 300px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar-right {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .payments-container {
+        padding: 20px 15px;
+    }
 }
 
 .total-contributions-card {
     background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
-    border-radius: 20px;
-    padding: 35px 40px;
+    border-radius: 16px;
+    padding: 32px;
     color: white;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.2);
 }
 
 .total-contributions-card::after {
-    content: 'Ksh';
+    content: 'KES';
     position: absolute;
-    right: 40px;
+    right: 32px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 150px;
+    font-size: 120px;
     font-weight: 700;
     opacity: 0.05;
 }
 
 .total-contributions-card h4 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
     margin: 0 0 12px 0;
     color: rgba(255, 255, 255, 0.8);
     position: relative;
@@ -90,7 +119,8 @@ main {
 }
 
 .total-contributions-card h2 {
-    font-size: 2.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
     font-weight: 700;
     margin: 0 0 12px 0;
     position: relative;
@@ -98,7 +128,7 @@ main {
 }
 
 .total-contributions-card p {
-    font-size: 0.9rem;
+    font-size: 14px;
     margin: 0;
     color: rgba(255, 255, 255, 0.9);
     position: relative;
@@ -109,23 +139,24 @@ main {
 }
 
 .total-contributions-card p i {
-    font-size: 0.8rem;
+    font-size: 12px;
 }
 
 .membership-card {
     background: white;
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    margin-bottom: 30px;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
 }
 
 .membership-card h4 {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 1.5px;
-    color: #9CA3AF;
-    margin: 0 0 15px 0;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin: 0 0 12px 0;
 }
 
 .membership-status {
@@ -135,46 +166,50 @@ main {
 }
 
 .membership-status h2 {
-    font-size: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
     font-weight: 700;
     color: #1F2937;
     margin: 0;
 }
 
 .status-badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: #D1FAE5;
     color: #059669;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .status-badge i {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     background: #059669;
     border-radius: 50%;
 }
 
 .verification-icon {
-    color: #7F3D9E;
-    font-size: 2rem;
-    margin-top: 10px;
+    color: #7F20B0;
+    font-size: 24px;
+    margin-top: 12px;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 24px;
 }
 
 .section-header h3 {
-    font-size: 1.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
     font-weight: 700;
     color: #1F2937;
     margin: 0;
@@ -182,7 +217,7 @@ main {
 
 .section-controls {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     align-items: center;
 }
 
@@ -190,35 +225,43 @@ main {
     background: white;
     border: 1px solid #E5E7EB;
     padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 500;
-    color: #374151;
+    color: #4B5563;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.3s;
+    transition: all 0.2s;
 }
 
 .filter-btn:hover, .year-selector:hover {
-    border-color: #7F3D9E;
-    color: #7F3D9E;
+    border-color: #7F20B0;
+    color: #7F20B0;
 }
 
 .year-selector i {
-    color: #7F3D9E;
+    color: #7F20B0;
 }
 
 .payments-table {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+}
+
+.payments-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
 }
 
 .payments-table table {
     width: 100%;
+    min-width: 700px;
     border-collapse: collapse;
 }
 
@@ -227,17 +270,18 @@ main {
 }
 
 .payments-table thead th {
-    padding: 18px 20px;
+    padding: 16px 20px;
     text-align: left;
-    font-size: 0.85rem;
+    font-size: 11px;
     font-weight: 700;
-    color: #7F3D9E;
-    letter-spacing: 0.5px;
+    color: #6B7280;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .payments-table tbody tr {
     border-bottom: 1px solid #F3F4F6;
-    transition: all 0.3s;
+    transition: background 0.2s;
 }
 
 .payments-table tbody tr:hover {
@@ -249,9 +293,10 @@ main {
 }
 
 .payments-table tbody td {
-    padding: 20px;
-    font-size: 0.9rem;
+    padding: 16px 20px;
+    font-size: 14px;
     color: #1F2937;
+    white-space: nowrap;
 }
 
 .payments-table tbody td:first-child {
@@ -259,13 +304,24 @@ main {
     color: #6B7280;
 }
 
+@media (max-width: 768px) {
+    .payments-table thead th,
+    .payments-table tbody td {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+}
+
 .payment-status {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .payment-status.success {
@@ -288,75 +344,93 @@ main {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    position: sticky;
-    top: 20px;
 }
 
 .quick-pay-card {
-    background: white;
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 16px rgba(127, 32, 176, 0.2);
+    color: white;
 }
 
 .quick-pay-card h3 {
-    font-size: 1.1rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
     font-weight: 700;
-    color: #1F2937;
-    margin: 0 0 8px 0;
+    color: white;
+    margin: 0 0 20px 0;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .quick-pay-card h3 i {
-    color: #7F3D9E;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 22px;
 }
 
 .paybill-info {
-    margin: 25px 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .paybill-info p {
-    font-size: 0.75rem;
-    color: #6B7280;
-    letter-spacing: 1px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .paybill-info h2 {
-    font-size: 1.8rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
     font-weight: 700;
-    color: #1F2937;
-    margin: 0 0 20px 0;
+    color: white;
+    margin: 0;
+    letter-spacing: 2px;
 }
 
 .account-ref {
-    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .account-ref p {
-    font-size: 0.75rem;
-    color: #6B7280;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 6px 0;
+    text-transform: uppercase;
     letter-spacing: 1px;
-    margin: 0 0 8px 0;
 }
 
 .account-ref h3 {
-    font-size: 1.3rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 24px;
     font-weight: 700;
-    color: #7F3D9E;
+    color: white;
     margin: 0;
+    letter-spacing: 1px;
 }
 
 .how-to-pay-btn {
-    background: #7F3D9E;
-    color: white;
+    background: white;
+    color: #7F20B0;
     border: none;
-    padding: 14px 0;
-    border-radius: 12px;
+    padding: 14px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 13px;
     cursor: pointer;
     width: 100%;
     transition: all 0.3s;
@@ -364,22 +438,53 @@ main {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .how-to-pay-btn:hover {
-    background: #6B2D8A;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.how-to-pay-btn i {
+    font-size: 15px;
+}
+
+.btn-make-payment {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-make-payment:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
 }
 
 .statements-card {
     background: white;
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #F3F4F6;
 }
 
 .statements-card h3 {
-    font-size: 1.1rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
     font-weight: 700;
     color: #1F2937;
     margin: 0 0 12px 0;
@@ -389,24 +494,54 @@ main {
 }
 
 .statements-card h3 i {
-    color: #F59E0B;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
 }
 
 .statements-card p {
-    font-size: 0.85rem;
+    font-size: 14px;
     color: #6B7280;
-    line-height: 1.6;
-    margin: 0 0 20px 0;
+    line-height: 1.7;
+    margin: 0 0 24px 0;
+}
+
+.btn-download-statement {
+    background: white;
+    color: #6B7280;
+    border: 1px solid #E5E7EB;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-download-statement:hover {
+    background: #F9FAFB;
+    border-color: #D1D5DB;
 }
 
 .download-btn {
-    background: white;
-    color: #7F3D9E;
-    border: 2px solid #7F3D9E;
-    padding: 12px 0;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 13px;
     cursor: pointer;
     width: 100%;
     transition: all 0.3s;
@@ -414,10 +549,18 @@ main {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .download-btn:hover {
-    background: #F3E8FF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+}
+
+.download-btn i {
+    font-size: 15px;
 }
 
 @media (max-width: 1024px) {
@@ -432,26 +575,40 @@ main {
 
 /* Payment Modal Styling */
 #paymentModal .modal-content {
-    border-radius: 20px;
+    border-radius: 16px;
     border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 #paymentModal .modal-header {
-    background: white;
-    padding: 25px 30px;
-    border-bottom: 1px solid #E5E7EB;
-    border-radius: 20px 20px 0 0;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    padding: 24px 30px;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
 }
 
 #paymentModal .modal-header .modal-title {
-    font-size: 1.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
     font-weight: 700;
-    color: #1F2937;
+    color: white;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#paymentModal .modal-header .modal-title i {
+    font-size: 20px;
 }
 
 #paymentModal .modal-header .btn-close {
-    font-size: 1.2rem;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#paymentModal .modal-header .btn-close:hover {
+    opacity: 1;
 }
 
 #paymentModal .modal-body {
@@ -459,80 +616,82 @@ main {
 }
 
 #paymentModal .alert-info {
-    background: #E0F2FE;
-    border: none;
-    border-radius: 12px;
-    padding: 15px 20px;
-    margin-bottom: 25px;
+    background: #EFF6FF;
+    border: 1px solid #DBEAFE;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     gap: 12px;
+    font-size: 13px;
+    color: #1E40AF;
 }
 
 #paymentModal .alert-info i {
-    color: #0284C7;
-    font-size: 1.2rem;
+    color: #3B82F6;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 #paymentModal .payment-method-label {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: #1F2937;
     margin-bottom: 12px;
     display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .payment-method-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0;
-    margin-bottom: 30px;
-    border-radius: 8px;
-    overflow: hidden;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
 .payment-method-tab {
     padding: 14px 20px;
-    border: 1px solid #E5E7EB;
+    border: 2px solid #E5E7EB;
     background: white;
     color: #6B7280;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.3s;
-    border-right: none;
-}
-
-.payment-method-tab:last-child {
-    border-right: 1px solid #E5E7EB;
+    transition: all 0.2s;
+    border-radius: 8px;
 }
 
 .payment-method-tab.active {
-    background: #2563EB;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
     color: white;
-    border-color: #2563EB;
+    border-color: #7F20B0;
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.2);
 }
 
 .payment-method-tab:not(.active):hover {
     background: #F9FAFB;
+    border-color: #D1D5DB;
 }
 
 .payment-section-title {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: #1F2937;
     margin-bottom: 12px;
 }
 
 .payment-section-title i {
-    color: #2563EB;
+    color: #7F20B0;
+    font-size: 18px;
 }
 
 .payment-description {
@@ -542,7 +701,7 @@ main {
 }
 
 #paymentModal .form-label {
-    font-size: 0.9rem;
+    font-size: 13px;
     font-weight: 600;
     color: #374151;
     margin-bottom: 8px;
@@ -550,17 +709,18 @@ main {
 
 #paymentModal .form-control,
 #paymentModal .form-select {
-    border: 1.5px solid #E5E7EB;
+    border: 1px solid #E5E7EB;
     border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    transition: all 0.3s;
+    padding: 10px 14px;
+    font-size: 14px;
+    transition: all 0.2s;
 }
 
 #paymentModal .form-control:focus,
 #paymentModal .form-select:focus {
-    border-color: #2563EB;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #7F20B0;
+    box-shadow: 0 0 0 3px rgba(127, 32, 176, 0.1);
+    outline: none;
 }
 
 #paymentModal .form-control::placeholder {
@@ -568,40 +728,40 @@ main {
 }
 
 #paymentModal .text-muted {
-    font-size: 0.8rem;
+    font-size: 12px;
     color: #6B7280;
-    margin-top: 6px;
+    margin-top: 4px;
     display: block;
 }
 
 #paymentModal .alert-warning {
     background: #FEF3C7;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin: 20px 0;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
     display: flex;
     align-items: flex-start;
     gap: 12px;
 }
 
 #paymentModal .alert-warning i {
-    color: #D97706;
-    font-size: 1rem;
+    color: #F59E0B;
+    font-size: 16px;
     margin-top: 2px;
 }
 
 .btn-send-payment {
-    background: #2563EB;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
     color: white;
     border: none;
-    padding: 14px 0;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.95rem;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
     width: 100%;
-    transition: all 0.3s;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -609,89 +769,177 @@ main {
 }
 
 .btn-send-payment:hover {
-    background: #1D4ED8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
 }
 
 .btn-send-payment:disabled {
-    background: #93C5FD;
+    background: #D1D5DB;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 #paymentModal .modal-footer {
     padding: 20px 30px;
     border-top: 1px solid #E5E7EB;
-    border-radius: 0 0 20px 20px;
+    border-radius: 0 0 16px 16px;
+    background: #F9FAFB;
 }
 
 #paymentModal .modal-footer .btn {
-    padding: 12px 30px;
-    border-radius: 10px;
+    padding: 10px 24px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 14px;
 }
 
 #paymentModal .modal-footer .btn-secondary {
-    background: #F3F4F6;
-    color: #374151;
-    border: none;
+    background: white;
+    color: #6B7280;
+    border: 1px solid #E5E7EB;
 }
 
 #paymentModal .modal-footer .btn-secondary:hover {
-    background: #E5E7EB;
+    background: #F3F4F6;
+    border-color: #D1D5DB;
 }
 
 .paybill-instructions {
-    background: #F9FAFB;
+    background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+    border: 2px solid #BAE6FD;
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px;
+    margin: 20px 0;
+}
+
+.paybill-detail {
     margin-bottom: 20px;
 }
 
-.paybill-instructions p {
-    margin: 0 0 8px 0;
-    font-size: 0.9rem;
+.paybill-detail:last-child {
+    margin-bottom: 0;
 }
 
-.paybill-instructions strong {
-    color: #1F2937;
-}
-
-.paybill-instructions .paybill-number {
-    color: #2563EB;
-    font-size: 1.3rem;
-    font-weight: 700;
-}
-
-.paybill-instructions .account-number {
-    color: #059669;
-    font-size: 1.1rem;
+.paybill-detail label {
+    display: block;
+    font-size: 11px;
     font-weight: 600;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.paybill-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+}
+
+.paybill-value.paybill-number {
+    color: #2563EB;
+}
+
+.paybill-value.account-number {
+    color: #059669;
+}
+
+.paybill-value.amount-value {
+    color: #DC2626;
 }
 
 .payment-steps {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
     margin: 20px 0;
 }
 
 .payment-steps h6 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: #1F2937;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-steps h6 i {
+    color: #7F20B0;
 }
 
 .payment-steps ol {
-    padding-left: 20px;
+    padding-left: 24px;
+    margin: 0;
 }
 
 .payment-steps ol li {
-    font-size: 0.85rem;
+    font-size: 14px;
     color: #4B5563;
-    margin-bottom: 8px;
-    line-height: 1.6;
+    margin-bottom: 12px;
+    line-height: 1.7;
+    padding-left: 8px;
+}
+
+.payment-steps ol li:last-child {
+    margin-bottom: 0;
 }
 
 .payment-steps ol li strong {
     color: #1F2937;
+    font-weight: 600;
+}
+
+.payment-steps .highlight-blue {
+    color: #2563EB;
+    background: #EFF6FF;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.payment-steps .highlight-green {
+    color: #059669;
+    background: #ECFDF5;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.payment-steps .highlight-orange {
+    color: #DC2626;
+    background: #FEF2F2;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.manual-payment-note {
+    background: #FEF3C7;
+    border-left: 4px solid #F59E0B;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+}
+
+.manual-payment-note i {
+    color: #F59E0B;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.manual-payment-note p {
+    margin: 0;
+    font-size: 13px;
+    color: #78350F;
+    line-height: 1.6;
+}
+
+.manual-payment-note strong {
+    color: #92400E;
 }
 </style>
 
@@ -706,7 +954,7 @@ main {
             <!-- Total Contributions Card -->
             <div class="total-contributions-card">
                 <h4>TOTAL CONTRIBUTIONS 2023</h4>
-                <h2>Ksh <?php echo number_format($total_paid, 2); ?></h2>
+                <h2>KES <?php echo number_format($total_paid, 2); ?></h2>
                 <p><i class="fas fa-arrow-up"></i> 12% increase from 2022</p>
             </div>
 
@@ -725,23 +973,24 @@ main {
 
             <!-- Payments Table -->
             <div class="payments-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Ref Number</th>
-                            <th>Amount</th>
-                            <th>Period</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
+                <div class="payments-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Ref Number</th>
+                                <th>Amount</th>
+                                <th>Period</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
                     <tbody>
                         <?php foreach ($payments as $payment): ?>
                         <tr>
                             <td><?php echo date('M d, Y', strtotime($payment['payment_date'])); ?></td>
-                            <td><?php echo htmlspecialchars($payment['transaction_id']); ?></td>
-                            <td><?php echo number_format($payment['amount'], 2); ?></td>
-                            <td><?php echo htmlspecialchars($payment['period']); ?></td>
+                            <td><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></td>
+                            <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
+                            <td><?php echo htmlspecialchars($payment['period'] ?? 'N/A'); ?></td>
                             <td>
                                 <span class="payment-status <?php echo $payment['status'] === 'completed' ? 'success' : ($payment['status'] === 'failed' ? 'failed' : 'pending'); ?>">
                                     <?php echo strtoupper($payment['status']); ?>
@@ -751,6 +1000,7 @@ main {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
 
@@ -781,21 +1031,21 @@ main {
                 </div>
 
                 <div class="account-ref">
-                    <p>YOUR ACCOUNT REF</p>
-                    <h3>SH-99238</h3>
+                    <p>Your Account Reference</p>
+                    <h3><?php echo $member['member_id'] ?? 'SH-99238'; ?></h3>
                 </div>
 
                 <button class="how-to-pay-btn" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                    <i class="fas fa-info-circle"></i> HOW TO PAY
+                    <i class="fas fa-bolt"></i> Pay Now
                 </button>
             </div>
 
             <!-- Statements -->
             <div class="statements-card">
                 <h3><i class="fas fa-file-invoice"></i> Statements</h3>
-                <p>Generate a certified record of your contributions for official use or personal audit.</p>
-                <button class="download-btn">
-                    <i class="fas fa-download"></i> DOWNLOAD FULL STATEMENT
+                <p>Download a comprehensive record of all your contributions and transactions for your records or official documentation.</p>
+                <button class="download-btn" onclick="window.location.href='/member/generate-statement'">
+                    <i class="fas fa-file-download"></i> Generate Statement
                 </button>
             </div>
         </div>
@@ -881,30 +1131,47 @@ main {
                 <div id="manualPaybillSection" style="display: none;">
                     <h6 class="payment-section-title">
                         <i class="fas fa-hand-holding-usd"></i>
-                        Pay via M-Pesa Paybill
+                        Manual M-Pesa Paybill Payment
                     </h6>
+                    <p class="payment-description">Follow these simple steps to pay via M-Pesa Paybill from your phone.</p>
+                    
                     <div class="paybill-instructions">
-                        <p><strong>Paybill Number:</strong> <span class="paybill-number">4163987</span></p>
-                        <p><strong>Account Number:</strong> <span class="account-number"><?php echo $member['member_number'] ?? 'SH-99238'; ?></span></p>
-                        <p><strong>Amount:</strong> <span style="color: #DC2626; font-weight: 600;">KES <?php echo number_format($member['monthly_contribution'] ?? 500, 2); ?></span></p>
+                        <div class="paybill-detail">
+                            <label>M-PESA Paybill Number</label>
+                            <div class="paybill-value paybill-number">4163987</div>
+                        </div>
+                        <div class="paybill-detail">
+                            <label>Account Number (Your Member ID)</label>
+                            <div class="paybill-value account-number"><?php echo $member['member_id'] ?? 'SH-99238'; ?></div>
+                        </div>
+                        <div class="paybill-detail">
+                            <label>Amount to Pay</label>
+                            <div class="paybill-value amount-value">KES <?php echo number_format($member['monthly_contribution'] ?? 500, 2); ?></div>
+                        </div>
                     </div>
                     
                     <div class="payment-steps">
-                        <h6>Steps to Pay:</h6>
+                        <h6><i class="fas fa-list-ol"></i> How to Pay</h6>
                         <ol>
-                            <li>Go to M-Pesa menu on your phone</li>
+                            <li>Open <strong>M-Pesa</strong> on your phone</li>
                             <li>Select <strong>Lipa na M-Pesa</strong></li>
                             <li>Select <strong>Pay Bill</strong></li>
-                            <li>Enter Business Number: <strong>4163987</strong></li>
-                            <li>Enter Account Number: <strong><?php echo $member['member_number'] ?? 'SH-99238'; ?></strong></li>
-                            <li>Enter Amount: <strong><?php echo number_format($member['monthly_contribution'] ?? 500, 2); ?></strong></li>
+                            <li>Enter Business Number: <strong class="highlight-blue">4163987</strong></li>
+                            <li>Enter Account Number: <strong class="highlight-green"><?php echo $member['member_id'] ?? 'SH-99238'; ?></strong></li>
+                            <li>Enter Amount: <strong class="highlight-orange">KES <?php echo number_format($member['monthly_contribution'] ?? 500, 2); ?></strong></li>
                             <li>Enter your M-Pesa PIN and confirm</li>
+                            <li>You will receive an SMS confirmation from M-Pesa</li>
                         </ol>
                     </div>
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-success" style="margin-top: 20px;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Your payment will be automatically recorded and reflected in your account within 1-5 minutes.</span>
+                    </div>
+                    
+                    <div class="manual-payment-note">
                         <i class="fas fa-info-circle"></i>
-                        <span>Payment will reflect automatically in your account within a few minutes.</span>
+                        <p><strong>Important:</strong> Always use your correct Member ID (<strong><?php echo $member['member_id'] ?? 'SH-99238'; ?></strong>) as the account number to ensure your payment is credited to your account.</p>
                     </div>
                 </div>
             </div>
@@ -967,7 +1234,28 @@ main {
 </div>
 
 <script>
-// Payment method toggle
+// Payment method tab toggle
+document.querySelectorAll('.payment-method-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        document.querySelectorAll('.payment-method-tab').forEach(t => t.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Show/hide sections based on data-method
+        const method = this.getAttribute('data-method');
+        if (method === 'stk') {
+            document.getElementById('stkPushSection').style.display = 'block';
+            document.getElementById('manualPaybillSection').style.display = 'none';
+        } else if (method === 'manual') {
+            document.getElementById('stkPushSection').style.display = 'none';
+            document.getElementById('manualPaybillSection').style.display = 'block';
+        }
+    });
+});
+
+// Legacy radio button support (if exists)
 document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
     radio.addEventListener('change', function() {
         if (this.value === 'stk') {
@@ -1167,4 +1455,4 @@ document.getElementById('verifyTransactionForm')?.addEventListener('submit', asy
 });
 </script>
 
-<?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>

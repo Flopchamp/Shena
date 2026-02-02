@@ -2,63 +2,61 @@
 $page = 'dashboard'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample data - replace with actual database queries
-$agent = [
-    'first_name' => 'Sarah',
-    'last_name' => 'Jenkins',
-    'agent_number' => 'GOLD TIER AGENT',
-    'total_members' => 1284,
-    'members_growth' => 12,
-    'active_policies' => 1150,
-    'policies_growth' => 5.2,
-    'monthly_commission' => 12450,
-    'commission_growth' => 18,
-    'agent_rank' => 14,
-    'rank_progress' => 85
+// Get dynamic data from controller (passed by AgentDashboardController)
+// Expected variables: $agent, $members, $stats
+$stats = $stats ?? [
+    'total_members' => 0,
+    'members_growth' => 0,
+    'active_policies' => 0,
+    'policies_growth' => 0,
+    'monthly_commission' => 0,
+    'commission_growth' => 0,
+    'agent_rank' => 0,
+    'rank_progress' => 0
 ];
 
-$members = [
-    [
-        'initials' => 'TM',
-        'name' => 'Thabo Mbeki',
-        'role' => 'Primary Member',
-        'member_number' => 'SH-882910',
-        'policy_plan' => 'Family Premium Plus',
-        'join_date' => '12 Jan 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ],
-    [
-        'initials' => 'PN',
-        'name' => 'Patience Ndlovu',
-        'role' => 'Solo Member',
-        'member_number' => 'SH-992123',
-        'policy_plan' => 'Standard Solo',
-        'join_date' => '05 Sep 2023',
-        'status' => 'MATURITY',
-        'status_class' => 'warning'
-    ],
-    [
-        'initials' => 'JM',
-        'name' => 'John Molefe',
-        'role' => 'Manager Plan',
-        'member_number' => 'SH-771223',
-        'policy_plan' => 'Senior Care',
-        'join_date' => '22 Oct 2022',
-        'status' => 'DEFAULTED',
-        'status_class' => 'danger'
-    ],
-    [
-        'initials' => 'SK',
-        'name' => 'Sipho Khumalo',
-        'role' => 'Primary Member',
-        'member_number' => 'SH-881290',
-        'policy_plan' => 'Family Premium',
-        'join_date' => '15 Aug 2023',
-        'status' => 'ACTIVE',
-        'status_class' => 'success'
-    ]
-];
+// Process members data
+$processed_members = [];
+if (!empty($members)) {
+    $package_names = [
+        'individual' => 'Individual Plan',
+        'couple' => 'Couple Plan',
+        'family' => 'Family Plan',
+        'executive' => 'Executive Plan'
+    ];
+    
+    $status_map = [
+        'active' => ['label' => 'ACTIVE', 'class' => 'active'],
+        'pending' => ['label' => 'PENDING', 'class' => 'maturity'],
+        'matured' => ['label' => 'MATURITY', 'class' => 'maturity'],
+        'defaulted' => ['label' => 'DEFAULTED', 'class' => 'defaulted'],
+        'suspended' => ['label' => 'SUSPENDED', 'class' => 'defaulted']
+    ];
+    
+    foreach (array_slice($members, 0, 4) as $member) {
+        $names = explode(' ', trim($member['first_name'] . ' ' . $member['last_name']));
+        $initials = '';
+        foreach ($names as $name) {
+            if (!empty($name)) {
+                $initials .= strtoupper(substr($name, 0, 1));
+            }
+        }
+        
+        $status_info = $status_map[strtolower($member['status'] ?? 'pending')] ?? ['label' => 'PENDING', 'class' => 'maturity'];
+        
+        $processed_members[] = [
+            'initials' => $initials,
+            'name' => $member['first_name'] . ' ' . $member['last_name'],
+            'role' => 'Primary Member',
+            'member_number' => $member['member_number'] ?? 'N/A',
+            'policy_plan' => $package_names[$member['package'] ?? 'individual'] ?? 'Individual Plan',
+            'join_date' => !empty($member['created_at']) ? date('d M Y', strtotime($member['created_at'])) : 'N/A',
+            'status' => $status_info['label'],
+            'status_class' => $status_info['class'],
+            'member_id' => $member['id']
+        ];
+    }
+}
 ?>
 
 <style>
@@ -567,10 +565,10 @@ $members = [
                 <i class="fas fa-users stat-icon"></i>
                 <span class="stat-label">Total Members</span>
             </div>
-            <div class="stat-value"><?php echo number_format($agent['total_members']); ?></div>
+            <div class="stat-value"><?php echo number_format($stats['total_members']); ?></div>
             <div class="stat-growth">
                 <i class="fas fa-arrow-up"></i>
-                +<?php echo $agent['members_growth']; ?>%
+                +<?php echo number_format($stats['members_growth'], 1); ?>%
             </div>
             <div class="stat-description">Active registrations this year</div>
         </div>
@@ -581,10 +579,10 @@ $members = [
                 <i class="fas fa-shield-alt stat-icon"></i>
                 <span class="stat-label">Active Policies</span>
             </div>
-            <div class="stat-value"><?php echo number_format($agent['active_policies']); ?></div>
+            <div class="stat-value"><?php echo number_format($stats['active_policies']); ?></div>
             <div class="stat-growth">
                 <i class="fas fa-arrow-up"></i>
-                +<?php echo $agent['policies_growth']; ?>%
+                +<?php echo number_format($stats['policies_growth'], 1); ?>%
             </div>
             <div class="stat-description">Current premium-paying members</div>
         </div>
@@ -595,12 +593,12 @@ $members = [
                 <i class="fas fa-coins stat-icon"></i>
                 <span class="stat-label">Monthly Comm.</span>
             </div>
-            <div class="stat-value">R <?php echo number_format($agent['monthly_commission']); ?></div>
+            <div class="stat-value">KES <?php echo number_format($stats['monthly_commission'], 2); ?></div>
             <div class="stat-growth">
                 <i class="fas fa-arrow-up"></i>
-                +<?php echo $agent['commission_growth']; ?>%
+                +<?php echo number_format($stats['commission_growth'], 1); ?>%
             </div>
-            <div class="stat-description">Next payout: 28 Oct 2023</div>
+            <div class="stat-description">Next payout: 28th of month</div>
         </div>
 
         <!-- Agent Rank -->
@@ -609,11 +607,11 @@ $members = [
                 <i class="fas fa-trophy stat-icon"></i>
                 <span class="stat-label">Agent Rank</span>
             </div>
-            <div class="stat-value">#<?php echo $agent['agent_rank']; ?></div>
+            <div class="stat-value">#<?php echo $stats['agent_rank'] > 0 ? $stats['agent_rank'] : 'N/A'; ?></div>
             <div class="rank-progress">
-                <div class="rank-progress-bar" style="width: <?php echo $agent['rank_progress']; ?>%;"></div>
+                <div class="rank-progress-bar" style="width: <?php echo $stats['rank_progress']; ?>%;"></div>
             </div>
-            <div class="stat-description"><?php echo $agent['rank_progress']; ?>% to Platinum</div>
+            <div class="stat-description"><?php echo $stats['rank_progress']; ?>% to next tier</div>
         </div>
     </div>
 
@@ -645,7 +643,19 @@ $members = [
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($members as $member): ?>
+                <?php if (empty($processed_members)): ?>
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 48px;">
+                        <i class="fas fa-users" style="font-size: 48px; color: #D1D5DB; margin-bottom: 16px;"></i>
+                        <p style="color: #9CA3AF; font-size: 14px;">No members registered yet</p>
+                        <button class="btn-new-registration" onclick="location.href='/agent/register-member'" style="margin-top: 16px;">
+                            <i class="fas fa-user-plus"></i>
+                            Register First Member
+                        </button>
+                    </td>
+                </tr>
+                <?php else: ?>
+                <?php foreach ($processed_members as $member): ?>
                 <tr>
                     <td>
                         <div class="member-info">
@@ -667,7 +677,7 @@ $members = [
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="action-btn" title="View Details">
+                            <button class="action-btn" title="View Details" onclick="location.href='/agent/member-details/<?php echo $member['member_id']; ?>'">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="action-btn" title="More Actions">
@@ -677,11 +687,12 @@ $members = [
                     </td>
                 </tr>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
 
         <div class="pagination-wrapper">
-            <div class="pagination-info">Showing 4 of 1,284 members</div>
+            <div class="pagination-info">Showing <?php echo count($processed_members); ?> of <?php echo count($members ?? []); ?> members</div>
             <div class="pagination-controls">
                 <button class="page-btn">
                     <i class="fas fa-chevron-left"></i>

@@ -866,9 +866,9 @@ class MemberController extends BaseController
         // Get notification preferences
         $db = Database::getInstance();
         $stmt = $db->getConnection()->prepare("
-            SELECT * FROM notification_preferences WHERE member_id = ?
+            SELECT * FROM notification_preferences WHERE user_id = ?
         ");
-        $stmt->execute([$member['id']]);
+        $stmt->execute([$_SESSION['user_id']]);
         $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // Default preferences if none exist
@@ -930,9 +930,9 @@ class MemberController extends BaseController
             
             // Check if preferences exist
             $stmt = $db->getConnection()->prepare("
-                SELECT id FROM notification_preferences WHERE member_id = ?
+                SELECT id FROM notification_preferences WHERE user_id = ?
             ");
-            $stmt->execute([$member['id']]);
+            $stmt->execute([$_SESSION['user_id']]);
             $exists = $stmt->fetch();
             
             if ($exists) {
@@ -950,26 +950,26 @@ class MemberController extends BaseController
                         notification_frequency = :notification_frequency,
                         marketing_communications = :marketing_communications,
                         updated_at = NOW()
-                    WHERE member_id = :member_id
+                    WHERE user_id = :user_id
                 ");
-                $preferences['member_id'] = $member['id'];
+                $preferences['user_id'] = $_SESSION['user_id'];
                 $stmt->execute($preferences);
             } else {
                 // Insert new preferences
                 $stmt = $db->getConnection()->prepare("
                     INSERT INTO notification_preferences (
-                        member_id, email_payment_reminders, email_payment_confirmations,
+                        user_id, email_payment_reminders, email_payment_confirmations,
                         email_claim_updates, email_newsletters, sms_payment_reminders,
                         sms_payment_confirmations, sms_claim_updates, sms_important_alerts,
                         notification_frequency, marketing_communications
                     ) VALUES (
-                        :member_id, :email_payment_reminders, :email_payment_confirmations,
+                        :user_id, :email_payment_reminders, :email_payment_confirmations,
                         :email_claim_updates, :email_newsletters, :sms_payment_reminders,
                         :sms_payment_confirmations, :sms_claim_updates, :sms_important_alerts,
                         :notification_frequency, :marketing_communications
                     )
                 ");
-                $preferences['member_id'] = $member['id'];
+                $preferences['user_id'] = $_SESSION['user_id'];
                 $stmt->execute($preferences);
             }
             
@@ -981,5 +981,72 @@ class MemberController extends BaseController
         }
         
         $this->redirect('/member/notification-settings');
+    }
+    
+    /**
+     * Display notifications page
+     */
+    public function notifications()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/login');
+            return;
+        }
+        
+        // TODO: Get notifications from database
+        // For now, we'll pass empty array and let the view handle sample data
+        $notifications = [];
+        
+        $data = [
+            'title' => 'Notifications - Shena Companion Welfare Association',
+            'member' => $member,
+            'notifications' => $notifications,
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+        
+        $this->view('member.notifications', $data);
+    }
+    
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationAsRead()
+    {
+        $this->validateCsrf();
+        // TODO: Implement notification mark as read logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $this->validateCsrf();
+        // TODO: Implement mark all as read logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Delete a notification
+     */
+    public function deleteNotification()
+    {
+        $this->validateCsrf();
+        // TODO: Implement notification delete logic
+        echo json_encode(['success' => true]);
+    }
+    
+    /**
+     * Clear all notifications
+     */
+    public function clearAllNotifications()
+    {
+        $this->validateCsrf();
+        // TODO: Implement clear all notifications logic
+        echo json_encode(['success' => true]);
     }
 }

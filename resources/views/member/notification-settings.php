@@ -1,205 +1,535 @@
 <?php
-/**
- * Member Notification Settings View
- * Allow members to manage their notification preferences
- */
-$pageTitle = 'Notification Settings - ' . SITE_NAME;
-include 'resources/views/layouts/member-header.php';
+$page = 'notifications';
+include __DIR__ . '/../layouts/member-header.php';
+
+$preferences = $preferences ?? [];
+$memberData = $member ?? [];
 ?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-bell mr-2"></i>Notification Settings
-        </h1>
-        <a href="/dashboard" class="btn btn-secondary">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
+<style>
+main {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.notifications-container {
+    padding: 30px;
+    background: #F8F9FA;
+    min-height: calc(100vh - 80px);
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0;
+}
+
+.settings-grid {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.settings-card {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.settings-card-header {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-card-header i {
+    font-size: 24px;
+    color: white;
+}
+
+.settings-card-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.settings-card-body {
+    padding: 28px;
+}
+
+.notification-option {
+    padding: 20px 0;
+    border-bottom: 1px solid #F3F4F6;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.notification-option:last-child {
+    border-bottom: none;
+}
+
+.notification-info {
+    flex: 1;
+}
+
+.notification-info h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 6px 0;
+}
+
+.notification-info p {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E5E7EB;
+    transition: .3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #7F20B0;
+    box-shadow: 0 0 0 3px rgba(127, 32, 176, 0.1);
+}
+
+.form-text {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 6px;
+    display: block;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(127, 32, 176, 0.4);
+}
+
+.contact-info-card {
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 2px solid #BAE6FD;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+}
+
+.contact-info-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.contact-info-content {
+    flex: 1;
+}
+
+.contact-info-content h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1E40AF;
+    margin: 0 0 8px 0;
+}
+
+.contact-detail {
+    font-size: 13px;
+    color: #1E40AF;
+    margin: 4px 0;
+}
+
+.contact-detail strong {
+    font-weight: 600;
+}
+
+.contact-link {
+    font-size: 13px;
+    color: #2563EB;
+    text-decoration: none;
+    margin-top: 8px;
+    display: inline-block;
+    font-weight: 600;
+}
+
+.contact-link:hover {
+    text-decoration: underline;
+}
+
+.section-divider {
+    padding: 16px 28px;
+    background: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.section-divider h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6B7280;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.success-alert {
+    background: #ECFDF5;
+    border-left: 4px solid #10B981;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.success-alert i {
+    color: #10B981;
+    font-size: 20px;
+}
+
+.success-alert-text {
+    font-size: 14px;
+    color: #065F46;
+    font-weight: 600;
+}
+
+.error-alert {
+    background: #FEF2F2;
+    border-left: 4px solid #EF4444;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.error-alert i {
+    color: #EF4444;
+    font-size: 20px;
+}
+
+.error-alert-text {
+    font-size: 14px;
+    color: #991B1B;
+    font-weight: 600;
+}
+</style>
+
+<div class="notifications-container">
+    <div class="page-header">
+        <h1>Notification Settings</h1>
+        <p>Manage how and when you receive notifications from us</p>
     </div>
 
-    <!-- Alert Messages -->
     <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show">
-            <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="success-alert">
+            <i class="fas fa-check-circle"></i>
+            <span class="success-alert-text"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></span>
         </div>
     <?php endif; ?>
     
     <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show">
-            <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="error-alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <span class="error-alert-text"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></span>
         </div>
     <?php endif; ?>
 
-    <div class="row">
-        <!-- Notification Preferences Card -->
-        <div class="col-lg-8 mx-auto">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-cog mr-2"></i>Manage Your Notification Preferences
-                    </h6>
+    <div class="settings-grid">
+        <form action="/member/notification-settings" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+            
+            <!-- Email Notifications -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Email Notifications</h3>
                 </div>
-                <div class="card-body">
-                    <form action="/member/notification-settings" method="POST">
-                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                        
-                        <!-- Email Notifications -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-envelope mr-2"></i>Email Notifications</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="email_payment_reminders" 
-                                           name="email_payment_reminders" value="1"
-                                           <?php echo ($preferences['email_payment_reminders'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="email_payment_reminders">
-                                        <strong>Payment Reminders</strong>
-                                        <p class="text-muted small mb-0">Receive reminders about upcoming payments</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="email_payment_confirmations" 
-                                           name="email_payment_confirmations" value="1"
-                                           <?php echo ($preferences['email_payment_confirmations'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="email_payment_confirmations">
-                                        <strong>Payment Confirmations</strong>
-                                        <p class="text-muted small mb-0">Get notified when your payments are received</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="email_claim_updates" 
-                                           name="email_claim_updates" value="1"
-                                           <?php echo ($preferences['email_claim_updates'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="email_claim_updates">
-                                        <strong>Claim Updates</strong>
-                                        <p class="text-muted small mb-0">Receive updates about your claim submissions and approvals</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="email_newsletters" 
-                                           name="email_newsletters" value="1"
-                                           <?php echo ($preferences['email_newsletters'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="email_newsletters">
-                                        <strong>Newsletters & Updates</strong>
-                                        <p class="text-muted small mb-0">Stay informed with our latest news and updates</p>
-                                    </label>
-                                </div>
-                            </div>
+                <div class="settings-card-body">
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Payment Reminders</h4>
+                            <p>Receive email reminders before your payment is due</p>
                         </div>
-
-                        <!-- SMS Notifications -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-sms mr-2"></i>SMS Notifications</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="sms_payment_reminders" 
-                                           name="sms_payment_reminders" value="1"
-                                           <?php echo ($preferences['sms_payment_reminders'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="sms_payment_reminders">
-                                        <strong>Payment Reminders</strong>
-                                        <p class="text-muted small mb-0">Get SMS reminders before payments are due</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="sms_payment_confirmations" 
-                                           name="sms_payment_confirmations" value="1"
-                                           <?php echo ($preferences['sms_payment_confirmations'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="sms_payment_confirmations">
-                                        <strong>Payment Confirmations</strong>
-                                        <p class="text-muted small mb-0">Instant SMS confirmation when payments are received</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="sms_claim_updates" 
-                                           name="sms_claim_updates" value="1"
-                                           <?php echo ($preferences['sms_claim_updates'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="sms_claim_updates">
-                                        <strong>Claim Updates</strong>
-                                        <p class="text-muted small mb-0">Get SMS notifications about claim status changes</p>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="sms_important_alerts" 
-                                           name="sms_important_alerts" value="1"
-                                           <?php echo ($preferences['sms_important_alerts'] ?? 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="sms_important_alerts">
-                                        <strong>Important Alerts</strong>
-                                        <p class="text-muted small mb-0">Critical account notifications (cannot be disabled)</p>
-                                    </label>
-                                </div>
-                            </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="email_payment_reminders" value="1" 
+                                   <?php echo ($preferences['email_payment_reminders'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Payment Confirmations</h4>
+                            <p>Get instant email confirmation when payments are received</p>
                         </div>
-
-                        <!-- General Settings -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-sliders-h mr-2"></i>General Settings</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="notification_frequency">Notification Frequency</label>
-                                    <select class="form-control" id="notification_frequency" name="notification_frequency">
-                                        <option value="immediate" <?php echo ($preferences['notification_frequency'] ?? 'immediate') === 'immediate' ? 'selected' : ''; ?>>Immediate</option>
-                                        <option value="daily_digest" <?php echo ($preferences['notification_frequency'] ?? '') === 'daily_digest' ? 'selected' : ''; ?>>Daily Digest</option>
-                                        <option value="weekly_digest" <?php echo ($preferences['notification_frequency'] ?? '') === 'weekly_digest' ? 'selected' : ''; ?>>Weekly Digest</option>
-                                    </select>
-                                    <small class="form-text text-muted">Choose how often you want to receive non-urgent notifications</small>
-                                </div>
-                                
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" class="form-check-input" id="marketing_communications" 
-                                           name="marketing_communications" value="1"
-                                           <?php echo ($preferences['marketing_communications'] ?? 0) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="marketing_communications">
-                                        <strong>Marketing Communications</strong>
-                                        <p class="text-muted small mb-0">Receive promotional offers and partnership opportunities</p>
-                                    </label>
-                                </div>
-                            </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="email_payment_confirmations" value="1" 
+                                   <?php echo ($preferences['email_payment_confirmations'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Claim Updates</h4>
+                            <p>Receive updates about your claim submissions and status changes</p>
                         </div>
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-save mr-2"></i>Save Preferences
-                            </button>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="email_claim_updates" value="1" 
+                                   <?php echo ($preferences['email_claim_updates'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Newsletters & Updates</h4>
+                            <p>Stay informed with our latest news, tips, and member benefits</p>
                         </div>
-                    </form>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="email_newsletters" value="1" 
+                                   <?php echo ($preferences['email_newsletters'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Contact Information Card -->
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-address-card mr-2"></i>Contact Information
-                    </h6>
+            <!-- SMS Notifications -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-sms"></i>
+                    <h3>SMS Notifications</h3>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Current Email:</strong> <?php echo htmlspecialchars($member['email']); ?><br>
-                        <strong>Current Phone:</strong> <?php echo htmlspecialchars($member['phone']); ?>
+                <div class="settings-card-body">
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Payment Reminders</h4>
+                            <p>Get SMS reminders before payments are due</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="sms_payment_reminders" value="1" 
+                                   <?php echo ($preferences['sms_payment_reminders'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
-                    <p class="text-muted mb-0">
-                        To update your email or phone number, please go to your 
-                        <a href="/profile">Profile Settings</a>.
-                    </p>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Payment Confirmations</h4>
+                            <p>Instant SMS confirmation when your payments are processed</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="sms_payment_confirmations" value="1" 
+                                   <?php echo ($preferences['sms_payment_confirmations'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Claim Updates</h4>
+                            <p>Get SMS notifications about important claim status changes</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="sms_claim_updates" value="1" 
+                                   <?php echo ($preferences['sms_claim_updates'] ?? 1) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Critical Alerts</h4>
+                            <p>Important account and security notifications (always enabled)</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="sms_important_alerts" value="1" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Settings -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <i class="fas fa-sliders-h"></i>
+                    <h3>General Preferences</h3>
+                </div>
+                <div class="settings-card-body">
+                    <div class="form-group">
+                        <label class="form-label">Notification Frequency</label>
+                        <select class="form-select" name="notification_frequency">
+                            <option value="immediate" <?php echo ($preferences['notification_frequency'] ?? 'immediate') === 'immediate' ? 'selected' : ''; ?>>
+                                Immediate - Receive notifications as they happen
+                            </option>
+                            <option value="daily_digest" <?php echo ($preferences['notification_frequency'] ?? '') === 'daily_digest' ? 'selected' : ''; ?>>
+                                Daily Digest - Once per day summary
+                            </option>
+                            <option value="weekly_digest" <?php echo ($preferences['notification_frequency'] ?? '') === 'weekly_digest' ? 'selected' : ''; ?>>
+                                Weekly Digest - Weekly summary
+                            </option>
+                        </select>
+                        <small class="form-text">Choose how often you want to receive non-urgent notifications</small>
+                    </div>
+                    
+                    <div class="notification-option">
+                        <div class="notification-info">
+                            <h4>Marketing Communications</h4>
+                            <p>Receive promotional offers, partner benefits, and special deals</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="marketing_communications" value="1" 
+                                   <?php echo ($preferences['marketing_communications'] ?? 0) ? 'checked' : ''; ?>>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="save-btn">
+                <i class="fas fa-save"></i>
+                Save Preferences
+            </button>
+        </form>
+
+        <!-- Contact Information -->
+        <div style="margin-top: 24px;">
+            <div class="contact-info-card">
+                <div class="contact-info-icon">
+                    <i class="fas fa-address-card"></i>
+                </div>
+                <div class="contact-info-content">
+                    <h4>Your Contact Information</h4>
+                    <div class="contact-detail"><strong>Email:</strong> <?php echo htmlspecialchars($memberData['email'] ?? 'N/A'); ?></div>
+                    <div class="contact-detail"><strong>Phone:</strong> <?php echo htmlspecialchars($memberData['phone'] ?? 'N/A'); ?></div>
+                    <a href="/profile" class="contact-link">
+                        <i class="fas fa-edit"></i> Update Contact Details
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<?php include 'resources/views/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>

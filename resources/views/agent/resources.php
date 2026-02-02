@@ -2,61 +2,12 @@
 $page = 'resources'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample data - replace with actual database queries
-$flyers_brochures = [
-    [
-        'title' => 'Family Protection P...',
-        'size' => '5.3 MB',
-        'badge' => 'PREM-PLAN',
-        'badge_class' => 'premium'
-    ],
-    [
-        'title' => 'Senior Care Policy B...',
-        'size' => '4.8 MB',
-        'badge' => 'BANNER',
-        'badge_class' => 'banner'
-    ]
-];
-
-$social_media = [
-    [
-        'title' => 'WhatsApp Status Im...',
-        'size' => '1.1 MB',
-        'badge' => 'INSTAGRAM',
-        'badge_class' => 'instagram'
-    ],
-    [
-        'title' => 'Facebook Header Art',
-        'size' => '3.3 MB',
-        'badge' => 'FACEBOOK',
-        'badge_class' => 'facebook'
-    ]
-];
-
-$member_forms = [
-    [
-        'title' => 'Standard Registrati...',
-        'size' => '302 KB'
-    ]
-];
-
-$latest_updates = [
-    [
-        'title' => 'New 2024 Policy Guidelines Added',
-        'time' => '2 hours ago',
-        'color' => 'purple'
-    ],
-    [
-        'title' => 'October Bonus Campaign - Kaizer',
-        'time' => 'Yesterday',
-        'color' => 'purple'
-    ],
-    [
-        'title' => 'Updated Registration T&Cs',
-        'time' => '5 days ago',
-        'color' => 'purple'
-    ]
-];
+// Get dynamic data from controller
+// Expected variables: $flyers_brochures, $social_media, $member_forms, $latest_updates
+$flyers_brochures = $flyers_brochures ?? [];
+$social_media = $social_media ?? [];
+$member_forms = $member_forms ?? [];
+$latest_updates = $latest_updates ?? [];
 ?>
 
 <style>
@@ -430,6 +381,12 @@ $latest_updates = [
                 </div>
 
                 <div class="resource-cards-grid">
+                    <?php if (empty($flyers_brochures)): ?>
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
+                            <i class="fas fa-file-alt" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
+                            <p style="color: #9CA3AF; font-size: 14px;">No flyers or brochures available yet</p>
+                        </div>
+                    <?php else: ?>
                     <?php foreach ($flyers_brochures as $resource): ?>
                     <div class="resource-card">
                         <div class="resource-icon">
@@ -448,6 +405,7 @@ $latest_updates = [
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -462,6 +420,12 @@ $latest_updates = [
                 </div>
 
                 <div class="resource-cards-grid">
+                    <?php if (empty($social_media)): ?>
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
+                            <i class="fas fa-images" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
+                            <p style="color: #9CA3AF; font-size: 14px;">No social media graphics available yet</p>
+                        </div>
+                    <?php else: ?>
                     <?php foreach ($social_media as $resource): ?>
                     <div class="resource-card">
                         <div class="resource-icon">
@@ -480,6 +444,7 @@ $latest_updates = [
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -494,6 +459,12 @@ $latest_updates = [
                 </div>
 
                 <div class="resource-cards-grid">
+                    <?php if (empty($member_forms)): ?>
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
+                            <i class="fas fa-file-contract" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
+                            <p style="color: #9CA3AF; font-size: 14px;">No member forms available yet</p>
+                        </div>
+                    <?php else: ?>
                     <?php foreach ($member_forms as $resource): ?>
                     <div class="resource-card">
                         <div class="resource-icon">
@@ -509,6 +480,7 @@ $latest_updates = [
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -522,6 +494,12 @@ $latest_updates = [
                     <span class="notification-dot"></span>
                 </div>
 
+                <?php if (empty($latest_updates)): ?>
+                    <div style="text-align: center; padding: 24px;">
+                        <i class="fas fa-bell" style="font-size: 32px; color: #D1D5DB; margin-bottom: 8px;"></i>
+                        <p style="color: #9CA3AF; font-size: 13px; margin: 0;">No updates available</p>
+                    </div>
+                <?php else: ?>
                 <?php foreach ($latest_updates as $update): ?>
                 <div class="update-item">
                     <div class="update-icon">
@@ -533,6 +511,7 @@ $latest_updates = [
                     </div>
                 </div>
                 <?php endforeach; ?>
+                <?php endif; ?>
 
                 <div class="clear-notifications">
                     <button class="btn-clear-notifications">Clear Notifications</button>

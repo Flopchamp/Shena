@@ -880,7 +880,7 @@ if (!empty($payment_history)) {
                     <h4>Support Tip</h4>
                 </div>
                 <p class="support-tip-text">
-                    Member missed last payment: two last months. Remind them to settle the R 25.00 arrears to avoid policy degradation.
+                    Member missed last payment. Remind them to settle any arrears to avoid policy degradation. Check their payment history for details.
                 </p>
                 <button class="btn-view-playbook">View Agent Playbook</button>
             </div>
