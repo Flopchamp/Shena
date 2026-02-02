@@ -414,10 +414,10 @@
             <button class="icon-btn">
                 <i class="fas fa-bell"></i>
             </button>
-            <button class="icon-btn">
+            <button class="icon-btn" onclick="location.href='/agent/profile'" title="Profile Settings">
                 <i class="fas fa-cog"></i>
             </button>
-            <div class="user-profile">
+            <div class="user-profile" onclick="location.href='/agent/profile'" style="cursor: pointer;" title="View Profile">
                 <div class="user-info">
                     <h6><?php echo htmlspecialchars($agent['first_name'] ?? 'Sarah'); ?> <?php echo htmlspecialchars($agent['last_name'] ?? 'Jenkins'); ?></h6>
                     <p><?php echo htmlspecialchars($agent['agent_number'] ?? 'GOLD TIER AGENT'); ?></p>

@@ -529,4 +529,41 @@ class Member extends BaseModel
         
         return $this->db->fetchAll($query, ['search' => "%{$searchTerm}%"]);
     }
+    
+    /**
+     * Get member dependents/beneficiaries
+     * 
+     * @param int $memberId Member ID
+     * @return array List of dependents
+     */
+    public function getMemberDependents($memberId)
+    {
+        $sql = "SELECT * FROM beneficiaries 
+                WHERE member_id = :member_id 
+                ORDER BY relationship, created_at";
+        
+        return $this->db->fetchAll($sql, ['member_id' => $memberId]);
+    }
+    
+    /**
+     * Get member payment history
+     * 
+     * @param int $memberId Member ID
+     * @param int $limit Optional limit for results
+     * @return array List of payments
+     */
+    public function getMemberPaymentHistory($memberId, $limit = null)
+    {
+        $sql = "SELECT p.*, p.created_at as payment_date
+                FROM payments p
+                WHERE p.member_id = :member_id
+                AND p.status = 'completed'
+                ORDER BY p.created_at DESC";
+        
+        if ($limit) {
+            $sql .= " LIMIT " . intval($limit);
+        }
+        
+        return $this->db->fetchAll($sql, ['member_id' => $memberId]);
+    }
 }
