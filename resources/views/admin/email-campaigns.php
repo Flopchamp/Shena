@@ -1,4 +1,4 @@
-<?php include_once 'admin-header.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <div class="container-fluid">
     <!-- Page Header -->
@@ -372,4 +372,4 @@ function retryFailed(campaignId) {
 }
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

@@ -88,6 +88,7 @@ class Router
         $this->addRoute('GET', '/admin/payments/fail/{id}', 'PaymentController@failPayment');
         $this->addRoute('GET', '/admin/claims', 'AdminController@claims');
         $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
+        $this->addRoute('GET', '/admin/claims/track-services', 'AdminController@viewTrackServices');
         $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/{id}/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/approve-cash', 'AdminController@approveClaimCashAlternative');
@@ -148,6 +149,7 @@ class Router
         
         // Payment Reconciliation Routes (Admin Only) - Phase 2
         $this->addRoute('GET', '/admin/payments/reconciliation', 'PaymentController@viewReconciliation');
+        $this->addRoute('GET', '/admin/payments-reconciliation', 'PaymentController@viewReconciliation');
         $this->addRoute('GET', '/admin/payments/unmatched', 'PaymentController@viewUnmatchedPayments');
         $this->addRoute('GET', '/admin/payments/{id}/matches', 'PaymentController@getPotentialMatches');
         $this->addRoute('POST', '/admin/payments/reconcile', 'PaymentController@manualReconcile');

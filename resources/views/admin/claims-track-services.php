@@ -3,7 +3,7 @@
  * Admin Service Delivery Tracking View
  * Track and manage service delivery for approved claims
  */
-require_once __DIR__ . '/admin-header.php';
+require_once __DIR__ . '/../layouts/admin-header.php';
 ?>
 
 <div class="container-fluid py-4">
@@ -303,4 +303,4 @@ document.getElementById('viewNotesModal').addEventListener('show.bs.modal', func
 });
 </script>
 
-<?php require_once __DIR__ . '/admin-footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/admin-footer.php'; ?>

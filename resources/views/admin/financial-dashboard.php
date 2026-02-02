@@ -1,4 +1,4 @@
-<?php include 'admin-header.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <div class="container-fluid">
     <div class="row">
@@ -440,4 +440,4 @@ function exportReport() {
 }
 </script>
 
-<?php include 'admin-footer.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

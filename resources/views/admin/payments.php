@@ -1,266 +1,647 @@
-<?php include_once 'admin-header.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-money-bill-wave mr-2"></i>Payments Management
-        </h1>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal">
-                <i class="fas fa-search-dollar mr-2"></i>Verify Payment
-            </button>
-            <a href="/admin/payments/reconciliation" class="btn btn-warning">
-                <i class="fas fa-balance-scale mr-2"></i>Reconciliation
-            </a>
-            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="fas fa-filter mr-2"></i>Filter
-            </button>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="/admin/payments">All Payments</a>
-                <a class="dropdown-item" href="/admin/payments?status=completed">Completed</a>
-                <a class="dropdown-item" href="/admin/payments?status=pending">Pending</a>
-                <a class="dropdown-item" href="/admin/payments?status=failed">Failed</a>
+<style>
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 4px 0;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-action {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: #8B5CF6;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #7C3AED;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #6B7280;
+    }
+
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+        transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .stat-icon.success {
+        background: #D1FAE5;
+        color: #10B981;
+    }
+
+    .stat-icon.info {
+        background: #DBEAFE;
+        color: #3B82F6;
+    }
+
+    .stat-icon.warning {
+        background: #FEF3C7;
+        color: #F59E0B;
+    }
+
+    .stat-icon.primary {
+        background: #EDE9FE;
+        color: #8B5CF6;
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 8px;
+    }
+
+    .stat-change {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    /* Table Card */
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 30px;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #F3F4F6;
+    }
+
+    .table-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .table-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+        margin-top: 4px;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+        border-color: #8B5CF6;
+        color: #8B5CF6;
+    }
+
+    .filter-btn.active {
+        background: #8B5CF6;
+        color: white;
+        border-color: #8B5CF6;
+    }
+
+    /* Payments Table */
+    .payments-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .payments-table thead th {
+        background: #F9FAFB;
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #E5E7EB;
+    }
+
+    .payments-table tbody td {
+        padding: 16px;
+        border-bottom: 1px solid #F3F4F6;
+        font-size: 14px;
+        color: #1F2937;
+    }
+
+    .payments-table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .member-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        color: white;
+    }
+
+    .member-avatar.blue {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    .member-avatar.green {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+
+    .member-avatar.purple {
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    }
+
+    .member-avatar.orange {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+
+    .member-details .member-name {
+        font-weight: 600;
+        color: #1F2937;
+        margin-bottom: 2px;
+    }
+
+    .member-details .member-number {
+        font-size: 12px;
+        color: #9CA3AF;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .status-badge.pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .status-badge.failed {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .type-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #F3F4F6;
+        color: #6B7280;
+    }
+
+    .action-btns {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #6B7280;
+    }
+
+    .action-btn:hover {
+        background: #8B5CF6;
+        color: white;
+        border-color: #8B5CF6;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        color: #E5E7EB;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h5 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #6B7280;
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+        color: #9CA3AF;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 2px solid #F3F4F6;
+        padding: 20px 24px;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .alert {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .alert-info {
+        background: #EFF6FF;
+        border: 1px solid #DBEAFE;
+        color: #1E40AF;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Payments Management</h1>
+        <p class="page-subtitle">Track and manage all payment transactions</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn-action btn-secondary" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal">
+            <i class="fas fa-search"></i>
+            Verify Payment
+        </button>
+        <button class="btn-action btn-primary" onclick="window.location.href='/admin/payments-reconciliation'">
+            <i class="fas fa-sync-alt"></i>
+            Reconciliation
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-icon success">
+                <i class="fas fa-dollar-sign"></i>
             </div>
+        </div>
+        <div class="stat-value">KES <?php echo number_format(array_sum(array_column($payments ?? [], 'amount')), 0); ?></div>
+        <div class="stat-change">All-time collections</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Total Payments</div>
+            <div class="stat-icon info">
+                <i class="fas fa-receipt"></i>
+            </div>
+        </div>
+        <div class="stat-value"><?php echo count($payments ?? []); ?></div>
+        <div class="stat-change">Total transactions</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Pending</div>
+            <div class="stat-icon warning">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-value"><?php echo count(array_filter($payments ?? [], fn($p) => $p['status'] === 'pending')); ?></div>
+        <div class="stat-change">Awaiting verification</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">This Month</div>
+            <div class="stat-icon primary">
+                <i class="fas fa-calendar"></i>
+            </div>
+        </div>
+        <div class="stat-value">KES <?php 
+            $thisMonth = array_filter($payments ?? [], fn($p) => 
+                date('Y-m', strtotime($p['created_at'])) === date('Y-m')
+            );
+            echo number_format(array_sum(array_column($thisMonth, 'amount')), 0);
+        ?></div>
+        <div class="stat-change"><?php echo date('F Y'); ?></div>
+    </div>
+</div>
+
+<!-- Payments Table -->
+<div class="table-card">
+    <div class="table-header">
+        <div>
+            <div class="table-title">Payment Transactions</div>
+            <div class="table-subtitle">View and manage all payment records</div>
+        </div>
+        <div class="filter-group">
+            <button class="filter-btn active" onclick="filterPayments('all')">All</button>
+            <button class="filter-btn" onclick="filterPayments('completed')">Completed</button>
+            <button class="filter-btn" onclick="filterPayments('pending')">Pending</button>
+            <button class="filter-btn" onclick="filterPayments('failed')">Failed</button>
         </div>
     </div>
 
-    <!-- Payments Statistics -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Revenue
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format(array_sum(array_column($payments, 'amount')), 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Payments
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count($payments); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Payments
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($payments, fn($p) => $p['status'] === 'pending')); ?>
+    <?php if (!empty($payments)): ?>
+    <div style="overflow-x: auto;">
+        <table class="payments-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Member</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                $avatarColors = ['blue', 'green', 'purple', 'orange'];
+                $index = 0;
+                foreach ($payments as $payment): 
+                    $initials = strtoupper(substr($payment['first_name'], 0, 1) . substr($payment['last_name'], 0, 1));
+                    $avatarColor = $avatarColors[$index % 4];
+                    $index++;
+                ?>
+                <tr data-status="<?php echo $payment['status']; ?>">
+                    <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                    <td>
+                        <div class="member-info">
+                            <div class="member-avatar <?php echo $avatarColor; ?>"><?php echo $initials; ?></div>
+                            <div class="member-details">
+                                <div class="member-name"><?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?></div>
+                                <div class="member-number"><?php echo htmlspecialchars($payment['member_number']); ?></div>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                    </td>
+                    <td><strong>KES <?php echo number_format($payment['amount'], 2); ?></strong></td>
+                    <td><span class="type-badge"><?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?></span></td>
+                    <td><span class="type-badge"><?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?></span></td>
+                    <td>
+                        <span class="status-badge <?php echo $payment['status']; ?>">
+                            <?php echo ucfirst($payment['status']); ?>
+                        </span>
+                    </td>
+                    <td><?php echo date('M j, Y H:i', strtotime($payment['created_at'])); ?></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $payment['id']; ?>" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal" title="Verify">
+                                <i class="fas fa-check"></i>
+                            </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                This Month
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php 
-                                    $thisMonth = array_filter($payments, fn($p) => 
-                                        date('Y-m', strtotime($p['created_at'])) === date('Y-m')
-                                    );
-                                    echo number_format(array_sum(array_column($thisMonth, 'amount')), 2);
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </td>
+                </tr>
 
-    <!-- Payments Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Payment Transactions</h6>
-        </div>
-        <div class="card-body">
-            <?php if (!empty($payments)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Transaction ID</th>
-                                <th>Member</th>
-                                <th>Amount</th>
-                                <th>Type</th>
-                                <th>Method</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($payments as $payment): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?></strong><br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($payment['member_number']); ?></small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <strong>KES <?php echo number_format($payment['amount'], 2); ?></strong>
-                                </td>
-                                <td>
-                                    <span class="badge badge-secondary">
-                                        <?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-info">
-                                        <?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?php 
-                                        echo match($payment['status']) {
-                                            'completed' => 'success',
-                                            'pending' => 'warning',
-                                            'failed' => 'danger',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo ucfirst($payment['status']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y H:i', strtotime($payment['created_at'])); ?></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $payment['id']; ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal"
-                                                data-payment-id="<?php echo (int)$payment['id']; ?>"
-                                                data-member-id="<?php echo (int)($payment['member_id'] ?? 0); ?>"
-                                                data-amount="<?php echo htmlspecialchars($payment['amount']); ?>"
-                                                data-checkout-id="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>"
-                                                data-receipt="<?php echo htmlspecialchars($payment['transaction_id'] ?? ''); ?>">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                        <?php if ($payment['status'] === 'pending'): ?>
-                                        <button type="button" class="btn btn-success btn-sm" onclick="confirmPayment(<?php echo $payment['id']; ?>)">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="failPayment(<?php echo $payment['id']; ?>)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <!-- Payment Details Modal -->
-                            <div class="modal fade" id="paymentModal<?php echo $payment['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Payment Details</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Payment Details Modal -->
+                <div class="modal fade" id="paymentModal<?php echo $payment['id']; ?>" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Payment Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Transaction ID</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
+                                            <?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?>
                                         </div>
-                                        <div class="modal-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <h6>Payment Information</h6>
-                                                    <p><strong>Transaction ID:</strong> <?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></p>
-                                                    <p><strong>Amount:</strong> KES <?php echo number_format($payment['amount'], 2); ?></p>
-                                                    <p><strong>Type:</strong> <?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?></p>
-                                                    <p><strong>Method:</strong> <?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $payment['status'] === 'completed' ? 'success' : 'warning'; ?>"><?php echo ucfirst($payment['status']); ?></span></p>
-                                                    <p><strong>Date:</strong> <?php echo date('M j, Y H:i:s', strtotime($payment['created_at'])); ?></p>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6>Member Information</h6>
-                                                    <p><strong>Name:</strong> <?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?></p>
-                                                    <p><strong>Member Number:</strong> <?php echo htmlspecialchars($payment['member_number']); ?></p>
-                                                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($payment['phone_number'] ?? 'N/A'); ?></p>
-                                                    <p><strong>Reference:</strong> <?php echo htmlspecialchars($payment['reference'] ?? 'N/A'); ?></p>
-                                                    <p><strong>Notes:</strong> <?php echo htmlspecialchars($payment['notes'] ?? 'N/A'); ?></p>
-                                                </div>
-                                            </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
+                                            KES <?php echo number_format($payment['amount'], 2); ?>
                                         </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-warning" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#verifyPaymentModal"
-                                                data-member-id="<?php echo $payment['member_id']; ?>"
-                                                data-amount="<?php echo $payment['amount']; ?>"
-                                                data-checkout-id="<?php echo htmlspecialchars($payment['transaction_reference'] ?? ''); ?>"
-                                                data-receipt="<?php echo htmlspecialchars($payment['transaction_id'] ?? ''); ?>">
-                                                <i class="fas fa-check-circle mr-1"></i>Verify Payment
-                                            </button>
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Member Name</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                            <?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Member Number</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                            <?php echo htmlspecialchars($payment['member_number']); ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Payment Type</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                            <?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Payment Method</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                            <?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div style="padding: 10px;">
+                                            <span class="status-badge <?php echo $payment['status']; ?>">
+                                                <?php echo ucfirst($payment['status']); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Date & Time</label>
+                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
+                                            <?php echo date('M j, Y H:i:s', strtotime($payment['created_at'])); ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            <div class="modal-footer">
+                                <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-money-bill-wave fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No payments found</h5>
-                    <p class="text-gray-500">Payment transactions will appear here.</p>
-                </div>
-            <?php endif; ?>
-        </div>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
+    <?php else: ?>
+    <div class="empty-state">
+        <i class="fas fa-money-bill-wave"></i>
+        <h5>No payments found</h5>
+        <p>Payment transactions will appear here</p>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Verify Payment Modal -->
-<div class="modal fade" id="verifyPaymentModal" tabindex="-1" aria-labelledby="verifyPaymentModalLabel" aria-hidden="true">
+<div class="modal fade" id="verifyPaymentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="verifyPaymentModalLabel">Verify Payment (Paybill or STK)</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Verify Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="verifyPaymentForm">
                 <?php if (isset($_SESSION['csrf_token'])): ?>
@@ -268,76 +649,58 @@
                 <?php endif; ?>
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        Use this to verify a Paybill payment (by receipt) or STK push (by Checkout Request ID) when a member reports missing payment.
+                        <i class="fas fa-info-circle"></i>
+                        <span>Use this to verify a Paybill payment or STK push when a member reports missing payment</span>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Method</label>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Verification Method</label>
                             <select class="form-control" name="method" id="verifyMethod" required>
                                 <option value="stk">STK Push</option>
-                                <option value="paybill">Paybill</option>
+                                <option value="paybill">Paybill Receipt</option>
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Payment Type</label>
                             <select class="form-control" name="payment_type">
-                                <option value="monthly">Monthly</option>
-                                <option value="registration">Registration</option>
+                                <option value="monthly">Monthly Contribution</option>
+                                <option value="registration">Registration Fee</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Amount (KES)</label>
-                            <input type="number" class="form-control" name="amount" min="1" step="1" placeholder="e.g. 200">
-                        </div>
                     </div>
 
                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Amount (KES)</label>
+                            <input type="number" class="form-control" name="amount" min="1" step="1" placeholder="e.g. 500">
+                        </div>
                         <div class="col-md-6 mb-3" id="stkField">
-                            <label class="form-label">Checkout Request ID (STK)</label>
+                            <label class="form-label">Checkout Request ID</label>
                             <input type="text" class="form-control" name="checkout_request_id" id="checkoutRequestId" placeholder="ws_CO_...">
                         </div>
-                        <div class="col-md-6 mb-3" id="paybillField" style="display:none;">
-                            <label class="form-label">M-Pesa Receipt Number (Paybill)</label>
-                            <input type="text" class="form-control" name="mpesa_receipt_number" id="mpesaReceiptNumber" placeholder="ABC123XYZ">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Search Member</label>
-                        <div style="position: relative;">
-                            <input type="text" class="form-control" id="memberSearchInput" 
-                                placeholder="Type member name, number, ID number, or phone..." autocomplete="off">
-                            <div id="memberSearchResults" class="list-group" style="position: absolute; z-index: 1000; width: 100%; display: none; max-height: 300px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                        <div class="col-md-6 mb-3" id="receiptField" style="display: none;">
+                            <label class="form-label">M-Pesa Receipt</label>
+                            <input type="text" class="form-control" name="mpesa_receipt_number" id="mpesaReceiptNumber" placeholder="RH81M7...">
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Member ID</label>
-                            <input type="number" class="form-control" name="member_id" id="verifyMemberId" placeholder="Member ID" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Member Number</label>
-                            <input type="text" class="form-control" name="member_number" id="verifyMemberNumber" placeholder="M-000123" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">ID Number</label>
-                            <input type="text" class="form-control" name="id_number" id="verifyIdNumber" placeholder="ID Number" readonly>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Member ID (Optional)</label>
+                            <input type="number" class="form-control" name="member_id" id="memberIdInput" placeholder="Member ID">
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Notes (optional)</label>
-                        <textarea class="form-control" name="notes" rows="2" placeholder="Verification notes"></textarea>
-                    </div>
-
-                    <div id="verifyPaymentResult"></div>
+                    <div id="verifyResults" style="display: none; margin-top: 20px;"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Verify & Post</button>
+                    <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-action btn-primary">
+                        <i class="fas fa-check"></i>
+                        Verify Payment
+                    </button>
                 </div>
             </form>
         </div>
@@ -345,170 +708,88 @@
 </div>
 
 <script>
-function confirmPayment(paymentId) {
-    if (confirm('Confirm this payment as completed?')) {
-        // Implementation for confirming payment
-        window.location.href = `/admin/payments/confirm/${paymentId}`;
-    }
-}
-
-function failPayment(paymentId) {
-    const reason = prompt('Reason for payment failure:');
-    if (reason) {
-        // Implementation for marking payment as failed
-        window.location.href = `/admin/payments/fail/${paymentId}?reason=${encodeURIComponent(reason)}`;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const verifyModal = document.getElementById('verifyPaymentModal');
-    const verifyForm = document.getElementById('verifyPaymentForm');
-    const verifyMethod = document.getElementById('verifyMethod');
-    const stkField = document.getElementById('stkField');
-    const paybillField = document.getElementById('paybillField');
-    const resultBox = document.getElementById('verifyPaymentResult');
+// Filter payments by status
+function filterPayments(status) {
+    const rows = document.querySelectorAll('.payments-table tbody tr[data-status]');
+    const buttons = document.querySelectorAll('.filter-btn');
     
-    // Member autocomplete
-    const searchInput = document.getElementById('memberSearchInput');
-    const searchResults = document.getElementById('memberSearchResults');
-    const memberIdInput = document.getElementById('verifyMemberId');
-    const memberNumberInput = document.getElementById('verifyMemberNumber');
-    const idNumberInput = document.getElementById('verifyIdNumber');
-    let searchTimeout = null;
+    // Update button states
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
     
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            return;
-        }
-        
-        searchTimeout = setTimeout(() => {
-            fetch('/admin/payments/search-members?q=' + encodeURIComponent(query))
-                .then(response => response.json())
-                .then(data => {
-                    searchResults.innerHTML = '';
-                    
-                    if (data.results && data.results.length > 0) {
-                        data.results.forEach(member => {
-                            const item = document.createElement('button');
-                            item.type = 'button';
-                            item.className = 'list-group-item list-group-item-action';
-                            item.innerHTML = `
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">${member.name}</h6>
-                                    <small>${member.member_number}</small>
-                                </div>
-                                <small class="text-muted">ID: ${member.id_number} | Phone: ${member.phone}</small>
-                            `;
-                            item.addEventListener('click', function() {
-                                memberIdInput.value = member.id;
-                                memberNumberInput.value = member.member_number;
-                                idNumberInput.value = member.id_number;
-                                searchInput.value = member.label;
-                                searchResults.style.display = 'none';
-                            });
-                            searchResults.appendChild(item);
-                        });
-                        searchResults.style.display = 'block';
-                    } else {
-                        const noResults = document.createElement('div');
-                        noResults.className = 'list-group-item text-muted';
-                        noResults.textContent = 'No members found';
-                        searchResults.appendChild(noResults);
-                        searchResults.style.display = 'block';
-                    }
-                })
-                .catch(err => {
-                    console.error('Search error:', err);
-                    searchResults.style.display = 'none';
-                });
-        }, 300);
-    });
-    
-    // Close search results when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.style.display = 'none';
-        }
-    });
-
-    function toggleMethodFields() {
-        if (verifyMethod.value === 'paybill') {
-            stkField.style.display = 'none';
-            paybillField.style.display = 'block';
+    // Filter rows
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
         } else {
-            stkField.style.display = 'block';
-            paybillField.style.display = 'none';
+            row.style.display = 'none';
         }
-    }
-
-    if (verifyMethod) {
-        verifyMethod.addEventListener('change', toggleMethodFields);
-        toggleMethodFields();
-    }
-
-    verifyModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        if (!button) {
-            // Clear all fields when opening fresh
-            verifyForm.reset();
-            searchInput.value = '';
-            memberIdInput.value = '';
-            memberNumberInput.value = '';
-            idNumberInput.value = '';
-            resultBox.innerHTML = '';
-            return;
-        }
-        const memberId = button.getAttribute('data-member-id') || '';
-        const amount = button.getAttribute('data-amount') || '';
-        const checkoutId = button.getAttribute('data-checkout-id') || '';
-        const receipt = button.getAttribute('data-receipt') || '';
-
-        // Populate form fields
-        memberIdInput.value = memberId;
-        document.querySelector('input[name="amount"]').value = amount;
-        document.getElementById('checkoutRequestId').value = checkoutId;
-        document.getElementById('mpesaReceiptNumber').value = receipt;
-        
-        // Set appropriate method based on what data is available
-        if (receipt) {
-            verifyMethod.value = 'paybill';
-        } else if (checkoutId) {
-            verifyMethod.value = 'stk';
-        }
-        toggleMethodFields();
-        
-        resultBox.innerHTML = '';
     });
+}
 
-    verifyForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        resultBox.innerHTML = '<div class="alert alert-info">Verifying payment...</div>';
+// Toggle verification method fields
+document.getElementById('verifyMethod')?.addEventListener('change', function() {
+    const stkField = document.getElementById('stkField');
+    const receiptField = document.getElementById('receiptField');
+    
+    if (this.value === 'stk') {
+        stkField.style.display = 'block';
+        receiptField.style.display = 'none';
+    } else {
+        stkField.style.display = 'none';
+        receiptField.style.display = 'block';
+    }
+});
 
-        const formData = new FormData(verifyForm);
-
-        fetch('/admin/payments/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                resultBox.innerHTML = '<div class="alert alert-success">' + (data.message || 'Payment verified') + '</div>';
-                setTimeout(() => window.location.reload(), 1200);
-            } else {
-                resultBox.innerHTML = '<div class="alert alert-danger">' + (data.error || data.message || 'Verification failed') + '</div>';
-            }
-        })
-        .catch(() => {
-            resultBox.innerHTML = '<div class="alert alert-danger">Verification request failed</div>';
-        });
+// Verify payment form submission
+document.getElementById('verifyPaymentForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const resultsDiv = document.getElementById('verifyResults');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Verifying payment...</span>
+        </div>
+    `;
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/payments/verify', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultsDiv.innerHTML = `
+                <div class="alert" style="background: #D1FAE5; border: 1px solid #10B981; color: #065F46;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${data.message}</span>
+                </div>
+            `;
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            resultsDiv.innerHTML = `
+                <div class="alert" style="background: #FEE2E2; border: 1px solid #DC2626; color: #991B1B;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${data.message || 'Verification failed'}</span>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        resultsDiv.innerHTML = `
+            <div class="alert" style="background: #FEE2E2; border: 1px solid #DC2626; color: #991B1B;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Error verifying payment. Please try again.</span>
+            </div>
+        `;
     });
 });
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>
