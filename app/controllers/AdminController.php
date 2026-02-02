@@ -314,6 +314,24 @@ class AdminController extends BaseController
     }
 
     /**
+     * View Track Services - Overview of all claims being tracked
+     */
+    public function viewTrackServices()
+    {
+        $this->requireAdminAccess();
+        
+        // Get all approved claims that are in progress
+        $data = [
+            'title' => 'Track Services - Admin',
+            'claims' => $this->claimModel->getAllClaimsWithDetails([
+                'status' => 'approved'
+            ])
+        ];
+        
+        $this->view('admin/track-services', $data);
+    }
+
+    /**
      * Approve Claim for Standard Services (Default)
      */
     public function approveClaim()
@@ -1297,7 +1315,7 @@ class AdminController extends BaseController
             'recent_transactions' => $recentTransactions
         ];
         
-        $this->view('admin.financial-dashboard', $data);
+        $this->view('admin/financial-dashboard', $data);
     }
 }
 ?>
