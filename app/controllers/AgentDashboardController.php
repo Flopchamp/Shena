@@ -34,25 +34,39 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // Get agent statistics
-        $stats = $this->agentModel->getAgentDashboardStats($agent['id']);
-
-        // Get recent commissions (pass empty filters array, then limit separately)
-        $allCommissions = $this->agentModel->getAgentCommissions($agent['id'], []);
-        $recentCommissions = array_slice($allCommissions, 0, 5);
+        // Get agent statistics from database
+        $dbStats = $this->agentModel->getAgentDashboardStats($agent['id']);
+        
+        // Calculate growth percentages (comparing last 30 days vs previous 30 days)
+        $members_growth = 0;
+        $policies_growth = 0;
+        $commission_growth = 0;
+        
+        // You can enhance this later with actual growth calculations
+        
+        // Format stats for dashboard view
+        $stats = [
+            'total_members' => $dbStats['total_members'] ?? 0,
+            'members_growth' => $members_growth,
+            'active_policies' => $dbStats['active_members'] ?? 0,
+            'policies_growth' => $policies_growth,
+            'monthly_commission' => $dbStats['pending_commission'] ?? 0,
+            'commission_growth' => $commission_growth,
+            'agent_rank' => 0, // Can be calculated based on leaderboard later
+            'rank_progress' => 0
+        ];
 
         // Get recent members registered by this agent
-        $recentMembers = $this->memberModel->getMembersByAgent($agent['id'], 5);
+        $members = $this->memberModel->getMembersByAgent($agent['id']);
 
         $data = [
             'title' => 'Agent Dashboard - Shena Companion Welfare Association',
             'agent' => $agent,
             'stats' => $stats,
-            'recent_commissions' => $recentCommissions,
-            'recent_members' => $recentMembers
+            'members' => $members
         ];
 
-        $this->view('agent.dashboard', $data);
+        $this->view('agent/dashboard', $data);
     }
 
     public function profile()
@@ -71,7 +85,7 @@ class AgentDashboardController extends BaseController
             'csrf_token' => $this->generateCsrfToken()
         ];
 
-        $this->view('agent.profile', $data);
+        $this->view('agent/profile', $data);
     }
 
     public function updateProfile()
@@ -143,7 +157,7 @@ class AgentDashboardController extends BaseController
             'members' => $members
         ];
 
-        $this->view('agent.members', $data);
+        $this->view('agent/members', $data);
     }
 
     public function commissions()
@@ -176,7 +190,7 @@ class AgentDashboardController extends BaseController
             'pending_amount' => $pendingAmount
         ];
 
-        $this->view('agent.commissions', $data);
+        $this->view('agent/commissions', $data);
     }
 
     /**
@@ -206,7 +220,7 @@ class AgentDashboardController extends BaseController
             'csrf_token' => $this->generateCsrfToken()
         ];
 
-        $this->view('agent.register-member', $data);
+        $this->view('agent/register-member', $data);
     }
     
     /**
@@ -346,7 +360,7 @@ class AgentDashboardController extends BaseController
             'current_balance' => $currentBalance
         ];
 
-        $this->view('agent.payouts', $data);
+        $this->view('agent/payouts', $data);
     }
 
     /**
@@ -361,12 +375,18 @@ class AgentDashboardController extends BaseController
             return;
         }
 
+        // TODO: Implement actual resource management system
+        // For now, return empty arrays - resources can be managed by admin
         $data = [
             'title' => 'Resources - Shena Companion Welfare Association',
-            'agent' => $agent
+            'agent' => $agent,
+            'flyers_brochures' => [],
+            'social_media' => [],
+            'member_forms' => [],
+            'latest_updates' => []
         ];
 
-        $this->view('agent.resources', $data);
+        $this->view('agent/resources', $data);
     }
 
     /**
@@ -381,7 +401,7 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // Get claims for members registered by this agent
+        // TODO: Get claims for members registered by this agent
         // This would need proper implementation with a claims model
         $claims = [];
 
@@ -391,7 +411,7 @@ class AgentDashboardController extends BaseController
             'claims' => $claims
         ];
 
-        $this->view('agent.claims', $data);
+        $this->view('agent/claims', $data);
     }
 
     /**
@@ -436,7 +456,7 @@ class AgentDashboardController extends BaseController
             'payment_history' => $paymentHistory
         ];
 
-        $this->view('agent.member-details', $data);
+        $this->view('agent/member-details', $data);
     }
 
     /**
@@ -456,6 +476,6 @@ class AgentDashboardController extends BaseController
             'agent' => $agent
         ];
 
-        $this->view('agent.support', $data);
+        $this->view('agent/support', $data);
     }
 }
