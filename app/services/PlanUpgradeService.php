@@ -14,8 +14,10 @@ class PlanUpgradeService
     
     // Package monthly fees (in KES)
     const PACKAGE_FEES = [
-        'basic' => 500,
-        'premium' => 1000
+        'individual' => 500,
+        'couple' => 750,
+        'family' => 1000,
+        'executive' => 1500
     ];
     
     public function __construct()
@@ -31,11 +33,11 @@ class PlanUpgradeService
      * Calculate prorated upgrade cost
      * 
      * @param int $memberId Member ID
-     * @param string $toPackage Target package (premium)
+     * @param string $toPackage Target package (couple, family, or executive)
      * @param string|null $customDate Custom date for calculation (for testing)
      * @return array Calculation details
      */
-    public function calculateUpgradeCost($memberId, $toPackage = 'premium', $customDate = null)
+    public function calculateUpgradeCost($memberId, $toPackage = 'couple', $customDate = null)
     {
         // Get member with user information
         $query = "SELECT m.*, u.first_name, u.last_name, u.email, u.phone 
@@ -56,8 +58,17 @@ class PlanUpgradeService
             throw new Exception('Member is already on ' . $toPackage . ' package');
         }
         
-        if ($fromPackage === 'premium') {
-            throw new Exception('Cannot upgrade from premium package');
+        if ($fromPackage === 'executive') {
+            throw new Exception('Cannot upgrade from executive package - already at highest tier');
+        }
+        
+        // Validate upgrade path (must be upgrading to a higher tier)
+        $packageHierarchy = ['individual' => 1, 'couple' => 2, 'family' => 3, 'executive' => 4];
+        if (!isset($packageHierarchy[$fromPackage]) || !isset($packageHierarchy[$toPackage])) {
+            throw new Exception('Invalid package specified');
+        }
+        if ($packageHierarchy[$toPackage] <= $packageHierarchy[$fromPackage]) {
+            throw new Exception('Can only upgrade to a higher tier package');
         }
         
         // Get current and new monthly fees
@@ -101,7 +112,7 @@ class PlanUpgradeService
      * @param string $toPackage Target package
      * @return int Upgrade request ID
      */
-    public function createUpgradeRequest($memberId, $toPackage = 'premium')
+    public function createUpgradeRequest($memberId, $toPackage = 'couple')
     {
         $calculation = $this->calculateUpgradeCost($memberId, $toPackage);
         
@@ -278,10 +289,7 @@ class PlanUpgradeService
             'reason' => $reason
         ]);
         
-        return [
-            'success' => true,
-            'message' => 'Upgrade request cancelled'
-        ];
+        return true;
     }
     
     /**

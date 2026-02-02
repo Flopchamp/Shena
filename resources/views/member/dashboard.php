@@ -1,6 +1,7 @@
-
-<?php include VIEWS_PATH . '/layouts/member-header.php'; ?>
 <?php 
+$page = 'dashboard';
+include __DIR__ . '/../layouts/member-header.php';
+
 $memberData = is_array($member ?? null) ? $member : (is_object($member ?? null) ? get_object_vars($member) : []); 
 $totalPaid = 0;
 $monthsCovered = 0;
@@ -427,10 +428,27 @@ $maturityMonths = 3; // out of 5
 }
 
 .add-dependent-btn {
-    color: #7F3D9E;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.add-dependent-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+}
+
+.add-dependent-btn i {
+    font-size: 14px;
 }
 
 .support-card {
@@ -494,7 +512,7 @@ $maturityMonths = 3; // out of 5
             <div class="contribution-overview" style="margin-top: 20px;">
                 <div class="contribution-item">
                     <h4>TOTAL PAID</h4>
-                    <h2>$<?php echo number_format($totalPaid > 0 ? $totalPaid : 1240, 0); ?></h2>
+                    <h2>KES <?php echo number_format($totalPaid, 2); ?></h2>
                 </div>
                 <div class="contribution-item">
                     <h4>MONTHS COVERED</h4>
@@ -592,25 +610,27 @@ $maturityMonths = 3; // out of 5
             <div class="card-header-custom">
                 <h3>Dependents</h3>
                 <button class="add-dependent-btn" onclick="window.location.href='/beneficiaries'">
-                    + Add
+                    <i class="fas fa-plus"></i> Add Dependent
                 </button>
             </div>
-            <div class="dependent-item">
-                <div class="dependent-avatar">J</div>
-                <div class="dependent-info">
-                    <h4>Jane Doe</h4>
-                    <p>Spouse</p>
+            <?php if (!empty($dependents)): ?>
+                <?php foreach ($dependents as $dependent): ?>
+                <div class="dependent-item">
+                    <div class="dependent-avatar"><?php echo strtoupper(substr($dependent['first_name'], 0, 1)); ?></div>
+                    <div class="dependent-info">
+                        <h4><?php echo htmlspecialchars($dependent['first_name'] . ' ' . $dependent['last_name']); ?></h4>
+                        <p><?php echo htmlspecialchars($dependent['relationship']); ?></p>
+                    </div>
+                    <span class="active-badge"><?php echo strtoupper($dependent['status'] ?? 'ACTIVE'); ?></span>
                 </div>
-                <span class="active-badge">ACTIVE</span>
-            </div>
-            <div class="dependent-item">
-                <div class="dependent-avatar">L</div>
-                <div class="dependent-info">
-                    <h4>Leo Doe</h4>
-                    <p>Child</p>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="text-align: center; padding: 20px; color: #6B7280;">
+                    <i class="fas fa-users" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
+                    <p style="margin: 0;">No dependents registered yet.</p>
+                    <p style="font-size: 0.85rem; margin: 8px 0 0 0;">Click "Add Dependent" to register your family members.</p>
                 </div>
-                <span class="active-badge">ACTIVE</span>
-            </div>
+            <?php endif; ?>
             
             <!-- 24/7 Support Card -->
             <div class="support-card">
@@ -621,4 +641,4 @@ $maturityMonths = 3; // out of 5
     </div>
 </div>
 
-<?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>

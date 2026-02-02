@@ -1,26 +1,9 @@
-
 <?php
-$page = 'profile';
-include VIEWS_PATH . '/layouts/member-header.php';
+$page = 'settings';
+include __DIR__ . '/../layouts/member-header.php';
 
-// Sample data - replace with actual database queries
-$member = [
-    'full_name' => 'Johnathan Doe',
-    'first_name' => 'Johnathan',
-    'last_name' => 'Doe',
-    'member_number' => 'SH-99238',
-    'phone' => '+254 700 000 000',
-    'email' => 'john.doe@example.com',
-    'national_id' => '32904581',
-    'address' => 'Apt 4B, Harmony Towers, Westlands, Nairobi',
-    'next_of_kin_name' => 'Jane Doe',
-    'next_of_kin_relationship' => 'Spouse',
-    'next_of_kin_phone' => '+254 711 222 333',
-    'package_name' => 'Couples Below 70 Years',
-    'membership_tier' => 'Platinum Member',
-    'coverage_amount' => 1500000,
-    'is_covered' => true
-];
+// Use member data from controller
+$memberData = $member ?? [];
 ?>
 
 <style>
@@ -324,12 +307,12 @@ $member = [
                 <div class="col-md-6">
                     <label class="form-label">Full Name</label>
                     <input type="text" name="full_name" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['full_name']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['full_name'] ?? ''); ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">National ID / Passport</label>
                     <input type="text" name="national_id" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['national_id']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['national_id'] ?? ''); ?>" required>
                 </div>
             </div>
 
@@ -337,18 +320,18 @@ $member = [
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
                     <input type="tel" name="phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['phone']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['phone'] ?? ''); ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email Address</label>
                     <input type="email" name="email" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['email']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['email'] ?? ''); ?>" required>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Residential Address</label>
-                <textarea name="address" class="form-control" rows="3" required><?php echo htmlspecialchars($member['address']); ?></textarea>
+                <textarea name="address" class="form-control" rows="3" required><?php echo htmlspecialchars($memberData['address'] ?? ''); ?></textarea>
             </div>
         </form>
     </div>
@@ -373,25 +356,25 @@ $member = [
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
                     <input type="text" name="next_of_kin_name" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['next_of_kin_name']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['next_of_kin_name'] ?? ''); ?>" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Relationship</label>
                     <select name="next_of_kin_relationship" class="form-select" required>
-                        <option value="Spouse" <?php echo $member['next_of_kin_relationship'] == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
-                        <option value="Parent" <?php echo $member['next_of_kin_relationship'] == 'Parent' ? 'selected' : ''; ?>>Parent</option>
-                        <option value="Child" <?php echo $member['next_of_kin_relationship'] == 'Child' ? 'selected' : ''; ?>>Child</option>
-                        <option value="Sibling" <?php echo $member['next_of_kin_relationship'] == 'Sibling' ? 'selected' : ''; ?>>Sibling</option>
-                        <option value="Friend" <?php echo $member['next_of_kin_relationship'] == 'Friend' ? 'selected' : ''; ?>>Friend</option>
-                        <option value="Other" <?php echo $member['next_of_kin_relationship'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                        <option value="Spouse" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
+                        <option value="Parent" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Parent' ? 'selected' : ''; ?>>Parent</option>
+                        <option value="Child" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Child' ? 'selected' : ''; ?>>Child</option>
+                        <option value="Sibling" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Sibling' ? 'selected' : ''; ?>>Sibling</option>
+                        <option value="Friend" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Friend' ? 'selected' : ''; ?>>Friend</option>
+                        <option value="Other" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Other' ? 'selected' : ''; ?>>Other</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Phone Number</label>
                     <input type="tel" name="next_of_kin_phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($member['next_of_kin_phone']); ?>" required>
+                           value="<?php echo htmlspecialchars($memberData['next_of_kin_phone'] ?? ''); ?>" required>
                 </div>
             </form>
         </div>
@@ -409,9 +392,9 @@ $member = [
             </div>
 
             <div class="current-plan-label">CURRENT PLAN</div>
-            <div class="package-name"><?php echo htmlspecialchars($member['package_name']); ?></div>
+            <div class="package-name"><?php echo htmlspecialchars($memberData['package_name'] ?? $memberData['package'] ?? 'Basic'); ?></div>
             
-            <?php if ($member['is_covered']): ?>
+            <?php if ($memberData['is_covered'] ?? true): ?>
             <div class="coverage-badge">
                 <i class="fas fa-check-circle"></i>
                 Fully Covered
@@ -426,4 +409,4 @@ $member = [
     </div>
 </div>
 
-<?php include VIEWS_PATH . '/layouts/member-footer.php'; ?>
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>
