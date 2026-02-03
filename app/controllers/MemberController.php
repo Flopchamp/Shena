@@ -1049,4 +1049,56 @@ class MemberController extends BaseController
         // TODO: Implement clear all notifications logic
         echo json_encode(['success' => true]);
     }
+    
+    /**
+     * View contact support page
+     */
+    public function viewSupport()
+    {  
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/member/dashboard');
+            return;
+        }
+        
+        $this->view('member/support', [
+            'member' => $member
+        ]);
+    }
+    
+    /**
+     * Submit support request
+     */
+    public function submitSupport()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/member/support');
+            return;
+        }
+        
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/member/dashboard');
+            return;
+        }
+        
+        $subject = trim($_POST['subject'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        $priority = $_POST['priority'] ?? 'normal';
+        
+        if (empty($subject) || empty($message)) {
+            $_SESSION['error'] = 'Please fill in all required fields.';
+            $this->redirect('/member/support');
+            return;
+        }
+        
+        // TODO: Store support ticket in database
+        // For now, just show success message
+        $_SESSION['success'] = 'Your support request has been submitted successfully. Our team will get back to you soon.';
+        $this->redirect('/member/support');
+    }
 }

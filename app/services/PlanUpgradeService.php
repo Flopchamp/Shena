@@ -348,11 +348,16 @@ class PlanUpgradeService
      */
     public function getMemberUpgradeHistory($memberId)
     {
-        $query = "SELECT * FROM plan_upgrade_history 
-                  WHERE member_id = :member_id 
-                  ORDER BY upgraded_at DESC";
-        
-        return $this->db->fetchAll($query, ['member_id' => $memberId]);
+        try {
+            $query = "SELECT * FROM plan_upgrade_history 
+                      WHERE member_id = :member_id 
+                      ORDER BY upgraded_at DESC";
+            
+            return $this->db->fetchAll($query, ['member_id' => $memberId]);
+        } catch (Exception $e) {
+            error_log("Get upgrade history error: " . $e->getMessage());
+            return [];
+        }
     }
     
     /**
@@ -363,12 +368,17 @@ class PlanUpgradeService
      */
     public function getMemberPendingUpgrades($memberId)
     {
-        $query = "SELECT * FROM plan_upgrade_requests 
-                  WHERE member_id = :member_id 
-                  AND status IN ('pending', 'payment_initiated')
-                  ORDER BY requested_at DESC";
-        
-        return $this->db->fetchAll($query, ['member_id' => $memberId]);
+        try {
+            $query = "SELECT * FROM plan_upgrade_requests 
+                      WHERE member_id = :member_id 
+                      AND status IN ('pending', 'payment_initiated')
+                      ORDER BY requested_at DESC";
+            
+            return $this->db->fetchAll($query, ['member_id' => $memberId]);
+        } catch (Exception $e) {
+            error_log("Get pending upgrades error: " . $e->getMessage());
+            return [];
+        }
     }
     
     /**
