@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../services/BulkSmsService.php';
 require_once __DIR__ . '/../services/SmsService.php';
 require_once __DIR__ . '/../models/Member.php';
+require_once __DIR__ . '/../core/Database.php';
 
 class BulkSmsController extends BaseController
 {
@@ -31,27 +32,19 @@ class BulkSmsController extends BaseController
     {
         $this->requireRole(['admin', 'super_admin', 'manager']);
         
-        $filters = [
-            'status' => $_GET['status'] ?? '',
-            'date_from' => $_GET['date_from'] ?? '',
-            'date_to' => $_GET['date_to'] ?? ''
-        ];
+        // For now, provide empty data until campaign tables are created
+        $campaigns = [];
+        $queue_items = [];
+        $templates = [];
         
-        // Get campaigns
-        $campaigns = $this->bulkSmsService->getAllCampaigns($filters);
-        
-        // Get queue items
-        $queue_items = $this->bulkSmsService->getQueueItems(50);
-        
-        // Get templates
-        $templates = $this->bulkSmsService->getTemplates();
-        
-        // Get statistics
+        // Get statistics from communications table
         $stats = [
-            'active_campaigns' => $this->bulkSmsService->getActiveCampaignCount(),
-            'sent_today' => $this->bulkSmsService->getSentCountToday(),
-            'queue_pending' => $this->bulkSmsService->getQueuePendingCount(),
-            'sms_credits' => $this->bulkSmsService->getSmsCredits()
+            'active_campaigns' => 0,
+            'sent_today' => $this->getSmsSentToday(),
+            'queue_pending' => 0,
+            'sms_credits' => 0,
+            'total_sent' => $this->getTotalSmsSent(),
+            'failed_count' => $this->getFailedSmsCount()
         ];
         
         $data = [
@@ -63,6 +56,68 @@ class BulkSmsController extends BaseController
         ];
         
         $this->view('admin.sms-campaigns', $data);
+    }
+    
+    /**
+     * Get SMS sent today from communications table
+     */
+    private function getSmsSentToday()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'sms' 
+                AND DATE(sent_at) = CURDATE()
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting SMS sent today: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Get total SMS sent from communications table
+     */
+    private function getTotalSmsSent()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'sms'
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting total SMS sent: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Get failed SMS count from communications table
+     */
+    private function getFailedSmsCount()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'sms' 
+                AND status = 'failed'
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting failed SMS count: " . $e->getMessage());
+            return 0;
+        }
     }
     
     /**

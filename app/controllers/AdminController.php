@@ -656,53 +656,224 @@ class AdminController extends BaseController
     }
 
     /**
+     * Export Report (PDF or Excel)
+     */
+    public function exportReport()
+    {
+        $this->requireAdminAccess();
+        
+        $format = $_GET['format'] ?? 'excel';
+        $reportType = $_GET['type'] ?? 'overview';
+        $startDate = $_GET['date_from'] ?? date('Y-m-01');
+        $endDate = $_GET['date_to'] ?? date('Y-m-d');
+        
+        // Gather report data
+        $data = [
+            'reportType' => $reportType,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalMembers' => $this->memberModel->getTotalMembers(),
+            'activeMembers' => $this->memberModel->getActiveMembers(),
+            'inactiveMembers' => $this->memberModel->getInactiveMembers(),
+            'pendingMembers' => $this->memberModel->getPendingMembers(),
+            'totalRevenue' => $this->paymentModel->getTotalRevenue($startDate, $endDate),
+            'monthlyRevenue' => $this->paymentModel->getMonthlyRevenue(),
+            'totalClaimsPaid' => $this->claimModel->getTotalClaimsValue(),
+            'newMembersThisMonth' => count($this->memberModel->getNewRegistrations(date('Y-m-01'), date('Y-m-d'))),
+            'renewalDue' => count($this->paymentModel->getMembersWithOverduePayments()),
+            'pendingPayments' => count($this->paymentModel->getPendingPayments()),
+            'failedPayments' => count($this->paymentModel->getFailedPayments())
+        ];
+        
+        // Add specific report data based on type
+        if ($reportType === 'members') {
+            $data['memberReports'] = $this->memberModel->getNewRegistrations($startDate, $endDate);
+        } elseif ($reportType === 'payments') {
+            $data['paymentReports'] = $this->paymentModel->getPaymentReport($startDate, $endDate);
+        } elseif ($reportType === 'claims') {
+            $data['claimReports'] = $this->claimModel->getClaimReport($startDate, $endDate);
+        }
+        
+        if ($format === 'pdf') {
+            $this->exportPDF($data);
+        } else {
+            $this->exportExcel($data);
+        }
+    }
+    
+    /**
+     * Export Report as PDF
+     */
+    private function exportPDF($data)
+    {
+        // Set headers for PDF download
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="report_' . $data['reportType'] . '_' . date('Y-m-d') . '.pdf"');
+        
+        // For now, generate a simple PDF using HTML2PDF or similar
+        // This is a basic implementation - you can enhance with libraries like TCPDF, FPDF, or Dompdf
+        
+        // Simple HTML content for PDF
+        $html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #8B5CF6; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #8B5CF6; color: white; }
+                .header { margin-bottom: 30px; }
+                .stat { display: inline-block; margin: 10px; padding: 10px; background: #f0f0f0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Shena Companion Welfare - ' . ucfirst($data['reportType']) . ' Report</h1>
+                <p><strong>Period:</strong> ' . $data['startDate'] . ' to ' . $data['endDate'] . '</p>
+                <p><strong>Generated:</strong> ' . date('Y-m-d H:i:s') . '</p>
+            </div>
+            
+            <h2>Summary Statistics</h2>
+            <div class="stat"><strong>Total Members:</strong> ' . $data['totalMembers'] . '</div>
+            <div class="stat"><strong>Active Members:</strong> ' . $data['activeMembers'] . '</div>
+            <div class="stat"><strong>Total Revenue:</strong> KES ' . number_format($data['totalRevenue'], 2) . '</div>
+            <div class="stat"><strong>Total Claims Paid:</strong> KES ' . number_format($data['totalClaimsPaid'], 2) . '</div>';
+        
+        if ($data['reportType'] === 'members' && !empty($data['memberReports'])) {
+            $html .= '<h2>Member Details</h2>
+            <table>
+                <tr>
+                    <th>Member Number</th>
+                    <th>Name</th>
+                    <th>Package</th>
+                    <th>Status</th>
+                    <th>Registration Date</th>
+                </tr>';
+            foreach ($data['memberReports'] as $member) {
+                $html .= '<tr>
+                    <td>' . htmlspecialchars($member['member_number']) . '</td>
+                    <td>' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</td>
+                    <td>' . htmlspecialchars($member['package']) . '</td>
+                    <td>' . htmlspecialchars($member['status']) . '</td>
+                    <td>' . date('Y-m-d', strtotime($member['created_at'])) . '</td>
+                </tr>';
+            }
+            $html .= '</table>';
+        }
+        
+        $html .= '</body></html>';
+        
+        // Output HTML that can be printed to PDF by the browser
+        // User can use browser's "Print to PDF" feature
+        header('Content-Type: text/html; charset=UTF-8');
+        echo $html;
+        echo '<script>window.print();</script>';
+        exit;
+    }
+    
+    /**
+     * Export Report as Excel
+     */
+    private function exportExcel($data)
+    {
+        $filename = 'report_' . $data['reportType'] . '_' . date('Y-m-d') . '.csv';
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        // Report Header
+        fputcsv($output, ['Shena Companion Welfare - ' . ucfirst($data['reportType']) . ' Report']);
+        fputcsv($output, ['Period:', $data['startDate'] . ' to ' . $data['endDate']]);
+        fputcsv($output, ['Generated:', date('Y-m-d H:i:s')]);
+        fputcsv($output, []);
+        
+        // Summary Statistics
+        fputcsv($output, ['SUMMARY STATISTICS']);
+        fputcsv($output, ['Metric', 'Value']);
+        fputcsv($output, ['Total Members', $data['totalMembers']]);
+        fputcsv($output, ['Active Members', $data['activeMembers']]);
+        fputcsv($output, ['Inactive Members', $data['inactiveMembers']]);
+        fputcsv($output, ['Pending Members', $data['pendingMembers']]);
+        fputcsv($output, ['Total Revenue', 'KES ' . number_format($data['totalRevenue'], 2)]);
+        fputcsv($output, ['Total Claims Paid', 'KES ' . number_format($data['totalClaimsPaid'], 2)]);
+        fputcsv($output, ['New Members This Month', $data['newMembersThisMonth']]);
+        fputcsv($output, ['Renewals Due', $data['renewalDue']]);
+        fputcsv($output, ['Pending Payments', $data['pendingPayments']]);
+        fputcsv($output, ['Failed Payments', $data['failedPayments']]);
+        fputcsv($output, []);
+        
+        // Detailed data based on report type
+        if ($data['reportType'] === 'members' && !empty($data['memberReports'])) {
+            fputcsv($output, ['MEMBER DETAILS']);
+            fputcsv($output, ['Member Number', 'First Name', 'Last Name', 'Package', 'Status', 'Registration Date']);
+            
+            foreach ($data['memberReports'] as $member) {
+                fputcsv($output, [
+                    $member['member_number'],
+                    $member['first_name'],
+                    $member['last_name'],
+                    $member['package'],
+                    $member['status'],
+                    date('Y-m-d', strtotime($member['created_at']))
+                ]);
+            }
+        } elseif ($data['reportType'] === 'payments' && !empty($data['paymentReports'])) {
+            fputcsv($output, ['PAYMENT DETAILS']);
+            fputcsv($output, ['Member Number', 'Amount', 'Method', 'Status', 'Date']);
+            
+            foreach ($data['paymentReports'] as $payment) {
+                fputcsv($output, [
+                    $payment['member_number'] ?? 'N/A',
+                    'KES ' . number_format($payment['amount'], 2),
+                    $payment['payment_method'] ?? 'N/A',
+                    $payment['status'],
+                    date('Y-m-d H:i', strtotime($payment['payment_date']))
+                ]);
+            }
+        } elseif ($data['reportType'] === 'claims' && !empty($data['claimReports'])) {
+            fputcsv($output, ['CLAIM DETAILS']);
+            fputcsv($output, ['Claim Number', 'Member Number', 'Amount', 'Status', 'Date']);
+            
+            foreach ($data['claimReports'] as $claim) {
+                fputcsv($output, [
+                    $claim['claim_number'] ?? 'N/A',
+                    $claim['member_number'] ?? 'N/A',
+                    'KES ' . number_format($claim['claim_amount'], 2),
+                    $claim['status'],
+                    date('Y-m-d', strtotime($claim['created_at']))
+                ]);
+            }
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    /**
      * Communications Center with SMS Campaigns
      */
     public function communications()
     {
         $this->requireAdminAccess();
         
-        // Load BulkSmsService for campaign management
-        require_once __DIR__ . '/../services/BulkSmsService.php';
-        $bulkSmsService = new BulkSmsService();
-        
         $type = $_GET['type'] ?? 'all';
         $status = $_GET['status'] ?? 'all';
         
-        // Get campaigns
-        $filters = [
-            'status' => $_GET['campaign_status'] ?? '',
-            'date_from' => $_GET['date_from'] ?? '',
-            'date_to' => $_GET['date_to'] ?? ''
-        ];
-        $campaigns = $bulkSmsService->getAllCampaigns($filters);
-        
-        // Get queue items
-        $queue_items = $bulkSmsService->getQueueItems(50);
-        
-        // Get templates
-        $templates = $bulkSmsService->getTemplates();
-        
-        // Get statistics
-        $stats = [
-            'active_campaigns' => $bulkSmsService->getActiveCampaignCount(),
-            'sent_today' => $bulkSmsService->getSentCountToday(),
-            'queue_pending' => $bulkSmsService->getQueuePendingCount(),
-            'sms_credits' => $bulkSmsService->getSmsCredits()
-        ];
+        // Get recent communications from the communications log
+        $communications = $this->getRecentCommunications($type, $status);
         
         $data = [
-            'title' => 'Communications - Admin',
+            'title' => 'Communications Hub - Admin',
             'type' => $type,
             'status' => $status,
-            'communications' => $this->getRecentCommunications($type, $status),
-            'campaigns' => $campaigns,
-            'queue_items' => $queue_items,
-            'templates' => $templates,
-            'stats' => $stats
+            'communications' => $communications
         ];
         
-        $this->view('admin.sms-campaigns', $data);
+        $this->view('admin.communications', $data);
     }
 
     /**
@@ -948,12 +1119,18 @@ class AdminController extends BaseController
         $db = Database::getInstance()->getConnection();
         
         // Get current configuration
-        $stmt = $db->query("SELECT * FROM mpesa_config ORDER BY id DESC LIMIT 1");
-        $config = $stmt->fetch(PDO::FETCH_ASSOC);
+        $config = [];
+        try {
+            $stmt = $db->query("SELECT * FROM mpesa_config ORDER BY id DESC LIMIT 1");
+            $config = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            // Table doesn't exist yet, use empty config
+            error_log("M-Pesa config table not found: " . $e->getMessage());
+        }
         
         $data = [
             'title' => 'M-Pesa Configuration - ' . APP_NAME,
-            'config' => $config ?: []
+            'config' => $config
         ];
         
         $this->view('admin.mpesa-config', $data);
@@ -989,6 +1166,26 @@ class AdminController extends BaseController
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         
         try {
+            // Check if mpesa_config table exists, if not create it
+            $stmt = $db->query("SHOW TABLES LIKE 'mpesa_config'");
+            if (!$stmt->fetch()) {
+                // Create table if it doesn't exist
+                $db->exec("
+                    CREATE TABLE mpesa_config (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        environment VARCHAR(20) DEFAULT 'sandbox',
+                        consumer_key VARCHAR(255) NOT NULL,
+                        consumer_secret VARCHAR(255) NOT NULL,
+                        short_code VARCHAR(20) NOT NULL,
+                        pass_key VARCHAR(255) NOT NULL,
+                        callback_url VARCHAR(255),
+                        is_active TINYINT(1) DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    )
+                ");
+            }
+            
             // Check if configuration exists
             $stmt = $db->query("SELECT id FROM mpesa_config LIMIT 1");
             $exists = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -1256,66 +1453,241 @@ class AdminController extends BaseController
         $fromDate = $_GET['from_date'] ?? date('Y-m-01');
         $toDate = $_GET['to_date'] ?? date('Y-m-d');
         
-        // Get KPIs
-        $stmt = $db->prepare("
-            SELECT 
-                SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
-                SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
-                SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
-                SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
-                COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
-                COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
-            FROM financial_transactions
-            WHERE DATE(transaction_date) BETWEEN ? AND ?
-            AND status = 'completed'
-        ");
-        $stmt->execute([$fromDate, $toDate]);
-        $kpis = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Initialize default empty data
+        $kpis = [
+            'total_payments' => 0,
+            'total_commissions' => 0,
+            'total_upgrades' => 0,
+            'total_refunds' => 0,
+            'paying_members' => 0,
+            'earning_agents' => 0,
+            'net_revenue' => 0,
+            'revenue_change' => 0,
+            'total_revenue' => 0
+        ];
+        $monthlySummary = [];
+        $topAgents = [];
+        $recentTransactions = [];
         
-        $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
-                               ($kpis['total_commissions'] + $kpis['total_refunds']);
-        $kpis['revenue_change'] = 0; // Calculate vs previous period if needed
-        $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
-        
-        // Get monthly summary
-        $stmt = $db->query("
-            SELECT * FROM vw_financial_summary
-            ORDER BY month DESC
-            LIMIT 12
-        ");
-        $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get top agents
-        $stmt = $db->query("
-            SELECT * FROM vw_agent_leaderboard
-            LIMIT 10
-        ");
-        $topAgents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Get recent transactions
-        $stmt = $db->prepare("
-            SELECT 
-                ft.*,
-                m.member_number,
-                m.package
-            FROM financial_transactions ft
-            LEFT JOIN members m ON ft.member_id = m.id
-            WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
-            ORDER BY ft.transaction_date DESC
-            LIMIT 20
-        ");
-        $stmt->execute([$fromDate, $toDate]);
-        $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            // Get KPIs
+            $stmt = $db->prepare("
+                SELECT 
+                    SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
+                    SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
+                    SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
+                    SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
+                    COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
+                    COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
+                FROM financial_transactions
+                WHERE DATE(transaction_date) BETWEEN ? AND ?
+                AND status = 'completed'
+            ");
+            $stmt->execute([$fromDate, $toDate]);
+            $fetchedKpis = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($fetchedKpis) {
+                $kpis = $fetchedKpis;
+                $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
+                                       ($kpis['total_commissions'] + $kpis['total_refunds']);
+                $kpis['revenue_change'] = 0; // Calculate vs previous period if needed
+                $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
+            }
+            
+            // Get monthly summary
+            $stmt = $db->query("
+                SELECT * FROM vw_financial_summary
+                ORDER BY month DESC
+                LIMIT 12
+            ");
+            $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get top agents
+            $stmt = $db->query("
+                SELECT * FROM vw_agent_leaderboard
+                LIMIT 10
+            ");
+            $topAgents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get recent transactions
+            $stmt = $db->prepare("
+                SELECT 
+                    ft.*,
+                    m.member_number,
+                    m.package
+                FROM financial_transactions ft
+                LEFT JOIN members m ON ft.member_id = m.id
+                WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
+                ORDER BY ft.transaction_date DESC
+                LIMIT 20
+            ");
+            $stmt->execute([$fromDate, $toDate]);
+            $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            // Tables don't exist yet, use empty data
+            error_log("Financial dashboard tables not found: " . $e->getMessage());
+        }
         
         $data = [
             'title' => 'Financial Dashboard - ' . APP_NAME,
             'kpis' => $kpis,
             'monthly_summary' => $monthlySummary,
             'top_agents' => $topAgents,
-            'recent_transactions' => $recentTransactions
+            'recent_transactions' => $recentTransactions,
+            'from_date' => $fromDate,
+            'to_date' => $toDate
         ];
         
         $this->view('admin/financial-dashboard', $data);
+    }
+
+    /**
+     * Export Financial Report
+     */
+    public function exportFinancialReport()
+    {
+        $this->requireAdminAccess();
+        
+        $db = Database::getInstance()->getConnection();
+        
+        // Date range from filters or default to current month
+        $fromDate = $_GET['from_date'] ?? date('Y-m-01');
+        $toDate = $_GET['to_date'] ?? date('Y-m-d');
+        
+        // Initialize default empty data
+        $kpis = [
+            'total_payments' => 0,
+            'total_commissions' => 0,
+            'total_upgrades' => 0,
+            'total_refunds' => 0,
+            'paying_members' => 0,
+            'earning_agents' => 0,
+            'net_revenue' => 0,
+            'total_revenue' => 0
+        ];
+        $monthlySummary = [];
+        $recentTransactions = [];
+        
+        try {
+            // Get KPIs
+            $stmt = $db->prepare("
+                SELECT 
+                    SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
+                    SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
+                    SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
+                    SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
+                    COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
+                    COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
+                FROM financial_transactions
+                WHERE DATE(transaction_date) BETWEEN ? AND ?
+                AND status = 'completed'
+            ");
+            $stmt->execute([$fromDate, $toDate]);
+            $fetchedKpis = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($fetchedKpis) {
+                $kpis = $fetchedKpis;
+                $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
+                                       ($kpis['total_commissions'] + $kpis['total_refunds']);
+                $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
+            }
+            
+            // Get monthly summary
+            $stmt = $db->query("
+                SELECT * FROM vw_financial_summary
+                ORDER BY month DESC
+                LIMIT 12
+            ");
+            $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get all transactions in the period
+            $stmt = $db->prepare("
+                SELECT 
+                    ft.*,
+                    m.member_number,
+                    m.package
+                FROM financial_transactions ft
+                LEFT JOIN members m ON ft.member_id = m.id
+                WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
+                ORDER BY ft.transaction_date DESC
+            ");
+            $stmt->execute([$fromDate, $toDate]);
+            $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            // Tables don't exist yet, continue with empty data
+            error_log("Financial export tables not found: " . $e->getMessage());
+        }
+        
+        // Generate CSV
+        $filename = 'financial_report_' . $fromDate . '_to_' . $toDate . '.csv';
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        // Report Header
+        fputcsv($output, ['Financial Report']);
+        fputcsv($output, ['Period:', $fromDate . ' to ' . $toDate]);
+        fputcsv($output, ['Generated:', date('Y-m-d H:i:s')]);
+        fputcsv($output, []);
+        
+        // KPIs Summary
+        fputcsv($output, ['KEY PERFORMANCE INDICATORS']);
+        fputcsv($output, ['Metric', 'Value']);
+        fputcsv($output, ['Total Revenue', 'KES ' . number_format($kpis['total_revenue'], 2)]);
+        fputcsv($output, ['Total Payments', 'KES ' . number_format($kpis['total_payments'], 2)]);
+        fputcsv($output, ['Total Commissions', 'KES ' . number_format($kpis['total_commissions'], 2)]);
+        fputcsv($output, ['Total Upgrades', 'KES ' . number_format($kpis['total_upgrades'], 2)]);
+        fputcsv($output, ['Total Refunds', 'KES ' . number_format($kpis['total_refunds'], 2)]);
+        fputcsv($output, ['Net Revenue', 'KES ' . number_format($kpis['net_revenue'], 2)]);
+        fputcsv($output, ['Paying Members', $kpis['paying_members']]);
+        fputcsv($output, ['Earning Agents', $kpis['earning_agents']]);
+        fputcsv($output, []);
+        
+        // Transactions
+        if (!empty($recentTransactions)) {
+            fputcsv($output, ['TRANSACTIONS']);
+            fputcsv($output, ['Date', 'Type', 'Member Number', 'Package', 'Amount', 'Status']);
+            
+            foreach ($recentTransactions as $txn) {
+                fputcsv($output, [
+                    date('Y-m-d H:i', strtotime($txn['transaction_date'])),
+                    ucfirst($txn['transaction_type']),
+                    $txn['member_number'] ?? 'N/A',
+                    $txn['package'] ?? 'N/A',
+                    'KES ' . number_format($txn['amount'], 2),
+                    ucfirst($txn['status'])
+                ]);
+            }
+            fputcsv($output, []);
+        }
+        
+        // Monthly Summary
+        if (!empty($monthlySummary)) {
+            fputcsv($output, ['MONTHLY SUMMARY']);
+            fputcsv($output, ['Month', 'Payments', 'Commissions', 'Upgrades', 'Refunds', 'Net Revenue', 'Members']);
+            
+            foreach ($monthlySummary as $month) {
+                $net = $month['total_payments'] + $month['total_upgrades'] - 
+                       $month['total_commissions'] - $month['total_refunds'];
+                       
+                fputcsv($output, [
+                    date('F Y', strtotime($month['month'] . '-01')),
+                    'KES ' . number_format($month['total_payments'], 2),
+                    'KES ' . number_format($month['total_commissions'], 2),
+                    'KES ' . number_format($month['total_upgrades'], 2),
+                    'KES ' . number_format($month['total_refunds'], 2),
+                    'KES ' . number_format($net, 2),
+                    $month['paying_members']
+                ]);
+            }
+        }
+        
+        fclose($output);
+        exit;
     }
 }
 ?>

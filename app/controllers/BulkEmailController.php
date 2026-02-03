@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../services/BulkEmailService.php';
 require_once __DIR__ . '/../services/EmailService.php';
 require_once __DIR__ . '/../models/Member.php';
+require_once __DIR__ . '/../core/Database.php';
 
 class BulkEmailController extends BaseController
 {
@@ -31,34 +32,88 @@ class BulkEmailController extends BaseController
     {
         $this->requireRole(['admin', 'super_admin', 'manager']);
         
-        $filters = [
-            'status' => $_GET['status'] ?? '',
-            'date_from' => $_GET['date_from'] ?? '',
-            'date_to' => $_GET['date_to'] ?? ''
-        ];
+        // For now, provide empty data until campaign tables are created
+        $campaigns = [];
+        $templates = [];
         
-        // Get campaigns
-        $campaigns = $this->bulkEmailService->getAllCampaigns($filters);
-        
-        // Get templates
-        $templates = $this->bulkEmailService->getTemplates();
-        
-        // Get statistics
+        // Get statistics from communications table
         $stats = [
-            'active_campaigns' => $this->bulkEmailService->getActiveCampaignCount(),
-            'sent_today' => $this->bulkEmailService->getSentCountToday(),
-            'total_sent' => $this->bulkEmailService->getTotalSent(),
-            'failed_count' => $this->bulkEmailService->getFailedCount()
+            'active_campaigns' => 0,
+            'sent_today' => $this->getEmailsSentToday(),
+            'total_sent' => $this->getTotalEmailsSent(),
+            'failed_count' => $this->getFailedEmailsCount()
         ];
         
         $data = [
-            'title' => 'Email Campaigns - Shena Companion',
+            'title' => 'Email Campaigns - Admin',
             'campaigns' => $campaigns,
             'templates' => $templates,
             'stats' => $stats
         ];
         
         $this->view('admin.email-campaigns', $data);
+    }
+    
+    /**
+     * Get emails sent today from communications table
+     */
+    private function getEmailsSentToday()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'email' 
+                AND DATE(sent_at) = CURDATE()
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting emails sent today: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Get total emails sent from communications table
+     */
+    private function getTotalEmailsSent()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'email'
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting total emails sent: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Get failed emails count from communications table
+     */
+    private function getFailedEmailsCount()
+    {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->query("
+                SELECT COUNT(*) as count 
+                FROM communications 
+                WHERE type = 'email' 
+                AND status = 'failed'
+            ");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['count'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Error getting failed emails count: " . $e->getMessage());
+            return 0;
+        }
     }
     
     /**
