@@ -306,7 +306,7 @@
     <div class="left-panel">
         <div class="logo-container">
             <div class="logo-icon">
-                <img src="public/images/shena-logo.png" alt="SHENA Logo">
+                <img src="/public/images/shena-logo.png" alt="SHENA Logo">
             </div>
             <h1 class="brand-name">SHENA Companion</h1>
             <p class="tagline">We Are Royal</p>

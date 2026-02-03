@@ -373,7 +373,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-logo">
-            <img src="public/images/shena-logo.png" alt="SHENA Logo">
+            <img src="/public/images/shena-logo.png" alt="SHENA Logo">
             <div class="sidebar-logo-text">
                 SHENA <span>Companion</span>
             </div>
