@@ -99,6 +99,7 @@ class Router
         $this->addRoute('POST', '/admin/claims/{id}/complete', 'AdminController@completeClaim');
         $this->addRoute('POST', '/admin/claims/{id}/reject', 'AdminController@rejectClaim');
         $this->addRoute('GET', '/admin/reports', 'AdminController@reports');
+        $this->addRoute('GET', '/admin/reports/export', 'AdminController@exportReport');
         $this->addRoute('GET', '/admin/communications', 'AdminController@communications');
         $this->addRoute('POST', '/admin/send-message', 'AdminController@sendMessage');
         $this->addRoute('POST', '/admin/communications/send-email', 'AdminController@sendEmail');
@@ -119,6 +120,9 @@ class Router
         $this->addRoute('POST', '/admin/communications/delete-queue-item', 'BulkSmsController@deleteQueueItem');
         $this->addRoute('GET', '/admin/communications/campaign/{id}', 'BulkSmsController@viewCampaign');
         $this->addRoute('GET', '/admin/communications/templates', 'BulkSmsController@templates');
+        
+        // SMS Campaign Management Routes (dedicated page)
+        $this->addRoute('GET', '/admin/sms-campaigns', 'BulkSmsController@index');
         
         // Email Campaign Management Routes
         $this->addRoute('GET', '/admin/email-campaigns', 'BulkEmailController@index');
@@ -146,6 +150,7 @@ class Router
         
         // Phase 4: Financial Dashboard Routes
         $this->addRoute('GET', '/admin/financial-dashboard', 'AdminController@viewFinancialDashboard');
+        $this->addRoute('GET', '/admin/financial-dashboard/export', 'AdminController@exportFinancialReport');
         
         // Payment Reconciliation Routes (Admin Only) - Phase 2
         $this->addRoute('GET', '/admin/payments/reconciliation', 'PaymentController@viewReconciliation');
