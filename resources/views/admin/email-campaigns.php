@@ -1,279 +1,587 @@
-<?php include_once 'admin-header.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-envelope-open-text mr-2"></i>Email Campaigns
-        </h1>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
-                <i class="fas fa-plus mr-2"></i>Create Campaign
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 4px 6px rgba(127, 61, 158, 0.1);
+    }
+
+    .page-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #f3f4f6;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 8px rgba(127, 61, 158, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-card .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card .icon-wrapper i {
+        font-size: 24px;
+    }
+
+    .stat-card.primary .icon-wrapper {
+        background: rgba(127, 61, 158, 0.1);
+        color: #7F3D9E;
+    }
+
+    .stat-card.success .icon-wrapper {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .stat-card.info .icon-wrapper {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .stat-card.danger .icon-wrapper {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #f3f4f6;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead {
+        background: #f9fafb;
+    }
+
+    .modern-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .modern-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    .status-badge.draft {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6B7280;
+    }
+
+    .status-badge.scheduled {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .status-badge.sending {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .status-badge.completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .status-badge.cancelled {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #6b7280;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px;
+    }
+
+    .action-btn:hover {
+        background: rgba(127, 61, 158, 0.1);
+        color: #7F3D9E;
+    }
+
+    .action-btn.success:hover {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .action-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .modern-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modern-btn.primary {
+        background: #7F3D9E;
+        color: white;
+    }
+
+    .modern-btn.primary:hover {
+        background: #7F3D9E;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(127, 61, 158, 0.3);
+    }
+
+    .modern-btn.secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .modern-btn.secondary:hover {
+        background: #e5e7eb;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .empty-state p {
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+    }
+
+    .modern-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .modern-modal.active {
+        display: flex;
+    }
+
+    .modal-content-modern {
+        background: white;
+        border-radius: 12px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header-modern {
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header-modern h3 {
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-body-modern {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    select.form-control {
+        cursor: pointer;
+    }
+
+    .count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .count-badge.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .count-badge.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+</style>
+
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1><i class="fas fa-envelope-open-text"></i> Email Campaigns</h1>
+            <p>Create and manage bulk email campaigns for members</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button class="modern-btn primary" onclick="openModal('createCampaignModal')">
+                <i class="fas fa-plus"></i> Create Campaign
             </button>
-            <a href="/admin/communications" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Communications
+            <a href="/admin/communications" class="modern-btn secondary">
+                <i class="fas fa-arrow-left"></i> Back
             </a>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Active Campaigns
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo $stats['active_campaigns'] ?? 0; ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-paper-plane fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Sent Today
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo number_format($stats['sent_today'] ?? 0); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Sent
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo number_format($stats['total_sent'] ?? 0); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Failed
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo number_format($stats['failed_count'] ?? 0); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Campaigns List -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-list mr-2"></i>Email Campaigns
-            </h6>
-        </div>
-        <div class="card-body">
-            <?php if (!empty($campaigns)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%">
-                        <thead>
-                            <tr>
-                                <th>Campaign</th>
-                                <th>Audience</th>
-                                <th>Recipients</th>
-                                <th>Sent/Failed</th>
-                                <th>Status</th>
-                                <th>Scheduled</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($campaigns as $campaign): ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($campaign['title']); ?></strong>
-                                    <br><small class="text-muted"><?php echo date('M j, Y', strtotime($campaign['created_at'])); ?></small>
-                                </td>
-                                <td><?php echo ucwords(str_replace('_', ' ', $campaign['target_audience'])); ?></td>
-                                <td><?php echo $campaign['total_recipients']; ?></td>
-                                <td>
-                                    <span class="badge badge-success"><?php echo $campaign['sent_count']; ?></span> /
-                                    <span class="badge badge-danger"><?php echo $campaign['failed_count']; ?></span>
-                                </td>
-                                <td>
-                                    <?php
-                                    $statusColors = [
-                                        'draft' => 'secondary',
-                                        'scheduled' => 'warning',
-                                        'sending' => 'info',
-                                        'completed' => 'success',
-                                        'cancelled' => 'danger'
-                                    ];
-                                    $color = $statusColors[$campaign['status']] ?? 'secondary';
-                                    ?>
-                                    <span class="badge badge-<?php echo $color; ?>">
-                                        <?php echo ucfirst($campaign['status']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php 
-                                    if ($campaign['scheduled_at']) {
-                                        echo date('M j, Y H:i', strtotime($campaign['scheduled_at']));
-                                    } else {
-                                        echo '<span class="text-muted">-</span>';
-                                    }
-                                    ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="/admin/email-campaigns/campaign/<?php echo $campaign['id']; ?>" class="btn btn-info btn-sm" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <?php if ($campaign['status'] === 'draft' || $campaign['status'] === 'scheduled'): ?>
-                                            <button type="button" class="btn btn-success btn-sm" onclick="sendCampaign(<?php echo $campaign['id']; ?>)" title="Send Now">
-                                                <i class="fas fa-paper-plane"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-warning btn-sm" onclick="cancelCampaign(<?php echo $campaign['id']; ?>)" title="Cancel">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($campaign['status'] === 'completed' && $campaign['failed_count'] > 0): ?>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="retryFailed(<?php echo $campaign['id']; ?>)" title="Retry Failed">
-                                                <i class="fas fa-redo"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-envelope-open-text fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No email campaigns yet</h5>
-                    <p class="text-gray-500">Create your first email campaign to get started.</p>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
-                        <i class="fas fa-plus mr-2"></i>Create Campaign
-                    </button>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
 
-<!-- Create Campaign Modal -->
-<div class="modal fade" id="createCampaignModal" tabindex="-1" aria-labelledby="createCampaignModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createCampaignModalLabel">Create Email Campaign</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Statistics -->
+<div class="row" style="margin-bottom: 2rem;">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="icon-wrapper">
+                <i class="fas fa-paper-plane"></i>
             </div>
-            <form id="createCampaignForm" method="POST" action="/admin/email-campaigns/create">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="campaignTitle" class="form-label">Campaign Title *</label>
-                                <input type="text" class="form-control" id="campaignTitle" name="title" required>
+            <p class="stat-value"><?php echo $stats['active_campaigns'] ?? 0; ?></p>
+            <p class="stat-label">Active Campaigns</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="icon-wrapper">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <p class="stat-value"><?php echo number_format($stats['sent_today'] ?? 0); ?></p>
+            <p class="stat-label">Sent Today</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="icon-wrapper">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <p class="stat-value"><?php echo number_format($stats['total_sent'] ?? 0); ?></p>
+            <p class="stat-label">Total Sent</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card danger">
+            <div class="icon-wrapper">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p class="stat-value"><?php echo number_format($stats['failed_count'] ?? 0); ?></p>
+            <p class="stat-label">Failed</p>
+        </div>
+    </div>
+</div>
+
+<!-- Campaigns List -->
+<div class="modern-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 1.5rem;">
+            <i class="fas fa-list"></i> Email Campaigns
+        </h2>
+    </div>
+
+    <?php if (empty($campaigns)): ?>
+        <div class="empty-state">
+            <i class="fas fa-envelope-open-text"></i>
+            <h3>No Email Campaigns Yet</h3>
+            <p>Create your first email campaign to reach out to members</p>
+            <button class="modern-btn primary" onclick="openModal('createCampaignModal')">
+                <i class="fas fa-plus"></i> Create First Campaign
+            </button>
+        </div>
+    <?php else: ?>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Audience</th>
+                        <th>Recipients</th>
+                        <th>Sent/Failed</th>
+                        <th>Status</th>
+                        <th>Scheduled</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($campaigns as $campaign): ?>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong><?php echo htmlspecialchars($campaign['title']); ?></strong><br>
+                                <small style="color: #6b7280;"><?php echo date('M j, Y', strtotime($campaign['created_at'])); ?></small>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="emailSubject" class="form-label">Email Subject *</label>
-                                <input type="text" class="form-control" id="emailSubject" name="subject" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="emailMessage" class="form-label">Email Message *</label>
-                                <textarea class="form-control" id="emailMessage" name="message" rows="10" required></textarea>
-                                <small class="form-text text-muted">
-                                    Available placeholders: {name}, {first_name}, {last_name}, {member_number}, {email}
-                                </small>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="targetAudience" class="form-label">Target Audience *</label>
-                                <select class="form-control" id="targetAudience" name="target_audience" required>
-                                    <option value="all_members">All Members</option>
-                                    <option value="active">Active Members Only</option>
-                                    <option value="grace_period">Members in Grace Period</option>
-                                    <option value="defaulted">Defaulted Members</option>
-                                    <option value="new_members">New Members (Last 30 Days)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="scheduledAt" class="form-label">Schedule (Optional)</label>
-                                <input type="datetime-local" class="form-control" id="scheduledAt" name="scheduled_at">
-                                <small class="form-text text-muted">Leave empty to send immediately</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Templates</label>
-                                <select class="form-control" id="templateSelect" onchange="loadTemplate()">
-                                    <option value="">-- Select Template --</option>
-                                    <?php if (!empty($templates)): ?>
-                                        <?php foreach ($templates as $template): ?>
-                                            <option value="<?php echo htmlspecialchars($template['template']); ?>">
-                                                <?php echo htmlspecialchars($template['name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="sendNow" name="send_now" value="1">
-                                <label class="form-check-label" for="sendNow">
-                                    Send Immediately
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="campaignResult"></div>
+                        </td>
+                        <td><?php echo ucwords(str_replace('_', ' ', $campaign['target_audience'])); ?></td>
+                        <td><?php echo number_format($campaign['total_recipients']); ?></td>
+                        <td>
+                            <span class="count-badge success"><?php echo $campaign['sent_count']; ?></span>
+                            <span class="count-badge danger"><?php echo $campaign['failed_count']; ?></span>
+                        </td>
+                        <td>
+                            <span class="status-badge <?php echo $campaign['status']; ?>">
+                                <?php echo ucfirst($campaign['status']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php 
+                            if ($campaign['scheduled_at']) {
+                                echo date('M j, Y H:i', strtotime($campaign['scheduled_at']));
+                            } else {
+                                echo '<span style="color: #9ca3af;">-</span>';
+                            }
+                            ?>
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="viewCampaign(<?php echo $campaign['id']; ?>)" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <?php if ($campaign['status'] === 'draft' || $campaign['status'] === 'scheduled'): ?>
+                                <button class="action-btn success" onclick="sendCampaign(<?php echo $campaign['id']; ?>)" title="Send Now">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="cancelCampaign(<?php echo $campaign['id']; ?>)" title="Cancel">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            <?php endif; ?>
+                            <?php if ($campaign['status'] === 'completed' && $campaign['failed_count'] > 0): ?>
+                                <button class="action-btn" onclick="retryFailed(<?php echo $campaign['id']; ?>)" title="Retry Failed">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Create Campaign Modal -->
+<div class="modern-modal" id="createCampaignModal">
+    <div class="modal-content-modern">
+        <div class="modal-header-modern">
+            <h3><i class="fas fa-plus"></i> Create Email Campaign</h3>
+            <button class="modal-close" onclick="closeModal('createCampaignModal')">&times;</button>
+        </div>
+        <div class="modal-body-modern">
+            <form action="/admin/email-campaigns/create" method="POST" id="createCampaignForm">
+                <div class="form-group">
+                    <label for="campaign-title">Campaign Title</label>
+                    <input type="text" class="form-control" id="campaign-title" name="title" required placeholder="e.g., Monthly Newsletter - January 2026">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Create Campaign</button>
+
+                <div class="form-group">
+                    <label for="target-audience">Target Audience</label>
+                    <select class="form-control" id="target-audience" name="target_audience" required>
+                        <option value="">Select audience...</option>
+                        <option value="all_members">All Active Members</option>
+                        <option value="active_only">Active Members Only</option>
+                        <option value="inactive">Inactive Members</option>
+                        <option value="pending">Pending Members</option>
+                        <option value="custom">Custom Selection</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email-subject">Email Subject</label>
+                    <input type="text" class="form-control" id="email-subject" name="subject" required placeholder="Enter email subject line">
+                </div>
+
+                <div class="form-group">
+                    <label for="email-body">Email Content</label>
+                    <textarea class="form-control" id="email-body" name="body" required placeholder="Enter your email message here..."></textarea>
+                    <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
+                        You can use placeholders: {member_name}, {member_number}, {package}
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="schedule-type">Schedule</label>
+                    <select class="form-control" id="schedule-type" name="schedule_type" required>
+                        <option value="now">Send Immediately</option>
+                        <option value="scheduled">Schedule for Later</option>
+                        <option value="draft">Save as Draft</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="schedule-datetime-field" style="display: none;">
+                    <label for="schedule-datetime">Schedule Date & Time</label>
+                    <input type="datetime-local" class="form-control" id="schedule-datetime" name="scheduled_at">
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="modern-btn secondary" onclick="closeModal('createCampaignModal')">Cancel</button>
+                    <button type="submit" class="modern-btn primary">
+                        <i class="fas fa-save"></i> Create Campaign
+                    </button>
                 </div>
             </form>
         </div>
@@ -281,95 +589,144 @@
 </div>
 
 <script>
-function loadTemplate() {
-    const templateText = document.getElementById('templateSelect').value;
-    if (templateText) {
-        document.getElementById('emailMessage').value = templateText;
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// Close modal on outside click
+document.querySelectorAll('.modern-modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal(this.id);
+        }
+    });
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modern-modal.active').forEach(modal => {
+            closeModal(modal.id);
+        });
+    }
+});
+
+// Schedule type handler
+document.getElementById('schedule-type')?.addEventListener('change', function() {
+    const datetimeField = document.getElementById('schedule-datetime-field');
+    datetimeField.style.display = this.value === 'scheduled' ? 'block' : 'none';
+});
+
+// Campaign actions
+function viewCampaign(id) {
+    window.location.href = '/admin/email-campaigns/campaign/' + id;
+}
+
+function sendCampaign(id) {
+    if (confirm('Are you sure you want to send this campaign now?')) {
+        fetch('/admin/email-campaigns/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ campaign_id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Campaign sent successfully!');
+                location.reload();
+            } else {
+                alert('Failed to send campaign: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred');
+        });
     }
 }
 
-document.getElementById('createCampaignForm').addEventListener('submit', function(e) {
+function cancelCampaign(id) {
+    if (confirm('Are you sure you want to cancel this campaign?')) {
+        fetch('/admin/email-campaigns/cancel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ campaign_id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Campaign cancelled successfully!');
+                location.reload();
+            } else {
+                alert('Failed to cancel campaign: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred');
+        });
+    }
+}
+
+function retryFailed(id) {
+    if (confirm('Retry sending to all failed recipients?')) {
+        fetch('/admin/email-campaigns/retry-failed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ campaign_id: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Retry initiated successfully!');
+                location.reload();
+            } else {
+                alert('Failed to retry: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred');
+        });
+    }
+}
+
+// Form submission
+document.getElementById('createCampaignForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
-    
-    const resultDiv = document.getElementById('campaignResult');
-    resultDiv.innerHTML = '<div class="alert alert-info">Creating campaign...</div>';
     
     const formData = new FormData(this);
     
     fetch('/admin/email-campaigns/create', {
         method: 'POST',
-        body: new URLSearchParams(formData)
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            resultDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
-            setTimeout(() => window.location.reload(), 1500);
+            alert('Campaign created successfully!');
+            closeModal('createCampaignModal');
+            location.reload();
         } else {
-            resultDiv.innerHTML = '<div class="alert alert-danger">' + (data.error || 'Failed to create campaign') + '</div>';
+            alert('Failed to create campaign: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
-        resultDiv.innerHTML = '<div class="alert alert-danger">Request failed. Please try again.</div>';
+        console.error('Error:', error);
+        alert('Network error occurred');
     });
 });
-
-function sendCampaign(campaignId) {
-    if (!confirm('Send this campaign now?')) return;
-    
-    fetch('/admin/email-campaigns/send', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({campaign_id: campaignId})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Campaign sent successfully');
-            window.location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'Failed to send campaign'));
-        }
-    });
-}
-
-function cancelCampaign(campaignId) {
-    if (!confirm('Cancel this campaign?')) return;
-    
-    fetch('/admin/email-campaigns/cancel', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({campaign_id: campaignId})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Campaign cancelled');
-            window.location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'Failed to cancel'));
-        }
-    });
-}
-
-function retryFailed(campaignId) {
-    if (!confirm('Retry sending to all failed recipients?')) return;
-    
-    fetch('/admin/email-campaigns/retry-failed', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({campaign_id: campaignId})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Retry completed');
-            window.location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'Failed to retry'));
-        }
-    });
-}
 </script>
 
-<?php include_once 'admin-footer.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

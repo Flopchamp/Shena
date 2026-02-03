@@ -1,731 +1,649 @@
-<?php include_once 'admin-header.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-file-medical mr-2"></i>Claims Management
-        </h1>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newClaimModal">
-            <i class="fas fa-plus mr-2"></i>New Claim
-        </button>
+<style>
+    /* Page Header */
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 4px 0;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+        margin: 0;
+    }
+
+    /* Stats Grid */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #E5E7EB;
+        transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .stat-icon.blue {
+        background: #DBEAFE;
+        color: #3B82F6;
+    }
+
+    .stat-icon.orange {
+        background: #FED7AA;
+        color: #F97316;
+    }
+
+    .stat-icon.green {
+        background: #D1FAE5;
+        color: #10B981;
+    }
+
+    .stat-icon.red {
+        background: #FEE2E2;
+        color: #EF4444;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #9CA3AF;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    /* Main Content Layout */
+    .content-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    /* Active Claims */
+    .claims-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .claims-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 20px;
+    }
+
+    .claim-item {
+        padding: 16px;
+        background: #F9FAFB;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .claim-item:hover {
+        background: #F3F4F6;
+    }
+
+    .claim-item.active {
+        background: white;
+        border: 2px solid #7F3D9E;
+    }
+
+    .claim-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .claim-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .claim-badge.doc-review {
+        background: #DBEAFE;
+        color: #3B82F6;
+    }
+
+    .claim-badge.logistics {
+        background: #FED7AA;
+        color: #F97316;
+    }
+
+    .claim-badge.settled {
+        background: #D1FAE5;
+        color: #10B981;
+    }
+
+    .claim-number {
+        font-size: 11px;
+        color: #9CA3AF;
+    }
+
+    .claim-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 4px;
+    }
+
+    .claim-beneficiary {
+        font-size: 12px;
+        color: #6B7280;
+        margin-bottom: 8px;
+    }
+
+    .claim-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #7F3D9E;
+    }
+
+    .claim-progress i {
+        font-size: 14px;
+    }
+
+    .claim-logistics-info {
+        font-size: 12px;
+        color: #6B7280;
+        margin-bottom: 4px;
+    }
+
+    .claim-pickup {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #F97316;
+    }
+
+    .claim-settled-info {
+        font-size: 12px;
+        color: #10B981;
+    }
+
+    /* Verification Panel */
+    .verification-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .verification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .verification-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .verification-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+        margin-bottom: 24px;
+    }
+
+    .claim-amount-label {
+        font-size: 11px;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .claim-amount-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #7F3D9E;
+    }
+
+    /* Document Upload Grid */
+    .document-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .document-slot {
+        aspect-ratio: 1;
+        border: 2px dashed #E5E7EB;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #F9FAFB;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(139, 92, 246, 0.05) 10px,
+            rgba(139, 92, 246, 0.05) 20px
+        );
+    }
+
+    .document-slot:hover {
+        border-color: #8B5CF6;
+        background: rgba(139, 92, 246, 0.02);
+    }
+
+    .document-slot.verified {
+        border-color: #7F3D9E;
+        border-style: solid;
+        background: #F0FDF4;
+        background-image: none;
+    }
+
+    .document-slot.review {
+        border-color: #7F3D9E;
+        border-style: solid;
+        background: #FAF5FF;
+        background-image: none;
+    }
+
+    .document-icon {
+        font-size: 36px;
+        color: #D1D5DB;
+        margin-bottom: 12px;
+    }
+
+    .document-slot.verified .document-icon {
+        color: #7F3D9E;
+    }
+
+    .document-slot.review .document-icon {
+        color: #7F3D9E;
+    }
+
+    .document-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .document-status {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .document-status.verified {
+        background: #7F3D9E;
+        color: white;
+    }
+
+    .document-status.review {
+        background: #7F3D9E;
+        color: white;
+    }
+
+    /* Logistics Section */
+    .logistics-section {
+        background: #F9FAFB;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .logistics-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .logistics-icon {
+        width: 40px;
+        height: 40px;
+        background: #7F3D9E;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+
+    .logistics-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .form-section {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #1F2937;
+        background: white;
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+    }
+
+    /* Checklist */
+    .checklist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .checklist-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #7F3D9E;
+    }
+
+    .checklist-label {
+        font-size: 13px;
+        color: #1F2937;
+        cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+        .content-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .document-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .checklist-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Claims & Logistics Hub</h1>
+    <p class="page-subtitle">Verification and funeral coordination management</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-row">
+    <!-- Doc Review -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="fas fa-file-alt"></i>
+            </div>
+        </div>
+        <div class="stat-label">Doc Review</div>
+        <div class="stat-value">12 Claims</div>
     </div>
 
-    <!-- Claims Statistics -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'pending')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- In Logistics -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon orange">
+                <i class="fas fa-truck"></i>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Approved Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'approved')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-label">In Logistics</div>
+        <div class="stat-value">08 Active</div>
+    </div>
+
+    <!-- Settled MTD -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Value
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                KES <?php echo number_format(array_sum(array_column($claims, 'claim_amount')), 2); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-label">Settled (MTD)</div>
+        <div class="stat-value">45 Total</div>
+    </div>
+
+    <!-- Action Needed -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-exclamation-triangle"></i>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                Rejected Claims
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($claims, fn($c) => $c['status'] === 'rejected')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <div class="stat-label">Action Needed</div>
+        <div class="stat-value">03 Critical</div>
+    </div>
+</div>
+
+<!-- Main Content Layout -->
+<div class="content-layout">
+    <!-- Left Column: Active Claims -->
+    <div>
+        <div class="claims-card">
+            <div class="claims-title">Active Claims</div>
+
+            <!-- Document Review Claim -->
+            <div class="claim-item active">
+                <div class="claim-header">
+                    <span class="claim-badge doc-review">DOCUMENT REVIEW</span>
+                    <span class="claim-number">#CLM-8902</span>
                 </div>
+                <div class="claim-name">John Doe (Main Member)</div>
+                <div class="claim-beneficiary">Beneficiary: Mary Doe (Spouse)</div>
+                <div class="claim-progress">
+                    <i class="fas fa-file-check"></i>
+                    <span>1/3 Docs verified</span>
+                </div>
+            </div>
+
+            <!-- Logistics Claim -->
+            <div class="claim-item">
+                <div class="claim-header">
+                    <span class="claim-badge logistics">LOGISTICS</span>
+                    <span class="claim-number">#CLM-8891</span>
+                </div>
+                <div class="claim-name">Alice Wanjiru</div>
+                <div class="claim-logistics-info">Coordination: Transport & Coffin</div>
+                <div class="claim-pickup">
+                    <i class="fas fa-clock"></i>
+                    <span>Pickup Tomorrow 9:00 AM</span>
+                </div>
+            </div>
+
+            <!-- Settled Claim -->
+            <div class="claim-item">
+                <div class="claim-header">
+                    <span class="claim-badge settled">SETTLED</span>
+                    <span class="claim-number">#CLM-8825</span>
+                </div>
+                <div class="claim-name">Robert King'ara</div>
+                <div class="claim-settled-info">Grant Disbursed: Oct 20</div>
             </div>
         </div>
     </div>
 
-    <!-- Claims Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Insurance Claims</h6>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                    Filter by Status
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="/admin/claims">All Claims</a>
-                    <a class="dropdown-item" href="/admin/claims?status=pending">Pending</a>
-                    <a class="dropdown-item" href="/admin/claims?status=approved">Approved</a>
-                    <a class="dropdown-item" href="/admin/claims?status=rejected">Rejected</a>
+    <!-- Right Column: Claim Verification -->
+    <div>
+        <div class="verification-card">
+            <div class="verification-header">
+                <div>
+                    <div class="verification-title">Claim Verification: #CLM-8902</div>
+                    <div class="verification-subtitle">Verify mandatory documents to proceed to logistics</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="claim-amount-label">Claim Amount</div>
+                    <div class="claim-amount-value">KES 80,000</div>
                 </div>
             </div>
-        </div>
-        <div class="card-body">
-            <?php if (!empty($claims)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Claim ID</th>
-                                <th>Member</th>
-                                <th>Deceased Name</th>
-                                <th>Service Type</th>
-                                <th>Status</th>
-                                <th>Progress</th>
-                                <th>Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($claims as $claim): ?>
-                            <tr>
-                                <td>#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?></strong><br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($claim['member_number']); ?></small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($claim['deceased_name']); ?></strong><br>
-                                        <small class="text-muted">
-                                            <?php echo !empty($claim['relationship_to_deceased']) ? ucfirst($claim['relationship_to_deceased']) : 'N/A'; ?>
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
-                                        <span class="badge badge-warning">
-                                            <i class="fas fa-money-bill"></i> Cash (KES 20,000)
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-hands-helping"></i> Standard Services
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?php 
-                                        echo match($claim['status']) {
-                                            'pending' => 'warning',
-                                            'approved' => 'success',
-                                            'rejected' => 'danger',
-                                            'processing' => 'info',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo ucfirst(str_replace('_', ' ', $claim['status'])); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if (in_array($claim['status'], ['approved', 'services_in_progress'])): ?>
-                                        <?php
-                                        $completed_services = 0;
-                                        $total_services = 5;
-                                        if ($claim['mortuary_bill_settled']) $completed_services++;
-                                        if ($claim['body_dressing_completed']) $completed_services++;
-                                        if ($claim['coffin_delivered']) $completed_services++;
-                                        if ($claim['transportation_arranged']) $completed_services++;
-                                        if ($claim['equipment_delivered']) $completed_services++;
-                                        $progress = ($completed_services / $total_services) * 100;
-                                        ?>
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-<?php echo $progress == 100 ? 'success' : 'info'; ?>" 
-                                                 style="width: <?php echo $progress; ?>%">
-                                                <?php echo $completed_services; ?>/<?php echo $total_services; ?>
-                                            </div>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="text-muted">N/A</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#claimModal<?php echo $claim['id']; ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <?php if ($claim['status'] === 'pending'): ?>
-                                        <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#approveModal<?php echo $claim['id']; ?>">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="rejectClaim(<?php echo $claim['id']; ?>)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        <?php if (in_array($claim['status'], ['approved', 'services_in_progress'])): ?>
-                                        <a href="/admin/claims/track/<?php echo $claim['id']; ?>" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-tasks"></i> Track Services
-                                        </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
 
-                            <!-- Claim Details Modal -->
-                            <div class="modal fade" id="claimModal<?php echo $claim['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Claim Details - #<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <h6>Claim Information</h6>
-                                                    <p><strong>Service Type:</strong> 
-                                                        <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
-                                                            <span class="badge badge-warning">Cash Alternative (KES 20,000)</span>
-                                                        <?php else: ?>
-                                                            <span class="badge badge-success">Standard Services</span>
-                                                        <?php endif; ?>
-                                                    </p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $claim['status'] === 'approved' ? 'success' : 'warning'; ?>"><?php echo ucfirst(str_replace('_', ' ', $claim['status'])); ?></span></p>
-                                                    <p><strong>Date Submitted:</strong> <?php echo date('M j, Y H:i', strtotime($claim['created_at'])); ?></p>
-                                                    <?php if (!empty($claim['services_delivery_date'])): ?>
-                                                    <p><strong>Service Delivery Date:</strong> <?php echo date('M j, Y', strtotime($claim['services_delivery_date'])); ?></p>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($claim['processed_at'])): ?>
-                                                    <p><strong>Date Processed:</strong> <?php echo date('M j, Y H:i', strtotime($claim['processed_at'])); ?></p>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6>Member Information</h6>
-                                                    <p><strong>Name:</strong> <?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?></p>
-                                                    <p><strong>Member Number:</strong> <?php echo htmlspecialchars($claim['member_number']); ?></p>
-                                                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($claim['phone_number'] ?? 'N/A'); ?></p>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6>Deceased Information</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <p><strong>Full Name:</strong> <?php echo htmlspecialchars($claim['deceased_name']); ?></p>
-                                                            <?php if (!empty($claim['deceased_id_number'])): ?>
-                                                            <p><strong>ID Number:</strong> <?php echo htmlspecialchars($claim['deceased_id_number']); ?></p>
-                                                            <?php endif; ?>
-                                                            <p><strong>Relationship:</strong> <?php echo ucfirst($claim['relationship_to_deceased'] ?? 'N/A'); ?></p>
-                                                            <p><strong>Date of Death:</strong> <?php echo date('M j, Y', strtotime($claim['date_of_death'])); ?></p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <p><strong>Place of Death:</strong> <?php echo htmlspecialchars($claim['place_of_death'] ?? 'N/A'); ?></p>
-                                                            <p><strong>Cause of Death:</strong> <?php echo htmlspecialchars($claim['cause_of_death'] ?? 'N/A'); ?></p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6>Mortuary Details</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <p><strong>Mortuary Name:</strong> <?php echo htmlspecialchars($claim['mortuary_name'] ?? 'N/A'); ?></p>
-                                                            <p><strong>Days in Mortuary:</strong> <?php echo $claim['mortuary_days_count'] ?? 0; ?> days</p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <?php if (!empty($claim['mortuary_bill_amount'])): ?>
-                                                            <p><strong>Bill Amount:</strong> KES <?php echo number_format($claim['mortuary_bill_amount'], 2); ?></p>
-                                                            <?php endif; ?>
-                                                            <?php if (!empty($claim['mortuary_bill_reference'])): ?>
-                                                            <p><strong>Bill Reference:</strong> <?php echo htmlspecialchars($claim['mortuary_bill_reference']); ?></p>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <?php if ($claim['service_delivery_type'] === 'standard_services'): ?>
-                                            <hr>
-                                            <h6>Service Delivery Checklist</h6>
-                                            <ul class="list-unstyled">
-                                                <li><i class="fas fa-<?php echo $claim['mortuary_bill_settled'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Mortuary Bill Payment</li>
-                                                <li><i class="fas fa-<?php echo $claim['body_dressing_completed'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Body Dressing</li>
-                                                <li><i class="fas fa-<?php echo $claim['coffin_delivered'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Executive Coffin</li>
-                                                <li><i class="fas fa-<?php echo $claim['transportation_arranged'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Transportation</li>
-                                                <li><i class="fas fa-<?php echo $claim['equipment_delivered'] ? 'check-circle text-success' : 'circle text-muted'; ?>"></i> Equipment (Lowering gear, trolley, gazebo, 100 chairs)</li>
-                                            </ul>
-                                            <?php endif; ?>
-                                            
-                                            <?php if ($claim['service_delivery_type'] === 'cash_alternative' && !empty($claim['cash_alternative_reason'])): ?>
-                                            <hr>
-                                            <h6>Cash Alternative Details</h6>
-                                            <div class="alert alert-warning">
-                                                <strong>Reason:</strong> <?php echo nl2br(htmlspecialchars($claim['cash_alternative_reason'])); ?><br>
-                                                <strong>Amount:</strong> KES 20,000.00
-                                            </div>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($claim['supporting_documents'])): ?>
-                                            <hr>
-                                            <h6>Supporting Documents</h6>
-                                            <p><a href="/uploads/<?php echo htmlspecialchars($claim['supporting_documents']); ?>" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-download mr-2"></i>View Documents
-                                            </a></p>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($claim['admin_notes']) || !empty($claim['processing_notes'])): ?>
-                                            <hr>
-                                            <h6>Admin Notes</h6>
-                                            <div class="alert alert-info">
-                                                <?php echo nl2br(htmlspecialchars($claim['admin_notes'] ?? $claim['processing_notes'] ?? '')); ?>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Approve Claim Modal -->
-                            <?php if ($claim['status'] === 'pending'): ?>
-                            <div class="modal fade" id="approveModal<?php echo $claim['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-success text-white">
-                                            <h5 class="modal-title">
-                                                <i class="fas fa-check-circle"></i> Approve Claim #<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?>
-                                            </h5>
-                                            <button type="button" class="close text-white" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="alert alert-info">
-                                                <strong>Member:</strong> <?php echo htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']); ?><br>
-                                                <strong>Deceased:</strong> <?php echo htmlspecialchars($claim['deceased_name']); ?><br>
-                                                <strong>Mortuary Days:</strong> <?php echo $claim['mortuary_days_count'] ?? 14; ?> days
-                                            </div>
-                                            
-                                            <h6 class="font-weight-bold">Select Service Delivery Type:</h6>
-                                            
-                                            <!-- Standard Services Option -->
-                                            <div class="card mb-3 border-success">
-                                                <div class="card-body">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="approval_type<?php echo $claim['id']; ?>" 
-                                                               id="standardServices<?php echo $claim['id']; ?>" value="standard" checked>
-                                                        <label class="form-check-label font-weight-bold" for="standardServices<?php echo $claim['id']; ?>">
-                                                            <i class="fas fa-hands-helping text-success"></i> Standard Services
-                                                        </label>
-                                                    </div>
-                                                    <small class="text-muted d-block mt-2">
-                                                        Per SHENA Policy Section 3, provide:
-                                                        <ul class="mb-0">
-                                                            <li>Mortuary bill payment (up to 14 days)</li>
-                                                            <li>Body dressing</li>
-                                                            <li>Executive coffin</li>
-                                                            <li>Transportation</li>
-                                                            <li>Equipment (lowering gear, trolley, gazebo, 100 chairs)</li>
-                                                        </ul>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Cash Alternative Option -->
-                                            <div class="card border-warning">
-                                                <div class="card-body">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="approval_type<?php echo $claim['id']; ?>" 
-                                                               id="cashAlternative<?php echo $claim['id']; ?>" value="cash">
-                                                        <label class="form-check-label font-weight-bold" for="cashAlternative<?php echo $claim['id']; ?>">
-                                                            <i class="fas fa-money-bill text-warning"></i> Cash Alternative (KES 20,000)
-                                                        </label>
-                                                    </div>
-                                                    <small class="text-muted d-block mt-2">
-                                                        Per Policy Section 12, only for exceptional circumstances
-                                                    </small>
-                                                    
-                                                    <div id="cashReasonSection<?php echo $claim['id']; ?>" class="mt-3" style="display: none;">
-                                                        <label class="font-weight-bold">Reason for Cash Alternative: *</label>
-                                                        <select class="form-control" id="cashReason<?php echo $claim['id']; ?>">
-                                                            <option value="">Select reason...</option>
-                                                            <option value="member_preference">Member's explicit preference</option>
-                                                            <option value="remote_location">Remote location - services unavailable</option>
-                                                            <option value="cultural_religious">Cultural/religious requirements</option>
-                                                            <option value="urgent_burial">Urgent burial needed</option>
-                                                            <option value="other">Other exceptional circumstances</option>
-                                                        </select>
-                                                        
-                                                        <div id="cashReasonOther<?php echo $claim['id']; ?>" class="mt-2" style="display: none;">
-                                                            <textarea class="form-control" placeholder="Please specify the reason..." rows="2"></textarea>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="form-group mt-3">
-                                                <label class="font-weight-bold">Admin Notes:</label>
-                                                <textarea class="form-control" id="adminNotes<?php echo $claim['id']; ?>" rows="2" 
-                                                          placeholder="Add any notes about this approval..."></textarea>
-                                            </div>
-                                            
-                                            <div class="form-group">
-                                                <label class="font-weight-bold">Service Delivery Date:</label>
-                                                <input type="date" class="form-control" id="deliveryDate<?php echo $claim['id']; ?>" 
-                                                       min="<?php echo date('Y-m-d'); ?>" value="<?php echo date('Y-m-d'); ?>">
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                            <button type="button" class="btn btn-success" onclick="submitApproval(<?php echo $claim['id']; ?>)">
-                                                <i class="fas fa-check"></i> Approve Claim
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+            <!-- Document Upload Grid -->
+            <div class="document-grid">
+                <!-- ID Copy -->
+                <div class="document-slot verified">
+                    <i class="fas fa-id-card document-icon"></i>
+                    <div class="document-label">1. ID Copy</div>
+                    <span class="document-status verified">VERIFIED</span>
                 </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-file-medical fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No claims found</h5>
-                    <p class="text-gray-500">Insurance claims will appear here when members submit them.</p>
+
+                <!-- Chief's Letter -->
+                <div class="document-slot review">
+                    <i class="fas fa-file-signature document-icon"></i>
+                    <div class="document-label">2. Chief's Letter</div>
+                    <span class="document-status review">REVIEW REQ</span>
                 </div>
-            <?php endif; ?>
+
+                <!-- Mortuary Invoice -->
+                <div class="document-slot review">
+                    <i class="fas fa-file-invoice document-icon"></i>
+                    <div class="document-label">3. Mortuary Invoice</div>
+                    <span class="document-status review">REVIEW REQ</span>
+                </div>
+            </div>
+
+            <!-- Logistics Section -->
+            <div class="logistics-section">
+                <div class="logistics-header">
+                    <div class="logistics-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="logistics-title">Approve & Dispatch Logistics</div>
+                </div>
+
+                <!-- Coffin Selection -->
+                <div class="form-section">
+                    <label class="form-label">Coffin Selection</label>
+                    <select class="form-select">
+                        <option>Executive Mahogany Finish</option>
+                        <option>Standard Oak</option>
+                        <option>Premium Walnut</option>
+                    </select>
+                </div>
+
+                <!-- Equipment Checklist -->
+                <div class="form-section">
+                    <label class="form-label">Equipment Checklist</label>
+                    <div class="checklist-grid">
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" id="tents" checked>
+                            <label for="tents" class="checklist-label">Tents & Chairs</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" id="lowering" checked>
+                            <label for="lowering" class="checklist-label">Lowering Gear</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" id="sound">
+                            <label for="sound" class="checklist-label">Sound System</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" id="programs">
+                            <label for="programs" class="checklist-label">Programs Print</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport Allocation -->
+                <div class="form-section" style="margin-bottom: 0;">
+                    <label class="form-label">Transport Allocation</label>
+                    <select class="form-select">
+                        <option>Hearse Unit #04 - KCH 234D</option>
+                        <option>Hearse Unit #02 - KBZ 123A</option>
+                        <option>Hearse Unit #06 - KAA 456C</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- New Claim Modal -->
-<div class="modal fade" id="newClaimModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create New Claim</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="/admin/claims/create" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> <strong>Service-Based Claims:</strong> Claims default to standard funeral services. Cash alternative (KES 20,000) only for exceptional circumstances per policy.
-                    </div>
-                    
-                    <h6 class="font-weight-bold">Member Selection</h6>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Member <span class="text-danger">*</span></label>
-                                <select name="member_id" class="form-control" id="memberSelect" required>
-                                    <option value="">Select Member</option>
-                                    <?php if (isset($members)): ?>
-                                        <?php foreach ($members as $m): ?>
-                                            <option value="<?php echo $m['id']; ?>" 
-                                                    data-name="<?php echo htmlspecialchars($m['first_name'] . ' ' . $m['last_name']); ?>"
-                                                    data-number="<?php echo htmlspecialchars($m['member_number']); ?>">
-                                                <?php echo htmlspecialchars($m['member_number'] . ' - ' . $m['first_name'] . ' ' . $m['last_name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <hr>
-                    <h6 class="font-weight-bold">Deceased Information</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Full Name <span class="text-danger">*</span></label>
-                                <input type="text" name="deceased_name" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>ID/Birth Certificate Number <span class="text-danger">*</span></label>
-                                <input type="text" name="deceased_id_number" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Relationship to Deceased <span class="text-danger">*</span></label>
-                                <select name="relationship_to_deceased" class="form-control" required>
-                                    <option value="">Select Relationship</option>
-                                    <option value="self">Self</option>
-                                    <option value="spouse">Spouse</option>
-                                    <option value="parent">Parent</option>
-                                    <option value="child">Child</option>
-                                    <option value="sibling">Sibling</option>
-                                    <option value="dependent">Registered Dependent</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Date of Birth</label>
-                                <input type="date" name="date_of_birth" class="form-control">
-                                <small class="form-text text-muted">For dependent age verification</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Date of Death <span class="text-danger">*</span></label>
-                                <input type="date" name="date_of_death" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Place of Death <span class="text-danger">*</span></label>
-                                <input type="text" name="place_of_death" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Cause of Death <span class="text-danger">*</span></label>
-                        <textarea name="cause_of_death" class="form-control" rows="2" required></textarea>
-                        <small class="form-text text-muted">Required for policy exclusion verification</small>
-                    </div>
-                    
-                    <hr>
-                    <h6 class="font-weight-bold">Mortuary & Service Details</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Mortuary Name <span class="text-danger">*</span></label>
-                                <input type="text" name="mortuary_name" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Days in Mortuary <span class="text-danger">*</span></label>
-                                <input type="number" name="mortuary_days_count" class="form-control" min="0" max="14" value="14" required>
-                                <small class="form-text text-muted">Maximum 14 days per policy</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Mortuary Bill Amount</label>
-                                <input type="number" name="mortuary_bill_amount" class="form-control" step="0.01">
-                                <small class="form-text text-muted">For reference and verification</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Bill Reference/Invoice #</label>
-                                <input type="text" name="mortuary_bill_reference" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <hr>
-                    <h6 class="font-weight-bold">Required Documents</h6>
-                    <div class="form-group">
-                        <label>Supporting Documents</label>
-                        <input type="file" name="supporting_documents" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" multiple>
-                        <small class="form-text text-muted">ID/Birth Certificate, Chief's Letter, Mortuary Invoice, Death Certificate (optional)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Admin Notes</label>
-                        <textarea name="admin_notes" class="form-control" rows="3" placeholder="Additional notes about this claim..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Create Claim
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-// Handle cash alternative radio button
-document.addEventListener('DOMContentLoaded', function() {
-    const radios = document.querySelectorAll('input[name^="approval_type"]');
-    radios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const claimId = this.name.replace('approval_type', '');
-            const cashReasonSection = document.getElementById('cashReasonSection' + claimId);
-            
-            if (this.value === 'cash' && this.checked) {
-                cashReasonSection.style.display = 'block';
-            } else {
-                cashReasonSection.style.display = 'none';
-            }
-        });
-    });
-    
-    // Handle "Other" reason selection
-    const reasonSelects = document.querySelectorAll('select[id^="cashReason"]');
-    reasonSelects.forEach(select => {
-        select.addEventListener('change', function() {
-            const claimId = this.id.replace('cashReason', '');
-            const otherSection = document.getElementById('cashReasonOther' + claimId);
-            
-            if (this.value === 'other') {
-                otherSection.style.display = 'block';
-            } else {
-                otherSection.style.display = 'none';
-            }
-        });
-    });
-});
-
-function submitApproval(claimId) {
-    const approvalType = document.querySelector(`input[name="approval_type${claimId}"]:checked`).value;
-    const adminNotes = document.getElementById(`adminNotes${claimId}`).value;
-    const deliveryDate = document.getElementById(`deliveryDate${claimId}`).value;
-    
-    let url, formData;
-    
-    if (approvalType === 'cash') {
-        // Cash alternative approval
-        const cashReason = document.getElementById(`cashReason${claimId}`).value;
-        
-        if (!cashReason) {
-            alert('Please select a reason for cash alternative');
-            return;
-        }
-        
-        let reasonText = cashReason;
-        if (cashReason === 'other') {
-            const otherTextarea = document.querySelector(`#cashReasonOther${claimId} textarea`);
-            if (!otherTextarea.value.trim()) {
-                alert('Please specify the reason for cash alternative');
-                return;
-            }
-            reasonText = otherTextarea.value.trim();
-        }
-        
-        if (!confirm('Approve this claim for KES 20,000 cash alternative?\n\nReason: ' + reasonText)) {
-            return;
-        }
-        
-        url = '/admin/claims/approve-cash';
-        formData = new FormData();
-        formData.append('claim_id', claimId);
-        formData.append('cash_alternative_reason', reasonText);
-        formData.append('admin_notes', adminNotes);
-        formData.append('services_delivery_date', deliveryDate);
-        
-    } else {
-        // Standard services approval
-        if (!confirm('Approve this claim for standard service delivery?')) {
-            return;
-        }
-        
-        url = '/admin/claims/approve';
-        formData = new FormData();
-        formData.append('claim_id', claimId);
-        formData.append('admin_notes', adminNotes);
-        formData.append('services_delivery_date', deliveryDate);
-    }
-    
-    // Submit the form
-    fetch(url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Claim approved successfully!');
-            location.reload();
-        } else {
-            alert(data.message || 'Error approving claim');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing the approval');
-    });
-}
-
-function rejectClaim(claimId) {
-    const reason = prompt('Reason for rejection:');
-    if (reason) {
-        if (confirm('Reject this claim?')) {
-            // Implementation for rejecting claim
-            window.location.href = `/admin/claims/reject/${claimId}?reason=${encodeURIComponent(reason)}`;
-        }
-    }
-}
-</script>
-
-<?php include_once 'admin-footer.php'; ?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

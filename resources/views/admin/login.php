@@ -3,137 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title ?? 'Admin Login'; ?></title>
+    <title><?php echo $title ?? 'Sign In'; ?> - Shena Companion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Manrope', sans-serif;
+            background: #F5F5F7;
             min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Panel */
+        .left-panel {
+            width: 50%;
+            background: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 50%, #6B21A8 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            padding: 60px 40px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(10px);
         }
-        .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 400px;
+
+        .logo-icon img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
         }
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
+
+        .brand-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
-        .login-body {
-            padding: 2rem;
+
+        .tagline {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 400;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.95);
         }
-        .form-control {
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-        }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem;
-            width: 100%;
-            color: white;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-        .input-group {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-        .input-group i {
+
+        .portal-label {
             position: absolute;
-            left: 1rem;
+            bottom: 40px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 50%;
+            background: #F5F5F7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: #9CA3AF;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .password-label-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .forgot-link {
+            font-size: 12px;
+            color: #8B5CF6;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: none;
+        }
+
+        .forgot-link:hover {
+            color: #7C3AED;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #6c757d;
-            z-index: 3;
+            color: #9CA3AF;
+            font-size: 14px;
         }
-        .input-group .form-control {
-            padding-left: 3rem;
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1F2937;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #D1D5DB;
+            font-size: 13px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .remember-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .remember-wrapper input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: #8B5CF6;
+        }
+
+        .remember-wrapper label {
+            font-size: 12px;
+            color: #6B7280;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .btn-signin {
+            width: 100%;
+            padding: 13px 24px;
+            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-signin:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-signin:active {
+            transform: translateY(0);
+        }
+
+        .security-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 24px;
+            padding: 14px;
+            background: #FEF3C7;
+            border-left: 3px solid #F59E0B;
+            border-radius: 6px;
+        }
+
+        .security-notice i {
+            color: #F59E0B;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .security-notice p {
+            font-size: 11px;
+            color: #92400E;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: none;
+            font-size: 13px;
+        }
+
+        .alert-danger {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left-panel,
+            .right-panel {
+                width: 100%;
+            }
+
+            .left-panel {
+                min-height: 35vh;
+                padding: 40px 20px;
+            }
+
+            .logo-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .brand-name {
+                font-size: 32px;
+            }
+
+            .tagline {
+                font-size: 18px;
+            }
+
+            .right-panel {
+                padding: 40px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="login-card">
-                    <div class="login-header">
-                        <i class="fas fa-shield-alt fa-3x mb-3"></i>
-                        <h3 class="mb-0">Admin Portal</h3>
-                        <p class="mb-0 opacity-75">Shena Companion Welfare Association</p>
-                    </div>
-                    <div class="login-body">
-                        <?php if (isset($error)): ?>
-                            <div class="alert alert-danger" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <?php echo htmlspecialchars($error); ?>
-                            </div>
-                        <?php endif; ?>
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <img src="/public/images/shena-logo.png" alt="SHENA Logo">
+            </div>
+            <h1 class="brand-name">SHENA Companion</h1>
+            <p class="tagline">We Are Royal</p>
+        </div>
+        
+        <div class="portal-label">
+            STAFF ADMINISTRATION PORTAL
+        </div>
+    </div>
 
-                        <form method="POST" action="/admin/login">
-                            <div class="input-group">
-                                <i class="fas fa-user"></i>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="username" 
-                                       name="username" 
-                                       placeholder="Username" 
-                                       required 
-                                       autocomplete="username">
-                            </div>
+    <!-- Right Panel -->
+    <div class="right-panel">
+        <div class="login-container">
+            <h2 class="login-title">Sign In</h2>
+            <p class="login-subtitle">Please enter your administrative credential to access the portal.</p>
 
-                            <div class="input-group">
-                                <i class="fas fa-lock"></i>
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="password" 
-                                       name="password" 
-                                       placeholder="Password" 
-                                       required 
-                                       autocomplete="current-password">
-                            </div>
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
 
-                            <button type="submit" class="btn btn-login">
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                Sign In
-                            </button>
-                        </form>
-
-                        <div class="text-center mt-4">
-                            <small class="text-muted">
-                                <a href="/" class="text-decoration-none">
-                                    <i class="fas fa-arrow-left me-1"></i>
-                                    Back to Main Site
-                                </a>
-                            </small>
-                        </div>
+            <form method="POST" action="/admin/login" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Admin Email / ID</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" 
+                               class="form-control" 
+                               id="username" 
+                               name="username" 
+                               placeholder="rensheard@neric-2025" 
+                               required 
+                               autocomplete="username">
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="password-label-wrapper">
+                        <label class="form-label">Password</label>
+                        <a href="/admin/forgot-password" class="forgot-link">Forgot Password?</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               placeholder="••••••••" 
+                               required 
+                               autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="remember-wrapper">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember this device</label>
+                </div>
+
+                <button type="submit" class="btn-signin">
+                    Sign In to Portal
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="security-notice">
+                <i class="fas fa-shield-alt"></i>
+                <p>All logins are authenticated and stored for security. If you suspect unauthorized access or need to report a suspicious system activity, please contact IT.</p>
             </div>
         </div>
     </div>
@@ -144,8 +386,8 @@
         document.getElementById('username').focus();
         
         // Add loading state to button on form submit
-        document.querySelector('form').addEventListener('submit', function() {
-            const btn = document.querySelector('.btn-login');
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.querySelector('.btn-signin');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
             btn.disabled = true;
         });
