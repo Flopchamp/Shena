@@ -42,12 +42,12 @@
     }
 
     .btn-primary {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
     }
 
     .btn-primary:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
         transform: translateY(-1px);
     }
 
@@ -123,7 +123,7 @@
 
     .stat-icon.primary {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .stat-value {
@@ -186,14 +186,14 @@
     }
 
     .filter-btn:hover {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .filter-btn.active {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
     }
 
     /* Payments Table */
@@ -324,9 +324,9 @@
     }
 
     .action-btn:hover {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
     }
 
     /* Empty State */
@@ -393,7 +393,7 @@
 
     .form-control:focus {
         outline: none;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
         box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
     }
 

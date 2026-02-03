@@ -69,7 +69,7 @@
     }
 
     .section-header i {
-        color: #8B5CF6;
+        color: #7F3D9E;
         font-size: 18px;
     }
 
@@ -98,8 +98,8 @@
 
     .form-control:focus {
         outline: none;
-        border-color: #8B5CF6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 
     .form-control::placeholder {
@@ -144,7 +144,7 @@
         border: 1px solid #E5E7EB;
         border-left: none;
         background: white;
-        color: #6B7280;
+        color: #7F3D9E;
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -202,13 +202,13 @@
         font-weight: 600;
         cursor: pointer;
         border: none;
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         transition: all 0.2s;
     }
 
     .btn-submit:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
         transform: translateY(-1px);
     }
 

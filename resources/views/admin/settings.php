@@ -50,7 +50,7 @@
         width: 40px;
         height: 40px;
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -89,8 +89,8 @@
 
     .form-input:focus {
         outline: none;
-        border-color: #8B5CF6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 
     .form-help {
@@ -168,7 +168,7 @@
     }
 
     .toggle-switch input:checked + .toggle-slider {
-        background-color: #8B5CF6;
+        background-color: #7F3D9E;
     }
 
     .toggle-switch input:checked + .toggle-slider:before {
@@ -257,7 +257,7 @@
 
     /* Status Card */
     .status-card {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
         border-radius: 12px;
         padding: 24px;
         color: white;
@@ -388,7 +388,7 @@
     }
 
     .btn-save {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         border: none;
         padding: 12px 32px;
@@ -403,9 +403,9 @@
     }
 
     .btn-save:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     .btn-reset {

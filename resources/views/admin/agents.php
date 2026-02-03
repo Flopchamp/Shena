@@ -22,14 +22,14 @@
 
     /* Emergency Alert */
     .emergency-alert {
-        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #B91C1C 100%);
         border-radius: 12px;
         padding: 16px 20px;
         margin-bottom: 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.2);
     }
 
     .alert-content {
@@ -139,7 +139,7 @@
 
     .stat-icon.purple {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .stat-icon.yellow {
@@ -237,9 +237,9 @@
     }
 
     .filter-btn.active {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
     }
 
     .map-container {
@@ -263,7 +263,7 @@
     }
 
     .map-dot.purple {
-        background: #8B5CF6;
+        background: #7F3D9E;
         top: 45%;
         left: 48%;
     }
@@ -382,7 +382,7 @@
 
     .payout-button {
         width: 100%;
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         border: none;
         padding: 8px;
@@ -394,7 +394,7 @@
     }
 
     .payout-button:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
     }
 
     .payout-button.audit {
@@ -466,7 +466,7 @@
     }
 
     .agents-table thead th {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         padding: 14px 16px;
         text-align: left;
@@ -505,7 +505,7 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         display: flex;
         align-items: center;
@@ -552,7 +552,7 @@
 
     .earnings-value {
         font-weight: 700;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .action-btn {
@@ -567,14 +567,14 @@
     }
 
     .action-btn:hover {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
     }
 
     /* Top Performers */
     .performers-card {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
         border-radius: 12px;
         padding: 24px;
         color: white;

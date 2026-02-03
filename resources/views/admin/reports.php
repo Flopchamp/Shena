@@ -96,12 +96,12 @@
 
     .form-control:focus {
         outline: none;
-        border-color: #8B5CF6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 
     .btn-generate {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         border: none;
         padding: 10px 24px;
@@ -114,7 +114,7 @@
     }
 
     .btn-generate:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
         transform: translateY(-1px);
     }
 
@@ -166,7 +166,7 @@
 
     .stat-icon.primary {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .stat-icon.success {
@@ -256,7 +256,7 @@
     }
 
     .legend-dot.primary {
-        background: #8B5CF6;
+        background: #7F3D9E;
     }
 
     .legend-dot.success {

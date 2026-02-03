@@ -130,7 +130,7 @@
 
     .claim-item.active {
         background: white;
-        border: 2px solid #8B5CF6;
+        border: 2px solid #7F3D9E;
     }
 
     .claim-header {
@@ -187,7 +187,7 @@
         align-items: center;
         gap: 8px;
         font-size: 12px;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .claim-progress i {
@@ -250,7 +250,7 @@
     .claim-amount-value {
         font-size: 18px;
         font-weight: 700;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     /* Document Upload Grid */
@@ -288,14 +288,14 @@
     }
 
     .document-slot.verified {
-        border-color: #10B981;
+        border-color: #7F3D9E;
         border-style: solid;
         background: #F0FDF4;
         background-image: none;
     }
 
     .document-slot.review {
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
         border-style: solid;
         background: #FAF5FF;
         background-image: none;
@@ -308,11 +308,11 @@
     }
 
     .document-slot.verified .document-icon {
-        color: #10B981;
+        color: #7F3D9E;
     }
 
     .document-slot.review .document-icon {
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .document-label {
@@ -332,12 +332,12 @@
     }
 
     .document-status.verified {
-        background: #10B981;
+        background: #7F3D9E;
         color: white;
     }
 
     .document-status.review {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
     }
 
@@ -359,7 +359,7 @@
     .logistics-icon {
         width: 40px;
         height: 40px;
-        background: #8B5CF6;
+        background: #7F3D9E;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -401,8 +401,8 @@
 
     .form-select:focus {
         outline: none;
-        border-color: #8B5CF6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 
     /* Checklist */
@@ -422,7 +422,7 @@
         width: 20px;
         height: 20px;
         cursor: pointer;
-        accent-color: #8B5CF6;
+        accent-color: #7F3D9E;
     }
 
     .checklist-label {

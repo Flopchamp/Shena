@@ -2,13 +2,13 @@
 
     <!-- Footer -->
     <footer style="margin-left: 260px; padding: 20px 30px; background: white; border-top: 1px solid #E5E7EB; font-size: 12px; color: #9CA3AF; display: flex; justify-content: space-between; align-items: center;">
-        <div>
+        <div style="color : #7F3D9E">
             © 2023 SHENA Companion Admin Portal. Secure Management Environment.
         </div>
         <div style="display: flex; gap: 20px;">
-            <a href="/documentation" style="color: #9CA3AF; text-decoration: none;">DOCUMENTATION</a>
-            <a href="/privacy-policy" style="color: #9CA3AF; text-decoration: none;">PRIVACY POLICY</a>
-            <a href="/support-center" style="color: #9CA3AF; text-decoration: none;">SUPPORT CENTER</a>
+            <a href="/documentation" style="color: #7F3D9E; text-decoration: none;">DOCUMENTATION</a>
+            <a href="/privacy-policy" style="color: #7F3D9E; text-decoration: none;">PRIVACY POLICY</a>
+            <a href="/support-center" style="color: #7F3D9E; text-decoration: none;">SUPPORT CENTER</a>
         </div>
     </footer>
 

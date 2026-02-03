@@ -2,12 +2,12 @@
 
 <style>
     .page-header {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
         border-radius: 12px;
         padding: 2rem;
         margin-bottom: 2rem;
         color: white;
-        box-shadow: 0 4px 6px rgba(139, 92, 246, 0.1);
+        box-shadow: 0 4px 6px rgba(127, 61, 158, 0.1);
     }
 
     .page-header h1 {
@@ -88,14 +88,14 @@
     }
 
     .modern-btn.primary {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
     }
 
     .modern-btn.primary:hover {
         background: #7C3AED;
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 8px rgba(127, 61, 158, 0.3);
     }
 
     .modern-btn.secondary {
@@ -192,7 +192,7 @@
     }
 
     input:checked + .slider {
-        background-color: #8B5CF6;
+        background-color: #7F3D9E;
     }
 
     input:checked + .slider:before {
@@ -290,7 +290,7 @@
         top: 0;
         width: 24px;
         height: 24px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
         color: white;
         border-radius: 50%;
         display: flex;

@@ -2,12 +2,12 @@
 
 <style>
     .page-header {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
         border-radius: 12px;
         padding: 2rem;
         margin-bottom: 2rem;
         color: white;
-        box-shadow: 0 4px 6px rgba(139, 92, 246, 0.1);
+        box-shadow: 0 4px 6px rgba(127, 61, 158, 0.1);
     }
 
     .page-header h1 {
@@ -55,12 +55,12 @@
     }
 
     .stat-card.primary .icon-wrapper {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
         color: white;
     }
 
     .stat-card.success .icon-wrapper {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #059669 100%);
         color: white;
     }
 

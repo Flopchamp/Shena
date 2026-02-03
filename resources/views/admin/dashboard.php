@@ -3,14 +3,14 @@
 <style>
     /* Emergency Alert Banner */
     .emergency-alert {
-        background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #EF4444 100%);
         border-radius: 12px;
         padding: 20px 24px;
         margin-bottom: 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.2);
     }
 
     .alert-content {
@@ -121,7 +121,7 @@
 
     .stat-icon.purple {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .stat-icon.orange {
@@ -263,7 +263,7 @@
 
     .view-tasks-link {
         font-size: 12px;
-        color: #8B5CF6;
+        color: #7F3D9E;
         text-decoration: none;
         font-weight: 600;
         padding: 6px 12px;
@@ -306,7 +306,7 @@
         display: inline-block;
         padding: 4px 8px;
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
         border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
@@ -330,13 +330,13 @@
     }
 
     .btn-action.primary {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%);
         color: white;
     }
 
     .btn-action.primary:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     .btn-action.secondary {
@@ -398,13 +398,13 @@
     }
 
     .btn-filter-table:hover {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .btn-add-member {
         padding: 8px 16px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%);
         border: none;
         border-radius: 8px;
         color: white;
@@ -419,7 +419,7 @@
 
     .btn-add-member:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     .members-table {
@@ -576,8 +576,8 @@
     }
 
     .pagination-btn:hover:not(:disabled) {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .pagination-btn:disabled {
@@ -862,7 +862,7 @@ const contributionChart = new Chart(ctx, {
         datasets: [{
             label: 'Contributions',
             data: [520, 680, 590, 720, 850, 730],
-            borderColor: '#8B5CF6',
+            borderColor: '#7F3D9E',
             backgroundColor: gradient,
             borderWidth: 3,
             tension: 0.4,

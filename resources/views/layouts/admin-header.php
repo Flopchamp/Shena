@@ -77,7 +77,7 @@
 
         .sidebar-logo-text span {
             font-weight: 400;
-            color: #8B5CF6;
+            color: #7F3D9E;
         }
 
         .sidebar-nav {
@@ -104,12 +104,12 @@
 
         .nav-link:hover {
             background: #F9FAFB;
-            color: #8B5CF6;
+            color: #7F3D9E;
         }
 
         .nav-link.active {
             background: linear-gradient(135deg, #F3E8FF 0%, #EDE9FE 100%);
-            color: #8B5CF6;
+            color: #7F3D9E;
         }
 
         .nav-link.active::before {
@@ -120,7 +120,7 @@
             transform: translateY(-50%);
             width: 4px;
             height: 24px;
-            background: #8B5CF6;
+            background: #7F3D9E;
             border-radius: 0 4px 4px 0;
         }
 
@@ -214,8 +214,8 @@
 
         .search-bar input:focus {
             outline: none;
-            border-color: #8B5CF6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            border-color: #7F3D9E;
+            box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
         }
 
         .search-bar input::placeholder {
@@ -264,7 +264,7 @@
 
         .btn-new-registration {
             padding: 10px 20px;
-            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+            background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
             border: none;
             border-radius: 8px;
             color: white;
@@ -279,7 +279,7 @@
 
         .btn-new-registration:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
         }
 
         /* Main Content Area */

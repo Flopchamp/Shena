@@ -2,12 +2,12 @@
 
 <style>
     .page-header {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
         border-radius: 12px;
         padding: 2rem;
         margin-bottom: 2rem;
         color: white;
-        box-shadow: 0 4px 6px rgba(139, 92, 246, 0.1);
+        box-shadow: 0 4px 6px rgba(127, 61, 158, 0.1);
     }
 
     .page-header h1 {
@@ -34,7 +34,7 @@
     }
 
     .stat-card:hover {
-        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.1);
+        box-shadow: 0 4px 8px rgba(127, 61, 158, 0.1);
         transform: translateY(-2px);
     }
 
@@ -53,8 +53,8 @@
     }
 
     .stat-card.primary .icon-wrapper {
-        background: rgba(139, 92, 246, 0.1);
-        color: #8B5CF6;
+        background: rgba(127, 61, 158, 0.1);
+        color: #7F3D9E;
     }
 
     .stat-card.success .icon-wrapper {
@@ -178,8 +178,8 @@
     }
 
     .action-btn:hover {
-        background: rgba(139, 92, 246, 0.1);
-        color: #8B5CF6;
+        background: rgba(127, 61, 158, 0.1);
+        color: #7F3D9E;
     }
 
     .action-btn.success:hover {
@@ -206,14 +206,14 @@
     }
 
     .modern-btn.primary {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
     }
 
     .modern-btn.primary:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 8px rgba(127, 61, 158, 0.3);
     }
 
     .modern-btn.secondary {
@@ -287,7 +287,7 @@
     }
 
     .modal-header-modern {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 12px 12px 0 0;
@@ -347,8 +347,8 @@
 
     .form-control:focus {
         outline: none;
-        border-color: #8B5CF6;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 
     textarea.form-control {

@@ -49,7 +49,7 @@
 
     /* Emergency Alert */
     .emergency-alert {
-        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #B91C1C 100%);
         border-radius: 12px;
         padding: 16px 20px;
         margin-bottom: 24px;
@@ -197,7 +197,7 @@
 
     .stat-progress-bar {
         height: 100%;
-        background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(90deg, #7F3D9E 0%, #7F3D9E 100%);
         border-radius: 4px;
         transition: width 0.3s ease;
     }
@@ -256,7 +256,7 @@
     }
 
     .legend-dot.purple {
-        background: #8B5CF6;
+        background: #7F3D9E;
     }
 
     .legend-dot.gray {
@@ -333,7 +333,7 @@
 
     .feed-button {
         width: 100%;
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         border: none;
         padding: 8px;
@@ -345,7 +345,7 @@
     }
 
     .feed-button:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
     }
 
     /* Table */
@@ -394,9 +394,9 @@
     }
 
     .table-btn.primary {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
-        border-color: #8B5CF6;
+        border-color: #7F3D9E;
     }
 
     .table-btn:hover {
@@ -404,7 +404,7 @@
     }
 
     .table-btn.primary:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
     }
 
     .reconciliation-table {
@@ -414,7 +414,7 @@
     }
 
     .reconciliation-table thead th {
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         padding: 14px 16px;
         text-align: left;
@@ -512,7 +512,7 @@
         padding: 6px 16px;
         border-radius: 6px;
         border: none;
-        background: #8B5CF6;
+        background: #7F3D9E;
         color: white;
         font-size: 12px;
         font-weight: 600;
@@ -521,7 +521,7 @@
     }
 
     .action-btn:hover {
-        background: #7C3AED;
+        background: #7F3D9E;
     }
 
     .action-btn.edit {
@@ -564,7 +564,7 @@
             <i class="fas fa-circle"></i>
             LIVE M-PESA FEED ACTIVE
         </div>
-        <button style="background: #8B5CF6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+        <button style="background: #7F3D9E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
             <i class="fas fa-file-alt"></i> Defaulter Report
         </button>
     </div>

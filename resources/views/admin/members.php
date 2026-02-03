@@ -22,14 +22,14 @@
 
     /* Emergency Alert Banner */
     .emergency-alert {
-        background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+        background: linear-gradient(135deg, #7F3D9E 0%, #EF4444 100%);
         border-radius: 12px;
         padding: 20px 24px;
         margin-bottom: 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.2);
     }
 
     .alert-content {
@@ -140,7 +140,7 @@
 
     .stat-icon.purple {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .stat-icon.pink {
@@ -217,13 +217,13 @@
     }
 
     .btn-export:hover {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .btn-new-registration {
         padding: 8px 16px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%);
         border: none;
         border-radius: 8px;
         color: white;
@@ -238,7 +238,7 @@
 
     .btn-new-registration:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     /* Members Table */
@@ -292,7 +292,7 @@
     }
 
     .member-avatar.purple {
-        background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
+        background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%);
     }
 
     .member-avatar.pink {
@@ -343,7 +343,7 @@
 
     .status-badge.grace {
         background: #EDE9FE;
-        color: #8B5CF6;
+        color: #7F3D9E;
     }
 
     .status-badge.default {
@@ -403,8 +403,8 @@
     }
 
     .pagination-btn:hover:not(:disabled) {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .pagination-btn:disabled {
@@ -510,7 +510,7 @@
     .btn-approve {
         flex: 1;
         padding: 8px 16px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%);
         border: none;
         border-radius: 6px;
         color: white;
@@ -522,7 +522,7 @@
 
     .btn-approve:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     .btn-close {
