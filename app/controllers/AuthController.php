@@ -397,10 +397,19 @@ class AuthController extends BaseController
     
     public function logout()
     {
+        // Check if user is admin before destroying session
+        $isAdmin = isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['super_admin', 'manager']);
+        
         session_destroy();
         session_start();
         $_SESSION['success'] = 'You have been logged out successfully.';
-        $this->redirect('/login');
+        
+        // Redirect to appropriate login page
+        if ($isAdmin) {
+            $this->redirect('/admin-login');
+        } else {
+            $this->redirect('/login');
+        }
     }
     
     /**

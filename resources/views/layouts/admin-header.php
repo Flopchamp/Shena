@@ -344,6 +344,76 @@
             font-size: 16px;
         }
 
+        .admin-profile {
+            position: relative;
+        }
+
+        /* Admin Dropdown Menu */
+        .admin-dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 10px;
+            right: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 8px;
+            padding: 8px 0;
+            display: none;
+            z-index: 1000;
+        }
+
+        .admin-dropdown-menu.show {
+            display: block;
+            animation: slideUp 0.2s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #1F2937;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #F9FAFB;
+            color: #7F3D9E;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .dropdown-item.logout-item {
+            border-top: 1px solid #E5E7EB;
+            margin-top: 4px;
+            padding-top: 12px;
+            color: #DC2626;
+        }
+
+        .dropdown-item.logout-item:hover {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+
         /* Responsive */
         @media (max-width: 992px) {
             .sidebar {
@@ -531,13 +601,25 @@
         </nav>
 
         <!-- Admin Profile -->
-        <div class="admin-profile">
+        <div class="admin-profile" onclick="toggleAdminMenu(event)">
             <div class="admin-avatar">AD</div>
             <div class="admin-info">
                 <div class="admin-name">Admin Director</div>
                 <div class="admin-email">admin@shena.com</div>
             </div>
             <i class="fas fa-ellipsis-v admin-menu-btn"></i>
+            
+            <!-- Dropdown Menu -->
+            <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                <a href="/admin/settings" class="dropdown-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Profile Settings</span>
+                </a>
+                <a href="/logout" class="dropdown-item logout-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -565,6 +647,23 @@
     <div class="main-content">
 
     <script>
+        // Toggle admin dropdown menu
+        function toggleAdminMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('adminDropdownMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Close admin menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('adminDropdownMenu');
+            const profile = document.querySelector('.admin-profile');
+            
+            if (menu && !profile.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
         // Toggle submenu function
         function toggleSubmenu(event, submenuId) {
             event.preventDefault();
