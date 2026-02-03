@@ -1,338 +1,638 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-comments mr-2"></i>Communications
-        </h1>
-        <div class="btn-group">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#sendEmailModal">
-                <i class="fas fa-envelope mr-2"></i>Quick Email
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 4px 6px rgba(139, 92, 246, 0.1);
+    }
+
+    .page-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+        border: 1px solid #f3f4f6;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #f3f4f6;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-card .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card .icon-wrapper i {
+        font-size: 24px;
+    }
+
+    .stat-card.primary .icon-wrapper {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8B5CF6;
+    }
+
+    .stat-card.success .icon-wrapper {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .stat-card.info .icon-wrapper {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .stat-card.warning .icon-wrapper {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #f3f4f6;
+        padding: 0;
+        list-style: none;
+    }
+
+    .modern-tabs .tab-item {
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+        font-weight: 600;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        margin-bottom: -2px;
+    }
+
+    .modern-tabs .tab-item:hover {
+        color: #8B5CF6;
+    }
+
+    .modern-tabs .tab-item.active {
+        color: #8B5CF6;
+        border-bottom-color: #8B5CF6;
+    }
+
+    .tab-content-panel {
+        display: none;
+    }
+
+    .tab-content-panel.active {
+        display: block;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead {
+        background: #f9fafb;
+    }
+
+    .modern-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .modern-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+
+    .status-badge.sent {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .status-badge.failed {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .type-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .type-badge.email {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8B5CF6;
+    }
+
+    .type-badge.sms {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #6b7280;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-btn:hover {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8B5CF6;
+    }
+
+    .modern-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modern-btn.primary {
+        background: #8B5CF6;
+        color: white;
+    }
+
+    .modern-btn.primary:hover {
+        background: #7C3AED;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+    }
+
+    .modern-btn.success {
+        background: #10B981;
+        color: white;
+    }
+
+    .modern-btn.success:hover {
+        background: #059669;
+    }
+
+    .modern-btn.secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .modern-btn.secondary:hover {
+        background: #e5e7eb;
+    }
+
+    .modern-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .modern-modal.active {
+        display: flex;
+    }
+
+    .modal-content-modern {
+        background: white;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header-modern {
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header-modern h3 {
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-body-modern {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #9ca3af;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .select-control {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .select-control:hover {
+        border-color: #8B5CF6;
+    }
+
+    .select-control:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+</style>
+
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1><i class="fas fa-comments"></i> Communications Hub</h1>
+            <p>Manage email and SMS communications with members</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button class="modern-btn primary" onclick="openModal('emailModal')">
+                <i class="fas fa-envelope"></i> Quick Email
             </button>
-            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#sendSMSModal">
-                <i class="fas fa-sms mr-2"></i>Quick SMS
+            <button class="modern-btn success" onclick="openModal('smsModal')">
+                <i class="fas fa-sms"></i> Quick SMS
             </button>
         </div>
     </div>
-    
-    <!-- Navigation Tabs -->
-    <ul class="nav nav-tabs mb-4" id="communicationTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="history-tab" data-toggle="tab" href="#history" role="tab">
-                <i class="fas fa-history mr-2"></i>History
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="email-campaigns-tab" data-toggle="tab" href="#email-campaigns" role="tab">
-                <i class="fas fa-envelope-open-text mr-2"></i>Email Campaigns
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="sms-campaigns-tab" data-toggle="tab" href="#sms-campaigns" role="tab">
-                <i class="fas fa-comment-dots mr-2"></i>SMS Campaigns
-            </a>
-        </li>
-    </ul>
-    
-    <!-- Tab Content -->
-    <div class="tab-content" id="communicationTabsContent">
-        <!-- History Tab -->
-        <div class="tab-pane fade show active" id="history" role="tabpanel">
-    <!-- Communication Statistics -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Emails Sent
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['type'] === 'email')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                SMS Sent
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['type'] === 'sms')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-sms fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                This Month
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php 
-                                    $thisMonth = array_filter($communications, fn($c) => 
-                                        date('Y-m', strtotime($c['sent_at'])) === date('Y-m')
-                                    );
-                                    echo count($thisMonth);
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Failed
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo count(array_filter($communications, fn($c) => $c['status'] === 'failed')); ?>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Communications History -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Communication History</h6>
-            <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-                    Filter
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="/admin/communications">All Communications</a>
-                    <a class="dropdown-item" href="/admin/communications?type=email">Emails Only</a>
-                    <a class="dropdown-item" href="/admin/communications?type=sms">SMS Only</a>
-                    <a class="dropdown-item" href="/admin/communications?status=failed">Failed Only</a>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <?php if (!empty($communications)): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Recipients</th>
-                                <th>Subject</th>
-                                <th>Status</th>
-                                <th>Sent Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($communications as $comm): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge badge-<?php echo $comm['type'] === 'email' ? 'primary' : 'success'; ?>">
-                                        <i class="fas fa-<?php echo $comm['type'] === 'email' ? 'envelope' : 'sms'; ?> mr-1"></i>
-                                        <?php echo strtoupper($comm['type']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div>
-                                        <?php if ($comm['recipient_type'] === 'all'): ?>
-                                            <strong>All Members</strong>
-                                        <?php elseif ($comm['recipient_type'] === 'group'): ?>
-                                            <strong><?php echo ucfirst($comm['recipient_group']); ?> Members</strong>
-                                        <?php else: ?>
-                                            <?php echo htmlspecialchars($comm['recipient_name'] ?? 'Individual Member'); ?>
-                                        <?php endif; ?>
-                                        <br>
-                                        <small class="text-muted"><?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($comm['subject']); ?></strong><br>
-                                        <small class="text-muted">
-                                            <?php echo htmlspecialchars(substr($comm['message'], 0, 50) . '...'); ?>
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-<?php 
-                                        echo match($comm['status']) {
-                                            'sent' => 'success',
-                                            'failed' => 'danger',
-                                            'pending' => 'warning',
-                                            default => 'secondary'
-                                        };
-                                    ?>">
-                                        <?php echo ucfirst($comm['status']); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y H:i', strtotime($comm['sent_at'])); ?></td>
-                                <td>
-                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#commModal<?php echo $comm['id']; ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- Communication Details Modal -->
-                            <div class="modal fade" id="commModal<?php echo $comm['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Communication Details</h5>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <h6>Communication Info</h6>
-                                                    <p><strong>Type:</strong> <?php echo !empty($comm['type']) ? strtoupper($comm['type']) : 'N/A'; ?></p>
-                                                    <p><strong>Status:</strong> <span class="badge badge-<?php echo $comm['status'] === 'sent' ? 'success' : 'danger'; ?>"><?php echo !empty($comm['status']) ? ucfirst($comm['status']) : 'Pending'; ?></span></p>
-                                                    <p><strong>Sent Date:</strong> <?php echo !empty($comm['sent_at']) ? date('M j, Y H:i:s', strtotime($comm['sent_at'])) : 'Not sent yet'; ?></p>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6>Recipients</h6>
-                                                    <p><strong>Type:</strong> <?php echo !empty($comm['recipient_type']) ? ucfirst($comm['recipient_type']) : 'N/A'; ?></p>
-                                                    <p><strong>Count:</strong> <?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</p>
-                                                    <?php if (!empty($comm['recipient_group'])): ?>
-                                                    <p><strong>Group:</strong> <?php echo ucfirst($comm['recipient_group']); ?></p>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                            
-                                            <h6>Subject</h6>
-                                            <p><?php echo htmlspecialchars($comm['subject'] ?? ''); ?></p>
-                                            
-                                            <h6>Message</h6>
-                                            <div class="border p-3 bg-light">
-                                                <?php echo nl2br(htmlspecialchars($comm['message'] ?? '')); ?>
-                                            </div>
-
-                                            <?php if (!empty($comm['error_message'])): ?>
-                                            <h6 class="mt-3">Error Details</h6>
-                                            <div class="alert alert-danger">
-                                                <?php echo htmlspecialchars($comm['error_message']); ?>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="text-center py-5">
-                    <i class="fas fa-comments fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-600">No communications yet</h5>
-                    <p class="text-gray-500">Email and SMS communications will appear here.</p>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-        </div>
-        <!-- End History Tab -->
-        
-        <!-- Email Campaigns Tab -->
-        <div class="tab-pane fade" id="email-campaigns" role="tabpanel">
-            <iframe src="/admin/email-campaigns" style="width:100%; height:800px; border:none;" id="emailCampaignsFrame"></iframe>
-        </div>
-        
-        <!-- SMS Campaigns Tab -->
-        <div class="tab-pane fade" id="sms-campaigns" role="tabpanel">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle mr-2"></i>
-                SMS Campaigns functionality is managed through the Bulk SMS system below.
-            </div>
-        </div>
-    </div>
-    <!-- End Tab Content -->
 </div>
 
-<!-- Send Email Modal -->
-<div class="modal fade" id="sendEmailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send Email</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+<!-- Statistics -->
+<div class="row" style="margin-bottom: 2rem;">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="icon-wrapper">
+                <i class="fas fa-envelope"></i>
             </div>
-            <form method="POST" action="/admin/communications/send-email">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Recipients *</label>
-                        <select name="recipients" class="form-control" required>
-                            <option value="">Select Recipients</option>
-                            <option value="all">All Members</option>
-                            <option value="active">Active Members Only</option>
-                            <option value="inactive">Inactive Members Only</option>
-                            <option value="recent">Recently Joined Members</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Subject *</label>
-                        <input type="text" name="subject" class="form-control" required placeholder="Email subject">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Message *</label>
-                        <textarea name="message" class="form-control" rows="8" required placeholder="Email message content..."></textarea>
-                        <small class="form-text text-muted">You can use HTML formatting in your message.</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="sendCopy" name="send_copy" value="1">
-                            <label class="custom-control-label" for="sendCopy">Send a copy to my email</label>
-                        </div>
-                    </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => $c['type'] === 'email')); ?></p>
+            <p class="stat-label">Emails Sent</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="icon-wrapper">
+                <i class="fas fa-sms"></i>
+            </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => $c['type'] === 'sms')); ?></p>
+            <p class="stat-label">SMS Sent</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="icon-wrapper">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <p class="stat-value">
+                <?php 
+                    $thisMonth = array_filter($communications ?? [], fn($c) => 
+                        date('Y-m', strtotime($c['sent_at'] ?? 'now')) === date('Y-m')
+                    );
+                    echo count($thisMonth);
+                ?>
+            </p>
+            <p class="stat-label">This Month</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="icon-wrapper">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => ($c['status'] ?? 'sent') === 'failed')); ?></p>
+            <p class="stat-label">Failed</p>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="modern-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 1.5rem;">
+            Communication History
+        </h2>
+        <div class="filter-group">
+            <select class="select-control" onchange="filterCommunications(this.value)">
+                <option value="all">All Types</option>
+                <option value="email">Email Only</option>
+                <option value="sms">SMS Only</option>
+            </select>
+            <select class="select-control" onchange="filterByStatus(this.value)">
+                <option value="all">All Status</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+                <option value="pending">Pending</option>
+            </select>
+        </div>
+    </div>
+
+    <?php if (empty($communications)): ?>
+        <div class="empty-state">
+            <i class="fas fa-comments"></i>
+            <h3>No Communications Yet</h3>
+            <p>Start sending emails or SMS messages to members</p>
+            <button class="modern-btn primary" onclick="openModal('emailModal')" style="margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Send First Message
+            </button>
+        </div>
+    <?php else: ?>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Recipients</th>
+                        <th>Subject/Message</th>
+                        <th>Status</th>
+                        <th>Sent Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($communications as $comm): ?>
+                    <tr data-type="<?php echo $comm['type']; ?>" data-status="<?php echo $comm['status'] ?? 'sent'; ?>">
+                        <td>
+                            <span class="type-badge <?php echo $comm['type']; ?>">
+                                <i class="fas fa-<?php echo $comm['type'] === 'email' ? 'envelope' : 'sms'; ?>"></i>
+                                <?php echo strtoupper($comm['type']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>
+                                    <?php 
+                                        if (($comm['recipient_type'] ?? 'individual') === 'all') {
+                                            echo 'All Members';
+                                        } elseif (($comm['recipient_type'] ?? 'individual') === 'group') {
+                                            echo ucfirst($comm['recipient_group'] ?? 'Group') . ' Members';
+                                        } else {
+                                            echo htmlspecialchars($comm['recipient_name'] ?? 'Individual Member');
+                                        }
+                                    ?>
+                                </strong>
+                                <br>
+                                <small style="color: #6b7280;"><?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong><?php echo htmlspecialchars($comm['subject'] ?? 'No Subject'); ?></strong><br>
+                                <small style="color: #6b7280;">
+                                    <?php echo htmlspecialchars(substr($comm['message'] ?? '', 0, 50) . '...'); ?>
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge <?php echo $comm['status'] ?? 'sent'; ?>">
+                                <?php echo ucfirst($comm['status'] ?? 'Sent'); ?>
+                            </span>
+                        </td>
+                        <td><?php echo date('M j, Y H:i', strtotime($comm['sent_at'] ?? 'now')); ?></td>
+                        <td>
+                            <button class="action-btn" onclick="viewCommunication(<?php echo $comm['id']; ?>)" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Quick Email Modal -->
+<div class="modern-modal" id="emailModal">
+    <div class="modal-content-modern">
+        <div class="modal-header-modern">
+            <h3><i class="fas fa-envelope"></i> Send Quick Email</h3>
+            <button class="modal-close" onclick="closeModal('emailModal')">&times;</button>
+        </div>
+        <div class="modal-body-modern">
+            <form action="/admin/communications/send-email" method="POST" id="emailForm">
+                <div class="form-group">
+                    <label for="email-recipient-type">Recipients</label>
+                    <select class="form-control" id="email-recipient-type" name="recipient_type" required>
+                        <option value="">Select recipient type...</option>
+                        <option value="all">All Members</option>
+                        <option value="group">Member Group</option>
+                        <option value="individual">Individual Member</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane mr-2"></i>Send Email
+
+                <div class="form-group" id="email-group-field" style="display: none;">
+                    <label for="email-recipient-group">Member Group</label>
+                    <select class="form-control" id="email-recipient-group" name="recipient_group">
+                        <option value="active">Active Members</option>
+                        <option value="inactive">Inactive Members</option>
+                        <option value="pending">Pending Members</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="email-individual-field" style="display: none;">
+                    <label for="email-recipient-id">Select Member</label>
+                    <select class="form-control" id="email-recipient-id" name="recipient_id">
+                        <!-- Populated via JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email-subject">Subject</label>
+                    <input type="text" class="form-control" id="email-subject" name="subject" required placeholder="Enter email subject">
+                </div>
+
+                <div class="form-group">
+                    <label for="email-message">Message</label>
+                    <textarea class="form-control" id="email-message" name="message" required placeholder="Enter your message here..." rows="6"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="modern-btn secondary" onclick="closeModal('emailModal')">Cancel</button>
+                    <button type="submit" class="modern-btn primary">
+                        <i class="fas fa-paper-plane"></i> Send Email
                     </button>
                 </div>
             </form>
@@ -340,47 +640,53 @@
     </div>
 </div>
 
-<!-- Send SMS Modal -->
-<div class="modal fade" id="sendSMSModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send SMS</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="/admin/communications/send-sms">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Recipients *</label>
-                        <select name="recipients" class="form-control" required>
-                            <option value="">Select Recipients</option>
-                            <option value="all">All Members</option>
-                            <option value="active">Active Members Only</option>
-                            <option value="inactive">Inactive Members Only</option>
-                            <option value="recent">Recently Joined Members</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Message *</label>
-                        <textarea name="message" class="form-control" rows="4" required placeholder="SMS message content..." maxlength="160"></textarea>
-                        <small class="form-text text-muted">Maximum 160 characters for SMS messages.</small>
-                        <div class="text-right">
-                            <small id="smsCounter" class="text-muted">0/160</small>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Note:</strong> SMS charges apply. Please ensure you have sufficient SMS credits before sending.
-                    </div>
+<!-- Quick SMS Modal -->
+<div class="modern-modal" id="smsModal">
+    <div class="modal-content-modern">
+        <div class="modal-header-modern">
+            <h3><i class="fas fa-sms"></i> Send Quick SMS</h3>
+            <button class="modal-close" onclick="closeModal('smsModal')">&times;</button>
+        </div>
+        <div class="modal-body-modern">
+            <form action="/admin/communications/send-sms" method="POST" id="smsForm">
+                <div class="form-group">
+                    <label for="sms-recipient-type">Recipients</label>
+                    <select class="form-control" id="sms-recipient-type" name="recipient_type" required>
+                        <option value="">Select recipient type...</option>
+                        <option value="all">All Members</option>
+                        <option value="group">Member Group</option>
+                        <option value="individual">Individual Member</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-sms mr-2"></i>Send SMS
+
+                <div class="form-group" id="sms-group-field" style="display: none;">
+                    <label for="sms-recipient-group">Member Group</label>
+                    <select class="form-control" id="sms-recipient-group" name="recipient_group">
+                        <option value="active">Active Members</option>
+                        <option value="inactive">Inactive Members</option>
+                        <option value="pending">Pending Members</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="sms-individual-field" style="display: none;">
+                    <label for="sms-recipient-id">Select Member</label>
+                    <select class="form-control" id="sms-recipient-id" name="recipient_id">
+                        <!-- Populated via JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sms-message">Message</label>
+                    <textarea class="form-control" id="sms-message" name="message" required placeholder="Enter your SMS message..." rows="4" maxlength="160"></textarea>
+                    <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
+                        <span id="sms-counter">0</span>/160 characters
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="modern-btn secondary" onclick="closeModal('smsModal')">Cancel</button>
+                    <button type="submit" class="modern-btn success">
+                        <i class="fas fa-paper-plane"></i> Send SMS
                     </button>
                 </div>
             </form>
@@ -389,17 +695,133 @@
 </div>
 
 <script>
-// SMS character counter
-$(document).ready(function() {
-    $('textarea[name="message"]').on('input', function() {
-        const length = $(this).val().length;
-        $('#smsCounter').text(length + '/160');
-        
-        if (length > 160) {
-            $('#smsCounter').addClass('text-danger');
-        } else {
-            $('#smsCounter').removeClass('text-danger');
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// Close modal on outside click
+document.querySelectorAll('.modern-modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal(this.id);
         }
+    });
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modern-modal.active').forEach(modal => {
+            closeModal(modal.id);
+        });
+    }
+});
+
+// Email recipient type handler
+document.getElementById('email-recipient-type')?.addEventListener('change', function() {
+    const groupField = document.getElementById('email-group-field');
+    const individualField = document.getElementById('email-individual-field');
+    
+    groupField.style.display = this.value === 'group' ? 'block' : 'none';
+    individualField.style.display = this.value === 'individual' ? 'block' : 'none';
+});
+
+// SMS recipient type handler
+document.getElementById('sms-recipient-type')?.addEventListener('change', function() {
+    const groupField = document.getElementById('sms-group-field');
+    const individualField = document.getElementById('sms-individual-field');
+    
+    groupField.style.display = this.value === 'group' ? 'block' : 'none';
+    individualField.style.display = this.value === 'individual' ? 'block' : 'none';
+});
+
+// SMS character counter
+document.getElementById('sms-message')?.addEventListener('input', function() {
+    document.getElementById('sms-counter').textContent = this.value.length;
+});
+
+// Filter communications by type
+function filterCommunications(type) {
+    const rows = document.querySelectorAll('.modern-table tbody tr');
+    rows.forEach(row => {
+        if (type === 'all' || row.dataset.type === type) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Filter communications by status
+function filterByStatus(status) {
+    const rows = document.querySelectorAll('.modern-table tbody tr');
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// View communication details (placeholder)
+function viewCommunication(id) {
+    alert('View communication details for ID: ' + id);
+}
+
+// Form submission handlers
+document.getElementById('emailForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/communications/send-email', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Email sent successfully!');
+            closeModal('emailModal');
+            location.reload();
+        } else {
+            alert('Failed to send email: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred');
+    });
+});
+
+document.getElementById('smsForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/communications/send-sms', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('SMS sent successfully!');
+            closeModal('smsModal');
+            location.reload();
+        } else {
+            alert('Failed to send SMS: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred');
     });
 });
 </script>
