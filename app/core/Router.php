@@ -145,6 +145,7 @@ class Router
         
         // Phase 4: Plan Upgrades Management Routes
         $this->addRoute('GET', '/admin/plan-upgrades', 'AdminController@viewPlanUpgrades');
+        $this->addRoute('GET', '/admin/plan-upgrades/export', 'AdminController@exportPlanUpgrades');
         $this->addRoute('POST', '/admin/plan-upgrades/complete/{id}', 'AdminController@completePlanUpgrade');
         $this->addRoute('POST', '/admin/plan-upgrades/cancel/{id}', 'AdminController@cancelPlanUpgrade');
         

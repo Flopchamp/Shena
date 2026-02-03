@@ -1238,68 +1238,81 @@ class AdminController extends BaseController
     {
         $this->requireAdminAccess();
         
-        $db = Database::getInstance()->getConnection();
-        
-        // Get statistics
-        $stats = [
-            'pending' => 0,
-            'completed' => 0,
-            'cancelled' => 0,
-            'total_revenue' => 0
-        ];
-        
-        $stmt = $db->query("
-            SELECT 
-                status,
-                COUNT(*) as count,
-                SUM(prorated_amount) as total
-            FROM plan_upgrade_requests
-            GROUP BY status
-        ");
-        
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $stats[$row['status']] = $row['count'];
-            if ($row['status'] === 'completed') {
-                $stats['total_revenue'] = $row['total'];
+        try {
+            $db = Database::getInstance()->getConnection();
+            
+            // Get statistics
+            $stats = [
+                'pending' => 0,
+                'completed' => 0,
+                'cancelled' => 0,
+                'total_revenue' => 0
+            ];
+            
+            $stmt = $db->query("
+                SELECT 
+                    status,
+                    COUNT(*) as count,
+                    SUM(prorated_amount) as total
+                FROM plan_upgrade_requests
+                GROUP BY status
+            ");
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $stats[$row['status']] = $row['count'];
+                if ($row['status'] === 'completed') {
+                    $stats['total_revenue'] = $row['total'];
+                }
             }
+            
+            // Build filter query
+            $where = ['1=1'];
+            $params = [];
+            
+            if (!empty($_GET['status'])) {
+                $where[] = 'pur.status = ?';
+                $params[] = $_GET['status'];
+            }
+            
+            if (!empty($_GET['from_date'])) {
+                $where[] = 'DATE(pur.requested_at) >= ?';
+                $params[] = $_GET['from_date'];
+            }
+            
+            if (!empty($_GET['to_date'])) {
+                $where[] = 'DATE(pur.requested_at) <= ?';
+                $params[] = $_GET['to_date'];
+            }
+            
+            // Get upgrade requests
+            $sql = "
+                SELECT 
+                    pur.*,
+                    u.first_name, u.last_name, m.member_number,
+                    CONCAT(u.first_name, ' ', u.last_name) as member_name
+                FROM plan_upgrade_requests pur
+                JOIN members m ON pur.member_id = m.id
+                JOIN users u ON m.user_id = u.id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY pur.requested_at DESC
+                LIMIT 100
+            ";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            // Handle missing table gracefully
+            $stats = [
+                'pending' => 0,
+                'completed' => 0,
+                'cancelled' => 0,
+                'total_revenue' => 0
+            ];
+            $upgrades = [];
+            error_log("Plan Upgrades Error: " . $e->getMessage());
         }
-        
-        // Build filter query
-        $where = ['1=1'];
-        $params = [];
-        
-        if (!empty($_GET['status'])) {
-            $where[] = 'pur.status = ?';
-            $params[] = $_GET['status'];
-        }
-        
-        if (!empty($_GET['from_date'])) {
-            $where[] = 'DATE(pur.requested_at) >= ?';
-            $params[] = $_GET['from_date'];
-        }
-        
-        if (!empty($_GET['to_date'])) {
-            $where[] = 'DATE(pur.requested_at) <= ?';
-            $params[] = $_GET['to_date'];
-        }
-        
-        // Get upgrade requests
-        $sql = "
-            SELECT 
-                pur.*,
-                u.first_name, u.last_name, m.member_number,
-                CONCAT(u.first_name, ' ', u.last_name) as member_name
-            FROM plan_upgrade_requests pur
-            JOIN members m ON pur.member_id = m.id
-            JOIN users u ON m.user_id = u.id
-            WHERE " . implode(' AND ', $where) . "
-            ORDER BY pur.requested_at DESC
-            LIMIT 100
-        ";
-        
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
             'title' => 'Plan Upgrade Management - ' . APP_NAME,
@@ -1308,6 +1321,100 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.plan-upgrades', $data);
+    }
+
+    /**
+     * Export Plan Upgrades to CSV
+     */
+    public function exportPlanUpgrades()
+    {
+        $this->requireAdminAccess();
+        
+        try {
+            $db = Database::getInstance()->getConnection();
+            
+            // Build filter query
+            $where = ['1=1'];
+            $params = [];
+            
+            if (!empty($_GET['status'])) {
+                $where[] = 'pur.status = ?';
+                $params[] = $_GET['status'];
+            }
+            
+            if (!empty($_GET['from_date'])) {
+                $where[] = 'DATE(pur.requested_at) >= ?';
+                $params[] = $_GET['from_date'];
+            }
+            
+            if (!empty($_GET['to_date'])) {
+                $where[] = 'DATE(pur.requested_at) <= ?';
+                $params[] = $_GET['to_date'];
+            }
+            
+            // Get upgrade requests
+            $sql = "
+                SELECT 
+                    pur.id,
+                    u.first_name, u.last_name, m.member_number,
+                    pur.from_package, pur.to_package,
+                    pur.prorated_amount, pur.payment_status,
+                    pur.status, pur.requested_at, pur.processed_at
+                FROM plan_upgrade_requests pur
+                JOIN members m ON pur.member_id = m.id
+                JOIN users u ON m.user_id = u.id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY pur.requested_at DESC
+            ";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            $upgrades = [];
+            error_log("Export Plan Upgrades Error: " . $e->getMessage());
+        }
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="plan_upgrades_' . date('Y-m-d') . '.csv"');
+        
+        // Open output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'ID',
+            'Member Name',
+            'Member Number',
+            'From Package',
+            'To Package',
+            'Amount (KES)',
+            'Payment Status',
+            'Status',
+            'Requested Date',
+            'Processed Date'
+        ]);
+        
+        // Add data rows
+        foreach ($upgrades as $upgrade) {
+            fputcsv($output, [
+                $upgrade['id'],
+                $upgrade['first_name'] . ' ' . $upgrade['last_name'],
+                $upgrade['member_number'] ?? 'N/A',
+                $upgrade['from_package'],
+                $upgrade['to_package'],
+                number_format($upgrade['prorated_amount'], 2),
+                ucfirst($upgrade['payment_status']),
+                ucfirst($upgrade['status']),
+                date('Y-m-d H:i:s', strtotime($upgrade['requested_at'])),
+                $upgrade['processed_at'] ? date('Y-m-d H:i:s', strtotime($upgrade['processed_at'])) : 'N/A'
+            ]);
+        }
+        
+        fclose($output);
+        exit();
     }
 
     /**
