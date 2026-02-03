@@ -64,6 +64,10 @@ class Router
         $this->addRoute('GET', '/member/upgrade/status', 'MemberController@checkUpgradeStatus');
         $this->addRoute('POST', '/member/upgrade/cancel', 'MemberController@cancelUpgrade');
         
+        // Member Support Route
+        $this->addRoute('GET', '/member/support', 'MemberController@viewSupport');
+        $this->addRoute('POST', '/member/support/submit', 'MemberController@submitSupport');
+        
         // Member Notification Settings Routes
         $this->addRoute('GET', '/member/notification-settings', 'MemberController@viewNotificationSettings');
         $this->addRoute('POST', '/member/notification-settings', 'MemberController@updateNotificationSettings');
