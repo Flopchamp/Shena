@@ -1,29 +1,5 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-dollar-sign me-2"></i>Transactions</h1>
-</div>
-
-<!-- Transactions Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/payments">
-            <i class="fas fa-money-bill-wave"></i> Payments
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/payments/reconciliation">
-            <i class="fas fa-balance-scale"></i> Reconciliation
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/plan-upgrades">
-            <i class="fas fa-level-up-alt"></i> Plan Upgrades
-        </a>
-    </li>
-</ul>
-
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>

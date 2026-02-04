@@ -7,24 +7,45 @@ $top_performers = $top_performers ?? [];
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-users me-2"></i>User Management</h1>
+    <h1 class="h3 mb-0"><i class="fas fa-user-tie me-2"></i>Agent Management</h1>
+    <div class="header-actions">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAgentModal">
+            <i class="fas fa-user-plus me-2"></i>Add Agent
+        </button>
+        <button class="btn btn-success btn-sm" onclick="exportAgentData()">
+            <i class="fas fa-file-excel me-2"></i>Export Data
+        </button>
+    </div>
 </div>
 
-<!-- User Management Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/members">
-            <i class="fas fa-users"></i> Members
-        </a>
+<!-- Agent Management Tabs -->
+<ul class="nav nav-tabs mb-4" id="agentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+            <i class="fas fa-chart-line"></i> Analytics
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/agents">
-            <i class="fas fa-user-tie"></i> Agents
-        </a>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="agents-list-tab" data-bs-toggle="tab" data-bs-target="#agentsList" type="button" role="tab">
+            <i class="fas fa-list"></i> All Agents
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="commissions-tab" data-bs-toggle="tab" data-bs-target="#commissions" type="button" role="tab">
+            <i class="fas fa-money-check-alt"></i> Process Commission
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
+            <i class="fas fa-folder-open"></i> Agent Resources
+        </button>
     </li>
 </ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="agentTabContent">
 
 <style>
     /* Page Header */

@@ -490,9 +490,8 @@
         <h1 class="h3 mb-0"><i class="fas fa-cog me-2"></i>System Settings</h1>
         <p class="text-muted small mb-0">Configure system-wide settings and preferences</p>
     </div>
-    <button type="submit" form="settingsForm" class="btn-save">
-        <i class="fas fa-save"></i>
-        <span>Save Settings</span>
+    <button type="submit" form="settingsForm" class="btn btn-primary btn-sm">
+        <i class="fas fa-save me-2"></i>Save Settings
     </button>
 </div>
 
@@ -536,8 +535,7 @@
     
     <!-- Tab Content -->
     <div class="tab-content" id="settingsTabContent">
-    <!-- General Tab -->
-    <div class="tab-pane active" id="general" role="tabpanel">
+            
             <!-- General Settings -->
             <div class="settings-card">
                 <div class="settings-card-header">

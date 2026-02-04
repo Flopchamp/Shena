@@ -1,44 +1,5 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<<<<<<< HEAD
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications Hub</h1>
-</div>
-
-<!-- Communication Tabs -->
-<ul class="nav nav-tabs mb-4" id="communicationTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="quick-messages-tab" data-bs-toggle="tab" data-bs-target="#quickMessages" type="button" role="tab">
-            <i class="fas fa-paper-plane"></i> Quick Messages
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="email-campaigns-tab" data-bs-toggle="tab" data-bs-target="#emailCampaigns" type="button" role="tab">
-            <i class="fas fa-envelope-open-text"></i> Email Campaigns
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="sms-campaigns-tab" data-bs-toggle="tab" data-bs-target="#smsCampaigns" type="button" role="tab">
-            <i class="fas fa-comment-dots"></i> SMS Campaigns
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
-            <i class="fas fa-bell"></i> System Notifications
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
-            <i class="fas fa-history"></i> Communication History
-        </button>
-    </li>
-</ul>
-
-<!-- Tab Content -->
-<div class="tab-content" id="communicationTabContent">
-
-=======
 <!-- Page Header with Navigation Tabs -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications</h1>
@@ -63,7 +24,6 @@
     </li>
 </ul>
 
->>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
 <style>
     .page-header {
         background: linear-gradient(135deg, #7F3D9E 0%, #7F3D9E 100%);
