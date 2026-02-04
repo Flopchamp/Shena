@@ -89,6 +89,7 @@
         .text-gray-300 {
             color: #dddfeb !important;
         }
+<<<<<<< HEAD
         
         /* Dropdown submenu styling */
         .sidebar .collapse {
@@ -117,6 +118,8 @@
         .sidebar .collapse .nav-link i {
             font-size: 0.85rem;
         }
+=======
+>>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
     </style>
 </head>
 <body>
@@ -139,6 +142,7 @@
                             </a>
                         </li>
                         
+<<<<<<< HEAD
                         <!-- Member Management -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="/admin/members">
@@ -156,6 +160,31 @@
                         </li>
                         
                         <!-- Claims -->
+=======
+                        <!-- Member & Agent Management -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="/admin/members">
+                                <i class="fas fa-users"></i>
+                                Members
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/agents') !== false) ? 'active' : ''; ?>" href="/admin/agents">
+                                <i class="fas fa-user-tie"></i>
+                                Agents
+                            </a>
+                        </li>
+                        
+                        <!-- Financial Operations -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/financial') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false) ? 'active' : ''; ?>" href="/admin/financial-dashboard">
+                                <i class="fas fa-chart-line"></i>
+                                Financial Operations
+                            </a>
+                        </li>
+                        
+                        <!-- Claims Management -->
+>>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/claims') !== false) ? 'active' : ''; ?>" href="/admin/claims">
                                 <i class="fas fa-file-medical"></i>
@@ -163,6 +192,7 @@
                             </a>
                         </li>
                         
+<<<<<<< HEAD
                         <!-- Payments -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/reconciliation') !== false) ? 'active' : ''; ?>" 
@@ -203,24 +233,43 @@
                         <!-- Communications -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/bulk-sms') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notifications') !== false) ? 'active' : ''; ?>" href="/admin/communications">
+=======
+                        <!-- Communications -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/bulk-sms') !== false) ? 'active' : ''; ?>" href="/admin/communications">
+>>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
                                 <i class="fas fa-comments"></i>
                                 Communications
                             </a>
                         </li>
                         
+<<<<<<< HEAD
                         <!-- Reports & Analytics -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/financial-dashboard') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/analytics') !== false) ? 'active' : ''; ?>" href="/admin/reports">
                                 <i class="fas fa-chart-line"></i>
                                 Reports & Analytics
+=======
+                        <!-- Reports -->
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false) ? 'active' : ''; ?>" href="/admin/reports">
+                                <i class="fas fa-chart-bar"></i>
+                                Reports
+>>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
                             </a>
                         </li>
                         
                         <!-- System Settings -->
                         <li class="nav-item">
+<<<<<<< HEAD
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notification-settings') !== false) ? 'active' : ''; ?>" href="/admin/settings">
                                 <i class="fas fa-cog"></i>
                                 System Settings
+=======
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/mpesa-config') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notification-settings') !== false) ? 'active' : ''; ?>" href="/admin/settings">
+                                <i class="fas fa-cog"></i>
+                                Settings
+>>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
                             </a>
                         </li>
                         
