@@ -2,29 +2,29 @@
 
 <!-- Page Header with Navigation Tabs -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Financial Operations</h1>
+    <h1 class="h3 mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
 </div>
 
-<!-- Financial Operations Navigation Tabs -->
+<!-- Reports & Analytics Navigation Tabs -->
 <ul class="nav nav-tabs mb-4" role="tablist">
     <li class="nav-item">
-        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
-            <i class="fas fa-chart-line"></i> Dashboard
+        <a class="nav-link" href="/admin/reports">
+            <i class="fas fa-file-alt"></i> All Reports
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/admin/payments">
-            <i class="fas fa-money-bill-wave"></i> Payments
+        <a class="nav-link active" href="/admin/financial-dashboard">
+            <i class="fas fa-chart-line"></i> Financial Analytics
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/admin/payments/reconciliation">
-            <i class="fas fa-balance-scale"></i> Reconciliation
+        <a class="nav-link" href="/admin/reports/members">
+            <i class="fas fa-users"></i> Member Analytics
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/admin/plan-upgrades">
-            <i class="fas fa-level-up-alt"></i> Plan Upgrades
+        <a class="nav-link" href="/admin/reports/claims">
+            <i class="fas fa-file-medical"></i> Claims Analytics
         </a>
     </li>
 </ul>

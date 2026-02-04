@@ -1,5 +1,24 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+<!-- Page Header with Navigation Tabs -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0"><i class="fas fa-users me-2"></i>User Management</h1>
+</div>
+
+<!-- User Management Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/members">
+            <i class="fas fa-users"></i> Members
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="/admin/agents">
+            <i class="fas fa-user-tie"></i> Agents
+        </a>
+    </li>
+</ul>
+
 <style>
     /* Page Header */
     .page-header {
