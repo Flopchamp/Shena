@@ -6,48 +6,24 @@ $pending_approvals = $pending_approvals ?? [];
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header -->
+<!-- Page Header with Navigation Tabs -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-users me-2"></i>Member Management</h1>
-    <div class="header-actions">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#registerMemberModal">
-            <i class="fas fa-user-plus me-2"></i>Register Member
-        </button>
-        <button class="btn btn-success btn-sm" onclick="exportMemberData()">
-            <i class="fas fa-file-pdf me-2"></i>Export PDF
-        </button>
-    </div>
+    <h1 class="h3 mb-0"><i class="fas fa-users me-2"></i>User Management</h1>
 </div>
 
-<!-- Member Management Tabs -->
-<ul class="nav nav-tabs mb-4" id="memberTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab">
-            <i class="fas fa-chart-pie"></i> Statistics
-        </button>
+<!-- User Management Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" href="/admin/members">
+            <i class="fas fa-users"></i> Members
+        </a>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#membersList" type="button" role="tab">
-            <i class="fas fa-list"></i> Member List
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals" type="button" role="tab">
-            <i class="fas fa-check-circle"></i> Approvals
-            <?php if (($stats['pending_approvals'] ?? 0) > 0): ?>
-                <span class="badge bg-danger ms-1"><?php echo $stats['pending_approvals']; ?></span>
-            <?php endif; ?>
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="contributions-tab" data-bs-toggle="tab" data-bs-target="#contributions" type="button" role="tab">
-            <i class="fas fa-money-bill-wave"></i> Contributions
-        </button>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/agents">
+            <i class="fas fa-user-tie"></i> Agents
+        </a>
     </li>
 </ul>
-
-<!-- Tab Content -->
-<div class="tab-content" id="memberTabContent">
 
 <style>
     /* Page Header */

@@ -134,7 +134,6 @@
                     </div>
                     
                     <ul class="nav flex-column">
-                        <!-- Dashboard -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo ($_SERVER['REQUEST_URI'] == '/admin' || $_SERVER['REQUEST_URI'] == '/admin/dashboard') ? 'active' : ''; ?>" href="/admin">
                                 <i class="fas fa-tachometer-alt"></i>
@@ -142,6 +141,7 @@
                             </a>
                         </li>
                         
+<<<<<<< HEAD
 <<<<<<< HEAD
                         <!-- Member Management -->
                         <li class="nav-item">
@@ -162,29 +162,27 @@
                         <!-- Claims -->
 =======
                         <!-- Member & Agent Management -->
+=======
+>>>>>>> 28314ad (feat: Update admin navigation structure and enhance user management interfaces)
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="/admin/members">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/agents') !== false) ? 'active' : ''; ?>" href="/admin/members">
                                 <i class="fas fa-users"></i>
-                                Members
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/agents') !== false) ? 'active' : ''; ?>" href="/admin/agents">
-                                <i class="fas fa-user-tie"></i>
-                                Agents
+                                Users
                             </a>
                         </li>
                         
-                        <!-- Financial Operations -->
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/financial') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false) ? 'active' : ''; ?>" href="/admin/financial-dashboard">
-                                <i class="fas fa-chart-line"></i>
-                                Financial Operations
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/payments') !== false && strpos($_SERVER['REQUEST_URI'], '/admin/reports') === false) ? 'active' : ''; ?>" href="/admin/payments">
+                                <i class="fas fa-dollar-sign"></i>
+                                Transactions
                             </a>
                         </li>
                         
+<<<<<<< HEAD
                         <!-- Claims Management -->
 >>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
+=======
+>>>>>>> 28314ad (feat: Update admin navigation structure and enhance user management interfaces)
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/claims') !== false) ? 'active' : ''; ?>" href="/admin/claims">
                                 <i class="fas fa-file-medical"></i>
@@ -192,6 +190,7 @@
                             </a>
                         </li>
                         
+<<<<<<< HEAD
 <<<<<<< HEAD
                         <!-- Payments -->
                         <li class="nav-item">
@@ -235,6 +234,8 @@
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/bulk-sms') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notifications') !== false) ? 'active' : ''; ?>" href="/admin/communications">
 =======
                         <!-- Communications -->
+=======
+>>>>>>> 28314ad (feat: Update admin navigation structure and enhance user management interfaces)
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/bulk-sms') !== false) ? 'active' : ''; ?>" href="/admin/communications">
 >>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
@@ -244,6 +245,7 @@
                         </li>
                         
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <!-- Reports & Analytics -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/financial-dashboard') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/analytics') !== false) ? 'active' : ''; ?>" href="/admin/reports">
@@ -251,15 +253,20 @@
                                 Reports & Analytics
 =======
                         <!-- Reports -->
+=======
+>>>>>>> 28314ad (feat: Update admin navigation structure and enhance user management interfaces)
                         <li class="nav-item">
-                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false) ? 'active' : ''; ?>" href="/admin/reports">
+                            <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/reports') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/financial-dashboard') !== false) ? 'active' : ''; ?>" href="/admin/reports">
                                 <i class="fas fa-chart-bar"></i>
+<<<<<<< HEAD
                                 Reports
 >>>>>>> d9b3398 (feat: Implement admin header layout and navigation structure across multiple admin pages)
+=======
+                                Reports & Analytics
+>>>>>>> 28314ad (feat: Update admin navigation structure and enhance user management interfaces)
                             </a>
                         </li>
                         
-                        <!-- System Settings -->
                         <li class="nav-item">
 <<<<<<< HEAD
                             <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notification-settings') !== false) ? 'active' : ''; ?>" href="/admin/settings">
