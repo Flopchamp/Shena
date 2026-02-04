@@ -1,23 +1,85 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0"><i class="fas fa-file-medical me-2"></i>Claims Management</h1>
+    <div class="header-actions">
+        <button class="btn btn-danger btn-sm" id="unprocessedAlert" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="unprocessedCount">0</span> Unprocessed Claims
+        </button>
+    </div>
 </div>
 
-<!-- Claims Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/claims">
-            <i class="fas fa-clock"></i> Active Claims
-        </a>
+<!-- Claims Analytics Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="fas fa-file-medical"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['total_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-label">Pending Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['pending_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Completed Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['completed_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Disbursed</div>
+        <div class="stat-value">KES <?php echo number_format($stats['total_disbursed'] ?? 0); ?></div>
+    </div>
+</div>
+
+<!-- Claims Tabs -->
+<ul class="nav nav-tabs mb-4" id="claimsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pendingClaims" type="button" role="tab">
+            <i class="fas fa-clock"></i> Pending Claims
+            <?php if (($stats['pending_claims'] ?? 0) > 0): ?>
+                <span class="badge bg-warning ms-1"><?php echo $stats['pending_claims']; ?></span>
+            <?php endif; ?>
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/claims/completed">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approvedClaims" type="button" role="tab">
+            <i class="fas fa-check"></i> Approved Claims
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completedClaims" type="button" role="tab">
             <i class="fas fa-check-circle"></i> Completed Claims
-        </a>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#allClaims" type="button" role="tab">
+            <i class="fas fa-list"></i> All Claims
+        </button>
     </li>
 </ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="claimsTabContent">
 
 <style>
     /* Page Header */

@@ -436,17 +436,56 @@
 </style>
 
 <!-- Page Header -->
-<div class="page-header">
-    <h1 class="page-title">System Settings</h1>
-    <p class="page-subtitle">Configure system-wide settings and preferences</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0"><i class="fas fa-cog me-2"></i>System Settings</h1>
+        <p class="text-muted small mb-0">Configure system-wide settings and preferences</p>
+    </div>
+    <button type="submit" form="settingsForm" class="btn btn-primary btn-sm">
+        <i class="fas fa-save me-2"></i>Save Settings
+    </button>
 </div>
 
-<!-- Settings Layout -->
-<div class="settings-layout">
-    <!-- Left Column: Settings Forms -->
-    <div>
-        <form method="POST" action="/admin/settings">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+<!-- Settings Tabs -->
+<ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+            <i class="fas fa-sliders-h"></i> General
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab">
+            <i class="fas fa-envelope"></i> Email Configuration
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sms-tab" data-bs-toggle="tab" data-bs-target="#sms" type="button" role="tab">
+            <i class="fas fa-comment"></i> SMS Configuration
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">
+            <i class="fas fa-credit-card"></i> Payment Settings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notification-tab" data-bs-toggle="tab" data-bs-target="#notification" type="button" role="tab">
+            <i class="fas fa-bell"></i> Notifications
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">
+            <i class="fas fa-shield-alt"></i> Security
+        </button>
+    </li>
+</ul>
+
+<!-- Settings Form -->
+<form method="POST" action="/admin/settings" id="settingsForm">
+    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="settingsTabContent">
             
             <!-- General Settings -->
             <div class="settings-card">

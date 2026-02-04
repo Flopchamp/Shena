@@ -1,28 +1,41 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications</h1>
+    <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications Hub</h1>
 </div>
 
-<!-- Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/communications">
-            <i class="fas fa-history mr-2"></i>Quick Messages
-        </a>
+<!-- Communication Tabs -->
+<ul class="nav nav-tabs mb-4" id="communicationTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="quick-messages-tab" data-bs-toggle="tab" data-bs-target="#quickMessages" type="button" role="tab">
+            <i class="fas fa-paper-plane"></i> Quick Messages
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/email-campaigns">
-            <i class="fas fa-envelope-open-text mr-2"></i>Email Campaigns
-        </a>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="email-campaigns-tab" data-bs-toggle="tab" data-bs-target="#emailCampaigns" type="button" role="tab">
+            <i class="fas fa-envelope-open-text"></i> Email Campaigns
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/bulk-sms">
-            <i class="fas fa-comment-dots mr-2"></i>SMS Campaigns
-        </a>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sms-campaigns-tab" data-bs-toggle="tab" data-bs-target="#smsCampaigns" type="button" role="tab">
+            <i class="fas fa-comment-dots"></i> SMS Campaigns
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+            <i class="fas fa-bell"></i> System Notifications
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+            <i class="fas fa-history"></i> Communication History
+        </button>
     </li>
 </ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="communicationTabContent">
 
 <style>
     .page-header {

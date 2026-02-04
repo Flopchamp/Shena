@@ -1,43 +1,17 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-dollar-sign me-2"></i>Transactions</h1>
+    <div>
+        <h1 class="h3 mb-0"><i class="fas fa-level-up-alt me-2"></i>Plan Upgrade Management</h1>
+        <p class="text-muted small mb-0">Monitor and manage member plan upgrade requests</p>
+    </div>
+    <button class="btn btn-success btn-sm" onclick="exportToCSV()">
+        <i class="fas fa-download me-2"></i>Export CSV
+    </button>
 </div>
 
-<!-- Transactions Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/payments">
-            <i class="fas fa-money-bill-wave"></i> Payments
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/payments/reconciliation">
-            <i class="fas fa-balance-scale"></i> Reconciliation
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/plan-upgrades">
-            <i class="fas fa-level-up-alt"></i> Plan Upgrades
-        </a>
-    </li>
-</ul>
-
-<!-- Page Header -->
-<div class="page-header">
-    <div class="page-header-content">
-        <div>
-            <h1 class="page-title">Plan Upgrade Management</h1>
-            <p class="page-subtitle">Monitor and manage member plan upgrade requests</p>
-        </div>
-        <div>
-            <button class="btn-export" onclick="exportToCSV()">
-                <i class="fas fa-download"></i>
-                Export CSV
-            </button>
-        </div>
-    </div>
+<!-- Note: Access this page from Member Management > Approvals tab -->
 </div>
 
 <style>

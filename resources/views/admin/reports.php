@@ -1,33 +1,54 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
+    <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Reports & Analytics</h1>
+    <div class="header-actions">
+        <button class="btn btn-danger btn-sm" onclick="downloadReport('pdf')">
+            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        </button>
+        <button class="btn btn-success btn-sm" onclick="downloadReport('excel')">
+            <i class="fas fa-file-excel me-2"></i>Export Excel
+        </button>
+    </div>
 </div>
 
-<!-- Reports & Analytics Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/reports">
-            <i class="fas fa-file-alt"></i> All Reports
-        </a>
+<!-- Reports & Analytics Tabs -->
+<ul class="nav nav-tabs mb-4" id="reportsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+            <i class="fas fa-chart-bar"></i> Overview
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/financial-dashboard">
-            <i class="fas fa-chart-line"></i> Financial Analytics
-        </a>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial" type="button" role="tab">
+            <i class="fas fa-money-bill-trend-up"></i> Financial Analytics
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/reports/members">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="members-analytics-tab" data-bs-toggle="tab" data-bs-target="#membersAnalytics" type="button" role="tab">
             <i class="fas fa-users"></i> Member Analytics
-        </a>
+        </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/reports/claims">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="claims-analytics-tab" data-bs-toggle="tab" data-bs-target="#claimsAnalytics" type="button" role="tab">
             <i class="fas fa-file-medical"></i> Claims Analytics
-        </a>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="agent-performance-tab" data-bs-toggle="tab" data-bs-target="#agentPerformance" type="button" role="tab">
+            <i class="fas fa-user-tie"></i> Agent Performance
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="contributions-tab" data-bs-toggle="tab" data-bs-target="#contributionsAnalytics" type="button" role="tab">
+            <i class="fas fa-coins"></i> Contributions Analysis
+        </button>
     </li>
 </ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="reportsTabContent">
 
 <style>
     /* Page Header */
