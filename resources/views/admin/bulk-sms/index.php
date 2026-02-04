@@ -1,16 +1,32 @@
 <?php include __DIR__ . '/../../layouts/admin-header.php'; ?>
 
+<!-- Page Header with Navigation Tabs -->
 <div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2>Bulk SMS Campaigns</h2>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="/admin/bulk-sms/create" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Create New Campaign
-            </a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications</h1>
+        <a href="/admin/bulk-sms/create" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Create New Campaign
+        </a>
     </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/communications">
+                <i class="fas fa-history mr-2"></i>Quick Messages
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/email-campaigns">
+                <i class="fas fa-envelope-open-text mr-2"></i>Email Campaigns
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active">
+                <i class="fas fa-comment-dots mr-2"></i>SMS Campaigns
+            </a>
+        </li>
+    </ul>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <div class="alert alert-<?= $_SESSION['flash_type'] ?? 'info' ?> alert-dismissible fade show">

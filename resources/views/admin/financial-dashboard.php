@@ -1,5 +1,34 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+<!-- Page Header with Navigation Tabs -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Financial Operations</h1>
+</div>
+
+<!-- Financial Operations Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+            <i class="fas fa-chart-line"></i> Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/payments">
+            <i class="fas fa-money-bill-wave"></i> Payments
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/payments/reconciliation">
+            <i class="fas fa-balance-scale"></i> Reconciliation
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/plan-upgrades">
+            <i class="fas fa-level-up-alt"></i> Plan Upgrades
+        </a>
+    </li>
+</ul>
+
 <style>
     .page-header {
         background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
