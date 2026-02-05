@@ -1,30 +1,105 @@
+<?php
+// Mock data - will be from controller
+$pendingClaims = $pendingClaims ?? 3;
+$processedClaims = $processedClaims ?? 87;
+$approvedClaims = $approvedClaims ?? 82;
+$rejectedClaims = $rejectedClaims ?? 5;
+$totalClaimAmount = $totalClaimAmount ?? 8500000;
+?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
     /* Page Header */
     .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 24px;
     }
 
     .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
         color: #1F2937;
-        margin: 0 0 4px 0;
+        margin-bottom: 4px;
     }
 
     .page-subtitle {
-        font-size: 13px;
+        font-size: 14px;
         color: #9CA3AF;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: <?php echo $pendingClaims > 0 ? 'flex' : 'none'; ?>;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .alert-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+
+    .alert-text h4 {
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .alert-text p {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 13px;
         margin: 0;
     }
 
+    .btn-alert-action {
+        padding: 12px 24px;
+        background: white;
+        color: #DC2626;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-alert-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
     /* Stats Grid */
-    .stats-row {
+    .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap:20px;
         margin-bottom: 30px;
     }
 
@@ -45,12 +120,12 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 
     .stat-icon {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -58,592 +133,627 @@
         font-size: 18px;
     }
 
-    .stat-icon.blue {
-        background: #DBEAFE;
-        color: #3B82F6;
-    }
-
-    .stat-icon.orange {
-        background: #FED7AA;
-        color: #F97316;
-    }
-
-    .stat-icon.green {
-        background: #D1FAE5;
-        color: #10B981;
-    }
-
     .stat-icon.red {
-        background: #FEE2E2;
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
         color: #EF4444;
     }
 
+    .stat-icon.green {
+        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+        color: #10B981;
+    }
+
+    .stat-icon.orange {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        color: #F59E0B;
+    }
+
+    .stat-icon.purple {
+        background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+        color: #7F3D9E;
+    }
+
     .stat-label {
-        font-size: 11px;
+        font-size: 13px;
         color: #9CA3AF;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-weight: 500;
     }
 
     .stat-value {
         font-size: 28px;
         font-weight: 700;
         color: #1F2937;
+        margin-bottom: 4px;
     }
 
-    /* Main Content Layout */
-    .content-layout {
-        display: grid;
-        grid-template-columns: 1fr 1.5fr;
-        gap: 24px;
-        margin-bottom: 30px;
+    .stat-subtext {
+        font-size: 12px;
+        color: #6B7280;
     }
 
-    /* Active Claims */
-    .claims-card {
+    /* Tabs */
+    .tabs-container {
         background: white;
         border-radius: 12px;
-        padding: 24px;
         border: 1px solid #E5E7EB;
+        overflow: hidden;
     }
 
-    .claims-title {
-        font-size: 18px;
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 0;
+        background: #F9FAFB;
+    }
+
+    .tab-btn {
+        padding: 16px 24px;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 2px solid transparent;
+        position: relative;
+    }
+
+    .tab-btn:hover {
+        color: #7F3D9E;
+        background: rgba(127, 61, 158, 0.05);
+    }
+
+    .tab-btn.active {
+        color: #7F3D9E;
+        background: white;
+        border-bottom-color: #7F3D9E;
+    }
+
+    .tab-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
         font-weight: 700;
-        color: #1F2937;
+        margin-left: 8px;
+    }
+
+    .tab-badge.red {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .tab-badge.green {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .tab-content {
+        display: none;
+        padding: 24px;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Table Styles */
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 20px;
     }
 
-    .claim-item {
-        padding: 16px;
-        background: #F9FAFB;
-        border-radius: 10px;
-        margin-bottom: 12px;
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+    }
+
+    .filter-btn {
+        padding: 10px 16px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
     }
 
-    .claim-item:hover {
-        background: #F3F4F6;
+    .filter-btn:hover {
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
-    .claim-item.active {
-        background: white;
-        border: 2px solid #7F3D9E;
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
-    .claim-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
+    .custom-table thead {
+        background: #F9FAFB;
     }
 
-    .claim-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 10px;
+    .custom-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
         font-weight: 700;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border-bottom: 1px solid #E5E7EB;
     }
 
-    .claim-badge.doc-review {
+    .custom-table td {
+        padding: 16px;
+        border-bottom: 1px solid #F3F4F6;
+        font-size: 14px;
+        color: #1F2937;
+    }
+
+    .custom-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .custom-table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-badge.pending {
+        background: #FEF3C7;
+        color: #F59E0B;
+    }
+
+    .status-badge.approved {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .status-badge.rejected {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .status-badge.processing {
         background: #DBEAFE;
         color: #3B82F6;
     }
 
-    .claim-badge.logistics {
-        background: #FED7AA;
-        color: #F97316;
-    }
-
-    .claim-badge.settled {
-        background: #D1FAE5;
-        color: #10B981;
-    }
-
-    .claim-number {
-        font-size: 11px;
-        color: #9CA3AF;
-    }
-
-    .claim-name {
-        font-size: 15px;
-        font-weight: 700;
-        color: #1F2937;
-        margin-bottom: 4px;
-    }
-
-    .claim-beneficiary {
-        font-size: 12px;
-        color: #6B7280;
-        margin-bottom: 8px;
-    }
-
-    .claim-progress {
+    /* Action Buttons */
+    .action-buttons {
         display: flex;
-        align-items: center;
         gap: 8px;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
         font-size: 12px;
-        color: #7F3D9E;
-    }
-
-    .claim-progress i {
-        font-size: 14px;
-    }
-
-    .claim-logistics-info {
-        font-size: 12px;
-        color: #6B7280;
-        margin-bottom: 4px;
-    }
-
-    .claim-pickup {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: #F97316;
-    }
-
-    .claim-settled-info {
-        font-size: 12px;
-        color: #10B981;
-    }
-
-    /* Verification Panel */
-    .verification-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #E5E7EB;
-    }
-
-    .verification-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 8px;
-    }
-
-    .verification-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #1F2937;
-    }
-
-    .verification-subtitle {
-        font-size: 13px;
-        color: #9CA3AF;
-        margin-bottom: 24px;
-    }
-
-    .claim-amount-label {
-        font-size: 11px;
-        color: #9CA3AF;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .claim-amount-value {
-        font-size: 18px;
-        font-weight: 700;
-        color: #7F3D9E;
-    }
-
-    /* Document Upload Grid */
-    .document-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 30px;
-    }
-
-    .document-slot {
-        aspect-ratio: 1;
-        border: 2px dashed #E5E7EB;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #F9FAFB;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-        position: relative;
-        background-image: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 10px,
-            rgba(139, 92, 246, 0.05) 10px,
-            rgba(139, 92, 246, 0.05) 20px
-        );
-    }
-
-    .document-slot:hover {
-        border-color: #8B5CF6;
-        background: rgba(139, 92, 246, 0.02);
-    }
-
-    .document-slot.verified {
-        border-color: #7F3D9E;
-        border-style: solid;
-        background: #F0FDF4;
-        background-image: none;
-    }
-
-    .document-slot.review {
-        border-color: #7F3D9E;
-        border-style: solid;
-        background: #FAF5FF;
-        background-image: none;
-    }
-
-    .document-icon {
-        font-size: 36px;
-        color: #D1D5DB;
-        margin-bottom: 12px;
-    }
-
-    .document-slot.verified .document-icon {
-        color: #7F3D9E;
-    }
-
-    .document-slot.review .document-icon {
-        color: #7F3D9E;
-    }
-
-    .document-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #6B7280;
-        margin-bottom: 8px;
-        text-align: center;
-    }
-
-    .document-status {
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .document-status.verified {
-        background: #7F3D9E;
-        color: white;
-    }
-
-    .document-status.review {
-        background: #7F3D9E;
-        color: white;
-    }
-
-    /* Logistics Section */
-    .logistics-section {
-        background: #F9FAFB;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .logistics-header {
-        display: flex;
+        border: none;
+        display: inline-flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
+        gap: 6px;
     }
 
-    .logistics-icon {
-        width: 40px;
-        height: 40px;
-        background: #7F3D9E;
-        border-radius: 10px;
+    .btn-view {
+        background: #EDE9FE;
+        color: #7F3D9E;
+    }
+
+    .btn-view:hover {
+        background: #DDD6FE;
+    }
+
+    .btn-approve {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .btn-approve:hover {
+        background: #A7F3D0;
+    }
+
+    .btn-reject {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .btn-reject:hover {
+        background: #FECACA;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: #F3F4F6;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 18px;
-    }
-
-    .logistics-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1F2937;
-    }
-
-    .form-section {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        font-size: 11px;
-        font-weight: 700;
+        margin: 0 auto 20px;
+        font-size: 32px;
         color: #9CA3AF;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
         margin-bottom: 8px;
-        display: block;
     }
 
-    .form-select {
-        width: 100%;
-        padding: 10px 16px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
+    .empty-text {
         font-size: 14px;
-        color: #1F2937;
-        background: white;
-        cursor: pointer;
+        color: #9CA3AF;
     }
 
-    .form-select:focus {
-        outline: none;
-        border-color: #7F3D9E;
-        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
-    }
-
-    /* Checklist */
-    .checklist-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-
-    .checklist-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .checklist-checkbox {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        accent-color: #7F3D9E;
-    }
-
-    .checklist-label {
-        font-size: 13px;
-        color: #1F2937;
-        cursor: pointer;
-    }
-
-    @media (max-width: 1200px) {
-        .content-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .document-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
-        .stats-row {
+        .stats-grid {
             grid-template-columns: 1fr;
         }
 
-        .checklist-grid {
-            grid-template-columns: 1fr;
+        .tabs-header {
+            overflow-x: auto;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search-box {
+            width: 100%;
+        }
+
+        .custom-table {
+            font-size: 12px;
+        }
+
+        .custom-table td {
+            padding: 12px;
         }
     }
 </style>
 
 <!-- Page Header -->
 <div class="page-header">
-    <h1 class="page-title">Claims & Logistics Hub</h1>
-    <p class="page-subtitle">Verification and funeral coordination management</p>
+    <div>
+        <h1 class="page-title">Claims Management</h1>
+        <p class="page-subtitle">Process and manage all member claims</p>
+    </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="stats-row">
-    <!-- Doc Review -->
+<!-- Alert for Unprocessed Claims -->
+<div class="alert-banner">
+    <div class="alert-content">
+        <div class="alert-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="alert-text">
+            <h4>Urgent: Pending Claims Require Attention</h4>
+            <p><strong><?php echo $pendingClaims; ?> claim<?php echo $pendingClaims > 1 ? 's are' : ' is'; ?></strong> awaiting your review and processing</p>
+        </div>
+    </div>
+    <button class="btn-alert-action" onclick="showTab('pending')">
+        Process Now
+    </button>
+</div>
+
+<!-- Claims Analytics -->
+<div class="stats-grid">
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon blue">
-                <i class="fas fa-file-alt"></i>
+            <div class="stat-icon red">
+                <i class="fas fa-hourglass-half"></i>
             </div>
+            <span class="stat-label">Pending Claims</span>
         </div>
-        <div class="stat-label">Doc Review</div>
-        <div class="stat-value">12 Claims</div>
+        <div class="stat-value"><?php echo $pendingClaims; ?></div>
+        <div class="stat-subtext">Awaiting processing</div>
     </div>
 
-    <!-- In Logistics -->
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon orange">
-                <i class="fas fa-truck"></i>
-            </div>
-        </div>
-        <div class="stat-label">In Logistics</div>
-        <div class="stat-value">08 Active</div>
-    </div>
-
-    <!-- Settled MTD -->
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon green">
                 <i class="fas fa-check-circle"></i>
             </div>
+            <span class="stat-label">Approved Claims</span>
         </div>
-        <div class="stat-label">Settled (MTD)</div>
-        <div class="stat-value">45 Total</div>
+        <div class="stat-value"><?php echo $approvedClaims; ?></div>
+        <div class="stat-subtext">Successfully processed</div>
     </div>
 
-    <!-- Action Needed -->
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon red">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="stat-icon orange">
+                <i class="fas fa-times-circle"></i>
             </div>
+            <span class="stat-label">Rejected Claims</span>
         </div>
-        <div class="stat-label">Action Needed</div>
-        <div class="stat-value">03 Critical</div>
+        <div class="stat-value"><?php echo $rejectedClaims; ?></div>
+        <div class="stat-subtext">Did not meet criteria</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon purple">
+                <i class="fas fa-coins"></i>
+            </div>
+            <span class="stat-label">Total Amount</span>
+        </div>
+        <div class="stat-value">KSh <?php echo number_format($totalClaimAmount); ?></div>
+        <div class="stat-subtext">Paid out to date</div>
     </div>
 </div>
 
-<!-- Main Content Layout -->
-<div class="content-layout">
-    <!-- Left Column: Active Claims -->
-    <div>
-        <div class="claims-card">
-            <div class="claims-title">Active Claims</div>
-
-            <!-- Document Review Claim -->
-            <div class="claim-item active">
-                <div class="claim-header">
-                    <span class="claim-badge doc-review">DOCUMENT REVIEW</span>
-                    <span class="claim-number">#CLM-8902</span>
-                </div>
-                <div class="claim-name">John Doe (Main Member)</div>
-                <div class="claim-beneficiary">Beneficiary: Mary Doe (Spouse)</div>
-                <div class="claim-progress">
-                    <i class="fas fa-file-check"></i>
-                    <span>1/3 Docs verified</span>
-                </div>
-            </div>
-
-            <!-- Logistics Claim -->
-            <div class="claim-item">
-                <div class="claim-header">
-                    <span class="claim-badge logistics">LOGISTICS</span>
-                    <span class="claim-number">#CLM-8891</span>
-                </div>
-                <div class="claim-name">Alice Wanjiru</div>
-                <div class="claim-logistics-info">Coordination: Transport & Coffin</div>
-                <div class="claim-pickup">
-                    <i class="fas fa-clock"></i>
-                    <span>Pickup Tomorrow 9:00 AM</span>
-                </div>
-            </div>
-
-            <!-- Settled Claim -->
-            <div class="claim-item">
-                <div class="claim-header">
-                    <span class="claim-badge settled">SETTLED</span>
-                    <span class="claim-number">#CLM-8825</span>
-                </div>
-                <div class="claim-name">Robert King'ara</div>
-                <div class="claim-settled-info">Grant Disbursed: Oct 20</div>
-            </div>
-        </div>
+<!-- Claims Tabs -->
+<div class="tabs-container">
+    <div class="tabs-header">
+        <button class="tab-btn active" onclick="showTab('pending')" id="tab-pending">
+            <i class="fas fa-hourglass-half"></i>
+            Pending Claims
+            <span class="tab-badge red"><?php echo $pendingClaims; ?></span>
+        </button>
+        <button class="tab-btn" onclick="showTab('all')" id="tab-all">
+            <i class="fas fa-list"></i>
+            All Claims
+        </button>
+        <button class="tab-btn" onclick="showTab('completed')" id="tab-completed">
+            <i class="fas fa-check-circle"></i>
+            Completed Claims
+            <span class="tab-badge green"><?php echo $approvedClaims; ?></span>
+        </button>
     </div>
 
-    <!-- Right Column: Claim Verification -->
-    <div>
-        <div class="verification-card">
-            <div class="verification-header">
-                <div>
-                    <div class="verification-title">Claim Verification: #CLM-8902</div>
-                    <div class="verification-subtitle">Verify mandatory documents to proceed to logistics</div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="claim-amount-label">Claim Amount</div>
-                    <div class="claim-amount-value">KES 80,000</div>
-                </div>
+    <!-- Pending Claims Tab -->
+    <div class="tab-content active" id="content-pending">
+        <div class="table-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search claims by member name or ID...">
             </div>
-
-            <!-- Document Upload Grid -->
-            <div class="document-grid">
-                <!-- ID Copy -->
-                <div class="document-slot verified">
-                    <i class="fas fa-id-card document-icon"></i>
-                    <div class="document-label">1. ID Copy</div>
-                    <span class="document-status verified">VERIFIED</span>
-                </div>
-
-                <!-- Chief's Letter -->
-                <div class="document-slot review">
-                    <i class="fas fa-file-signature document-icon"></i>
-                    <div class="document-label">2. Chief's Letter</div>
-                    <span class="document-status review">REVIEW REQ</span>
-                </div>
-
-                <!-- Mortuary Invoice -->
-                <div class="document-slot review">
-                    <i class="fas fa-file-invoice document-icon"></i>
-                    <div class="document-label">3. Mortuary Invoice</div>
-                    <span class="document-status review">REVIEW REQ</span>
-                </div>
-            </div>
-
-            <!-- Logistics Section -->
-            <div class="logistics-section">
-                <div class="logistics-header">
-                    <div class="logistics-icon">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="logistics-title">Approve & Dispatch Logistics</div>
-                </div>
-
-                <!-- Coffin Selection -->
-                <div class="form-section">
-                    <label class="form-label">Coffin Selection</label>
-                    <select class="form-select">
-                        <option>Executive Mahogany Finish</option>
-                        <option>Standard Oak</option>
-                        <option>Premium Walnut</option>
-                    </select>
-                </div>
-
-                <!-- Equipment Checklist -->
-                <div class="form-section">
-                    <label class="form-label">Equipment Checklist</label>
-                    <div class="checklist-grid">
-                        <div class="checklist-item">
-                            <input type="checkbox" class="checklist-checkbox" id="tents" checked>
-                            <label for="tents" class="checklist-label">Tents & Chairs</label>
-                        </div>
-                        <div class="checklist-item">
-                            <input type="checkbox" class="checklist-checkbox" id="lowering" checked>
-                            <label for="lowering" class="checklist-label">Lowering Gear</label>
-                        </div>
-                        <div class="checklist-item">
-                            <input type="checkbox" class="checklist-checkbox" id="sound">
-                            <label for="sound" class="checklist-label">Sound System</label>
-                        </div>
-                        <div class="checklist-item">
-                            <input type="checkbox" class="checklist-checkbox" id="programs">
-                            <label for="programs" class="checklist-label">Programs Print</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transport Allocation -->
-                <div class="form-section" style="margin-bottom: 0;">
-                    <label class="form-label">Transport Allocation</label>
-                    <select class="form-select">
-                        <option>Hearse Unit #04 - KCH 234D</option>
-                        <option>Hearse Unit #02 - KBZ 123A</option>
-                        <option>Hearse Unit #06 - KAA 456C</option>
-                    </select>
-                </div>
+            <div class="filter-group">
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
             </div>
         </div>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Member Name</th>
+                    <th>Deceased Name</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Date Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample pending claim -->
+                <tr>
+                    <td><strong>#CLM-2026-001</strong></td>
+                    <td>John Doe</td>
+                    <td>Jane Doe</td>
+                    <td>Plan A</td>
+                    <td><strong>KSh 100,000</strong></td>
+                    <td>Feb 5, 2026</td>
+                    <td><span class="status-badge pending">Pending</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                            <button class="btn-action btn-approve">
+                                <i class="fas fa-check"></i>
+                                Approve
+                            </button>
+                            <button class="btn-action btn-reject">
+                                <i class="fas fa-times"></i>
+                                Reject
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- All Claims Tab -->
+    <div class="tab-content" id="content-all">
+        <div class="table-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search all claims...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Member Name</th>
+                    <th>Deceased Name</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Date Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample claims -->
+                <tr>
+                    <td><strong>#CLM-2026-001</strong></td>
+                    <td>John Doe</td>
+                    <td>Jane Doe</td>
+                    <td>Plan A</td>
+                    <td><strong>KSh 100,000</strong></td>
+                    <td>Feb 5, 2026</td>
+                    <td><span class="status-badge pending">Pending</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>#CLM-2026-002</strong></td>
+                    <td>Mary Smith</td>
+                    <td>Peter Smith</td>
+                    <td>Plan B</td>
+                    <td><strong>KSh 200,000</strong></td>
+                    <td>Feb 3, 2026</td>
+                    <td><span class="status-badge approved">Approved</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Completed Claims Tab -->
+    <div class="tab-content" id="content-completed">
+        <div class="table-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search completed claims...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-download"></i>
+                    Export PDF
+                </button>
+            </div>
+        </div>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Member Name</th>
+                    <th>Deceased Name</th>
+                    <th>Plan</th>
+                    <th>Amount Paid</th>
+                    <th>Date Completed</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>#CLM-2026-002</strong></td>
+                    <td>Mary Smith</td>
+                    <td>Peter Smith</td>
+                    <td>Plan B</td>
+                    <td><strong>KSh 200,000</strong></td>
+                    <td>Feb 4, 2026</td>
+                    <td><span class="status-badge approved">Approved</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById('content-' + tabName).classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+}
+</script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>
