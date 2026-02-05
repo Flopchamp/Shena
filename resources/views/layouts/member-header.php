@@ -30,9 +30,11 @@
 			color: white;
 			position: fixed;
 			height: 100vh;
-			overflow-y: auto;
+			overflow: hidden;
 			z-index: 1000;
 			transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			display: flex;
+			flex-direction: column;
 		}
 		
 		.sidebar.collapsed {
@@ -46,6 +48,7 @@
 			align-items: center;
 			gap: 16px;
 			transition: all 0.3s ease;
+			flex-shrink: 0;
 		}
 
 		.sidebar.collapsed .sidebar-logo {
@@ -109,6 +112,21 @@
 			font-weight: 600;
 		}
 
+		.sidebar-menu-container {
+			flex: 1;
+			overflow-y: auto;
+			padding-bottom: 20px;
+		}
+
+		.sidebar-menu-container::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		.sidebar-menu-container::-webkit-scrollbar-thumb {
+			background: rgba(255, 255, 255, 0.3);
+			border-radius: 2px;
+		}
+
 		.sidebar-menu-label {
 			padding: 24px 20px 12px;
 			font-size: 11px;
@@ -127,10 +145,6 @@
 			padding: 0;
 			list-style: none;
 			margin: 0;
-		}
-		
-		.sidebar-nav:last-of-type {
-			padding-bottom: 180px;
 		}
 
 		.sidebar-nav-item {
@@ -184,7 +198,7 @@
 
 		/* Member Support Section */
 		.member-support {
-			position: absolute;
+			position: relative;
 			bottom: 0;
 			left: 0;
 			right: 0;
@@ -193,6 +207,7 @@
 			backdrop-filter: blur(10px);
 			transition: all 0.3s ease;
 			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			flex-shrink: 0;
 		}
 
 		.member-support-label {
@@ -516,6 +531,7 @@
 				</div>
 			</div>
 
+			<div class="sidebar-menu-container">
 			<div class="sidebar-menu-label">MAIN MENU</div>
 			<ul class="sidebar-nav">
 				<li class="sidebar-nav-item">
@@ -531,21 +547,27 @@
 					</a>
 				</li>
 				<li class="sidebar-nav-item">
+					<a href="/claims" class="sidebar-nav-link <?php echo ($page ?? '') === 'claims' ? 'active' : ''; ?>">
+						<i class="fas fa-file-medical"></i>
+						<span>Claims</span>
+					</a>
+				</li>
+				<li class="sidebar-nav-item">
 					<a href="/beneficiaries" class="sidebar-nav-link <?php echo ($page ?? '') === 'beneficiaries' ? 'active' : ''; ?>">
 						<i class="fas fa-users"></i>
 						<span>Beneficiaries</span>
 					</a>
 				</li>
+			</ul>
+
+			<div class="sidebar-menu-label">SERVICES</div>
+			<ul class="sidebar-nav">
 				<li class="sidebar-nav-item">
 					<a href="/member/upgrade" class="sidebar-nav-link <?php echo ($page ?? '') === 'upgrade' ? 'active' : ''; ?>">
 						<i class="fas fa-arrow-up"></i>
 						<span>Upgrade Plan</span>
 					</a>
 				</li>
-			</ul>
-
-			<div class="sidebar-menu-label">ACCOUNT</div>
-			<ul class="sidebar-nav">
 				<li class="sidebar-nav-item">
 					<a href="/profile" class="sidebar-nav-link <?php echo ($page ?? '') === 'settings' ? 'active' : ''; ?>">
 						<i class="fas fa-cog"></i>
@@ -553,6 +575,7 @@
 					</a>
 				</li>
 			</ul>
+			</div>
 			
 			<div class="member-support">
 				<div class="member-support-label">MEMBER SUPPORT</div>

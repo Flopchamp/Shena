@@ -1,5 +1,15 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0"><i class="fas fa-balance-scale me-2"></i>Payment Reconciliation</h1>
+        <p class="text-muted small mb-0">Match and verify payment transactions</p>
+    </div>
+</div>
+
+<!-- Note: Access this page from Payments dropdown in sidebar -->
+
 <style>
     /* Page Header */
     .page-header {

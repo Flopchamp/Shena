@@ -1,19 +1,17 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <!-- Page Header -->
-<div class="page-header">
-    <div class="page-header-content">
-        <div>
-            <h1 class="page-title">Plan Upgrade Management</h1>
-            <p class="page-subtitle">Monitor and manage member plan upgrade requests</p>
-        </div>
-        <div>
-            <button class="btn-export" onclick="exportToCSV()">
-                <i class="fas fa-download"></i>
-                Export CSV
-            </button>
-        </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0"><i class="fas fa-level-up-alt me-2"></i>Plan Upgrade Management</h1>
+        <p class="text-muted small mb-0">Monitor and manage member plan upgrade requests</p>
     </div>
+    <button class="btn btn-success btn-sm" onclick="exportToCSV()">
+        <i class="fas fa-download me-2"></i>Export CSV
+    </button>
+</div>
+
+<!-- Note: Access this page from Member Management > Approvals tab -->
 </div>
 
 <style>

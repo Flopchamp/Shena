@@ -436,18 +436,59 @@
 </style>
 
 <!-- Page Header -->
-<div class="page-header">
-    <h1 class="page-title">System Settings</h1>
-    <p class="page-subtitle">Configure system-wide settings and preferences</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0"><i class="fas fa-cog me-2"></i>System Settings</h1>
+        <p class="text-muted small mb-0">Configure system-wide settings and preferences</p>
+    </div>
+    <button type="submit" form="settingsForm" class="btn btn-primary btn-sm">
+        <i class="fas fa-save me-2"></i>Save Settings
+    </button>
 </div>
 
-<!-- Settings Layout -->
-<div class="settings-layout">
-    <!-- Left Column: Settings Forms -->
-    <div>
-        <form method="POST" action="/admin/settings">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-            
+<!-- Settings Tabs -->
+<ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+            <i class="fas fa-sliders-h"></i> General
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab">
+            <i class="fas fa-envelope"></i> Email Configuration
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sms-tab" data-bs-toggle="tab" data-bs-target="#sms" type="button" role="tab">
+            <i class="fas fa-comment"></i> SMS Configuration
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">
+            <i class="fas fa-credit-card"></i> Payment Settings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notification-tab" data-bs-toggle="tab" data-bs-target="#notification" type="button" role="tab">
+            <i class="fas fa-bell"></i> Notifications
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">
+            <i class="fas fa-shield-alt"></i> Security
+        </button>
+    </li>
+</ul>
+
+<!-- Settings Form -->
+<form method="POST" action="/admin/settings" id="settingsForm">
+    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="settingsTabContent">
+        
+        <!-- General Tab -->
+        <div class="tab-pane fade show active" id="general" role="tabpanel">
             <!-- General Settings -->
             <div class="settings-card">
                 <div class="settings-card-header">
@@ -587,6 +628,363 @@
                     <span>Reset</span>
                 </button>
             </div>
+        </div>
+        <!-- End General Tab -->
+        
+        <!-- Email Configuration Tab -->
+        <div class="tab-pane fade" id="email" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="settings-card-title">Email Configuration</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_host">SMTP Host</label>
+                        <input type="text" class="form-input" id="smtp_host" name="smtp_host" 
+                               value="<?php echo htmlspecialchars($settings['smtp_host'] ?? ''); ?>" placeholder="smtp.gmail.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_port">SMTP Port</label>
+                        <input type="number" class="form-input" id="smtp_port" name="smtp_port" 
+                               value="<?php echo $settings['smtp_port'] ?? '587'; ?>" placeholder="587">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_username">SMTP Username</label>
+                        <input type="text" class="form-input" id="smtp_username" name="smtp_username" 
+                               value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>" placeholder="your-email@gmail.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_password">SMTP Password</label>
+                        <input type="password" class="form-input" id="smtp_password" name="smtp_password" 
+                               value="<?php echo htmlspecialchars($settings['smtp_password'] ?? ''); ?>" placeholder="Enter SMTP password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_encryption">Encryption</label>
+                        <select class="form-input" id="smtp_encryption" name="smtp_encryption">
+                            <option value="tls" <?php echo ($settings['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : ''; ?>>TLS</option>
+                            <option value="ssl" <?php echo ($settings['smtp_encryption'] ?? 'tls') === 'ssl' ? 'selected' : ''; ?>>SSL</option>
+                            <option value="none" <?php echo ($settings['smtp_encryption'] ?? 'tls') === 'none' ? 'selected' : ''; ?>>None</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="from_email">From Email</label>
+                        <input type="email" class="form-input" id="from_email" name="from_email" 
+                               value="<?php echo htmlspecialchars($settings['from_email'] ?? ''); ?>" placeholder="noreply@example.com">
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="from_name">From Name</label>
+                        <input type="text" class="form-input" id="from_name" name="from_name" 
+                               value="<?php echo htmlspecialchars($settings['from_name'] ?? 'Shena Companion Welfare'); ?>" placeholder="Shena Companion Welfare">
+                    </div>
+                </div>
+                
+                <div class="save-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span>Save Email Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SMS Configuration Tab -->
+        <div class="tab-pane fade" id="sms" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="settings-card-title">SMS Configuration (Twilio)</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="twilio_account_sid">Twilio Account SID</label>
+                        <input type="text" class="form-input" id="twilio_account_sid" name="twilio_account_sid" 
+                               value="<?php echo htmlspecialchars($settings['twilio_account_sid'] ?? ''); ?>" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="twilio_auth_token">Twilio Auth Token</label>
+                        <input type="password" class="form-input" id="twilio_auth_token" name="twilio_auth_token" 
+                               value="<?php echo htmlspecialchars($settings['twilio_auth_token'] ?? ''); ?>" placeholder="Enter auth token">
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="twilio_phone_number">Twilio Phone Number</label>
+                        <input type="text" class="form-input" id="twilio_phone_number" name="twilio_phone_number" 
+                               value="<?php echo htmlspecialchars($settings['twilio_phone_number'] ?? ''); ?>" placeholder="+1234567890">
+                        <div class="form-help">Use the format +[country code][number]</div>
+                    </div>
+                </div>
+                
+                <div class="save-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span>Save SMS Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Settings Tab -->
+        <div class="tab-pane fade" id="payment" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="settings-card-title">Payment Settings</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="payment_deadline_days">Payment Grace Period (Days)</label>
+                        <input type="number" class="form-input" id="payment_deadline_days" name="payment_deadline_days" 
+                               value="<?php echo $settings['payment_deadline_days'] ?? 7; ?>" min="1" max="30">
+                        <div class="form-help">Days after due date before marking payment as overdue</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="late_payment_penalty">Late Payment Penalty (%)</label>
+                        <input type="number" class="form-input" id="late_payment_penalty" name="late_payment_penalty" 
+                               value="<?php echo $settings['late_payment_penalty'] ?? 0; ?>" min="0" max="50" step="0.5">
+                        <div class="form-help">Percentage penalty for late payments</div>
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label" for="payment_methods">Accepted Payment Methods</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                            <div class="toggle-group" style="border: none; padding: 12px; background: #F9FAFB; border-radius: 8px;">
+                                <div class="toggle-info">
+                                    <div class="toggle-label" style="font-size: 14px;">M-Pesa</div>
+                                </div>
+                                <label class="toggle-switch" style="transform: scale(0.8);">
+                                    <input type="checkbox" name="payment_methods[]" value="mpesa" 
+                                           <?php echo in_array('mpesa', $settings['payment_methods'] ?? ['mpesa']) ? 'checked' : ''; ?>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-group" style="border: none; padding: 12px; background: #F9FAFB; border-radius: 8px;">
+                                <div class="toggle-info">
+                                    <div class="toggle-label" style="font-size: 14px;">Bank Transfer</div>
+                                </div>
+                                <label class="toggle-switch" style="transform: scale(0.8);">
+                                    <input type="checkbox" name="payment_methods[]" value="bank" 
+                                           <?php echo in_array('bank', $settings['payment_methods'] ?? ['bank']) ? 'checked' : ''; ?>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-group" style="border: none; padding: 12px; background: #F9FAFB; border-radius: 8px;">
+                                <div class="toggle-info">
+                                    <div class="toggle-label" style="font-size: 14px;">Cash</div>
+                                </div>
+                                <label class="toggle-switch" style="transform: scale(0.8);">
+                                    <input type="checkbox" name="payment_methods[]" value="cash" 
+                                           <?php echo in_array('cash', $settings['payment_methods'] ?? ['cash']) ? 'checked' : ''; ?>>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="save-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span>Save Payment Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications Tab -->
+        <div class="tab-pane fade" id="notification" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="settings-card-title">Notification Preferences</div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">New Member Registration</div>
+                        <div class="toggle-description">Notify admins when a new member registers</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_new_member" 
+                               <?php echo !empty($settings['notify_new_member']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Payment Received</div>
+                        <div class="toggle-description">Notify member when payment is received</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_payment_received" 
+                               <?php echo !empty($settings['notify_payment_received']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Payment Reminder</div>
+                        <div class="toggle-description">Send payment reminders before due date</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_payment_reminder" 
+                               <?php echo !empty($settings['notify_payment_reminder']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Claim Submitted</div>
+                        <div class="toggle-description">Notify admins when a claim is submitted</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_claim_submitted" 
+                               <?php echo !empty($settings['notify_claim_submitted']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Claim Status Update</div>
+                        <div class="toggle-description">Notify member when claim status changes</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_claim_status" 
+                               <?php echo !empty($settings['notify_claim_status']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" for="reminder_days_before">Reminder Days Before Due Date</label>
+                    <input type="number" class="form-input" id="reminder_days_before" name="reminder_days_before" 
+                           value="<?php echo $settings['reminder_days_before'] ?? 3; ?>" min="1" max="14">
+                    <div class="form-help">Number of days before payment due date to send reminder</div>
+                </div>
+                
+                <div class="save-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span>Save Notification Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Tab -->
+        <div class="tab-pane fade" id="security" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="settings-card-title">Security Settings</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="max_login_attempts">Max Login Attempts</label>
+                        <input type="number" class="form-input" id="max_login_attempts" name="max_login_attempts" 
+                               value="<?php echo $settings['max_login_attempts'] ?? 5; ?>" min="3" max="10">
+                        <div class="form-help">Number of failed login attempts before account lockout</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="lockout_duration">Lockout Duration (minutes)</label>
+                        <input type="number" class="form-input" id="lockout_duration" name="lockout_duration" 
+                               value="<?php echo $settings['lockout_duration'] ?? 30; ?>" min="5" max="120">
+                        <div class="form-help">Duration to lock account after max attempts</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password_min_length">Minimum Password Length</label>
+                        <input type="number" class="form-input" id="password_min_length" name="password_min_length" 
+                               value="<?php echo $settings['password_min_length'] ?? 8; ?>" min="6" max="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password_expiry_days">Password Expiry (days)</label>
+                        <input type="number" class="form-input" id="password_expiry_days" name="password_expiry_days" 
+                               value="<?php echo $settings['password_expiry_days'] ?? 90; ?>" min="30" max="365">
+                        <div class="form-help">0 = never expire</div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Require Strong Passwords</div>
+                        <div class="toggle-description">Enforce uppercase, lowercase, numbers, and special characters</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="require_strong_password" 
+                               <?php echo !empty($settings['require_strong_password']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Two-Factor Authentication</div>
+                        <div class="toggle-description">Require 2FA for admin accounts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="require_2fa" 
+                               <?php echo !empty($settings['require_2fa']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">IP Whitelisting</div>
+                        <div class="toggle-description">Restrict admin access to specific IP addresses</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enable_ip_whitelist" 
+                               <?php echo !empty($settings['enable_ip_whitelist']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" for="allowed_ips">Allowed IP Addresses</label>
+                    <textarea class="form-input" id="allowed_ips" name="allowed_ips" rows="3" 
+                              placeholder="Enter IP addresses, one per line"><?php echo htmlspecialchars($settings['allowed_ips'] ?? ''); ?></textarea>
+                    <div class="form-help">Leave empty to allow all IPs</div>
+                </div>
+                
+                <div class="save-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        <span>Save Security Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         </form>
     </div>
     

@@ -87,6 +87,9 @@ class AdminController extends BaseController
                 
                 header('Location: /admin/dashboard');
                 exit();
+            } elseif ($admin && !in_array($admin['role'], ['super_admin', 'manager'])) {
+                // User exists but is not an admin
+                $_SESSION['error'] = 'Access denied. Please use the member login portal.';
             } else {
                 $_SESSION['error'] = 'Invalid admin credentials';
             }
@@ -149,13 +152,33 @@ class AdminController extends BaseController
         
         $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
         
+        // Calculate statistics
+        $totalMembers = $this->memberModel->getTotalMembers();
+        $activeMembers = $this->memberModel->getActiveMembers();
+        $pendingMembers = $this->memberModel->getPendingMembers();
+        
+        // Count defaulted members
+        $db = Database::getInstance();
+        $defaultedCount = $db->fetch("SELECT COUNT(*) as count FROM members WHERE status = 'defaulted'")['count'] ?? 0;
+        
+        $stats = [
+            'total_members' => $totalMembers,
+            'active_contributors' => $activeMembers,
+            'pending_approvals' => $pendingMembers,
+            'defaulters' => $defaultedCount,
+            'new_members' => count(array_filter($members, function($m) {
+                return !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-30 days');
+            }))
+        ];
+        
         $data = [
             'title' => 'Members - Admin',
             'members' => $members,
             'total_members' => count($members),
             'search' => $search,
             'status' => $status,
-            'package' => $package
+            'package' => $package,
+            'stats' => $stats
         ];
         
         $this->view('admin.members', $data);
@@ -250,6 +273,80 @@ class AdminController extends BaseController
         }
         
         $this->redirect('/admin/members');
+    }
+
+    /**
+     * View Member Details
+     */
+    public function viewMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        $member = $this->memberModel->find($id);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/admin/members');
+            return;
+        }
+        
+        // Get member's user details
+        $user = $this->userModel->find($member['user_id']);
+        
+        // Get payment history
+        $payments = $this->paymentModel->getMemberPayments($id);
+        
+        // Get claims history
+        $claims = $this->claimModel->findAll(['member_id' => $id]);
+        
+        // Get beneficiaries/dependents
+        $beneficiaryModel = new Beneficiary();
+        $beneficiaries = $beneficiaryModel->getMemberBeneficiaries($id);
+        
+        // Calculate maturity status
+        $maturityStatus = 'Not Set';
+        $maturityDaysRemaining = null;
+        if (!empty($member['maturity_ends']) && $member['maturity_ends'] != '0000-00-00') {
+            $maturityDate = new DateTime($member['maturity_ends']);
+            $today = new DateTime();
+            if ($today < $maturityDate) {
+                $diff = $today->diff($maturityDate);
+                $maturityDaysRemaining = $diff->days;
+                $maturityStatus = 'In Progress';
+            } else {
+                $maturityStatus = 'Completed';
+            }
+        }
+        
+        // Calculate coverage status
+        $coverageStatus = 'No Coverage';
+        $coverageDaysRemaining = null;
+        if (!empty($member['coverage_ends']) && $member['coverage_ends'] != '0000-00-00') {
+            $coverageDate = new DateTime($member['coverage_ends']);
+            $today = new DateTime();
+            if ($today < $coverageDate) {
+                $diff = $today->diff($coverageDate);
+                $coverageDaysRemaining = $diff->days;
+                $coverageStatus = 'Active';
+            } else {
+                $coverageStatus = 'Expired';
+            }
+        }
+        
+        $data = [
+            'title' => 'Member Details - ' . ($member['first_name'] ?? '') . ' ' . ($member['last_name'] ?? ''),
+            'member' => $member,
+            'user' => $user,
+            'payments' => $payments,
+            'claims' => $claims,
+            'beneficiaries' => $beneficiaries,
+            'maturityStatus' => $maturityStatus,
+            'maturityDaysRemaining' => $maturityDaysRemaining,
+            'coverageStatus' => $coverageStatus,
+            'coverageDaysRemaining' => $coverageDaysRemaining
+        ];
+        
+        $this->view('admin.members', $data);
     }
 
     /**

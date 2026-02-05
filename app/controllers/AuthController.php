@@ -95,6 +95,13 @@ class AuthController extends BaseController
                 return;
             }
             
+            // Block admin and manager accounts from public login
+            if (in_array($user['role'], ['super_admin', 'manager'])) {
+                $_SESSION['error'] = 'Admin accounts must login through the admin portal.';
+                $this->redirect('/login');
+                return;
+            }
+            
             // Check if user is active
             if ($user['status'] !== 'active') {
                 $_SESSION['error'] = 'Your account is not active. Please contact support.';
@@ -123,9 +130,7 @@ class AuthController extends BaseController
             }
             
             // Redirect based on role
-            if (in_array($user['role'], ['super_admin', 'manager'])) {
-                $this->redirect('/admin');
-            } elseif ($user['role'] === 'agent') {
+            if ($user['role'] === 'agent') {
                 $this->redirect('/agent/dashboard');
             } else {
                 $this->redirect('/dashboard');

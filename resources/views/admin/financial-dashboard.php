@@ -1,5 +1,34 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+<!-- Page Header with Navigation Tabs -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
+</div>
+
+<!-- Reports & Analytics Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/reports">
+            <i class="fas fa-file-alt"></i> All Reports
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="/admin/financial-dashboard">
+            <i class="fas fa-chart-line"></i> Financial Analytics
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/reports/members">
+            <i class="fas fa-users"></i> Member Analytics
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/reports/claims">
+            <i class="fas fa-file-medical"></i> Claims Analytics
+        </a>
+    </li>
+</ul>
+
 <style>
     .page-header {
         background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);

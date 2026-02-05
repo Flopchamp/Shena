@@ -1,5 +1,345 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0"><i class="fas fa-file-medical me-2"></i>Claims Management</h1>
+    <div class="header-actions">
+        <button class="btn btn-danger btn-sm" id="unprocessedAlert" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="unprocessedCount">0</span> Unprocessed Claims
+        </button>
+    </div>
+</div>
+
+<!-- Claims Analytics Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="fas fa-file-medical"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['total_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon orange">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-label">Pending Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['pending_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Completed Claims</div>
+        <div class="stat-value"><?php echo number_format($stats['completed_claims'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Disbursed</div>
+        <div class="stat-value">KES <?php echo number_format($stats['total_disbursed'] ?? 0); ?></div>
+    </div>
+</div>
+
+<!-- Claims Tabs -->
+<ul class="nav nav-tabs mb-4" id="claimsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pendingClaims" type="button" role="tab">
+            <i class="fas fa-clock"></i> Pending Claims
+            <?php if (($stats['pending_claims'] ?? 0) > 0): ?>
+                <span class="badge bg-warning ms-1"><?php echo $stats['pending_claims']; ?></span>
+            <?php endif; ?>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approvedClaims" type="button" role="tab">
+            <i class="fas fa-check"></i> Approved Claims
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completedClaims" type="button" role="tab">
+            <i class="fas fa-check-circle"></i> Completed Claims
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#allClaims" type="button" role="tab">
+            <i class="fas fa-list"></i> All Claims
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="claimsTabContent">
+    
+    <!-- Pending Claims Tab -->
+    <div class="tab-pane fade show active" id="pendingClaims" role="tabpanel">
+        <div class="claims-card">
+            <h3 class="claims-title">Pending Claims Requiring Review</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>CLAIM ID</th>
+                            <th>MEMBER</th>
+                            <th>DECEASED</th>
+                            <th>SUBMITTED</th>
+                            <th>AMOUNT</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($claims) && is_array($claims)): ?>
+                            <?php foreach ($claims as $claim): ?>
+                                <?php if (($claim['status'] ?? '') === 'pending'): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($claim['claim_number'] ?? 'N/A'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($claim['member_name'] ?? 'Unknown'); ?></td>
+                                    <td><?php echo htmlspecialchars($claim['deceased_name'] ?? 'N/A'); ?></td>
+                                    <td><?php echo isset($claim['created_at']) ? date('M d, Y', strtotime($claim['created_at'])) : 'N/A'; ?></td>
+                                    <td><strong>KES <?php echo number_format($claim['claim_amount'] ?? 0); ?></strong></td>
+                                    <td><span class="claim-badge doc-review">Pending Review</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success" onclick="approveClaim(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="viewClaim(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-eye"></i> Review
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <p class="text-muted">No pending claims</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approved Claims Tab -->
+    <div class="tab-pane fade" id="approvedClaims" role="tabpanel">
+        <div class="claims-card">
+            <h3 class="claims-title">Approved Claims - Awaiting Processing</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>CLAIM ID</th>
+                            <th>MEMBER</th>
+                            <th>DECEASED</th>
+                            <th>APPROVED DATE</th>
+                            <th>AMOUNT</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($claims) && is_array($claims)): ?>
+                            <?php foreach ($claims as $claim): ?>
+                                <?php if (($claim['status'] ?? '') === 'approved'): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($claim['claim_number'] ?? 'N/A'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($claim['member_name'] ?? 'Unknown'); ?></td>
+                                    <td><?php echo htmlspecialchars($claim['deceased_name'] ?? 'N/A'); ?></td>
+                                    <td><?php echo isset($claim['approved_at']) ? date('M d, Y', strtotime($claim['approved_at'])) : 'N/A'; ?></td>
+                                    <td><strong>KES <?php echo number_format($claim['claim_amount'] ?? 0); ?></strong></td>
+                                    <td><span class="claim-badge logistics">Logistics Planning</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="processLogistics(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-truck"></i> Process
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="viewClaim(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+                                    <p class="text-muted">No approved claims awaiting processing</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Claims Tab -->
+    <div class="tab-pane fade" id="completedClaims" role="tabpanel">
+        <div class="claims-card">
+            <h3 class="claims-title">Completed & Settled Claims</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>CLAIM ID</th>
+                            <th>MEMBER</th>
+                            <th>DECEASED</th>
+                            <th>COMPLETED DATE</th>
+                            <th>AMOUNT</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($claims) && is_array($claims)): ?>
+                            <?php foreach ($claims as $claim): ?>
+                                <?php if (in_array($claim['status'] ?? '', ['completed', 'paid'])): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($claim['claim_number'] ?? 'N/A'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($claim['member_name'] ?? 'Unknown'); ?></td>
+                                    <td><?php echo htmlspecialchars($claim['deceased_name'] ?? 'N/A'); ?></td>
+                                    <td><?php echo isset($claim['completed_at']) ? date('M d, Y', strtotime($claim['completed_at'])) : 'N/A'; ?></td>
+                                    <td><strong>KES <?php echo number_format($claim['claim_amount'] ?? 0); ?></strong></td>
+                                    <td><span class="claim-badge settled">Settled</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="viewClaim(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="downloadReceipt(<?php echo $claim['id']; ?>)">
+                                            <i class="fas fa-download"></i> Receipt
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">No completed claims</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Claims Tab -->
+    <div class="tab-pane fade" id="allClaims" role="tabpanel">
+        <div class="claims-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="claims-title mb-0">All Claims Overview</h3>
+                <div>
+                    <select class="form-select form-select-sm d-inline-block" style="width: auto;">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="completed">Completed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <button class="btn btn-sm btn-success ms-2">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>CLAIM ID</th>
+                            <th>MEMBER</th>
+                            <th>DECEASED</th>
+                            <th>DATE FILED</th>
+                            <th>AMOUNT</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($claims) && is_array($claims)): ?>
+                            <?php foreach ($claims as $claim): ?>
+                            <tr>
+                                <td><strong><?php echo htmlspecialchars($claim['claim_number'] ?? 'N/A'); ?></strong></td>
+                                <td><?php echo htmlspecialchars($claim['member_name'] ?? 'Unknown'); ?></td>
+                                <td><?php echo htmlspecialchars($claim['deceased_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo isset($claim['created_at']) ? date('M d, Y', strtotime($claim['created_at'])) : 'N/A'; ?></td>
+                                <td><strong>KES <?php echo number_format($claim['claim_amount'] ?? 0); ?></strong></td>
+                                <td>
+                                    <?php
+                                    $status = $claim['status'] ?? 'pending';
+                                    $badgeClass = match($status) {
+                                        'pending' => 'doc-review',
+                                        'approved' => 'logistics',
+                                        'completed', 'paid' => 'settled',
+                                        default => 'doc-review'
+                                    };
+                                    $statusLabel = ucfirst($status);
+                                    ?>
+                                    <span class="claim-badge <?php echo $badgeClass; ?>"><?php echo $statusLabel; ?></span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewClaim(<?php echo $claim['id']; ?>)">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">No claims found</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function viewClaim(claimId) {
+    window.location.href = '/admin/claim/' + claimId;
+}
+
+function approveClaim(claimId) {
+    if (confirm('Approve this claim?')) {
+        // TODO: Implement claim approval
+        alert('Claim approved successfully!');
+        location.reload();
+    }
+}
+
+function processLogistics(claimId) {
+    // TODO: Implement logistics processing
+    alert('Opening logistics management for claim #' + claimId);
+}
+
+function downloadReceipt(claimId) {
+    // TODO: Implement receipt download
+    alert('Downloading receipt for claim #' + claimId);
+}
+</script>
+
 <style>
     /* Page Header */
     .page-header {

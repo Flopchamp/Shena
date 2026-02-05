@@ -29,11 +29,12 @@
             width: 280px;
             height: 100vh;
             background: linear-gradient(180deg, #4A1468 0%, #7F20B0 50%, #4A1468 100%);
-            padding: 32px 0 120px 0;
+            padding: 0;
             z-index: 1000;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow: hidden;
             transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.collapsed {
@@ -89,12 +90,13 @@
         }
 
         .sidebar-logo {
-            padding: 0 24px 24px 24px;
+            padding: 32px 24px 24px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            margin-bottom: 20px;
+            margin-bottom: 0;
             display: flex;
             align-items: center;
             gap: 14px;
+            flex-shrink: 0;
         }
 
         .sidebar.collapsed .sidebar-logo {
@@ -196,6 +198,21 @@
             transform: rotate(180deg);
         }
 
+        .sidebar-menu-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
         .sidebar-menu-label {
             padding: 0 24px;
             font-size: 11px;
@@ -274,7 +291,7 @@
 
         /* Agent Support Section */
         .agent-support {
-            position: absolute;
+            position: relative;
             bottom: 0;
             left: 0;
             right: 0;
@@ -282,6 +299,8 @@
             padding: 22px 24px;
             backdrop-filter: blur(10px);
             transition: opacity 0.2s ease;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .agent-support-label {
@@ -642,7 +661,8 @@
             </div>
         </div>
 
-        <div class="sidebar-menu-label">MAIN MENU</div>
+        <div class="sidebar-menu-container">
+            <div class="sidebar-menu-label">MAIN MENU</div>
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="/agent/dashboard" class="sidebar-nav-link<?php echo (isset($page) && $page === 'dashboard') ? ' active' : ''; ?>">
@@ -657,18 +677,39 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a href="/agent/register-member" class="sidebar-nav-link<?php echo (isset($page) && $page === 'register-member') ? ' active' : ''; ?>">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register Member</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-menu-label">FINANCIALS</div>
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="/agent/commissions" class="sidebar-nav-link<?php echo (isset($page) && $page === 'commissions') ? ' active' : ''; ?>">
+                    <i class="fas fa-percentage"></i>
+                    <span>Commissions</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a href="/agent/payouts" class="sidebar-nav-link<?php echo (isset($page) && $page === 'payouts') ? ' active' : ''; ?>">
                     <i class="fas fa-money-check-alt"></i>
                     <span>Payouts</span>
                 </a>
             </li>
+        </ul>
+
+        <div class="sidebar-menu-label">RESOURCES</div>
+        <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="/agent/resources" class="sidebar-nav-link<?php echo (isset($page) && $page === 'resources') ? ' active' : ''; ?>">
                     <i class="fas fa-book"></i>
-                    <span>Resources</span>
+                    <span>Training & Docs</span>
                 </a>
             </li>
         </ul>
+        </div>
 
         <div class="agent-support">
             <div class="agent-support-label">AGENT SUPPORT</div>
