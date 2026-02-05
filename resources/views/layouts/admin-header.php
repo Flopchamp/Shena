@@ -40,26 +40,49 @@
             background: white;
             border-right: 1px solid #E5E7EB;
             z-index: 1000;
-            overflow-y: auto;
-            padding: 20px 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
         }
 
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
+        .sidebar.collapsed {
+            width: 80px;
         }
 
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #E5E7EB;
-            border-radius: 4px;
+        .sidebar.collapsed .sidebar-logo-text,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .nav-section-title,
+        .sidebar.collapsed .admin-info,
+        .sidebar.collapsed .admin-menu-btn {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+            overflow: hidden;
         }
+
+        .sidebar.collapsed .admin-profile {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .nav-submenu {
+            display: none !important;
+        }
+
+
 
         .sidebar-logo {
-            padding: 0 20px 20px;
+            padding: 20px 20px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid #F3F4F6;
-            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .sidebar-logo img {
@@ -81,7 +104,18 @@
         }
 
         .sidebar-nav {
-            padding: 0 10px;
+            padding: 20px 10px 100px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 4px;
         }
 
         .nav-item {
@@ -185,6 +219,35 @@
             justify-content: space-between;
             padding: 0 30px;
             z-index: 999;
+            transition: left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .top-header {
+            left: 80px;
+        }
+
+        .toggle-sidebar-btn {
+            width: 40px;
+            height: 40px;
+            background: #F9FAFB;
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 16px;
+        }
+
+        .toggle-sidebar-btn:hover {
+            background: #F3F4F6;
+            color: #7F3D9E;
+        }
+
+        .toggle-sidebar-btn i {
+            color: #6B7280;
+            font-size: 18px;
         }
 
         .search-bar {
@@ -200,6 +263,7 @@
             transform: translateY(-50%);
             color: #9CA3AF;
             font-size: 14px;
+            z-index: 2;
         }
 
         .search-bar input {
@@ -222,6 +286,91 @@
             color: #D1D5DB;
         }
 
+        .search-results {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-results.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #F3F4F6;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #1F2937;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: #F9FAFB;
+        }
+
+        .search-result-icon {
+            width: 36px;
+            height: 36px;
+            background: #F3F4F6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7F3D9E;
+            font-size: 14px;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 2px;
+        }
+
+        .search-result-category {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .search-result-empty {
+            padding: 32px 16px;
+            text-align: center;
+            color: #9CA3AF;
+            font-size: 14px;
+        }
+
         .header-actions {
             display: flex;
             align-items: center;
@@ -240,6 +389,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
         .notification-btn:hover {
@@ -260,6 +410,122 @@
             background: #EF4444;
             border-radius: 50%;
             border: 2px solid white;
+        }
+
+        /* Header Admin Profile Dropdown */
+        .header-admin-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-admin-profile:hover {
+            background: #F3F4F6;
+        }
+
+        .header-admin-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #7F3D9E 0%, #9333EA 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .header-admin-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-admin-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1F2937;
+            line-height: 1.2;
+        }
+
+        .header-admin-role {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .header-admin-arrow {
+            color: #9CA3AF;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .header-admin-profile.active .header-admin-arrow {
+            transform: rotate(180deg);
+        }
+
+        .header-admin-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 240px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            display: none;
+            z-index: 1000;
+        }
+
+        .header-admin-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .header-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            color: #1F2937;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .header-dropdown-item:hover {
+            background: #F9FAFB;
+        }
+
+        .header-dropdown-item i {
+            width: 18px;
+            font-size: 14px;
+            text-align: center;
+            color: #6B7280;
+        }
+
+        .header-dropdown-divider {
+            height: 1px;
+            background: #E5E7EB;
+            margin: 4px 0;
+        }
+
+        .header-dropdown-item.logout {
+            color: #DC2626;
+        }
+
+        .header-dropdown-item.logout:hover {
+            background: #FEE2E2;
+        }
+
+        .header-dropdown-item.logout i {
+            color: #DC2626;
         }
 
         .btn-new-registration {
@@ -288,22 +554,29 @@
             margin-top: 70px;
             padding: 30px;
             min-height: calc(100vh - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .top-header ~ .main-content,
+        .sidebar.collapsed + .top-header ~ .main-content {
+            margin-left: 80px;
         }
 
         /* Admin Profile (Bottom Left) */
         .admin-profile {
-            position: fixed;
-            bottom: 20px;
-            left: 10px;
-            width: 240px;
-            padding: 12px;
-            background: #F9FAFB;
-            border-radius: 12px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E5E7EB;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .admin-profile:hover {
@@ -344,16 +617,12 @@
             font-size: 16px;
         }
 
-        .admin-profile {
-            position: relative;
-        }
-
         /* Admin Dropdown Menu */
         .admin-dropdown-menu {
             position: absolute;
             bottom: 100%;
-            left: 10px;
-            right: 10px;
+            left: 16px;
+            right: 16px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -625,21 +894,54 @@
 
     <!-- Top Header -->
     <div class="top-header">
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search members, claims, or files...">
+        <div style="display: flex; align-items: center; flex: 1;">
+            <button class="toggle-sidebar-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="globalSearch" placeholder="Search functions, members, claims..." autocomplete="off" oninput="performSearch(this.value)">
+                
+                <!-- Search Results Dropdown -->
+                <div class="search-results" id="searchResults"></div>
+            </div>
         </div>
 
         <div class="header-actions">
-            <button class="notification-btn">
+            <a href="/admin/communications" class="notification-btn" title="View Notifications">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge"></span>
-            </button>
+            </a>
 
-            <button class="btn-new-registration" onclick="window.location.href='/admin/members/register'">
-                <i class="fas fa-plus"></i>
-                New Registration
-            </button>
+            <!-- Header Admin Profile -->
+            <div class="header-admin-profile" id="headerAdminProfile" onclick="toggleHeaderAdminMenu(event)">
+                <div class="header-admin-avatar">
+                    <?php echo strtoupper(substr($_SESSION['user_name'] ?? 'Admin', 0, 2)); ?>
+                </div>
+                <div class="header-admin-info">
+                    <div class="header-admin-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin Director'); ?></div>
+                    <div class="header-admin-role"><?php echo ucwords(str_replace('_', ' ', $_SESSION['user_role'] ?? 'Super Admin')); ?></div>
+                </div>
+                <i class="fas fa-chevron-down header-admin-arrow"></i>
+                
+                <!-- Header Admin Dropdown -->
+                <div class="header-admin-dropdown" id="headerAdminDropdown">
+                    <a href="/profile" class="header-dropdown-item">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="/admin/settings" class="header-dropdown-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <div class="header-dropdown-divider"></div>
+                    <a href="/logout" class="header-dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -647,20 +949,59 @@
     <div class="main-content">
 
     <script>
-        // Toggle admin dropdown menu
+        // Toggle sidebar collapse
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+
+        // Restore sidebar state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                document.querySelector('.sidebar').classList.add('collapsed');
+            }
+        });
+
+        // Toggle admin dropdown menu (sidebar)
         function toggleAdminMenu(event) {
             event.stopPropagation();
             const menu = document.getElementById('adminDropdownMenu');
             menu.classList.toggle('show');
         }
 
-        // Close admin menu when clicking outside
+        // Toggle header admin dropdown menu
+        function toggleHeaderAdminMenu(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('headerAdminDropdown');
+            const profile = document.getElementById('headerAdminProfile');
+            dropdown.classList.toggle('show');
+            profile.classList.toggle('active');
+        }
+
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
+            // Close sidebar admin menu
             const menu = document.getElementById('adminDropdownMenu');
             const profile = document.querySelector('.admin-profile');
-            
-            if (menu && !profile.contains(event.target)) {
+            if (menu && profile && !profile.contains(event.target)) {
                 menu.classList.remove('show');
+            }
+
+            // Close header admin dropdown
+            const headerDropdown = document.getElementById('headerAdminDropdown');
+            const headerProfile = document.getElementById('headerAdminProfile');
+            if (headerDropdown && headerProfile && !headerProfile.contains(event.target)) {
+                headerDropdown.classList.remove('show');
+                headerProfile.classList.remove('active');
+            }
+
+            // Close search results
+            const searchResults = document.getElementById('searchResults');
+            const searchBar = document.querySelector('.search-bar');
+            if (searchResults && searchBar && !searchBar.contains(event.target)) {
+                searchResults.classList.remove('show');
             }
         });
 
@@ -701,5 +1042,97 @@
                     }
                 }
             });
+        });
+
+        // Search functionality - System functions database
+        const systemFunctions = [
+            { title: 'Dashboard', category: 'Navigation', icon: 'fa-th-large', url: '/admin/dashboard' },
+            { title: 'Member Management', category: 'Navigation', icon: 'fa-users', url: '/admin/members' },
+            { title: 'View Members', category: 'Members', icon: 'fa-list', url: '/admin/members' },
+            { title: 'Register New Member', category: 'Members', icon: 'fa-user-plus', url: '/admin/members/register' },
+            { title: 'Agent Management', category: 'Navigation', icon: 'fa-user-tie', url: '/admin/agents' },
+            { title: 'View Agents', category: 'Agents', icon: 'fa-list', url: '/admin/agents' },
+            { title: 'Create Agent', category: 'Agents', icon: 'fa-plus', url: '/admin/agents/create' },
+            { title: 'Claims Management', category: 'Navigation', icon: 'fa-file-medical', url: '/admin/claims' },
+            { title: 'View Claims', category: 'Claims', icon: 'fa-list', url: '/admin/claims' },
+            { title: 'Pending Claims', category: 'Claims', icon: 'fa-clock', url: '/admin/claims?status=pending' },
+            { title: 'Approved Claims', category: 'Claims', icon: 'fa-check', url: '/admin/claims?status=approved' },
+            { title: 'Completed Claims', category: 'Claims', icon: 'fa-check-double', url: '/admin/claims/completed' },
+            { title: 'Track Service Delivery', category: 'Claims', icon: 'fa-truck', url: '/admin/claims/track-services' },
+            { title: 'All Payments', category: 'Payments', icon: 'fa-money-bill-wave', url: '/admin/payments' },
+            { title: 'Payment Reconciliation', category: 'Payments', icon: 'fa-balance-scale', url: '/admin/payments/reconciliation' },
+            { title: 'Pending Payments', category: 'Payments', icon: 'fa-clock', url: '/admin/payments?status=pending' },
+            { title: 'Failed Payments', category: 'Payments', icon: 'fa-times-circle', url: '/admin/payments?status=failed' },
+            { title: 'Email Campaigns', category: 'Communications', icon: 'fa-envelope', url: '/admin/email-campaigns' },
+            { title: 'SMS Campaigns', category: 'Communications', icon: 'fa-sms', url: '/admin/sms-campaigns' },
+            { title: 'Notifications', category: 'Communications', icon: 'fa-bell', url: '/admin/communications' },
+            { title: 'Send Bulk Email', category: 'Communications', icon: 'fa-mail-bulk', url: '/admin/email-campaigns' },
+            { title: 'Send Bulk SMS', category: 'Communications', icon: 'fa-comment-dots', url: '/admin/sms-campaigns' },
+            { title: 'Reports & Analytics', category: 'Reports', icon: 'fa-chart-line', url: '/admin/reports' },
+            { title: 'Financial Dashboard', category: 'Reports', icon: 'fa-chart-pie', url: '/admin/financial-dashboard' },
+            { title: 'Member Reports', category: 'Reports', icon: 'fa-users', url: '/admin/reports?type=members' },
+            { title: 'Payment Reports', category: 'Reports', icon: 'fa-money-check', url: '/admin/reports?type=payments' },
+            { title: 'Claims Reports', category: 'Reports', icon: 'fa-file-contract', url: '/admin/reports?type=claims' },
+            { title: 'System Settings', category: 'Settings', icon: 'fa-cog', url: '/admin/settings' },
+            { title: 'M-Pesa Configuration', category: 'Settings', icon: 'fa-mobile-alt', url: '/admin/mpesa-config' },
+            { title: 'Email Configuration', category: 'Settings', icon: 'fa-envelope-open-text', url: '/admin/settings?tab=email' },
+            { title: 'SMS Configuration', category: 'Settings', icon: 'fa-comment-alt', url: '/admin/settings?tab=sms' },
+            { title: 'Plan Upgrades', category: 'Management', icon: 'fa-arrow-up', url: '/admin/plan-upgrades' },
+            { title: 'Commission Management', category: 'Agents', icon: 'fa-hand-holding-usd', url: '/admin/commissions' }
+        ];
+
+        let searchTimeout;
+        function performSearch(query) {
+            clearTimeout(searchTimeout);
+            
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (query.length < 2) {
+                resultsContainer.classList.remove('show');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                const lowerQuery = query.toLowerCase();
+                const results = systemFunctions.filter(func => 
+                    func.title.toLowerCase().includes(lowerQuery) ||
+                    func.category.toLowerCase().includes(lowerQuery)
+                );
+
+                displaySearchResults(results);
+            }, 300);
+        }
+
+        function displaySearchResults(results) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-empty"><i class="fas fa-search"></i><br>No results found</div>';
+                resultsContainer.classList.add('show');
+                return;
+            }
+
+            const html = results.slice(0, 8).map(result => `
+                <a href="${result.url}" class="search-result-item">
+                    <div class="search-result-icon">
+                        <i class="fas ${result.icon}"></i>
+                    </div>
+                    <div class="search-result-info">
+                        <div class="search-result-title">${result.title}</div>
+                        <div class="search-result-category">${result.category}</div>
+                    </div>
+                </a>
+            `).join('');
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.add('show');
+        }
+
+        // Clear search on navigation
+        document.addEventListener('click', function(event) {
+            if (event.target.closest('.search-result-item')) {
+                document.getElementById('globalSearch').value = '';
+                document.getElementById('searchResults').classList.remove('show');
+            }
         });
     </script>

@@ -39,6 +39,9 @@
 
 <!-- Tab Content -->
 <div class="tab-content" id="agentTabContent">
+    
+    <!-- Analytics Tab -->
+    <div class="tab-pane fade show active" id="analytics" role="tabpanel" aria-labelledby="analytics-tab">
 
 <style>
     /* Page Header */
@@ -996,5 +999,523 @@
         </div>
     </div>
 </div>
+
+    </div>
+    <!-- End Analytics Tab -->
+    
+    <!-- All Agents List Tab -->
+    <div class="tab-pane fade" id="agentsList" role="tabpanel" aria-labelledby="agents-list-tab">
+        <div class="agents-table-card">
+            <div class="table-header">
+                <div class="table-title">All Registered Field Agents</div>
+                <div class="table-actions">
+                    <input type="text" class="form-control form-control-sm" placeholder="Search agents..." style="width: 200px; display: inline-block; margin-right: 10px;">
+                    <button class="table-btn">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                    <button class="table-btn primary" data-bs-toggle="modal" data-bs-target="#addAgentModal">
+                        <i class="fas fa-user-plus"></i> Register New Agent
+                    </button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="agents-table">
+                    <thead>
+                        <tr>
+                            <th>Agent Details</th>
+                            <th>Region</th>
+                            <th>Active Portfolios</th>
+                            <th>New Recruits</th>
+                            <th>Pending Earnings</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- David Ndungu -->
+                        <tr>
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar">DN</div>
+                                    <div class="agent-info">
+                                        <div class="agent-name">David Ndungu</div>
+                                        <div class="agent-number">AGT-2891</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Nairobi Makua</td>
+                            <td><span class="portfolio-badge">432</span></td>
+                            <td>
+                                <span class="status-indicator">
+                                    <i class="fas fa-arrow-up"></i> +12
+                                </span>
+                            </td>
+                            <td><span class="earnings-value">KES 22,450</span></td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="action-btn" onclick="viewAgentDetails('AGT-2891')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Jane Mwema -->
+                        <tr>
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar" style="background: #F59E0B;">JM</div>
+                                    <div class="agent-info">
+                                        <div class="agent-name">Jane Mwema</div>
+                                        <div class="agent-number">AGT-3456</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Kisumu Region</td>
+                            <td><span class="portfolio-badge">388</span></td>
+                            <td>
+                                <span class="status-indicator">
+                                    <i class="fas fa-arrow-up"></i> +8
+                                </span>
+                            </td>
+                            <td><span class="earnings-value">KES 18,960</span></td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="action-btn" onclick="viewAgentDetails('AGT-3456')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Andrew Gichuki -->
+                        <tr>
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar" style="background: #10B981;">AG</div>
+                                    <div class="agent-info">
+                                        <div class="agent-name">Andrew Gichuki</div>
+                                        <div class="agent-number">AGT-4823</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Mombasa Region</td>
+                            <td><span class="portfolio-badge">240</span></td>
+                            <td>
+                                <span class="status-indicator down">
+                                    <i class="fas fa-arrow-down"></i> -1
+                                </span>
+                            </td>
+                            <td><span class="earnings-value">KES 11,200</span></td>
+                            <td><span class="badge bg-warning">Pending Review</span></td>
+                            <td>
+                                <button class="action-btn" onclick="viewAgentDetails('AGT-4823')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Sarah Williams -->
+                        <tr>
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar" style="background: #EF4444;">SW</div>
+                                    <div class="agent-info">
+                                        <div class="agent-name">Sarah Williams</div>
+                                        <div class="agent-number">AGT-3826</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Nakuru Region</td>
+                            <td><span class="portfolio-badge">195</span></td>
+                            <td>
+                                <span class="status-indicator">
+                                    <i class="fas fa-arrow-up"></i> +5
+                                </span>
+                            </td>
+                            <td><span class="earnings-value">KES 12,461</span></td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="action-btn" onclick="viewAgentDetails('AGT-3826')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Robert King'era -->
+                        <tr>
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar" style="background: #8B5CF6;">RK</div>
+                                    <div class="agent-info">
+                                        <div class="agent-name">Robert King'era</div>
+                                        <div class="agent-number">AGT-4567</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>Eldoret Region</td>
+                            <td><span class="portfolio-badge">156</span></td>
+                            <td>
+                                <span class="status-indicator">
+                                    <i class="fas fa-arrow-up"></i> +3
+                                </span>
+                            </td>
+                            <td><span class="earnings-value">KES 9,200</span></td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="action-btn" onclick="viewAgentDetails('AGT-4567')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: center; padding: 16px; color: #9CA3AF; font-size: 13px;">
+                Displaying 5 of 482 Agents
+                <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
+                    <button class="btn btn-sm btn-outline-secondary">Previous</button>
+                    <button class="btn btn-sm btn-outline-secondary">1</button>
+                    <button class="btn btn-sm btn-primary">2</button>
+                    <button class="btn btn-sm btn-outline-secondary">3</button>
+                    <button class="btn btn-sm btn-outline-secondary">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End All Agents List Tab -->
+    
+    <!-- Process Commission Tab -->
+    <div class="tab-pane fade" id="commissions" role="tabpanel" aria-labelledby="commissions-tab">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="payout-card">
+                    <div class="payout-header">
+                        <div class="payout-title">Commission Payout Queue</div>
+                        <span class="payout-badge">3 PENDING REVIEW</span>
+                    </div>
+
+                    <!-- Sarah Williams -->
+                    <div class="payout-item">
+                        <div class="payout-agent">Sarah Williams</div>
+                        <div class="payout-amount">KES 12,461</div>
+                        <div class="payout-info">
+                            Agent: AGT-3826<br>
+                            8 Portfolios cleared<br>
+                            Period: Jan 2026
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="payout-button" onclick="approveCommission('AGT-3826')">
+                                <i class="fas fa-check"></i> Approve Payout
+                            </button>
+                            <button class="payout-button audit" onclick="auditCommission('AGT-3826')">
+                                <i class="fas fa-file-invoice"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Robert King'era -->
+                    <div class="payout-item">
+                        <div class="payout-agent">Robert King'era</div>
+                        <div class="payout-amount">KES 9,200</div>
+                        <div class="payout-info">
+                            Agent: AGT-4567<br>
+                            6 Portfolios cleared<br>
+                            Period: Jan 2026
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="payout-button" onclick="approveCommission('AGT-4567')">
+                                <i class="fas fa-check"></i> Approve Payout
+                            </button>
+                            <button class="payout-button audit" onclick="auditCommission('AGT-4567')">
+                                <i class="fas fa-file-invoice"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Andrew Gichuki -->
+                    <div class="payout-item">
+                        <div class="payout-agent">Andrew Gichuki</div>
+                        <div class="payout-amount">KES 11,200</div>
+                        <div class="payout-info">
+                            Agent: AGT-4823<br>
+                            7 Portfolios cleared<br>
+                            Period: Jan 2026
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="payout-button" onclick="approveCommission('AGT-4823')">
+                                <i class="fas fa-check"></i> Approve Payout
+                            </button>
+                            <button class="payout-button audit" onclick="auditCommission('AGT-4823')">
+                                <i class="fas fa-file-invoice"></i> View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history"></i> Recent Commission History</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Agent</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Jan 28, 2026</td>
+                                        <td>David Ndungu (AGT-2891)</td>
+                                        <td>KES 22,450</td>
+                                        <td><span class="badge bg-success">Paid</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jan 28, 2026</td>
+                                        <td>Jane Mwema (AGT-3456)</td>
+                                        <td>KES 18,960</td>
+                                        <td><span class="badge bg-success">Paid</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jan 21, 2026</td>
+                                        <td>Sarah Williams (AGT-3826)</td>
+                                        <td>KES 15,320</td>
+                                        <td><span class="badge bg-success">Paid</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-chart-pie"></i> Commission Summary</h6>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Pending Review:</span>
+                                <strong class="text-warning">KES 32,861</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Paid This Month:</span>
+                                <strong class="text-success">KES 156,730</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Agents:</span>
+                                <strong>482</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Avg Commission:</span>
+                                <strong>KES 325</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-cog"></i> Batch Actions</h6>
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-success btn-sm" onclick="approveAllCommissions()">
+                                <i class="fas fa-check-double"></i> Approve All Pending
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="exportCommissions()">
+                                <i class="fas fa-download"></i> Export Commission Report
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="viewCommissionRules()">
+                                <i class="fas fa-file-contract"></i> View Commission Rules
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Process Commission Tab -->
+    
+    <!-- Agent Resources Tab -->
+    <div class="tab-pane fade" id="resources" role="tabpanel" aria-labelledby="resources-tab">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-book"></i> Training Materials</h5>
+                        <p class="text-muted">Essential resources for agent onboarding and development</p>
+                        
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><i class="fas fa-file-pdf text-danger"></i> Agent Onboarding Guide</h6>
+                                    <small>PDF, 2.4 MB</small>
+                                </div>
+                                <p class="mb-1 small text-muted">Complete guide for new agents joining SHENA Companion</p>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><i class="fas fa-file-video text-primary"></i> Sales Training Videos</h6>
+                                    <small>Videos</small>
+                                </div>
+                                <p class="mb-1 small text-muted">Professional sales techniques and best practices</p>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><i class="fas fa-file-alt text-success"></i> Product Knowledge Guide</h6>
+                                    <small>PDF, 1.8 MB</small>
+                                </div>
+                                <p class="mb-1 small text-muted">Detailed information about all membership packages</p>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><i class="fas fa-file-powerpoint text-warning"></i> Presentation Templates</h6>
+                                    <small>PPTX, 3.1 MB</small>
+                                </div>
+                                <p class="mb-1 small text-muted">Professional slides for member presentations</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-tools"></i> Agent Tools & Forms</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-file-invoice fa-3x text-primary mb-2"></i>
+                                        <h6>Application Forms</h6>
+                                        <p class="small text-muted">Membership application templates</p>
+                                        <button class="btn btn-sm btn-outline-primary">Download</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-clipboard-check fa-3x text-success mb-2"></i>
+                                        <h6>Verification Checklist</h6>
+                                        <p class="small text-muted">Document verification guide</p>
+                                        <button class="btn btn-sm btn-outline-success">Download</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-calculator fa-3x text-warning mb-2"></i>
+                                        <h6>Commission Calculator</h6>
+                                        <p class="small text-muted">Calculate potential earnings</p>
+                                        <button class="btn btn-sm btn-outline-warning">Open Tool</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-id-card fa-3x text-info mb-2"></i>
+                                        <h6>Marketing Materials</h6>
+                                        <p class="small text-muted">Brochures and flyers</p>
+                                        <button class="btn btn-sm btn-outline-info">Download</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-bullhorn"></i> Latest Announcements</h6>
+                        <div class="mt-3">
+                            <div class="mb-3 pb-3 border-bottom">
+                                <small class="text-muted">Feb 1, 2026</small>
+                                <p class="mb-0 mt-1"><strong>New Training Session</strong></p>
+                                <p class="small mb-0">Next training scheduled for Feb 15th at 2 PM</p>
+                            </div>
+                            <div class="mb-3 pb-3 border-bottom">
+                                <small class="text-muted">Jan 28, 2026</small>
+                                <p class="mb-0 mt-1"><strong>Commission Rate Update</strong></p>
+                                <p class="small mb-0">New incentive structure effective Feb 1st</p>
+                            </div>
+                            <div>
+                                <small class="text-muted">Jan 25, 2026</small>
+                                <p class="mb-0 mt-1"><strong>Updated Marketing Kit</strong></p>
+                                <p class="small mb-0">New brochures available for download</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-question-circle"></i> Quick Help</h6>
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-book"></i> Agent Handbook
+                            </button>
+                            <button class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-headset"></i> Contact Support
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-comments"></i> Agent Forum
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Agent Resources Tab -->
+    
+</div>
+<!-- End Tab Content -->
+
+<script>
+function viewAgentDetails(agentId) {
+    alert('Viewing details for agent: ' + agentId);
+    // TODO: Implement agent details view
+}
+
+function approveCommission(agentId) {
+    if(confirm('Approve commission payout for ' + agentId + '?')) {
+        alert('Commission approved for ' + agentId);
+        // TODO: Implement commission approval
+    }
+}
+
+function auditCommission(agentId) {
+    alert('Viewing commission details for ' + agentId);
+    // TODO: Implement commission audit view
+}
+
+function approveAllCommissions() {
+    if(confirm('Approve all pending commissions?')) {
+        alert('All commissions approved');
+        // TODO: Implement batch approval
+    }
+}
+
+function exportCommissions() {
+    alert('Exporting commission report...');
+    // TODO: Implement export functionality
+}
+
+function viewCommissionRules() {
+    alert('Displaying commission rules...');
+    // TODO: Implement rules display
+}
+
+function exportAgentData() {
+    alert('Exporting agent data...');
+    // TODO: Implement export functionality
+}
+</script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

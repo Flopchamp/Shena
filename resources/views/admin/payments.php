@@ -13,6 +13,58 @@
     </div>
 </div>
 
+<!-- Payment Stats -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon purple">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+        </div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">KES <?php echo number_format($stats['total_revenue'] ?? 0); ?></div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> This month
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Successful Payments</div>
+        <div class="stat-value"><?php echo number_format($stats['successful_payments'] ?? 0); ?></div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> +12% from last month
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon yellow">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-label">Pending Verification</div>
+        <div class="stat-value"><?php echo number_format($stats['pending_payments'] ?? 0); ?></div>
+        <div class="stat-change">
+            <i class="fas fa-minus"></i> Requires action
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+        <div class="stat-label">Failed Payments</div>
+        <div class="stat-value"><?php echo number_format($stats['failed_payments'] ?? 0); ?></div>
+        <div class="stat-change negative">
+            <i class="fas fa-exclamation-circle"></i> Needs review
+        </div>
+    </div>
+</div>
+
 <!-- Payment Management Tabs -->
 <ul class="nav nav-tabs mb-4" id="paymentTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -55,713 +107,702 @@
 
 <!-- Tab Content -->
 <div class="tab-content" id="paymentTabContent">
-
-<style>
-    /* Page Header */
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 28px;
-        font-weight: 700;
-        color: #1F2937;
-        margin: 0 0 4px 0;
-    }
-
-    .page-subtitle {
-        font-size: 13px;
-        color: #9CA3AF;
-        margin: 0;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    .btn-action {
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-primary {
-        background: #7F3D9E;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #7F3D9E;
-        transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-        background: #F3F4F6;
-        color: #6B7280;
-    }
-
-    .btn-secondary:hover {
-        background: #E5E7EB;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #E5E7EB;
-        transition: all 0.2s;
-    }
-
-    .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transform: translateY(-2px);
-    }
-
-    .stat-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 12px;
-    }
-
-    .stat-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #6B7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-
-    .stat-icon.success {
-        background: #D1FAE5;
-        color: #10B981;
-    }
-
-    .stat-icon.info {
-        background: #DBEAFE;
-        color: #3B82F6;
-    }
-
-    .stat-icon.warning {
-        background: #FEF3C7;
-        color: #F59E0B;
-    }
-
-    .stat-icon.primary {
-        background: #EDE9FE;
-        color: #7F3D9E;
-    }
-
-    .stat-value {
-        font-size: 32px;
-        font-weight: 700;
-        color: #1F2937;
-        margin-bottom: 8px;
-    }
-
-    .stat-change {
-        font-size: 12px;
-        color: #6B7280;
-    }
-
-    /* Table Card */
-    .table-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #E5E7EB;
-        margin-bottom: 30px;
-    }
-
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #F3F4F6;
-    }
-
-    .table-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1F2937;
-    }
-
-    .table-subtitle {
-        font-size: 13px;
-        color: #9CA3AF;
-        margin-top: 4px;
-    }
-
-    .filter-group {
-        display: flex;
-        gap: 8px;
-    }
-
-    .filter-btn {
-        padding: 8px 16px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #6B7280;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .filter-btn:hover {
-        border-color: #7F3D9E;
-        color: #7F3D9E;
-    }
-
-    .filter-btn.active {
-        background: #7F3D9E;
-        color: white;
-        border-color: #7F3D9E;
-    }
-
-    /* Payments Table */
-    .payments-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .payments-table thead th {
-        background: #F9FAFB;
-        padding: 12px 16px;
-        text-align: left;
-        font-size: 11px;
-        font-weight: 700;
-        color: #6B7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #E5E7EB;
-    }
-
-    .payments-table tbody td {
-        padding: 16px;
-        border-bottom: 1px solid #F3F4F6;
-        font-size: 14px;
-        color: #1F2937;
-    }
-
-    .payments-table tbody tr:hover {
-        background: #F9FAFB;
-    }
-
-    .member-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .member-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 13px;
-        color: white;
-    }
-
-    .member-avatar.blue {
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-    }
-
-    .member-avatar.green {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    }
-
-    .member-avatar.purple {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
-    }
-
-    .member-avatar.orange {
-        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-    }
-
-    .member-details .member-name {
-        font-weight: 600;
-        color: #1F2937;
-        margin-bottom: 2px;
-    }
-
-    .member-details .member-number {
-        font-size: 12px;
-        color: #9CA3AF;
-    }
-
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .status-badge.completed {
-        background: #D1FAE5;
-        color: #059669;
-    }
-
-    .status-badge.pending {
-        background: #FEF3C7;
-        color: #D97706;
-    }
-
-    .status-badge.failed {
-        background: #FEE2E2;
-        color: #DC2626;
-    }
-
-    .type-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        background: #F3F4F6;
-        color: #6B7280;
-    }
-
-    .action-btns {
-        display: flex;
-        gap: 6px;
-    }
-
-    .action-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #6B7280;
-    }
-
-    .action-btn:hover {
-        background: #7F3D9E;
-        color: white;
-        border-color: #7F3D9E;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .empty-state i {
-        font-size: 64px;
-        color: #E5E7EB;
-        margin-bottom: 20px;
-    }
-
-    .empty-state h5 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #6B7280;
-        margin-bottom: 8px;
-    }
-
-    .empty-state p {
-        font-size: 14px;
-        color: #9CA3AF;
-    }
-
-    /* Modal Styles */
-    .modal-content {
-        border-radius: 12px;
-        border: none;
-    }
-
-    .modal-header {
-        border-bottom: 2px solid #F3F4F6;
-        padding: 20px 24px;
-    }
-
-    .modal-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1F2937;
-    }
-
-    .modal-body {
-        padding: 24px;
-    }
-
-    .form-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px 16px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.2s;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: #7F3D9E;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    }
-
-    .alert {
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .alert-info {
-        background: #EFF6FF;
-        border: 1px solid #DBEAFE;
-        color: #1E40AF;
-    }
-</style>
-
-<!-- Page Header -->
-<div class="page-header">
-    <div>
-        <h1 class="page-title">Payments Management</h1>
-        <p class="page-subtitle">Track and manage all payment transactions</p>
-    </div>
-    <div class="header-actions">
-        <button class="btn-action btn-secondary" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal">
-            <i class="fas fa-search"></i>
-            Verify Payment
-        </button>
-        <button class="btn-action btn-primary" onclick="window.location.href='/admin/payments-reconciliation'">
-            <i class="fas fa-sync-alt"></i>
-            Reconciliation
-        </button>
-    </div>
-</div>
-
-<!-- Statistics Cards -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-label">Total Revenue</div>
-            <div class="stat-icon success">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-        </div>
-        <div class="stat-value">KES <?php echo number_format(array_sum(array_column($payments ?? [], 'amount')), 0); ?></div>
-        <div class="stat-change">All-time collections</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-label">Total Payments</div>
-            <div class="stat-icon info">
-                <i class="fas fa-receipt"></i>
-            </div>
-        </div>
-        <div class="stat-value"><?php echo count($payments ?? []); ?></div>
-        <div class="stat-change">Total transactions</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-label">Pending</div>
-            <div class="stat-icon warning">
-                <i class="fas fa-clock"></i>
-            </div>
-        </div>
-        <div class="stat-value"><?php echo count(array_filter($payments ?? [], fn($p) => $p['status'] === 'pending')); ?></div>
-        <div class="stat-change">Awaiting verification</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-label">This Month</div>
-            <div class="stat-icon primary">
-                <i class="fas fa-calendar"></i>
-            </div>
-        </div>
-        <div class="stat-value">KES <?php 
-            $thisMonth = array_filter($payments ?? [], fn($p) => 
-                date('Y-m', strtotime($p['created_at'])) === date('Y-m')
-            );
-            echo number_format(array_sum(array_column($thisMonth, 'amount')), 0);
-        ?></div>
-        <div class="stat-change"><?php echo date('F Y'); ?></div>
-    </div>
-</div>
-
-<!-- Payments Table -->
-<div class="table-card">
-    <div class="table-header">
-        <div>
-            <div class="table-title">Payment Transactions</div>
-            <div class="table-subtitle">View and manage all payment records</div>
-        </div>
-        <div class="filter-group">
-            <button class="filter-btn active" onclick="filterPayments('all')">All</button>
-            <button class="filter-btn" onclick="filterPayments('completed')">Completed</button>
-            <button class="filter-btn" onclick="filterPayments('pending')">Pending</button>
-            <button class="filter-btn" onclick="filterPayments('failed')">Failed</button>
-        </div>
-    </div>
-
-    <?php if (!empty($payments)): ?>
-    <div style="overflow-x: auto;">
-        <table class="payments-table">
-            <thead>
-                <tr>
-                    <th>Transaction ID</th>
-                    <th>Member</th>
-                    <th>Amount</th>
-                    <th>Type</th>
-                    <th>Method</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php 
-                $avatarColors = ['blue', 'green', 'purple', 'orange'];
-                $index = 0;
-                foreach ($payments as $payment): 
-                    $initials = strtoupper(substr($payment['first_name'], 0, 1) . substr($payment['last_name'], 0, 1));
-                    $avatarColor = $avatarColors[$index % 4];
-                    $index++;
-                ?>
-                <tr data-status="<?php echo $payment['status']; ?>">
-                    <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
-                    <td>
-                        <div class="member-info">
-                            <div class="member-avatar <?php echo $avatarColor; ?>"><?php echo $initials; ?></div>
-                            <div class="member-details">
-                                <div class="member-name"><?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?></div>
-                                <div class="member-number"><?php echo htmlspecialchars($payment['member_number']); ?></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><strong>KES <?php echo number_format($payment['amount'], 2); ?></strong></td>
-                    <td><span class="type-badge"><?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?></span></td>
-                    <td><span class="type-badge"><?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?></span></td>
-                    <td>
-                        <span class="status-badge <?php echo $payment['status']; ?>">
-                            <?php echo ucfirst($payment['status']); ?>
-                        </span>
-                    </td>
-                    <td><?php echo date('M j, Y H:i', strtotime($payment['created_at'])); ?></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $payment['id']; ?>" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal" title="Verify">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Payment Details Modal -->
-                <div class="modal fade" id="paymentModal<?php echo $payment['id']; ?>" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Payment Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Transaction ID</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
-                                            <?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Amount</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
-                                            KES <?php echo number_format($payment['amount'], 2); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Member Name</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Member Number</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo htmlspecialchars($payment['member_number']); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Payment Type</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Payment Method</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Status</label>
-                                        <div style="padding: 10px;">
-                                            <span class="status-badge <?php echo $payment['status']; ?>">
-                                                <?php echo ucfirst($payment['status']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Date & Time</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo date('M j, Y H:i:s', strtotime($payment['created_at'])); ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
+    
+    <!-- All Payments Tab -->
+    <div class="tab-pane fade show active" id="allPayments" role="tabpanel">
+        <div class="payments-table-card">
+            <div class="table-header">
+                <div>
+                    <h3 class="table-title">All Payment Transactions</h3>
                 </div>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php else: ?>
-    <div class="empty-state">
-        <i class="fas fa-money-bill-wave"></i>
-        <h5>No payments found</h5>
-        <p>Payment transactions will appear here</p>
-    </div>
-    <?php endif; ?>
-</div>
-
-<!-- Verify Payment Modal -->
-<div class="modal fade" id="verifyPaymentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Verify Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="verifyPaymentForm">
-                <?php if (isset($_SESSION['csrf_token'])): ?>
-                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                <?php endif; ?>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Use this to verify a Paybill payment or STK push when a member reports missing payment</span>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Verification Method</label>
-                            <select class="form-control" name="method" id="verifyMethod" required>
-                                <option value="stk">STK Push</option>
-                                <option value="paybill">Paybill Receipt</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Payment Type</label>
-                            <select class="form-control" name="payment_type">
-                                <option value="monthly">Monthly Contribution</option>
-                                <option value="registration">Registration Fee</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Amount (KES)</label>
-                            <input type="number" class="form-control" name="amount" min="1" step="1" placeholder="e.g. 500">
-                        </div>
-                        <div class="col-md-6 mb-3" id="stkField">
-                            <label class="form-label">Checkout Request ID</label>
-                            <input type="text" class="form-control" name="checkout_request_id" id="checkoutRequestId" placeholder="ws_CO_...">
-                        </div>
-                        <div class="col-md-6 mb-3" id="receiptField" style="display: none;">
-                            <label class="form-label">M-Pesa Receipt</label>
-                            <input type="text" class="form-control" name="mpesa_receipt_number" id="mpesaReceiptNumber" placeholder="RH81M7...">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Member ID (Optional)</label>
-                            <input type="number" class="form-control" name="member_id" id="memberIdInput" placeholder="Member ID">
-                        </div>
-                    </div>
-
-                    <div id="verifyResults" style="display: none; margin-top: 20px;"></div>
+                <div class="table-actions">
+                    <select class="filter-select">
+                        <option value="all">All Methods</option>
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="cash">Cash</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-action btn-primary">
-                        <i class="fas fa-check"></i>
-                        Verify Payment
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>TRANSACTION ID</th>
+                            <th>MEMBER</th>
+                            <th>AMOUNT</th>
+                            <th>METHOD</th>
+                            <th>TYPE</th>
+                            <th>DATE</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <?php if (!empty($payments)): ?>
+                                <?php foreach ($payments as $payment): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($payment['member_name'] ?? 'Unknown'); ?></td>
+                                    <td><strong>KES <?php echo number_format($payment['amount'] ?? 0); ?></strong></td>
+                                    <td><?php echo ucfirst($payment['payment_method'] ?? 'N/A'); ?></td>
+                                    <td><?php echo ucfirst($payment['payment_type'] ?? 'N/A'); ?></td>
+                                    <td><?php echo isset($payment['created_at']) ? date('M d, Y H:i', strtotime($payment['created_at'])) : 'N/A'; ?></td>
+                                    <td>
+                                        <?php
+                                        $status = $payment['status'] ?? 'pending';
+                                        $badgeClass = match($status) {
+                                            'completed', 'confirmed' => 'bg-success',
+                                            'pending' => 'bg-warning',
+                                            'failed' => 'bg-danger',
+                                            default => 'bg-secondary'
+                                        };
+                                        ?>
+                                        <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($status); ?></span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="viewPayment(<?php echo $payment['id']; ?>)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted">No payments found</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+        </div>
+    </div>
+
+    <!-- Pending Payments Tab -->
+    <div class="tab-pane fade" id="pendingPayments" role="tabpanel">
+        <div class="payments-table-card">
+            <h3 class="table-title mb-3">Pending Payment Verification</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>TRANSACTION ID</th>
+                            <th>MEMBER</th>
+                            <th>AMOUNT</th>
+                            <th>METHOD</th>
+                            <th>DATE</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <?php if (!empty($payments)): ?>
+                                <?php foreach ($payments as $payment): ?>
+                                    <?php if (($payment['status'] ?? '') === 'pending'): ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($payment['member_name'] ?? 'Unknown'); ?></td>
+                                        <td><strong>KES <?php echo number_format($payment['amount'] ?? 0); ?></strong></td>
+                                        <td><?php echo ucfirst($payment['payment_method'] ?? 'N/A'); ?></td>
+                                        <td><?php echo isset($payment['created_at']) ? date('M d, Y H:i', strtotime($payment['created_at'])) : 'N/A'; ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success" onclick="confirmPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-check"></i> Confirm
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="rejectPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <p class="text-muted">No pending payments</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Successful Payments Tab -->
+    <div class="tab-pane fade" id="successfulPayments" role="tabpanel">
+        <div class="payments-table-card">
+            <h3 class="table-title mb-3">Successful Payment Transactions</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>TRANSACTION ID</th>
+                            <th>MEMBER</th>
+                            <th>AMOUNT</th>
+                            <th>METHOD</th>
+                            <th>TYPE</th>
+                            <th>DATE</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <?php if (!empty($payments)): ?>
+                                <?php foreach ($payments as $payment): ?>
+                                    <?php if (in_array($payment['status'] ?? '', ['completed', 'confirmed'])): ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($payment['member_name'] ?? 'Unknown'); ?></td>
+                                        <td><strong>KES <?php echo number_format($payment['amount'] ?? 0); ?></strong></td>
+                                        <td><?php echo ucfirst($payment['payment_method'] ?? 'N/A'); ?></td>
+                                        <td><?php echo ucfirst($payment['payment_type'] ?? 'N/A'); ?></td>
+                                        <td><?php echo isset($payment['created_at']) ? date('M d, Y H:i', strtotime($payment['created_at'])) : 'N/A'; ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="viewPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button class="btn btn-sm btn-secondary" onclick="downloadReceipt(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-download"></i> Receipt
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted">No successful payments</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Failed Payments Tab -->
+    <div class="tab-pane fade" id="failedPayments" role="tabpanel">
+        <div class="payments-table-card">
+            <div class="table-header">
+                <div>
+                    <h3 class="table-title">Failed Payment Transactions</h3>
+                    <p class="table-subtitle">Review and retry failed transactions</p>
+                </div>
+                <div class="table-actions">
+                    <button class="btn btn-warning btn-sm" onclick="retryAllFailed()">
+                        <i class="fas fa-redo"></i> Retry All
                     </button>
                 </div>
-            </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>TRANSACTION ID</th>
+                            <th>MEMBER</th>
+                            <th>AMOUNT</th>
+                            <th>METHOD</th>
+                            <th>DATE</th>
+                            <th>REASON</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <?php if (!empty($payments)): ?>
+                                <?php foreach ($payments as $payment): ?>
+                                    <?php if (($payment['status'] ?? '') === 'failed'): ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($payment['member_name'] ?? 'Unknown'); ?></td>
+                                        <td><strong>KES <?php echo number_format($payment['amount'] ?? 0); ?></strong></td>
+                                        <td><?php echo ucfirst($payment['payment_method'] ?? 'N/A'); ?></td>
+                                        <td><?php echo isset($payment['created_at']) ? date('M d, Y H:i', strtotime($payment['created_at'])) : 'N/A'; ?></td>
+                                        <td><small><?php echo htmlspecialchars($payment['failure_reason'] ?? 'Unknown'); ?></small></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="viewPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" onclick="retryPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-redo"></i> Retry
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <p class="text-muted">No failed payments</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Reconciliation Tab -->
+    <div class="tab-pane fade" id="reconciliation" role="tabpanel">
+        <div class="payments-table-card">
+            <div class="table-header">
+                <div>
+                    <h3 class="table-title">Payment Reconciliation</h3>
+                    <p class="table-subtitle">Match and verify payment transactions</p>
+                </div>
+            </div>
+            <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="reconStartDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="reconEndDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" id="reconMethod">
+                            <option value="all">All Methods</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary w-100" onclick="runReconciliation()">
+                            <i class="fas fa-sync"></i> Run Reconciliation
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon purple">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                            </div>
+                            <div class="stat-label">Total Transactions</div>
+                            <div class="stat-value" id="reconTotal">0</div>
+                            <div class="stat-change">All payments</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="stat-label">Successful</div>
+                            <div class="stat-value" id="reconSuccess">0</div>
+                            <div class="stat-change positive">Confirmed</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                            </div>
+                            <div class="stat-label">Failed/Pending</div>
+                            <div class="stat-value" id="reconFailed">0</div>
+                            <div class="stat-change negative">Requires action</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- M-Pesa Transactions Tab -->
+    <div class="tab-pane fade" id="mpesa" role="tabpanel">
+        <div class="payments-table-card">
+            <div class="table-header">
+                <div>
+                    <h3 class="table-title">M-Pesa Transaction History</h3>
+                    <p class="table-subtitle">All M-Pesa mobile money transactions</p>
+                </div>
+                <div class="table-actions">
+                    <button class="btn btn-success btn-sm" onclick="syncMpesa()">
+                        <i class="fas fa-sync"></i> Sync M-Pesa
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>M-PESA CODE</th>
+                            <th>PHONE NUMBER</th>
+                            <th>MEMBER</th>
+                            <th>AMOUNT</th>
+                            <th>TYPE</th>
+                            <th>DATE</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <?php if (!empty($payments)): ?>
+                                <?php foreach ($payments as $payment): ?>
+                                    <?php if (($payment['payment_method'] ?? '') === 'mpesa'): ?>
+                                    <tr>
+                                        <td><strong><?php echo htmlspecialchars($payment['mpesa_receipt_number'] ?? $payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($payment['phone_number'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($payment['member_name'] ?? 'Unknown'); ?></td>
+                                        <td><strong>KES <?php echo number_format($payment['amount'] ?? 0); ?></strong></td>
+                                        <td><?php echo ucfirst($payment['payment_type'] ?? 'N/A'); ?></td>
+                                        <td><?php echo isset($payment['created_at']) ? date('M d, Y H:i', strtotime($payment['created_at'])) : 'N/A'; ?></td>
+                                        <td>
+                                            <?php
+                                            $status = $payment['status'] ?? 'pending';
+                                            $badgeClass = match($status) {
+                                                'completed', 'confirmed' => 'bg-success',
+                                                'pending' => 'bg-warning',
+                                                'failed' => 'bg-danger',
+                                                default => 'bg-secondary'
+                                            };
+                                            ?>
+                                            <span class="badge <?php echo $badgeClass; ?>"><?php echo ucfirst($status); ?></span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="viewPayment(<?php echo $payment['id']; ?>)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-mobile-alt fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted">No M-Pesa transactions found</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+function viewPayment(paymentId) {
+    // TODO: Implement payment details view
+    alert('Viewing payment #' + paymentId);
+}
+
+function confirmPayment(paymentId) {
+    if (confirm('Confirm this payment?')) {
+        // TODO: Implement payment confirmation
+        alert('Payment confirmed successfully!');
+        location.reload();
+    }
+}
+
+function rejectPayment(paymentId) {
+    if (confirm('Reject this payment?')) {
+        // TODO: Implement payment rejection
+        alert('Payment rejected!');
+        location.reload();
+    }
+}
+
+function retryPayment(paymentId) {
+    if (confirm('Retry this payment?')) {
+        // TODO: Implement payment retry
+        alert('Payment retry initiated!');
+    }
+}
+
+function downloadReceipt(paymentId) {
+    // TODO: Implement receipt download
+    window.open('/admin/payment/' + paymentId + '/receipt', '_blank');
+}
+
+function runReconciliation() {
+    const startDate = document.getElementById('reconStartDate').value;
+    const endDate = document.getElementById('reconEndDate').value;
+    const method = document.getElementById('reconMethod').value;
+    
+    if (!startDate || !endDate) {
+        alert('Please select start and end dates');
+        return;
+    }
+    
+    // TODO: Implement reconciliation
+    alert('Running reconciliation from ' + startDate + ' to ' + endDate);
+}
+
+function retryAllFailed() {
+    if (confirm('Retry all failed payments? This will attempt to reprocess all failed transactions.')) {
+        // TODO: Implement retry all failed payments
+        alert('Retrying all failed payments...');
+        location.reload();
+    }
+}
+
+function syncMpesa() {
+    // TODO: Implement M-Pesa sync
+    alert('Syncing M-Pesa transactions...');
+    location.reload();
+}
+
+function exportPayments() {
+    // TODO: Implement payment export
+    window.location.href = '/admin/payments/export';
+}
+</script>
+
+<style>
+/* Stats Grid - Universal Modern Design */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    max-width: 100%;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #E5E7EB;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.stat-icon.purple {
+    background: #EDE9FE;
+    color: #7F3D9E;
+}
+
+.stat-icon.green {
+    background: #D1FAE5;
+    color: #10B981;
+}
+
+.stat-icon.yellow {
+    background: #FEF3C7;
+    color: #F59E0B;
+}
+
+.stat-icon.red {
+    background: #FEE2E2;
+    color: #EF4444;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #9CA3AF;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1F2937;
+}
+
+.stat-change {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-change.positive {
+    color: #10B981;
+}
+
+.stat-change.negative {
+    color: #EF4444;
+}
+
+/* Payments Table Card */
+.payments-table-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #E5E7EB;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.table-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1F2937;
+}
+
+.table-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 8px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 13px;
+    background: white;
+    color: #1F2937;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #7F3D9E;
+}
+
+/* Table Styling */
+.table-responsive {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background: #7F3D9E;
+    color: white;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.table thead th:first-child {
+    border-radius: 8px 0 0 0;
+}
+
+.table thead th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.table tbody td {
+    padding: 16px;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 13px;
+    color: #1F2937;
+}
+
+.table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+/* Badge Styling */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge.bg-success {
+    background: #D1FAE5 !important;
+    color: #10B981 !important;
+}
+
+.badge.bg-warning {
+    background: #FEF3C7 !important;
+    color: #F59E0B !important;
+}
+
+.badge.bg-danger {
+    background: #FEE2E2 !important;
+    color: #EF4444 !important;
+}
+
+.badge.bg-secondary {
+    background: #F3F4F6 !important;
+    color: #6B7280 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .payments-table-card {
+        padding: 16px;
+    }
+    
+    .table {
+        min-width: 600px;
+    }
+}
+</style>
 
 <script>
 // Filter payments by status
