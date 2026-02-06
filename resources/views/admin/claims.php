@@ -1,10 +1,11 @@
-<?php
-// Mock data - will be from controller
-$pendingClaims = $pendingClaims ?? 3;
-$processedClaims = $processedClaims ?? 87;
-$approvedClaims = $approvedClaims ?? 82;
-$rejectedClaims = $rejectedClaims ?? 5;
-$totalClaimAmount = $totalClaimAmount ?? 8500000;
+<?php 
+$pendingClaims = $pendingClaims ?? 0;
+$approvedClaims = $approvedClaims ?? 0;
+$rejectedClaims = $rejectedClaims ?? 0;
+$totalClaimAmount = $totalClaimAmount ?? 0;
+$pending_claims = $pending_claims ?? [];
+$all_claims = $all_claims ?? [];
+$completed_claims = $completed_claims ?? [];
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
@@ -583,32 +584,42 @@ $totalClaimAmount = $totalClaimAmount ?? 8500000;
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample pending claim -->
+                <?php if (empty($pending_claims)): ?>
                 <tr>
-                    <td><strong>#CLM-2026-001</strong></td>
-                    <td>John Doe</td>
-                    <td>Jane Doe</td>
-                    <td>Plan A</td>
-                    <td><strong>KSh 100,000</strong></td>
-                    <td>Feb 5, 2026</td>
-                    <td><span class="status-badge pending">Pending</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-action btn-approve">
-                                <i class="fas fa-check"></i>
-                                Approve
-                            </button>
-                            <button class="btn-action btn-reject">
-                                <i class="fas fa-times"></i>
-                                Reject
-                            </button>
-                        </div>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
+                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>No pending claims</p>
                     </td>
                 </tr>
+                <?php else: ?>
+                    <?php foreach ($pending_claims as $claim): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
+                        <td><strong>KSh <?php echo number_format($claim['amount'], 2); ?></strong></td>
+                        <td><?php echo date('M d, Y', strtotime($claim['submitted_date'])); ?></td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                                <button class="btn-action btn-approve">
+                                    <i class="fas fa-check"></i>
+                                    Approve
+                                </button>
+                                <button class="btn-action btn-reject">
+                                    <i class="fas fa-times"></i>
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -646,41 +657,34 @@ $totalClaimAmount = $totalClaimAmount ?? 8500000;
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample claims -->
+                <?php if (empty($all_claims)): ?>
                 <tr>
-                    <td><strong>#CLM-2026-001</strong></td>
-                    <td>John Doe</td>
-                    <td>Jane Doe</td>
-                    <td>Plan A</td>
-                    <td><strong>KSh 100,000</strong></td>
-                    <td>Feb 5, 2026</td>
-                    <td><span class="status-badge pending">Pending</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                        </div>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
+                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>No claims found</p>
                     </td>
                 </tr>
-                <tr>
-                    <td><strong>#CLM-2026-002</strong></td>
-                    <td>Mary Smith</td>
-                    <td>Peter Smith</td>
-                    <td>Plan B</td>
-                    <td><strong>KSh 200,000</strong></td>
-                    <td>Feb 3, 2026</td>
-                    <td><span class="status-badge approved">Approved</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                <?php else: ?>
+                    <?php foreach ($all_claims as $claim): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
+                        <td><strong>KSh <?php echo number_format($claim['amount'], 2); ?></strong></td>
+                        <td><?php echo date('M d, Y', strtotime($claim['submitted_date'])); ?></td>
+                        <td><span class="status-badge <?php echo $claim['status']; ?>"><?php echo ucfirst($claim['status']); ?></span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -718,23 +722,34 @@ $totalClaimAmount = $totalClaimAmount ?? 8500000;
                 </tr>
             </thead>
             <tbody>
+                <?php if (empty($completed_claims)): ?>
                 <tr>
-                    <td><strong>#CLM-2026-002</strong></td>
-                    <td>Mary Smith</td>
-                    <td>Peter Smith</td>
-                    <td>Plan B</td>
-                    <td><strong>KSh 200,000</strong></td>
-                    <td>Feb 4, 2026</td>
-                    <td><span class="status-badge approved">Approved</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view">
-                                <i class="fas fa-eye"></i>
-                                View Details
-                            </button>
-                        </div>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
+                        <i class="fas fa-clipboard-check" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>No completed claims</p>
                     </td>
                 </tr>
+                <?php else: ?>
+                    <?php foreach ($completed_claims as $claim): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
+                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
+                        <td><strong>KSh <?php echo number_format($claim['amount_paid'], 2); ?></strong></td>
+                        <td><?php echo date('M d, Y', strtotime($claim['completed_date'])); ?></td>
+                        <td><span class="status-badge approved">Approved</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
+                                    <i class="fas fa-eye"></i>
+                                    View Details
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

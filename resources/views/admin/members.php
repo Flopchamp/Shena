@@ -1,3 +1,9 @@
+<?php 
+$members = $members ?? [];
+$stats = $stats ?? ['total_members' => 0, 'grace_period' => 0, 'default_rate' => 0];
+$emergency_alert = $emergency_alert ?? null;
+$pending_approvals = $pending_approvals ?? [];
+?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
@@ -628,7 +634,7 @@
             </div>
         </div>
         <div class="stat-label">Total Members</div>
-        <div class="stat-value"><?php echo number_format($stats['total_members'] ?? 12450); ?></div>
+        <div class="stat-value"><?php echo number_format($stats['total_members'] ?? 0); ?></div>
     </div>
 
     <!-- Grace Period -->
@@ -639,7 +645,7 @@
             </div>
         </div>
         <div class="stat-label">Grace Period</div>
-        <div class="stat-value"><?php echo number_format($stats['grace_period'] ?? 284); ?></div>
+        <div class="stat-value"><?php echo number_format($stats['grace_period'] ?? 0); ?></div>
     </div>
 
     <!-- Default Rate -->
@@ -684,57 +690,58 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php 
-                    $sample_members = [
-                        ['name' => 'Alice Mwangi', 'avatar' => 'AM', 'color' => 'purple', 'id' => '32456781', 'package' => 'Gold Plan', 'status' => 'active', 'contribution' => 'KES 1,500', 'date' => '12 Oct 2023'],
-                        ['name' => 'Peter Kamau', 'avatar' => 'PK', 'color' => 'pink', 'id' => '28491032', 'package' => 'Standard', 'status' => 'grace', 'contribution' => 'Overdue', 'date' => 'Expired 5 Oct'],
-                        ['name' => 'Samuel Otieno', 'avatar' => 'SO', 'color' => 'red', 'id' => '30129485', 'package' => 'Premium', 'status' => 'default', 'contribution' => 'Inactive', 'date' => '']
-                    ];
-                    
-                    foreach ($sample_members as $member): 
-                    ?>
+                    <?php if (empty($members)): ?>
                     <tr>
-                        <td>
-                            <div class="member-info">
-                                <div class="member-avatar <?php echo $member['color']; ?>">
-                                    <?php echo $member['avatar']; ?>
-                                </div>
-                                <div class="member-details">
-                                    <div class="member-name"><?php echo $member['name']; ?></div>
-                                </div>
-                            </div>
-                        </td>
-                        <td><?php echo $member['id']; ?></td>
-                        <td>
-                            <span class="package-badge"><?php echo $member['package']; ?></span>
-                        </td>
-                        <td>
-                            <span class="status-badge <?php echo $member['status']; ?>">
-                                <?php echo strtoupper($member['status']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php if ($member['status'] === 'grace'): ?>
-                                <div class="contribution-info">
-                                    <span class="contribution-overdue"><?php echo $member['contribution']; ?></span>
-                                    <span class="contribution-overdue"><?php echo $member['date']; ?></span>
-                                </div>
-                            <?php elseif ($member['status'] === 'default'): ?>
-                                <span class="contribution-inactive"><?php echo $member['contribution']; ?></span>
-                            <?php else: ?>
-                                <div class="contribution-info">
-                                    <span class="contribution-amount"><?php echo $member['contribution']; ?></span>
-                                    <span class="contribution-date"><?php echo $member['date']; ?></span>
-                                </div>
-                            <?php endif; ?>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #6B7280;">
+                            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                            <p>No members found</p>
                         </td>
                     </tr>
-                    <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php foreach ($members as $member): ?>
+                        <tr>
+                            <td>
+                                <div class="member-info">
+                                    <div class="member-avatar <?php echo $member['avatar_color'] ?? 'purple'; ?>">
+                                        <?php echo strtoupper(substr($member['first_name'] ?? 'M', 0, 1) . substr($member['last_name'] ?? 'M', 0, 1)); ?>
+                                    </div>
+                                    <div class="member-details">
+                                        <div class="member-name"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><?php echo htmlspecialchars($member['national_id'] ?? 'N/A'); ?></td>
+                            <td>
+                                <span class="package-badge"><?php echo htmlspecialchars($member['package'] ?? 'Standard'); ?></span>
+                            </td>
+                            <td>
+                                <span class="status-badge <?php echo $member['status']; ?>">
+                                    <?php echo strtoupper($member['status']); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($member['status'] === 'grace_period'): ?>
+                                    <div class="contribution-info">
+                                        <span class="contribution-overdue">Overdue</span>
+                                        <span class="contribution-overdue"><?php echo date('d M Y', strtotime($member['last_payment_date'] ?? '')); ?></span>
+                                    </div>
+                                <?php elseif ($member['status'] === 'inactive'): ?>
+                                    <span class="contribution-inactive">Inactive</span>
+                                <?php else: ?>
+                                    <div class="contribution-info">
+                                        <span class="contribution-amount">KES <?php echo number_format($member['last_payment_amount'] ?? 0, 2); ?></span>
+                                        <span class="contribution-date"><?php echo date('d M Y', strtotime($member['last_payment_date'] ?? '')); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
 
             <div class="table-pagination">
-                <div>VIEWING 1-3 OF 12,450 MEMBERS</div>
+                <div>VIEWING <?php echo count($members); ?> OF <?php echo $stats['total_members'] ?? 0; ?> MEMBERS</div>
                 <div class="pagination-buttons">
                     <button class="pagination-btn" disabled>Previous</button>
                     <button class="pagination-btn">Next</button>
@@ -749,46 +756,34 @@
         <div class="approval-card">
             <div class="approval-header">Pending Approvals</div>
             
-            <div class="approval-item">
-                <div class="payroll-info">Verify M-Pesa Payroll</div>
-                <div class="payroll-info">4163987</div>
-            </div>
-        </div>
-
-        <!-- Grace Muli Approval -->
-        <div class="approval-card">
-            <div class="approval-name">Grace Muli</div>
-            <div class="approval-details">Standard Plan</div>
-            <div class="approval-tag awaiting">AWAITING CODE</div>
-            <div class="approval-reference">M-PESA REFERENCE</div>
-            <div class="approval-code">RHU2LBX6AA</div>
-            <div class="approval-actions">
-                <button class="btn-approve">Verify & Activate</button>
-                <button class="btn-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Robert Kinyana Approval -->
-        <div class="approval-card">
-            <div class="approval-name">Robert Kinyana</div>
-            <div class="approval-details">Gold Plan</div>
-            <div class="approval-tag new">NEW APP</div>
-            <div class="approval-reference">M-PESA REFERENCE</div>
-            <input type="text" class="approval-input" placeholder="Enter Ref Code">
-            <div class="approval-actions">
-                <button class="btn-approve">Validate Code</button>
-                <button class="btn-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- System Footer -->
-        <div class="system-footer">
-            <div class="system-label">System Integrated Payroll</div>
-            <div class="system-id">4163987</div>
+            <?php if (!empty($pending_approvals)): ?>
+                <?php foreach ($pending_approvals as $approval): ?>
+                <div class="approval-card">
+                    <div class="approval-name"><?php echo htmlspecialchars($approval['name']); ?></div>
+                    <div class="approval-details"><?php echo htmlspecialchars($approval['package']); ?></div>
+                    <div class="approval-tag <?php echo $approval['tag_class']; ?>"><?php echo htmlspecialchars($approval['tag']); ?></div>
+                    <div class="approval-reference">M-PESA REFERENCE</div>
+                    <?php if (!empty($approval['code'])): ?>
+                        <div class="approval-code"><?php echo htmlspecialchars($approval['code']); ?></div>
+                    <?php else: ?>
+                        <input type="text" class="approval-input" placeholder="Enter Ref Code">
+                    <?php endif; ?>
+                    <div class="approval-actions">
+                        <button class="btn-approve" onclick="window.location.href='/admin/members/approve/<?php echo $approval['id']; ?>'">
+                            <?php echo $approval['action_text'] ?? 'Verify & Activate'; ?>
+                        </button>
+                        <button class="btn-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="approval-item" style="text-align: center; padding: 20px; color: #9CA3AF;">
+                    <i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 8px; opacity: 0.3;"></i>
+                    <p>No pending approvals</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

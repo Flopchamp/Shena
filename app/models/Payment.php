@@ -329,4 +329,19 @@ class Payment extends BaseModel
             'end_date' => $endDate
         ]);
     }
+    
+    /**
+     * Get total count of contributions/payments
+     * 
+     * @return int Total contribution count
+     */
+    public function getContributionCount()
+    {
+        $sql = "SELECT COUNT(*) as count 
+                FROM {$this->table} 
+                WHERE status = 'completed'";
+        
+        $result = $this->db->fetch($sql);
+        return $result ? (int)$result['count'] : 0;
+    }
 }

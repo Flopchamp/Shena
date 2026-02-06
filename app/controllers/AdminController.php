@@ -8,7 +8,8 @@ class AdminController extends BaseController
     private $paymentModel;
     private $claimModel;
     private $userModel;
-    
+    private $agentModel;
+
     public function __construct()
     {
         parent::__construct();
@@ -16,6 +17,7 @@ class AdminController extends BaseController
         $this->paymentModel = new Payment();
         $this->claimModel = new Claim();
         $this->userModel = new User();
+        $this->agentModel = new Agent();
     }
 
     private function requireAdminAccess()
@@ -122,15 +124,20 @@ class AdminController extends BaseController
             'stats' => [
                 'total_members' => $this->memberModel->getTotalMembers(),
                 'active_members' => $this->memberModel->getActiveMembers(),
-                'pending_members' => $this->memberModel->getPendingMembers(),
+                'pending_members' => $this->memberModel->getPendingMembersCount(),
                 'total_payments' => $this->paymentModel->getTotalPayments(),
                 'monthly_revenue' => $this->paymentModel->getMonthlyRevenue(),
                 'pending_claims' => $this->claimModel->getPendingClaimsCount(),
-                'approved_claims' => $this->claimModel->getApprovedClaimsCount()
+                'approved_claims' => $this->claimModel->getApprovedClaimsCount(),
+                'total_commissions' => $this->agentModel->getTotalCommissions(),
+                'active_agents' => $this->agentModel->getActiveAgentsCount(),
+                'member_growth' => $this->memberModel->getMemberGrowth(),
+                'contribution_count' => $this->paymentModel->getContributionCount()
             ],
             'recent_members' => $this->memberModel->getRecentMembers(5),
             'recent_payments' => $this->paymentModel->getRecentPayments(5),
-            'recent_claims' => $this->claimModel->getRecentClaims(5)
+            'recent_claims' => $this->claimModel->getRecentClaims(5),
+            'recent_activities' => $this->getRecentActivities(5)
         ];
         
         $this->view('admin.dashboard', $data);
@@ -149,10 +156,51 @@ class AdminController extends BaseController
         
         $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
         
+        // Calculate statistics
+        $totalMembers = $this->memberModel->getTotalMembers();
+        $activeMembers = $this->memberModel->getActiveMembers();
+        $gracePeriodMembers = 0;
+        $defaultRate = 0;
+        
+        // Count grace period members
+        foreach ($members as $member) {
+            if ($member['status'] === 'grace_period') {
+                $gracePeriodMembers++;
+            }
+        }
+        
+        // Calculate default rate
+        if ($totalMembers > 0) {
+            $inactiveMembers = $this->memberModel->getInactiveMembers();
+            $defaultRate = ($inactiveMembers / $totalMembers) * 100;
+        }
+        
+        // Get pending approvals (members with pending status)
+        $pendingMembers = $this->memberModel->getPendingMembers();
+        $pending_approvals = [];
+        
+        foreach ($pendingMembers as $pending) {
+            $pending_approvals[] = [
+                'id' => $pending['id'],
+                'name' => $pending['first_name'] . ' ' . $pending['last_name'],
+                'package' => $pending['package'] ?? 'Standard',
+                'tag' => 'AWAITING ACTIVATION',
+                'tag_class' => 'awaiting',
+                'code' => $pending['payment_reference'] ?? '',
+                'action_text' => !empty($pending['payment_reference']) ? 'Verify & Activate' : 'Validate Code'
+            ];
+        }
+        
         $data = [
             'title' => 'Members - Admin',
             'members' => $members,
             'total_members' => count($members),
+            'stats' => [
+                'total_members' => $totalMembers,
+                'grace_period' => $gracePeriodMembers,
+                'default_rate' => $defaultRate
+            ],
+            'pending_approvals' => $pending_approvals,
             'search' => $search,
             'status' => $status,
             'package' => $package
@@ -289,9 +337,61 @@ class AdminController extends BaseController
             $conditions['status'] = $status;
         }
         
+        // Get all claims
+        $allClaims = $this->claimModel->getAllClaimsWithDetails($conditions);
+        
+        // Calculate statistics and format data
+        $pendingClaims = 0;
+        $approvedClaims = 0;
+        $rejectedClaims = 0;
+        $totalClaimAmount = 0;
+        $pending_claims = [];
+        $completed_claims = [];
+        
+        // Format claims data for the view
+        foreach ($allClaims as &$claim) {
+            // Generate claim number if not exists
+            $claim['claim_number'] = 'CLM-' . date('Y') . '-' . str_pad($claim['id'], 4, '0', STR_PAD_LEFT);
+            
+            // Format member name
+            $claim['member_name'] = $claim['first_name'] . ' ' . $claim['last_name'];
+            
+            // Use claim_amount as amount
+            $claim['amount'] = $claim['claim_amount'] ?? 0;
+            
+            // Format submitted date
+            $claim['submitted_date'] = $claim['created_at'];
+            
+            // Get package/plan info
+            $claim['plan'] = $claim['settlement_type'] ?? 'services';
+            
+            // Calculate totals
+            $totalClaimAmount += $claim['amount'];
+            
+            // Categorize claims
+            if ($claim['status'] === 'submitted' || $claim['status'] === 'under_review') {
+                $pendingClaims++;
+                $pending_claims[] = $claim;
+            } elseif ($claim['status'] === 'approved' || $claim['status'] === 'paid') {
+                $approvedClaims++;
+                $claim['amount_paid'] = $claim['approved_amount'] ?? $claim['amount'];
+                $claim['completed_date'] = $claim['approved_at'] ?? $claim['processed_at'];
+                $completed_claims[] = $claim;
+            } elseif ($claim['status'] === 'rejected') {
+                $rejectedClaims++;
+            }
+        }
+        
         $data = [
             'title' => 'Claims - Admin',
-            'claims' => $this->claimModel->getAllClaimsWithDetails($conditions),
+            'claims' => $allClaims,
+            'all_claims' => $allClaims,
+            'pending_claims' => $pending_claims,
+            'completed_claims' => $completed_claims,
+            'pendingClaims' => $pendingClaims,
+            'approvedClaims' => $approvedClaims,
+            'rejectedClaims' => $rejectedClaims,
+            'totalClaimAmount' => $totalClaimAmount,
             'status' => $status
         ];
         
@@ -615,7 +715,7 @@ class AdminController extends BaseController
             'totalMembers' => $this->memberModel->getTotalMembers(),
             'activeMembers' => $this->memberModel->getActiveMembers(),
             'inactiveMembers' => $this->memberModel->getInactiveMembers(),
-            'pendingMembers' => $this->memberModel->getPendingMembers(),
+            'pendingMembers' => $this->memberModel->getPendingMembersCount(),
             'totalRevenue' => $this->paymentModel->getTotalRevenue($startDate, $endDate),
             'monthlyRevenue' => $this->paymentModel->getMonthlyRevenue(),
             'totalClaimsPaid' => $this->claimModel->getTotalClaimsValue(),
@@ -1298,6 +1398,54 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.financial-dashboard', $data);
+    }
+
+    /**
+     * Get recent activities for dashboard
+     */
+    private function getRecentActivities($limit = 5)
+    {
+        try {
+            $db = Database::getInstance();
+            $query = "
+                SELECT
+                    'member_registration' as type,
+                    CONCAT(u.first_name, ' ', u.last_name) as title,
+                    'New member registered' as description,
+                    u.created_at as activity_time,
+                    m.id as reference_id
+                FROM users u
+                JOIN members m ON u.id = m.user_id
+                WHERE u.role = 'member'
+                UNION ALL
+                SELECT
+                    'payment' as type,
+                    CONCAT('KES ', p.amount) as title,
+                    CONCAT('Payment received from ', COALESCE(u.first_name, 'Unknown')) as description,
+                    p.payment_date as activity_time,
+                    p.id as reference_id
+                FROM payments p
+                LEFT JOIN members m ON p.member_id = m.id
+                LEFT JOIN users u ON m.user_id = u.id
+                WHERE p.status = 'completed'
+                UNION ALL
+                SELECT
+                    'claim' as type,
+                    CONCAT('Claim #', c.id) as title,
+                    CONCAT('Claim submitted for ', COALESCE(c.deceased_name, 'Unknown')) as description,
+                    c.created_at as activity_time,
+                    c.id as reference_id
+                FROM claims c
+                ORDER BY activity_time DESC
+                LIMIT ?
+            ";
+
+            $result = $db->query($query, [$limit]);
+            return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
+        } catch (Exception $e) {
+            error_log('Failed to fetch recent activities: ' . $e->getMessage());
+            return [];
+        }
     }
 }
 ?>

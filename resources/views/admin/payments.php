@@ -1,9 +1,8 @@
-<?php
-// Mock data - will be from controller
-$totalPayments = $totalPayments ?? 5250000;
-$monthlyPayments = $monthlyPayments ?? 450000;
-$pendingReconciliation = $pendingReconciliation ?? 12;
-$successRate = $successRate ?? 98.5;
+<?php 
+$totalPayments = $totalPayments ?? 0;
+$monthlyPayments = $monthlyPayments ?? 0;
+$pendingReconciliation = $pendingReconciliation ?? 0;
+$successRate = $successRate ?? 0;
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
@@ -486,11 +485,7 @@ $successRate = $successRate ?? 98.5;
         <button class="tab-btn" onclick="showTab('reconciliation')" id="tab-reconciliation">
             <i class="fas fa-sync-alt"></i>
             Reconciliation
-        </button>
-        <button class="tab-btn" onclick="showTab('financial')" id="tab-financial">
-            <i class="fas fa-chart-line"></i>
-            Financial Dashboard
-        </button>
+        </button> 
         <button class="tab-btn" onclick="showTab('reports')" id="tab-reports">
             <i class="fas fa-file-alt"></i>
             Reports
@@ -667,7 +662,7 @@ $successRate = $successRate ?? 98.5;
     </div>
 
     <!-- Financial Dashboard Tab -->
-    <div class="tab-content" id="content-financial">
+    <!-- <div class="tab-content" id="content-financial">
         <div class="financial-grid">
             <div class="chart-card">
                 <div class="chart-header">
@@ -685,7 +680,7 @@ $successRate = $successRate ?? 98.5;
                 <canvas id="paymentMethodsChart" height="300"></canvas>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Reports Tab -->
     <div class="tab-content" id="content-reports">

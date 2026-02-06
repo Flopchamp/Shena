@@ -501,7 +501,8 @@
         <div class="stat-value"><?php echo number_format($stats['total_members'] ?? 0); ?></div>
         <div class="stat-meta">
             <?php 
-            $growth = $stats['member_growth'] ?? 0;
+            $memberGrowthData = $stats['member_growth'] ?? ['growth_percentage' => 0];
+            $growth = is_array($memberGrowthData) ? ($memberGrowthData['growth_percentage'] ?? 0) : $memberGrowthData;
             $trendClass = $growth > 0 ? 'positive' : ($growth < 0 ? 'negative' : 'neutral');
             ?>
             <span class="stat-trend <?php echo $trendClass; ?>">
@@ -769,55 +770,58 @@
                 <h2 class="section-title">Recent Activity</h2>
             </div>
             <div class="activity-list">
-                <!-- Sample activity items - Replace with real data -->
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">New member registered</div>
-                        <div class="activity-meta">
-                            <span>John Doe</span>
-                            <span class="activity-time">2 hours ago</span>
+                <?php if (!empty($recent_activities)): ?>
+                    <?php foreach ($recent_activities as $activity): ?>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: linear-gradient(135deg,
+                                <?php
+                                switch ($activity['type']) {
+                                    case 'member_registration':
+                                        echo '#7F3D9E 0%, #7C3AED 100%';
+                                        break;
+                                    case 'payment':
+                                        echo '#059669 0%, #10B981 100%';
+                                        break;
+                                    case 'claim':
+                                        echo '#F59E0B 0%, #D97706 100%';
+                                        break;
+                                    default:
+                                        echo '#3B82F6 0%, #2563EB 100%';
+                                }
+                                ?>);">
+                                <i class="fas fa-<?php
+                                switch ($activity['type']) {
+                                    case 'member_registration':
+                                        echo 'user-plus';
+                                        break;
+                                    case 'payment':
+                                        echo 'coins';
+                                        break;
+                                    case 'claim':
+                                        echo 'file-medical';
+                                        break;
+                                    default:
+                                        echo 'envelope';
+                                }
+                                ?>"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title"><?php echo htmlspecialchars($activity['title']); ?></div>
+                                <div class="activity-meta">
+                                    <span><?php echo htmlspecialchars($activity['description']); ?></span>
+                                    <span class="activity-time"><?php echo date('M d, Y H:i', strtotime($activity['activity_time'])); ?></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%);">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Payment received</div>
-                        <div class="activity-meta">
-                            <span>KES 2,500 • Jane Smith</span>
-                            <span class="activity-time">5 hours ago</span>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-clock"></i>
                         </div>
+                        <p class="empty-text">No recent activities</p>
                     </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
-                        <i class="fas fa-file-medical"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Claim submitted</div>
-                        <div class="activity-meta">
-                            <span>Claim #CT-2024-00123</span>
-                            <span class="activity-time">1 day ago</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Broadcast sent</div>
-                        <div class="activity-meta">
-                            <span>Monthly newsletter</span>
-                            <span class="activity-time">2 days ago</span>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -852,9 +856,7 @@ const gradient = ctx.createLinearGradient(0, 0, 0, 300);
 gradient.addColorStop(0, 'rgba(127, 61, 158, 0.2)');
 gradient.addColorStop(1, 'rgba(127, 61, 158, 0.01)');
 
-// Generate sample data for last 7 months
 const monthlyRevenue = <?php echo json_encode($stats['monthly_revenue'] ?? 0); ?>;
-const baseRevenue = monthlyRevenue / 1.2; // Assume current month is 20% higher
 
 const contributionChart = new Chart(ctx, {
     type: 'line',
@@ -862,15 +864,7 @@ const contributionChart = new Chart(ctx, {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
         datasets: [{
             label: 'Revenue (KES)',
-            data: [
-                baseRevenue * 0.7,
-                baseRevenue * 0.8,
-                baseRevenue * 0.85,
-                baseRevenue * 0.9,
-                baseRevenue * 0.95,
-                baseRevenue * 1.0,
-                monthlyRevenue
-            ],
+            data: [0, 0, 0, 0, 0, 0, monthlyRevenue],
             borderColor: '#7F3D9E',
             backgroundColor: gradient,
             borderWidth: 2,

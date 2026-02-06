@@ -448,4 +448,34 @@ class Agent extends BaseModel
         
         return $this->db->query($sql, [$agentId, $agentId]);
     }
+    
+    /**
+     * Get total commissions across all agents
+     * 
+     * @return float Total commission amount
+     */
+    public function getTotalCommissions()
+    {
+        $sql = "SELECT COALESCE(SUM(commission_amount), 0) as total 
+                FROM agent_commissions 
+                WHERE status IN ('approved', 'paid')";
+        
+        $result = $this->db->query($sql)->fetch();
+        return $result ? (float)$result['total'] : 0.0;
+    }
+    
+    /**
+     * Get count of active agents
+     * 
+     * @return int Count of active agents
+     */
+    public function getActiveAgentsCount()
+    {
+        $sql = "SELECT COUNT(*) as count 
+                FROM agents 
+                WHERE status = 'active'";
+        
+        $result = $this->db->query($sql)->fetch();
+        return $result ? (int)$result['count'] : 0;
+    }
 }

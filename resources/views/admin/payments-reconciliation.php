@@ -714,59 +714,35 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Alice Mwangi -->
+                <?php if (empty($reconciled_payments)): ?>
                 <tr>
-                    <td><strong>RLK2XKDZM</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar green">AM</div>
-                            <div class="member-info">
-                                <div class="member-name">Alice Mwangi</div>
-                                <div class="member-number">SHENA-001-2891</div>
-                            </div>
-                        </div>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #6B7280;">
+                        <i class="fas fa-file-invoice-dollar" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>No reconciled payments found</p>
                     </td>
-                    <td><strong>1,500.00</strong></td>
-                    <td><span class="status-badge reconciled">RECONCILED</span></td>
-                    <td>Oct 25, 10:32 AM</td>
-                    <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
                 </tr>
-
-                <!-- John Kamau -->
-                <tr>
-                    <td><strong>RAC2SK359P</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar orange">JK</div>
-                            <div class="member-info">
-                                <div class="member-name">John Kamau</div>
-                                <div class="member-number">SHENA-001-3726</div>
+                <?php else: ?>
+                    <?php foreach ($reconciled_payments as $payment): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($payment['transaction_id']); ?></strong></td>
+                        <td>
+                            <div class="member-profile">
+                                <div class="member-avatar <?php echo $payment['avatar_color'] ?? 'green'; ?>">
+                                    <?php echo strtoupper(substr($payment['first_name'] ?? 'M', 0, 1) . substr($payment['last_name'] ?? 'M', 0, 1)); ?>
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name"><?php echo htmlspecialchars($payment['member_name'] ?? 'N/A'); ?></div>
+                                    <div class="member-number"><?php echo htmlspecialchars($payment['member_number'] ?? 'N/A'); ?></div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td><strong>1,200.00</strong></td>
-                    <td><span class="status-badge signaling">SIGNALING REQUIRED</span></td>
-                    <td>Oct 25, 10:25 AM</td>
-                    <td><button class="action-btn">Resolve</button></td>
-                </tr>
-
-                <!-- Samuel Kiplagat -->
-                <tr>
-                    <td><strong>RPK33LJX28</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar green">SK</div>
-                            <div class="member-info">
-                                <div class="member-name">Samuel Kiplagat</div>
-                                <div class="member-number">SHENA-001-4589</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><strong>8,000.00</strong></td>
-                    <td><span class="status-badge reconciled">RECONCILED</span></td>
-                    <td>Oct 24, 09:12 AM</td>
-                    <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
-                </tr>
+                        </td>
+                        <td><strong><?php echo number_format($payment['amount'], 2); ?></strong></td>
+                        <td><span class="status-badge <?php echo $payment['status']; ?>"><?php echo strtoupper($payment['status']); ?></span></td>
+                        <td><?php echo date('M d, h:i A', strtotime($payment['timestamp'])); ?></td>
+                        <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -788,10 +764,10 @@ if (ctx) {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            labels: <?php echo json_encode($chart_labels ?? ['Week 1', 'Week 2', 'Week 3', 'Week 4']); ?>,
             datasets: [{
                 label: 'Revenue',
-                data: [30000, 42000, 58000, 72000],
+                data: <?php echo json_encode($chart_data ?? [0, 0, 0, 0]); ?>,
                 borderColor: '#8B5CF6',
                 backgroundColor: 'rgba(139, 92, 246, 0.1)',
                 tension: 0.4,
