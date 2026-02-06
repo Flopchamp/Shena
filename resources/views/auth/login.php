@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Access - SHENA Companion</title>
     
     <!-- Bootstrap CSS -->
@@ -19,38 +19,27 @@
             box-sizing: border-box;
         }
         
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
-        }
-        
         body {
             font-family: 'Manrope', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            overflow-y: auto;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .login-container {
             display: flex;
-            min-height: 100vh;
-            width: 100%;
+            height: 100vh;
         }
         
         .left-panel {
             flex: 1;
             background: linear-gradient(135deg, rgba(127, 61, 158, 0.95) 0%, rgba(94, 43, 122, 0.95) 100%),
                         url('https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1200&q=80') center/cover;
-            background-attachment: fixed;
-            background-size: cover;
-            background-position: center;
             padding: 60px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: relative;
             overflow: hidden;
-            min-height: 100vh;
         }
         
         .left-panel::before {
@@ -160,8 +149,6 @@
             align-items: center;
             justify-content: center;
             padding: 40px;
-            min-height: 100vh;
-            overflow-y: auto;
         }
         
         .login-card {
@@ -229,11 +216,6 @@
             border-bottom-color: #7F3D9E;
         }
         
-        .tab:hover:not(.active) {
-            color: #9C27B0;
-            background: rgba(127, 61, 158, 0.05);
-        }
-        
         .form-group {
             margin-bottom: 24px;
         }
@@ -253,23 +235,11 @@
             border-radius: 10px;
             font-size: 0.95rem;
             transition: border-color 0.3s ease;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
         }
         
         .form-control:focus {
             outline: none;
             border-color: #7F3D9E;
-        }
-        
-        .form-control.invalid {
-            border-color: #DC2626;
-        }
-        
-        .form-control.invalid:focus {
-            border-color: #DC2626;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         }
         
         .password-wrapper {
@@ -311,12 +281,6 @@
         .login-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(127, 61, 158, 0.4);
-        }
-        
-        .login-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
         }
         
         .register-section {
@@ -386,239 +350,22 @@
             text-decoration: underline;
         }
         
-        .alert {
-            padding: 14px 18px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .alert-danger {
-            background: #FEE2E2;
-            border-left: 4px solid #DC2626;
-            color: #991B1B;
-        }
-        
-        .alert-success {
-            background: #D1FAE5;
-            border-left: 4px solid #059669;
-            color: #065F46;
-        }
-        
-        .alert-info {
-            background: #DBEAFE;
-            border-left: 4px solid #2563EB;
-            color: #1E40AF;
-        }
-        
-        .alert i {
-            font-size: 1.1rem;
-        }
-        
-        @media (max-width: 992px) {
+        @media (max-width: 768px) {
             .login-container {
                 flex-direction: column;
             }
             
             .left-panel {
-                min-height: 50vh;
+                min-height: 40vh;
                 padding: 40px 30px;
-                background-attachment: scroll;
-            }
-            
-            .left-panel::before {
-                display: none;
-            }
-            
-            .logo-section {
-                margin-bottom: 30px;
             }
             
             .hero-content h1 {
                 font-size: 2.5rem;
             }
             
-            .hero-content p {
-                font-size: 1rem;
-                max-width: 100%;
-            }
-            
-            .mission-btn {
-                padding: 12px 28px;
-                font-size: 0.9rem;
-            }
-            
-            .right-panel {
-                padding: 30px 20px;
-                min-height: auto;
-            }
-            
             .login-card {
-                padding: 40px 25px;
-                max-width: 100%;
-            }
-            
-            .portal-icon {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .portal-icon i {
-                font-size: 1.5rem;
-            }
-            
-            .login-card h2 {
-                font-size: 1.75rem;
-            }
-            
-            .footer-links {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .left-panel {
-                min-height: 40vh;
-                padding: 30px 20px;
-            }
-            
-            .hero-content h1 {
-                font-size: 2rem;
-                line-height: 1.2;
-            }
-            
-            .hero-content p {
-                font-size: 0.9rem;
-                margin-bottom: 25px;
-            }
-            
-            .logo-icon {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .logo-text {
-                font-size: 1.1rem;
-            }
-            
-            .right-panel {
-                padding: 20px 15px;
-            }
-            
-            .login-card {
-                padding: 30px 20px;
-            }
-            
-            .portal-icon {
-                width: 55px;
-                height: 55px;
-            }
-            
-            .login-card h2 {
-                font-size: 1.5rem;
-            }
-            
-            .subtitle {
-                font-size: 0.85rem;
-                margin-bottom: 30px;
-            }
-            
-            .tabs {
-                margin-bottom: 30px;
-            }
-            
-            .tab {
-                font-size: 0.9rem;
-                padding: 10px 0;
-            }
-            
-            .form-control {
-                padding: 12px 14px;
-                font-size: 0.9rem;
-            }
-            
-            .login-btn {
-                padding: 14px;
-                font-size: 0.95rem;
-            }
-            
-            .register-section {
-                margin-top: 25px;
-                padding-top: 25px;
-            }
-            
-            .footer-text {
-                font-size: 0.7rem;
-            }
-            
-            .copyright {
-                font-size: 0.7rem;
-            }
-        }
-        
-        /* Tablet specific styles */
-        @media (min-width: 481px) and (max-width: 768px) {
-            .left-panel {
-                min-height: 45vh;
-                padding: 50px 40px;
-            }
-            
-            .hero-content h1 {
-                font-size: 3rem;
-            }
-            
-            .login-card {
-                padding: 45px 35px;
-                max-width: 480px;
-            }
-        }
-        
-        /* Landscape mode adjustments */
-        @media (max-height: 600px) and (orientation: landscape) {
-            .left-panel {
-                display: none;
-            }
-            
-            .right-panel {
-                width: 100%;
-                padding: 20px;
-                min-height: auto;
-            }
-            
-            .login-card {
-                padding: 30px;
-            }
-            
-            .portal-icon {
-                width: 50px;
-                height: 50px;
-                margin-bottom: 20px;
-            }
-            
-            .login-card h2 {
-                font-size: 1.5rem;
-                margin-bottom: 8px;
-            }
-            
-            .subtitle {
-                margin-bottom: 20px;
-            }
-            
-            .tabs {
-                margin-bottom: 20px;
-            }
-            
-            .form-group {
-                margin-bottom: 16px;
-            }
-            
-            .register-section {
-                margin-top: 20px;
-                padding-top: 20px;
+                padding: 40px 30px;
             }
         }
     </style>
@@ -657,25 +404,6 @@
                 <h2>Portal Access</h2>
                 <p class="subtitle">Manage your association membership</p>
                 
-                <div class="alert alert-info" role="alert">
-                    <i class="fas fa-info-circle"></i>
-                    <span><strong>Admin/Staff:</strong> Please use the <a href="/admin/login" style="color: #1E40AF; text-decoration: underline; font-weight: 600;">Admin Login Portal</a></span>
-                </div>
-                
-                <?php if (isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></span>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (isset($_SESSION['success'])): ?>
-                    <div class="alert alert-success" role="alert">
-                        <i class="fas fa-check-circle"></i>
-                        <span><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></span>
-                    </div>
-                <?php endif; ?>
-                
                 <div class="tabs">
                     <div class="tab active">Sign In</div>
                     <div class="tab" onclick="window.location.href='/register'">Register</div>
@@ -690,7 +418,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <a href="/forgot-password" class="forgot-password">Forgot Password?</a>
+                        <a href="#" class="forgot-password">Forget Password?</a>
                         <label class="form-label">Password</label>
                         <div class="password-wrapper">
                             <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
@@ -698,12 +426,7 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="login-btn" id="loginBtn">
-                        <span id="btnText">Login to Dashboard</span>
-                        <span id="btnLoader" style="display: none;">
-                            <i class="fas fa-spinner fa-spin"></i> Signing in...
-                        </span>
-                    </button>
+                    <button type="submit" class="login-btn">Login to Dashboard</button>
                 </form>
                 
                 <div class="register-section">
@@ -723,9 +446,9 @@
                 </div>
                 
                 <div class="copyright">
-                    © <?php echo date('Y'); ?> SHENA Companion. All Rights Reserved. 
-                    <a href="/privacy">Privacy Policy</a> | 
-                    <a href="/terms">Terms of Service</a>
+                    © 2024 SHENA Companion. All Rights Reserved. 
+                    <a href="#">Privacy Policy</a> | 
+                    <a href="#">Terms of Service</a>
                 </div>
             </div>
         </div>
@@ -746,21 +469,6 @@
                 toggleIcon.classList.add('fa-eye');
             }
         }
-        
-        // Add loading state to login button
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const loginBtn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const btnLoader = document.getElementById('btnLoader');
-            
-            // Disable button and show loading state
-            loginBtn.disabled = true;
-            btnText.style.display = 'none';
-            btnLoader.style.display = 'inline-flex';
-        });
-        
-        // Auto-focus on email field
-        document.querySelector('input[name="email"]').focus();
     </script>
     
     <!-- Bootstrap JS -->

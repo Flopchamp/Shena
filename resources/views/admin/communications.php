@@ -2,184 +2,40 @@
 
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-bell me-2"></i>System Notifications</h1>
+    <h1 class="h3 mb-0"><i class="fas fa-comments me-2"></i>Communications Hub</h1>
 </div>
 
 <!-- Communication Tabs -->
 <ul class="nav nav-tabs mb-4" id="communicationTabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
-            <i class="fas fa-bell"></i> Active Notifications
+        <button class="nav-link active" id="quick-messages-tab" data-bs-toggle="tab" data-bs-target="#quickMessages" type="button" role="tab">
+            <i class="fas fa-paper-plane"></i> Quick Messages
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="email-campaigns-tab" data-bs-toggle="tab" data-bs-target="#emailCampaigns" type="button" role="tab">
+            <i class="fas fa-envelope-open-text"></i> Email Campaigns
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sms-campaigns-tab" data-bs-toggle="tab" data-bs-target="#smsCampaigns" type="button" role="tab">
+            <i class="fas fa-comment-dots"></i> SMS Campaigns
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+            <i class="fas fa-bell"></i> System Notifications
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
-            <i class="fas fa-history"></i> Notification History
+            <i class="fas fa-history"></i> Communication History
         </button>
     </li>
 </ul>
 
 <!-- Tab Content -->
 <div class="tab-content" id="communicationTabContent">
-    
-    <!-- System Notifications Tab -->
-    <div class="tab-pane fade show active" id="notifications" role="tabpanel">
-        <div class="modern-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div>
-                    <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 1.5rem;">
-                        System Notifications
-                    </h2>
-                    <p style="color: #6b7280; margin: 0.5rem 0 0 0;">Automated notifications sent by the system</p>
-                </div>
-            </div>
-            
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="stat-card primary">
-                        <div class="icon-wrapper">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <p class="stat-value">24</p>
-                        <p class="stat-label">Payment Reminders</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card success">
-                        <div class="icon-wrapper">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                        <p class="stat-value">12</p>
-                        <p class="stat-label">Welcome Messages</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card info">
-                        <div class="icon-wrapper">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <p class="stat-value">8</p>
-                        <p class="stat-label">Claim Updates</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Recipient</th>
-                            <th>Subject</th>
-                            <th>Status</th>
-                            <th>Sent At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="type-badge email"><i class="fas fa-bell"></i> REMINDER</span></td>
-                            <td><strong>John Doe</strong><br><small style="color: #6b7280;">+254712345678</small></td>
-                            <td>Monthly Contribution Reminder</td>
-                            <td><span class="status-badge sent">SENT</span></td>
-                            <td>Feb 04, 2026 10:30</td>
-                            <td>
-                                <button class="action-btn" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Communication History Tab -->
-    <div class="tab-pane fade" id="history" role="tabpanel">
-        <div class="modern-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 1.5rem;">
-                    Notification History
-                </h2>
-                <div class="filter-group">
-                    <select class="select-control" onchange="filterByStatus(this.value)">
-                        <option value="all">All Status</option>
-                        <option value="sent">Delivered</option>
-                        <option value="failed">Failed</option>
-                        <option value="pending">Pending</option>
-                    </select>
-                </div>
-            </div>
-
-            <?php if (empty($notifications)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-bell"></i>
-                    <h3>No Notification History</h3>
-                    <p>System notifications will appear here once they are sent</p>
-                </div>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Recipients</th>
-                                <th>Subject/Message</th>
-                                <th>Status</th>
-                                <th>Sent Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($notifications as $notif): ?>
-                            <tr data-status="<?php echo $notif['status'] ?? 'sent'; ?>">
-                                <td>
-                                    <span class="type-badge notification">
-                                        <i class="fas fa-bell"></i>
-                                        <?php echo strtoupper($notif['notification_type'] ?? 'SYSTEM'); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong>
-                                            <?php 
-                                                echo htmlspecialchars($notif['recipient_name'] ?? 'Member');
-                                            ?>
-                                        </strong>
-                                        <br>
-                                        <small style="color: #6b7280;"><?php echo htmlspecialchars($notif['recipient_email'] ?? ''); ?></small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($notif['subject'] ?? 'No Subject'); ?></strong><br>
-                                        <small style="color: #6b7280;">
-                                            <?php echo htmlspecialchars(substr($notif['message'] ?? '', 0, 50) . '...'); ?>
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge <?php echo $notif['status'] ?? 'sent'; ?>">
-                                        <?php echo ucfirst($notif['status'] ?? 'Sent'); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo date('M j, Y H:i', strtotime($notif['sent_at'] ?? 'now')); ?></td>
-                                <td>
-                                    <button class="action-btn" onclick="viewNotification(<?php echo $notif['id']; ?>)" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-</div>
 
 <style>
     .page-header {
@@ -604,6 +460,166 @@
         box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
     }
 </style>
+
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1><i class="fas fa-comments"></i> Communications Hub</h1>
+            <p>Manage email and SMS communications with members</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button class="modern-btn primary" onclick="openModal('emailModal')">
+                <i class="fas fa-envelope"></i> Quick Email
+            </button>
+            <button class="modern-btn success" onclick="openModal('smsModal')">
+                <i class="fas fa-sms"></i> Quick SMS
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row" style="margin-bottom: 2rem;">
+    <div class="col-md-3">
+        <div class="stat-card primary">
+            <div class="icon-wrapper">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => $c['type'] === 'email')); ?></p>
+            <p class="stat-label">Emails Sent</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="icon-wrapper">
+                <i class="fas fa-sms"></i>
+            </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => $c['type'] === 'sms')); ?></p>
+            <p class="stat-label">SMS Sent</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="icon-wrapper">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <p class="stat-value">
+                <?php 
+                    $thisMonth = array_filter($communications ?? [], fn($c) => 
+                        date('Y-m', strtotime($c['sent_at'] ?? 'now')) === date('Y-m')
+                    );
+                    echo count($thisMonth);
+                ?>
+            </p>
+            <p class="stat-label">This Month</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="icon-wrapper">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p class="stat-value"><?php echo count(array_filter($communications ?? [], fn($c) => ($c['status'] ?? 'sent') === 'failed')); ?></p>
+            <p class="stat-label">Failed</p>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="modern-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-family: 'Playfair Display', serif; color: #1f2937; font-size: 1.5rem;">
+            Communication History
+        </h2>
+        <div class="filter-group">
+            <select class="select-control" onchange="filterCommunications(this.value)">
+                <option value="all">All Types</option>
+                <option value="email">Email Only</option>
+                <option value="sms">SMS Only</option>
+            </select>
+            <select class="select-control" onchange="filterByStatus(this.value)">
+                <option value="all">All Status</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+                <option value="pending">Pending</option>
+            </select>
+        </div>
+    </div>
+
+    <?php if (empty($communications)): ?>
+        <div class="empty-state">
+            <i class="fas fa-comments"></i>
+            <h3>No Communications Yet</h3>
+            <p>Start sending emails or SMS messages to members</p>
+            <button class="modern-btn primary" onclick="openModal('emailModal')" style="margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Send First Message
+            </button>
+        </div>
+    <?php else: ?>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Recipients</th>
+                        <th>Subject/Message</th>
+                        <th>Status</th>
+                        <th>Sent Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($communications as $comm): ?>
+                    <tr data-type="<?php echo $comm['type']; ?>" data-status="<?php echo $comm['status'] ?? 'sent'; ?>">
+                        <td>
+                            <span class="type-badge <?php echo $comm['type']; ?>">
+                                <i class="fas fa-<?php echo $comm['type'] === 'email' ? 'envelope' : 'sms'; ?>"></i>
+                                <?php echo strtoupper($comm['type']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>
+                                    <?php 
+                                        if (($comm['recipient_type'] ?? 'individual') === 'all') {
+                                            echo 'All Members';
+                                        } elseif (($comm['recipient_type'] ?? 'individual') === 'group') {
+                                            echo ucfirst($comm['recipient_group'] ?? 'Group') . ' Members';
+                                        } else {
+                                            echo htmlspecialchars($comm['recipient_name'] ?? 'Individual Member');
+                                        }
+                                    ?>
+                                </strong>
+                                <br>
+                                <small style="color: #6b7280;"><?php echo $comm['recipient_count'] ?? 1; ?> recipient(s)</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong><?php echo htmlspecialchars($comm['subject'] ?? 'No Subject'); ?></strong><br>
+                                <small style="color: #6b7280;">
+                                    <?php echo htmlspecialchars(substr($comm['message'] ?? '', 0, 50) . '...'); ?>
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge <?php echo $comm['status'] ?? 'sent'; ?>">
+                                <?php echo ucfirst($comm['status'] ?? 'Sent'); ?>
+                            </span>
+                        </td>
+                        <td><?php echo date('M j, Y H:i', strtotime($comm['sent_at'] ?? 'now')); ?></td>
+                        <td>
+                            <button class="action-btn" onclick="viewCommunication(<?php echo $comm['id']; ?>)" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>
 
 <!-- Quick Email Modal -->
 <div class="modern-modal" id="emailModal">

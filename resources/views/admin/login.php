@@ -265,29 +265,6 @@
             background: #FEE2E2;
             color: #DC2626;
         }
-        
-        .alert-info {
-            background: #DBEAFE;
-            border: 1px solid #93C5FD;
-            color: #1E40AF;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .alert-info i {
-            color: #2563EB;
-        }
-        
-        .alert-info a {
-            color: #1E40AF;
-            text-decoration: underline;
-            font-weight: 600;
-        }
-        
-        .alert-info a:hover {
-            color: #1E3A8A;
-        }
 
         /* Responsive */
         @media (max-width: 992px) {
@@ -345,11 +322,6 @@
         <div class="login-container">
             <h2 class="login-title">Sign In</h2>
             <p class="login-subtitle">Please enter your administrative credential to access the portal.</p>
-
-            <div class="alert alert-info" role="alert">
-                <i class="fas fa-info-circle"></i>
-                <span><strong>Members:</strong> Please use the <a href="/login">Member Login Portal</a></span>
-            </div>
 
             <?php if (isset($error)): ?>
                 <div class="alert alert-danger" role="alert">

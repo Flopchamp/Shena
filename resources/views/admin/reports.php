@@ -50,558 +50,6 @@
 <!-- Tab Content -->
 <div class="tab-content" id="reportsTabContent">
 
-    <!-- Overview Tab -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
-        
-        <!-- Stats Grid -->
-        <div class="stats-row mb-4">
-            <div class="stat-card primary">
-                <div class="icon-wrapper">
-                    <i class="fas fa-users"></i>
-                </div>
-                <p class="stat-value"><?php echo $totalMembers ?? 245; ?></p>
-                <p class="stat-label">Total Members</p>
-            </div>
-            <div class="stat-card success">
-                <div class="icon-wrapper">
-                    <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <p class="stat-value">KES <?php echo number_format($totalRevenue ?? 490000, 0); ?></p>
-                <p class="stat-label">Total Revenue</p>
-            </div>
-            <div class="stat-card warning">
-                <div class="icon-wrapper">
-                    <i class="fas fa-file-medical"></i>
-                </div>
-                <p class="stat-value"><?php echo $totalClaims ?? 12; ?></p>
-                <p class="stat-label">Total Claims</p>
-            </div>
-            <div class="stat-card info">
-                <div class="icon-wrapper">
-                    <i class="fas fa-user-tie"></i>
-                </div>
-                <p class="stat-value"><?php echo $activeAgents ?? 8; ?></p>
-                <p class="stat-label">Active Agents</p>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="modern-card">
-                    <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                        <i class="fas fa-chart-line"></i> Revenue Trend (Last 6 Months)
-                    </h3>
-                    <canvas id="revenueChart" height="300"></canvas>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="modern-card">
-                    <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                        <i class="fas fa-users"></i> Member Distribution
-                    </h3>
-                    <canvas id="memberChart" height="300"></canvas>
-                    <div style="margin-top: 1.5rem;">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><i class="fas fa-circle" style="color: #7F3D9E;"></i> Active</span>
-                            <strong><?php echo $activeMembers ?? 220; ?></strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><i class="fas fa-circle" style="color: #10B981;"></i> Inactive</span>
-                            <strong><?php echo $inactiveMembers ?? 15; ?></strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span><i class="fas fa-circle" style="color: #3B82F6;"></i> Pending</span>
-                            <strong><?php echo $pendingMembers ?? 10; ?></strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Summary -->
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-chart-bar"></i> Quick Summary
-            </h3>
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>This Month</th>
-                            <th>Last Month</th>
-                            <th>Change</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>New Members</strong></td>
-                            <td>24</td>
-                            <td>18</td>
-                            <td><span class="badge bg-success">+33%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Revenue Collected</strong></td>
-                            <td>KES 48,000</td>
-                            <td>KES 45,000</td>
-                            <td><span class="badge bg-success">+6.7%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Claims Processed</strong></td>
-                            <td>3</td>
-                            <td>2</td>
-                            <td><span class="badge bg-warning">+50%</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Active Payments</strong></td>
-                            <td>220</td>
-                            <td>210</td>
-                            <td><span class="badge bg-success">+4.8%</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Analytics Tab -->
-    <div class="tab-pane fade" id="financial" role="tabpanel">
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-money-bill-trend-up"></i> Financial Analytics
-            </h3>
-            
-            <div class="stats-row mb-4">
-                <div class="stat-card success">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-arrow-trend-up"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($monthlyRevenue ?? 48000, 0); ?></p>
-                    <p class="stat-label">Monthly Revenue</p>
-                </div>
-                <div class="stat-card info">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($outstandingBalance ?? 12000, 0); ?></p>
-                    <p class="stat-label">Outstanding Balance</p>
-                </div>
-                <div class="stat-card warning">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($claimsPaid ?? 85000, 0); ?></p>
-                    <p class="stat-label">Claims Paid</p>
-                </div>
-                <div class="stat-card primary">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($netBalance ?? 405000, 0); ?></p>
-                    <p class="stat-label">Net Balance</p>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Collections</th>
-                            <th>Claims Paid</th>
-                            <th>Operating Costs</th>
-                            <th>Net Income</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>January 2026</strong></td>
-                            <td>KES 48,000</td>
-                            <td>KES 15,000</td>
-                            <td>KES 5,000</td>
-                            <td>KES 28,000</td>
-                            <td><span class="badge bg-success">Positive</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>December 2025</strong></td>
-                            <td>KES 45,000</td>
-                            <td>KES 20,000</td>
-                            <td>KES 4,500</td>
-                            <td>KES 20,500</td>
-                            <td><span class="badge bg-success">Positive</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>November 2025</strong></td>
-                            <td>KES 42,000</td>
-                            <td>KES 10,000</td>
-                            <td>KES 4,200</td>
-                            <td>KES 27,800</td>
-                            <td><span class="badge bg-success">Positive</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Member Analytics Tab -->
-    <div class="tab-pane fade" id="membersAnalytics" role="tabpanel">
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-users"></i> Member Analytics
-            </h3>
-            
-            <div class="stats-row mb-4">
-                <div class="stat-card primary">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $activeMembers ?? 220; ?></p>
-                    <p class="stat-label">Active Members</p>
-                </div>
-                <div class="stat-card warning">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-user-clock"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $inactiveMembers ?? 15; ?></p>
-                    <p class="stat-label">Inactive Members</p>
-                </div>
-                <div class="stat-card success">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $newMembersThisMonth ?? 24; ?></p>
-                    <p class="stat-label">New This Month</p>
-                </div>
-                <div class="stat-card info">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $retentionRate ?? 94; ?>%</p>
-                    <p class="stat-label">Retention Rate</p>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="modern-card" style="background: #f9fafb;">
-                        <h4 style="margin-bottom: 1rem; color: #1f2937;">Registration Trend</h4>
-                        <canvas id="registrationChart" height="250"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="modern-card" style="background: #f9fafb;">
-                        <h4 style="margin-bottom: 1rem; color: #1f2937;">Member by Plan Type</h4>
-                        <div class="table-responsive">
-                            <table class="modern-table">
-                                <thead>
-                                    <tr>
-                                        <th>Plan</th>
-                                        <th>Members</th>
-                                        <th>Percentage</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Basic Plan</strong></td>
-                                        <td>180</td>
-                                        <td><span class="badge bg-primary">73%</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Standard Plan</strong></td>
-                                        <td>50</td>
-                                        <td><span class="badge bg-info">20%</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Premium Plan</strong></td>
-                                        <td>15</td>
-                                        <td><span class="badge bg-success">7%</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Claims Analytics Tab -->
-    <div class="tab-pane fade" id="claimsAnalytics" role="tabpanel">
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-file-medical"></i> Claims Analytics
-            </h3>
-            
-            <div class="stats-row mb-4">
-                <div class="stat-card primary">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $totalClaims ?? 45; ?></p>
-                    <p class="stat-label">Total Claims</p>
-                </div>
-                <div class="stat-card success">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $approvedClaims ?? 38; ?></p>
-                    <p class="stat-label">Approved</p>
-                </div>
-                <div class="stat-card warning">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $pendingClaims ?? 4; ?></p>
-                    <p class="stat-label">Pending</p>
-                </div>
-                <div class="stat-card danger">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $rejectedClaims ?? 3; ?></p>
-                    <p class="stat-label">Rejected</p>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Claim ID</th>
-                            <th>Member Name</th>
-                            <th>Deceased Name</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Submitted Date</th>
-                            <th>Processing Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>CLM-001</strong></td>
-                            <td>John Kamau</td>
-                            <td>Mary Kamau</td>
-                            <td>KES 50,000</td>
-                            <td><span class="badge bg-success">Approved</span></td>
-                            <td>Jan 15, 2026</td>
-                            <td>3 days</td>
-                        </tr>
-                        <tr>
-                            <td><strong>CLM-002</strong></td>
-                            <td>Jane Wanjiku</td>
-                            <td>Peter Wanjiku</td>
-                            <td>KES 50,000</td>
-                            <td><span class="badge bg-warning">Pending</span></td>
-                            <td>Jan 20, 2026</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><strong>CLM-003</strong></td>
-                            <td>David Omondi</td>
-                            <td>Grace Omondi</td>
-                            <td>KES 50,000</td>
-                            <td><span class="badge bg-success">Approved</span></td>
-                            <td>Dec 28, 2025</td>
-                            <td>2 days</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Agent Performance Tab -->
-    <div class="tab-pane fade" id="agentPerformance" role="tabpanel">
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-user-tie"></i> Agent Performance
-            </h3>
-            
-            <div class="stats-row mb-4">
-                <div class="stat-card primary">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $totalAgents ?? 8; ?></p>
-                    <p class="stat-label">Total Agents</p>
-                </div>
-                <div class="stat-card success">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $totalRecruitments ?? 156; ?></p>
-                    <p class="stat-label">Total Recruitments</p>
-                </div>
-                <div class="stat-card info">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $avgRecruitments ?? 19; ?></p>
-                    <p class="stat-label">Avg Per Agent</p>
-                </div>
-                <div class="stat-card warning">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $topAgentRecruitments ?? 42; ?></p>
-                    <p class="stat-label">Top Agent</p>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Agent Name</th>
-                            <th>Total Recruitments</th>
-                            <th>This Month</th>
-                            <th>Active Members</th>
-                            <th>Performance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="badge bg-warning"><i class="fas fa-trophy"></i> 1</span></td>
-                            <td><strong>James Mwangi</strong></td>
-                            <td>42</td>
-                            <td>8</td>
-                            <td>40</td>
-                            <td><span class="badge bg-success">Excellent</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge bg-secondary">2</span></td>
-                            <td><strong>Sarah Nyambura</strong></td>
-                            <td>35</td>
-                            <td>6</td>
-                            <td>33</td>
-                            <td><span class="badge bg-success">Excellent</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="badge bg-secondary">3</span></td>
-                            <td><strong>Peter Otieno</strong></td>
-                            <td>28</td>
-                            <td>5</td>
-                            <td>26</td>
-                            <td><span class="badge bg-info">Good</span></td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td><strong>Lucy Akinyi</strong></td>
-                            <td>22</td>
-                            <td>4</td>
-                            <td>21</td>
-                            <td><span class="badge bg-info">Good</span></td>
-                        </tr>
-                        <tr>
-                            <td>5</td>
-                            <td><strong>Michael Kariuki</strong></td>
-                            <td>15</td>
-                            <td>2</td>
-                            <td>14</td>
-                            <td><span class="badge bg-warning">Average</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contributions Analysis Tab -->
-    <div class="tab-pane fade" id="contributionsAnalytics" role="tabpanel">
-        <div class="modern-card">
-            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; color: #1f2937;">
-                <i class="fas fa-coins"></i> Contributions Analysis
-            </h3>
-            
-            <div class="stats-row mb-4">
-                <div class="stat-card success">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($monthlyContributions ?? 48000, 0); ?></p>
-                    <p class="stat-label">This Month</p>
-                </div>
-                <div class="stat-card primary">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-calendar"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($totalContributions ?? 490000, 0); ?></p>
-                    <p class="stat-label">Total Collected</p>
-                </div>
-                <div class="stat-card info">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <p class="stat-value"><?php echo $collectionRate ?? 92; ?>%</p>
-                    <p class="stat-label">Collection Rate</p>
-                </div>
-                <div class="stat-card warning">
-                    <div class="icon-wrapper">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <p class="stat-value">KES <?php echo number_format($overdueAmount ?? 8000, 0); ?></p>
-                    <p class="stat-label">Overdue</p>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="modern-card" style="background: #f9fafb;">
-                        <h4 style="margin-bottom: 1rem; color: #1f2937;">Monthly Contributions Trend</h4>
-                        <canvas id="contributionsChart" height="300"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Expected</th>
-                            <th>Collected</th>
-                            <th>Pending</th>
-                            <th>Collection Rate</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>January 2026</strong></td>
-                            <td>KES 50,000</td>
-                            <td>KES 48,000</td>
-                            <td>KES 2,000</td>
-                            <td>96%</td>
-                            <td><span class="badge bg-success">Excellent</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>December 2025</strong></td>
-                            <td>KES 48,000</td>
-                            <td>KES 45,000</td>
-                            <td>KES 3,000</td>
-                            <td>94%</td>
-                            <td><span class="badge bg-success">Good</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>November 2025</strong></td>
-                            <td>KES 45,000</td>
-                            <td>KES 42,000</td>
-                            <td>KES 3,000</td>
-                            <td>93%</td>
-                            <td><span class="badge bg-success">Good</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
-
 <style>
     /* Page Header */
     .page-header {
@@ -720,18 +168,10 @@
         transform: translateY(-1px);
     }
 
-    /* Charts Grid */
-    .charts-grid {
+    /* Stats Grid */
+    .stats-grid {
         display: grid;
-        grid-template-columns: 1.8fr 1fr;
-        gap: 24px;
-        margin-bottom: 30px;
-    }
-
-    /* Universal Styles */
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 20px;
         margin-bottom: 30px;
     }
@@ -739,17 +179,32 @@
     .stat-card {
         background: white;
         border-radius: 12px;
-        padding: 20px;
+        padding: 24px;
         border: 1px solid #E5E7EB;
         transition: all 0.2s;
     }
 
     .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         transform: translateY(-2px);
     }
 
-    .stat-card .icon-wrapper {
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
         width: 40px;
         height: 40px;
         border-radius: 10px;
@@ -757,90 +212,46 @@
         align-items: center;
         justify-content: center;
         font-size: 18px;
-        margin-bottom: 12px;
     }
 
-    .stat-card.primary .icon-wrapper {
+    .stat-icon.primary {
         background: #EDE9FE;
         color: #7F3D9E;
     }
 
-    .stat-card.success .icon-wrapper {
+    .stat-icon.success {
         background: #D1FAE5;
         color: #10B981;
     }
 
-    .stat-card.info .icon-wrapper {
+    .stat-icon.info {
         background: #DBEAFE;
         color: #3B82F6;
     }
 
-    .stat-card.warning .icon-wrapper {
+    .stat-icon.warning {
         background: #FEF3C7;
         color: #F59E0B;
     }
 
-    .stat-card.danger .icon-wrapper {
-        background: #FEE2E2;
-        color: #EF4444;
-    }
-
-    .stat-card .stat-value {
-        font-size: 28px;
+    .stat-value {
+        font-size: 32px;
         font-weight: 700;
         color: #1F2937;
-        margin: 0 0 8px 0;
+        margin-bottom: 8px;
     }
 
-    .stat-card .stat-label {
-        font-size: 13px;
-        font-weight: 600;
+    .stat-change {
+        font-size: 12px;
         color: #6B7280;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
-    .modern-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        border: 1px solid #E5E7EB;
-        margin-bottom: 24px;
-    }
-
-    .modern-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .modern-table thead {
-        background: #7F3D9E;
-    }
-
-    .modern-table thead th {
-        color: white;
-        padding: 12px 16px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .modern-table tbody td {
-        padding: 12px 16px;
-        border-top: 1px solid #E5E7EB;
-        color: #374151;
-        font-size: 14px;
-    }
-
-    .modern-table tbody tr:hover {
-        background: #F9FAFB;
+    /* Charts Grid */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 24px;
+        margin-bottom: 30px;
     }
 
     .chart-card {
@@ -1025,190 +436,494 @@
     }
 </style>
 
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reports & Analytics</h1>
+        <p class="page-subtitle">Generate comprehensive reports and insights</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn-export pdf" onclick="exportReport('pdf')">
+            <i class="fas fa-file-pdf"></i>
+            Export PDF
+        </button>
+        <button class="btn-export excel" onclick="exportReport('excel')">
+            <i class="fas fa-file-excel"></i>
+            Export Excel
+        </button>
+    </div>
+</div>
+
+<!-- Report Filters -->
+<div class="filter-card">
+    <div class="filter-title">Report Filters</div>
+    <form method="GET" action="/admin/reports">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Report Type</label>
+                <select name="report_type" class="form-control">
+                    <option value="overview" <?php echo ($_GET['report_type'] ?? '') === 'overview' ? 'selected' : ''; ?>>Overview</option>
+                    <option value="members" <?php echo ($_GET['report_type'] ?? '') === 'members' ? 'selected' : ''; ?>>Members</option>
+                    <option value="payments" <?php echo ($_GET['report_type'] ?? '') === 'payments' ? 'selected' : ''; ?>>Payments</option>
+                    <option value="claims" <?php echo ($_GET['report_type'] ?? '') === 'claims' ? 'selected' : ''; ?>>Claims</option>
+                    <option value="financial" <?php echo ($_GET['report_type'] ?? '') === 'financial' ? 'selected' : ''; ?>>Financial</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="<?php echo $_GET['date_from'] ?? date('Y-m-01'); ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="<?php echo $_GET['date_to'] ?? date('Y-m-d'); ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn-generate">
+                    <i class="fas fa-chart-bar"></i> Generate Report
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Key Metrics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Total Members</div>
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="stat-value"><?php echo $totalMembers ?? 0; ?></div>
+        <div class="stat-change">Registered members</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-icon success">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="stat-value">KES <?php echo number_format($totalRevenue ?? 0, 0); ?></div>
+        <div class="stat-change">Cumulative collections</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Claims Paid</div>
+            <div class="stat-icon info">
+                <i class="fas fa-file-medical"></i>
+            </div>
+        </div>
+        <div class="stat-value">KES <?php echo number_format($totalClaimsPaid ?? 0, 0); ?></div>
+        <div class="stat-change">Total disbursements</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-label">Net Income</div>
+            <div class="stat-icon warning">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="stat-value">KES <?php echo number_format(($totalRevenue ?? 0) - ($totalClaimsPaid ?? 0), 0); ?></div>
+        <div class="stat-change">Revenue - Claims</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-grid">
+    <!-- Revenue Trend Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Monthly Revenue Trend</div>
+            <div class="chart-subtitle">Revenue performance over time</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Member Status Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Member Distribution</div>
+            <div class="chart-subtitle">By status category</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="memberChart"></canvas>
+        </div>
+        <div class="chart-legend">
+            <div class="legend-item">
+                <div class="legend-dot primary"></div>
+                <span>Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot success"></div>
+                <span>Inactive</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot info"></div>
+                <span>Pending</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Reports -->
+<?php if (($_GET['report_type'] ?? 'overview') === 'members'): ?>
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title">Member Registration Report</div>
+    </div>
+    <?php if (!empty($memberReports)): ?>
+    <div style="overflow-x: auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Member Number</th>
+                    <th>Name</th>
+                    <th>Package</th>
+                    <th>Status</th>
+                    <th>Join Date</th>
+                    <th>Last Payment</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($memberReports as $member): ?>
+                <tr>
+                    <td><strong><?php echo htmlspecialchars($member['member_number']); ?></strong></td>
+                    <td><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></td>
+                    <td><?php echo !empty($member['package_type']) ? ucfirst($member['package_type']) : 'Individual'; ?></td>
+                    <td>
+                        <span class="status-badge <?php echo $member['status'] === 'active' ? 'active' : 'inactive'; ?>">
+                            <?php echo !empty($member['status']) ? ucfirst($member['status']) : 'Pending'; ?>
+                        </span>
+                    </td>
+                    <td><?php echo date('M j, Y', strtotime($member['created_at'])); ?></td>
+                    <td><?php echo $member['last_payment'] ? date('M j, Y', strtotime($member['last_payment'])) : 'N/A'; ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php else: ?>
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h5>No member data available</h5>
+        <p>Member reports will appear here</p>
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php elseif (($_GET['report_type'] ?? 'overview') === 'payments'): ?>
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title">Payment Transaction Report</div>
+    </div>
+    <?php if (!empty($paymentReports)): ?>
+    <div style="overflow-x: auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Member</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                            <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($paymentReports as $payment): ?>
+                <tr>
+                    <td><strong><?php echo htmlspecialchars($payment['transaction_id']); ?></strong></td>
+                    <td><?php echo htmlspecialchars($payment['member_name'] ?? 'N/A'); ?></td>
+                    <td>KES <?php echo number_format($payment['amount'], 0); ?></td>
+                    <td><?php echo !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly'; ?></td>
+                    <td><?php echo !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A'; ?></td>
+                    <td>
+                        <span class="status-badge <?php echo $payment['status'] === 'completed' ? 'completed' : ($payment['status'] === 'pending' ? 'pending' : 'failed'); ?>">
+                            <?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?>
+                        </span>
+                    </td>
+                    <td><?php echo date('M j, Y', strtotime($payment['created_at'])); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php else: ?>
+    <div class="empty-state">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <h5>No payment data available</h5>
+        <p>Payment reports will appear here</p>
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php elseif (($_GET['report_type'] ?? 'overview') === 'claims'): ?>
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title">Claims Processing Report</div>
+    </div>
+    <?php if (!empty($claimReports)): ?>
+    <div style="overflow-x: auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Claim Number</th>
+                    <th>Member</th>
+                    <th>Deceased</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Filed Date</th>
+                    <th>Processed Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($claimReports as $claim): ?>
+                <tr>
+                    <td><strong>#<?php echo str_pad($claim['id'], 4, '0', STR_PAD_LEFT); ?></strong></td>
+                    <td><?php echo htmlspecialchars($claim['member_name'] ?? 'N/A'); ?></td>
+                    <td><?php echo htmlspecialchars($claim['deceased_name'] ?? 'N/A'); ?></td>
+                    <td>KES <?php echo number_format($claim['claim_amount'], 0); ?></td>
+                    <td>
+                        <span class="status-badge <?php 
+                            echo $claim['status'] === 'approved' ? 'completed' : 
+                                 ($claim['status'] === 'pending' ? 'pending' : 'failed'); 
+                        ?>">
+                            <?php echo !empty($claim['status']) ? ucfirst($claim['status']) : 'Pending'; ?>
+                        </span>
+                    </td>
+                    <td><?php echo date('M j, Y', strtotime($claim['created_at'])); ?></td>
+                    <td><?php echo $claim['processed_at'] ? date('M j, Y', strtotime($claim['processed_at'])) : 'N/A'; ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php else: ?>
+    <div class="empty-state">
+        <i class="fas fa-file-medical"></i>
+        <h5>No claims data available</h5>
+        <p>Claims reports will appear here</p>
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php elseif (($_GET['report_type'] ?? 'overview') === 'financial'): ?>
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title">Financial Summary Report</div>
+    </div>
+    <?php if (!empty($financialReports)): ?>
+    <div style="overflow-x: auto;">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Amount (KES)</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                $totalAmount = array_sum(array_column($financialReports, 'amount'));
+                foreach ($financialReports as $item): 
+                    $percentage = $totalAmount > 0 ? ($item['amount'] / $totalAmount) * 100 : 0;
+                ?>
+                <tr>
+                    <td><strong><?php echo htmlspecialchars($item['category']); ?></strong></td>
+                    <td>KES <?php echo number_format($item['amount'], 0); ?></td>
+                    <td><?php echo number_format($percentage, 2); ?>%</td>
+                </tr>
+                <?php endforeach; ?>
+                <tr style="background: #F9FAFB; font-weight: 700;">
+                    <td>Total</td>
+                    <td>KES <?php echo number_format($totalAmount, 0); ?></td>
+                    <td>100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <?php else: ?>
+    <div class="empty-state">
+        <i class="fas fa-chart-pie"></i>
+        <h5>No financial data available</h5>
+        <p>Financial reports will appear here</p>
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php else: ?>
+<!-- Overview Report -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Member Summary</div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Total Members</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #1F2937; margin: 0;"><?php echo $totalMembers ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Active Members</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #10B981; margin: 0;"><?php echo $activeMembers ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Inactive Members</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #F59E0B; margin: 0;"><?php echo $inactiveMembers ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">New This Month</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #8B5CF6; margin: 0;"><?php echo $newMembersThisMonth ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Pending Applications</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #6B7280; margin: 0;"><?php echo $pendingMembers ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Renewal Due</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #DC2626; margin: 0;"><?php echo $renewalDue ?? 0; ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Financial Summary</div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Total Revenue</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #10B981; margin: 0;">KES <?php echo number_format($totalRevenue ?? 0, 0); ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">This Month</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #3B82F6; margin: 0;">KES <?php echo number_format($monthlyRevenue ?? 0, 0); ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Claims Paid</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #F59E0B; margin: 0;">KES <?php echo number_format($totalClaimsPaid ?? 0, 0); ?></p>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Net Income</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #8B5CF6; margin: 0;">KES <?php echo number_format(($totalRevenue ?? 0) - ($totalClaimsPaid ?? 0), 0); ?></p>
+                </div>
+                <div class="col-sm-6">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Pending Payments</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #6B7280; margin: 0;"><?php echo $pendingPayments ?? 0; ?></p>
+                </div>
+                <div class="col-sm-6">
+                    <p style="font-size: 13px; color: #6B7280; margin-bottom: 4px;">Failed Payments</p>
+                    <p style="font-size: 24px; font-weight: 700; color: #DC2626; margin: 0;"><?php echo $failedPayments ?? 0; ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Revenue Chart
-if (document.getElementById('revenueChart')) {
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    const revenueChart = new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: ['Aug 2025', 'Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026'],
-            datasets: [{
-                label: 'Monthly Revenue',
-                data: [38000, 40000, 42000, 42000, 45000, 48000],
-                borderColor: '#7F3D9E',
-                backgroundColor: 'rgba(127, 61, 158, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#7F3D9E',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Monthly Revenue',
+            data: <?php echo json_encode($monthlyRevenueData ?? array_fill(0, 12, 0)); ?>,
+            borderColor: '#8B5CF6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#8B5CF6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'KES ' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: '#F3F4F6'
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'KES ' + value.toLocaleString();
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
-                    }
+                grid: {
+                    color: '#F3F4F6'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
                 }
             }
         }
-    });
-}
+    }
+});
 
 // Member Chart
-if (document.getElementById('memberChart')) {
-    const memberCtx = document.getElementById('memberChart').getContext('2d');
-    const memberChart = new Chart(memberCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Active', 'Inactive', 'Pending'],
-            datasets: [{
-                data: [220, 15, 10],
-                backgroundColor: ['#7F3D9E', '#10B981', '#3B82F6'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            cutout: '70%'
-        }
-    });
-}
-
-// Registration Chart
-if (document.getElementById('registrationChart')) {
-    const registrationCtx = document.getElementById('registrationChart').getContext('2d');
-    new Chart(registrationCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
-            datasets: [{
-                label: 'New Registrations',
-                data: [15, 18, 22, 20, 18, 24],
-                backgroundColor: '#7F3D9E',
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#F3F4F6'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
+const memberCtx = document.getElementById('memberChart').getContext('2d');
+const memberChart = new Chart(memberCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Active', 'Inactive', 'Pending'],
+        datasets: [{
+            data: [
+                <?php echo $activeMembers ?? 0; ?>,
+                <?php echo $inactiveMembers ?? 0; ?>,
+                <?php echo $pendingMembers ?? 0; ?>
+            ],
+            backgroundColor: ['#8B5CF6', '#10B981', '#3B82F6'],
+            borderWidth: 0
+        }],
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
             }
-        }
-    });
-}
-
-// Contributions Chart
-if (document.getElementById('contributionsChart')) {
-    const contributionsCtx = document.getElementById('contributionsChart').getContext('2d');
-    new Chart(contributionsCtx, {
-        type: 'line',
-        data: {
-            labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
-            datasets: [
-                {
-                    label: 'Expected',
-                    data: [40000, 42000, 43000, 45000, 48000, 50000],
-                    borderColor: '#6B7280',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    tension: 0.4
-                },
-                {
-                    label: 'Collected',
-                    data: [38000, 40000, 42000, 42000, 45000, 48000],
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }
-            ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'KES ' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: '#F3F4F6'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-}
+        cutout: '70%'
+    }
+});
 
-function downloadReport(format) {
-    alert('Downloading report in ' + format.toUpperCase() + ' format...');
-    // Implement export functionality
+function exportReport(format) {
+    const reportType = new URLSearchParams(window.location.search).get('report_type') || 'overview';
+    const dateFrom = new URLSearchParams(window.location.search).get('date_from') || '';
+    const dateTo = new URLSearchParams(window.location.search).get('date_to') || '';
+    
+    let url = `/admin/reports/export?format=${format}&type=${reportType}`;
+    if (dateFrom) url += `&date_from=${dateFrom}`;
+    if (dateTo) url += `&date_to=${dateTo}`;
+    
+    window.open(url, '_blank');
 }
 </script>
 
-<?php
-include_once __DIR__ . '/../layouts/admin-footer.php';
-?>
+<?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>
