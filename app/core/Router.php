@@ -76,6 +76,14 @@ class Router
         $this->addRoute('GET', '/admin', 'AdminController@dashboard');
         $this->addRoute('GET', '/admin/dashboard', 'AdminController@dashboard');
         $this->addRoute('GET', '/admin/members', 'AdminController@members');
+        $this->addRoute('GET', '/admin/members/export-csv', 'AdminController@exportMembersCSV');
+        $this->addRoute('GET', '/admin/members/register', 'AdminController@registerMember');
+        $this->addRoute('POST', '/admin/members/register', 'AdminController@registerMember');
+        $this->addRoute('GET', '/admin/members/view/{id}', 'AdminController@viewMember');
+        $this->addRoute('GET', '/admin/members/edit/{id}', 'AdminController@editMember');
+        $this->addRoute('POST', '/admin/members/update/{id}', 'AdminController@updateMember');
+        $this->addRoute('POST', '/admin/members/suspend/{id}', 'AdminController@suspendMember');
+        $this->addRoute('POST', '/admin/members/activate/{id}', 'AdminController@activateMember');
         $this->addRoute('GET', '/admin/member/{id}', 'AdminController@viewMember');
         $this->addRoute('POST', '/admin/member/activate', 'AdminController@activateMember');
         $this->addRoute('POST', '/admin/member/deactivate', 'AdminController@deactivateMember');
@@ -163,6 +171,7 @@ class Router
         
         // Agent Management Routes (Admin Only)
         $this->addRoute('GET', '/admin/agents', 'AgentController@index');
+        $this->addRoute('GET', '/admin/agents/export-csv', 'AgentController@exportAgentsCSV');
         $this->addRoute('GET', '/admin/agents/create', 'AgentController@create');
         $this->addRoute('POST', '/admin/agents/store', 'AgentController@store');
         $this->addRoute('GET', '/admin/agents/view/{id}', 'AgentController@show');
@@ -172,6 +181,8 @@ class Router
         $this->addRoute('GET', '/admin/commissions', 'AgentController@commissions');
         $this->addRoute('POST', '/admin/commissions/approve/{id}', 'AgentController@approveCommission');
         $this->addRoute('POST', '/admin/commissions/pay/{id}', 'AgentController@markCommissionPaid');
+        $this->addRoute('GET', '/admin/agents/resources', 'AgentController@resources');
+        $this->addRoute('POST', '/admin/agents/resources/upload', 'AgentController@uploadResource');
 
         // Agent Dashboard Routes (Agent Only)
         $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');

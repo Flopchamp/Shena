@@ -118,9 +118,9 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                 <div class="alert alert-success mt-3">
                                     <i class="fas fa-check-circle"></i> All services completed!
                                 </div>
-                                <form method="POST" action="/admin/claims/complete">
+                                <form method="POST" action="/admin/claims/complete" id="complete-claim-form">
                                     <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
-                                    <button type="submit" class="btn btn-success btn-lg w-100" onclick="return confirm('Mark this claim as completed?')">
+                                    <button type="button" onclick="confirmCompleteClaim()" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-check-double"></i> Complete Claim
                                     </button>
                                 </form>
@@ -301,6 +301,18 @@ document.getElementById('viewNotesModal').addEventListener('show.bs.modal', func
     document.getElementById('notes_service_label').textContent = serviceLabel;
     document.getElementById('notes_content').textContent = notes;
 });
+
+// Confirm Complete Claim
+function confirmCompleteClaim() {
+    ShenaApp.confirmAction(
+        'Mark this claim as completed? This finalizes all service deliveries and closes the claim.',
+        function() {
+            document.getElementById('complete-claim-form').submit();
+        },
+        null,
+        { type: 'success', title: 'Complete Claim', confirmText: 'Yes, Complete' }
+    );
+}
 </script>
 
 <?php require_once __DIR__ . '/../layouts/admin-footer.php'; ?>

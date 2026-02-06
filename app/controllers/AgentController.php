@@ -8,12 +8,14 @@
 
 require_once __DIR__ . '/../models/Agent.php';
 require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Claim.php';
 require_once __DIR__ . '/../services/EmailService.php';
 
 class AgentController extends BaseController
 {
     private $agentModel;
     private $userModel;
+    private $claimModel;
     private $emailService;
     
     public function __construct()
@@ -21,6 +23,7 @@ class AgentController extends BaseController
         parent::__construct();
         $this->agentModel = new Agent();
         $this->userModel = new User();
+        $this->claimModel = new Claim();
         $this->emailService = new EmailService();
     }
     
@@ -38,11 +41,91 @@ class AgentController extends BaseController
         
         $agents = $this->agentModel->getAllAgents($filters);
         
+        // Calculate statistics
+        $totalAgents = $this->agentModel->getActiveAgentsCount();
+        $pendingCommissions = $this->agentModel->getTotalCommissions();
+        
+        // Get pending commissions and aggregate by agent
+        $pendingCommissionsRaw = $this->agentModel->getPendingCommissions(100);
+        $pendingCommissionsData = $this->aggregateCommissionsByAgent($pendingCommissionsRaw);
+        
+        // Calculate monthly accounts (members registered this month)
+        $monthlyAccounts = 0;
+        $totalPortfolios = 0;
+        $newAgents = 0;
+        
+        foreach ($agents as $agent) {
+            $monthlyAccounts += $agent['total_members'] ?? 0;
+            $totalPortfolios += $agent['total_members'] ?? 0;
+        }
+        
+        // Get top performers (agents with most members)
+        $topPerformers = $this->getTopPerformers($agents, 3);
+        
+        // Get latest pending claim if exists
+        $pendingClaims = $this->claimModel->getPendingClaims();
+        $latestClaim = !empty($pendingClaims) ? $pendingClaims[0] : null;
+        
         $this->render('admin/agents', [
             'agents' => $agents,
             'filters' => $filters,
+            'stats' => [
+                'total_agents' => $totalAgents,
+                'pending_commissions' => $pendingCommissions,
+                'monthly_accounts' => $monthlyAccounts,
+                'total_portfolios' => $totalPortfolios,
+                'new_agents' => $newAgents
+            ],
+            'pending_commissions_data' => array_slice($pendingCommissionsData, 0, 5), // Top 5 for display
+            'top_performers' => $topPerformers,
+            'latest_claim' => $latestClaim,
             'pageTitle' => 'Agent Management'
         ]);
+    }
+    
+    /**
+     * Aggregate pending commissions by agent
+     */
+    private function aggregateCommissionsByAgent($commissions)
+    {
+        $aggregated = [];
+        
+        foreach ($commissions as $commission) {
+            $agentId = $commission['agent_id'];
+            
+            if (!isset($aggregated[$agentId])) {
+                $aggregated[$agentId] = [
+                    'agent_id' => $agentId,
+                    'agent_number' => $commission['agent_number'] ?? 'N/A',
+                    'agent_name' => trim(($commission['first_name'] ?? '') . ' ' . ($commission['last_name'] ?? '')),
+                    'commission_amount' => 0,
+                    'total_members' => 0
+                ];
+            }
+            
+            $aggregated[$agentId]['commission_amount'] += floatval($commission['commission_amount'] ?? 0);
+            $aggregated[$agentId]['total_members']++;
+        }
+        
+        // Sort by commission amount descending
+        usort($aggregated, function($a, $b) {
+            return $b['commission_amount'] <=> $a['commission_amount'];
+        });
+        
+        return array_values($aggregated);
+    }
+    
+    /**
+     * Get top performing agents
+     */
+    private function getTopPerformers($agents, $limit = 3)
+    {
+        // Sort agents by total_members descending
+        usort($agents, function($a, $b) {
+            return ($b['total_members'] ?? 0) <=> ($a['total_members'] ?? 0);
+        });
+        
+        return array_slice($agents, 0, $limit);
     }
     
     /**
@@ -332,6 +415,106 @@ class AgentController extends BaseController
         }
         
         redirect('/admin/commissions');
+    }
+    
+    /**
+     * Export Agents to CSV
+     */
+    public function exportAgentsCSV()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        $search = $_GET['search'] ?? '';
+        $status = $_GET['status'] ?? 'all';
+        
+        $agents = $this->agentModel->getAllAgents($search, $status);
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agents_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Open output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'Agent Number',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'County',
+            'Status',
+            'Total Members',
+            'Total Commission',
+            'Pending Commission',
+            'Registration Date'
+        ]);
+        
+        // Add agent data
+        foreach ($agents as $agent) {
+            fputcsv($output, [
+                $agent['agent_number'] ?? '',
+                $agent['first_name'] ?? '',
+                $agent['last_name'] ?? '',
+                $agent['email'] ?? '',
+                $agent['phone'] ?? '',
+                $agent['county'] ?? '',
+                ucfirst($agent['status'] ?? 'active'),
+                $agent['total_members'] ?? 0,
+                $agent['total_commission'] ?? 0,
+                $agent['pending_commission'] ?? 0,
+                $agent['created_at'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * Agent Resources Management
+     */
+    public function resources()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        // TODO: Fetch resources from database
+        // For now, using empty arrays
+        $resources = [
+            'marketing_materials' => [],
+            'training_documents' => [],
+            'policy_documents' => [],
+            'forms' => []
+        ];
+        
+        $this->render('admin/resources', [
+            'resources' => $resources,
+            'pageTitle' => 'Agent Resources'
+        ]);
+    }
+    
+    /**
+     * Upload Resource
+     */
+    public function uploadResource()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // TODO: Implement file upload logic
+        // 1. Validate file
+        // 2. Save to storage/uploads/resources/
+        // 3. Save metadata to database
+        
+        $this->setFlashMessage('Resource uploaded successfully', 'success');
+        redirect('/admin/agents/resources');
     }
     
     /**

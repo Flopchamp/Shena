@@ -14,6 +14,9 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <!-- Custom Modals -->
+    <link href="/public/css/modals.css" rel="stylesheet">
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -689,24 +692,10 @@
                     
                     <!-- Member Management -->
                     <li class="nav-item">
-                        <a class="nav-link has-submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="#" onclick="toggleSubmenu(event, 'members-submenu')">
+                        <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/members') !== false) ? 'active' : ''; ?>" href="/admin/members">
                             <i class="fas fa-users"></i>
                             <span>Member Management</span>
                         </a>
-                        <ul class="nav-submenu" id="members-submenu">
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo ($_SERVER['REQUEST_URI'] == '/admin/members') ? 'active' : ''; ?>" href="/admin/members">
-                                    <i class="fas fa-list"></i>
-                                    <span>All Members</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'members/register') !== false) ? 'active' : ''; ?>" href="/admin/members/register">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Register Member</span>
-                                </a>
-                            </li> 
-                        </ul>
                     </li>
 
                     <!-- Agent Management -->
@@ -991,9 +980,7 @@
             { title: 'Dashboard', subtitle: 'Analytics & Overview', url: '/admin/dashboard' },
             
             // Members
-            { title: 'All Members', subtitle: 'Member Management', url: '/admin/members' },
-            { title: 'Register Member', subtitle: 'Member Management', url: '/admin/members/register' },
-            { title: 'Member Approvals', subtitle: 'Member Management', url: '/admin/members/approvals' },
+            { title: 'Member Management', subtitle: 'View & Manage Members', url: '/admin/members' },
             
             // Agents
             { title: 'All Agents', subtitle: 'Agent Management', url: '/admin/agents' },

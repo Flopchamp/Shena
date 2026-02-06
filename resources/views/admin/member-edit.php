@@ -1,10 +1,10 @@
 <?php 
-$agent = $agent ?? [];
+$member = $member ?? [];
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
-    .agent-edit-container {
+    .member-edit-container {
         padding: 20px;
         max-width: 900px;
         margin: 0 auto;
@@ -227,13 +227,13 @@ $agent = $agent ?? [];
     }
 </style>
 
-<div class="agent-edit-container">
+<div class="member-edit-container">
     <!-- Page Header -->
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-edit"></i> Edit Agent - <?= htmlspecialchars($agent['agent_number'] ?? 'N/A') ?>
+            <i class="fas fa-edit"></i> Edit Member - <?= htmlspecialchars($member['member_number'] ?? 'N/A') ?>
         </h1>
-        <a href="/admin/agents/view/<?= $agent['id'] ?>" class="btn btn-secondary">
+        <a href="/admin/members/view/<?= $member['id'] ?>" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Back to Details
         </a>
     </div>
@@ -255,10 +255,10 @@ $agent = $agent ?? [];
     <?php endif; ?>
 
     <!-- Edit Form -->
-    <form method="POST" action="/admin/agents/update/<?= $agent['id'] ?>" class="form-card">
+    <form method="POST" action="/admin/members/update/<?= $member['id'] ?>" class="form-card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-user-edit"></i> Agent Information
+                <i class="fas fa-user-edit"></i> Member Information
             </h2>
         </div>
         <div class="card-body">
@@ -273,14 +273,14 @@ $agent = $agent ?? [];
                             First Name <span class="required">*</span>
                         </label>
                         <input type="text" name="first_name" class="form-control" 
-                               value="<?= htmlspecialchars($agent['first_name'] ?? '') ?>" required>
+                               value="<?= htmlspecialchars($member['first_name'] ?? '') ?>" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">
                             Last Name <span class="required">*</span>
                         </label>
                         <input type="text" name="last_name" class="form-control" 
-                               value="<?= htmlspecialchars($agent['last_name'] ?? '') ?>" required>
+                               value="<?= htmlspecialchars($member['last_name'] ?? '') ?>" required>
                     </div>
                 </div>
 
@@ -289,17 +289,33 @@ $agent = $agent ?? [];
                         <label class="form-label">
                             National ID <span class="required">*</span>
                         </label>
-                        <input type="text" name="national_id" class="form-control" 
-                               value="<?= htmlspecialchars($agent['national_id'] ?? '') ?>" required>
+                        <input type="text" name="id_number" class="form-control" 
+                               value="<?= htmlspecialchars($member['id_number'] ?? '') ?>" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">
-                            Agent Number <span class="required">*</span>
+                            Member Number <span class="required">*</span>
                         </label>
-                        <input type="text" name="agent_number" class="form-control" 
-                               value="<?= htmlspecialchars($agent['agent_number'] ?? '') ?>" required readonly>
-                        <p class="form-help">Agent number cannot be changed</p>
-</div>
+                        <input type="text" name="member_number" class="form-control" 
+                               value="<?= htmlspecialchars($member['member_number'] ?? '') ?>" required readonly>
+                        <p class="form-help">Member number cannot be changed</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="date_of_birth" class="form-control" 
+                               value="<?= htmlspecialchars($member['date_of_birth'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <select name="gender" class="form-select">
+                            <option value="">Select Gender</option>
+                            <option value="male" <?= ($member['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
+                            <option value="female" <?= ($member['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -314,15 +330,15 @@ $agent = $agent ?? [];
                             Phone Number <span class="required">*</span>
                         </label>
                         <input type="tel" name="phone" class="form-control" 
-                               value="<?= htmlspecialchars($agent['phone'] ?? '') ?>" required
+                               value="<?= htmlspecialchars($member['phone'] ?? '') ?>" required
                                placeholder="254XXXXXXXXX">
                     </div>
                     <div class="form-group">
                         <label class="form-label">
-                            Email Address <span class="required">*</span>
+                            Email Address
                         </label>
                         <input type="email" name="email" class="form-control" 
-                               value="<?= htmlspecialchars($agent['email'] ?? '') ?>" required>
+                               value="<?= htmlspecialchars($member['email'] ?? '') ?>">
                     </div>
                 </div>
 
@@ -334,78 +350,90 @@ $agent = $agent ?? [];
                         <select name="county" class="form-select" required>
                             <option value="">Select County</option>
                             <?php 
-                            $counties = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Kiambu', 'Machakos', 'Kajiado'];
+                            $counties = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Kiambu', 'Machakos', 'Kajiado', 'Meru', 'Nyeri', 'Embu'];
                             foreach ($counties as $county): ?>
-                                <option value="<?= $county ?>" <?= ($agent['county'] ?? '') === $county ? 'selected' : '' ?>>
+                                <option value="<?= $county ?>" <?= ($member['county'] ?? '') === $county ? 'selected' : '' ?>>
                                     <?= $county ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="active" <?= ($agent['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Active</option>
-                            <option value="suspended" <?= ($agent['status'] ?? '') === 'suspended' ? 'selected' : '' ?>>Suspended</option>
-                            <option value="inactive" <?= ($agent['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                        </select>
+                        <label class="form-label">Sub-County</label>
+                        <input type="text" name="sub_county" class="form-control" 
+                               value="<?= htmlspecialchars($member['sub_county'] ?? '') ?>">
                     </div>
                 </div>
 
                 <div class="form-group full-width">
                     <label class="form-label">Address</label>
-                    <textarea name="address" class="form-control" rows="3"><?= htmlspecialchars($agent['address'] ?? '') ?></textarea>
+                    <textarea name="address" class="form-control" rows="2"><?= htmlspecialchars($member['address'] ?? '') ?></textarea>
                 </div>
             </div>
 
-            <!-- Commission Settings -->
+            <!-- Membership Details -->
             <div class="form-section">
                 <h3 class="section-title">
-                    <i class="fas fa-percentage"></i> Commission Settings
+                    <i class="fas fa-id-card-alt"></i> Membership Details
                 </h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">
-                            Commission Rate (%) <span class="required">*</span>
+                            Package <span class="required">*</span>
                         </label>
-                        <input type="number" name="commission_rate" class="form-control" 
-                               value="<?= htmlspecialchars($agent['commission_rate'] ?? '5') ?>" 
-                               min="0" max="100" step="0.01" required>
-                        <p class="form-help">Percentage of recruitment fees earned as commission</p>
+                        <select name="package" class="form-select" required>
+                            <option value="basic" <?= ($member['package'] ?? 'basic') === 'basic' ? 'selected' : '' ?>>Basic</option>
+                            <option value="standard" <?= ($member['package'] ?? '') === 'standard' ? 'selected' : '' ?>>Standard</option>
+                            <option value="premium" <?= ($member['package'] ?? '') === 'premium' ? 'selected' : '' ?>>Premium</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="active" <?= ($member['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Active</option>
+                            <option value="suspended" <?= ($member['status'] ?? '') === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+                            <option value="grace_period" <?= ($member['status'] ?? '') === 'grace_period' ? 'selected' : '' ?>>Grace Period</option>
+                            <option value="inactive" <?= ($member['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <!-- Bank Details -->
+            <!-- Next of Kin -->
             <div class="form-section">
                 <h3 class="section-title">
-                    <i class="fas fa-university"></i> Bank Details
+                    <i class="fas fa-users"></i> Next of Kin
                 </h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" name="bank_name" class="form-control" 
-                               value="<?= htmlspecialchars($agent['bank_name'] ?? '') ?>"
-                               placeholder="e.g., Equity Bank">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="nok_name" class="form-control" 
+                               value="<?= htmlspecialchars($member['nok_name'] ?? '') ?>">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Account Number</label>
-                        <input type="text" name="bank_account" class="form-control" 
-                               value="<?= htmlspecialchars($agent['bank_account'] ?? '') ?>"
-                               placeholder="Account number">
+                        <label class="form-label">Relationship</label>
+                        <input type="text" name="nok_relationship" class="form-control" 
+                               value="<?= htmlspecialchars($member['nok_relationship'] ?? '') ?>">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Branch</label>
-                    <input type="text" name="bank_branch" class="form-control" 
-                           value="<?= htmlspecialchars($agent['bank_branch'] ?? '') ?>"
-                           placeholder="e.g., Nairobi Branch">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="nok_phone" class="form-control" 
+                               value="<?= htmlspecialchars($member['nok_phone'] ?? '') ?>"
+                               placeholder="254XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ID Number</label>
+                        <input type="text" name="nok_id_number" class="form-control" 
+                               value="<?= htmlspecialchars($member['nok_id_number'] ?? '') ?>">
+                    </div>
                 </div>
             </div>
 
             <!-- Form Actions -->
             <div class="form-actions">
-                <a href="/admin/agents/view/<?= $agent['id'] ?>" class="btn btn-secondary">
+                <a href="/admin/members/view/<?= $member['id'] ?>" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
                 </a>
                 <button type="submit" class="btn btn-primary">

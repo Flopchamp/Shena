@@ -153,6 +153,8 @@ class AdminController extends BaseController
         $search = $_GET['search'] ?? '';
         $status = $_GET['status'] ?? 'all';
         $package = $_GET['package'] ?? 'all';
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = 50; // Show 50 members per page for better performance
         
         $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
         
@@ -175,19 +177,44 @@ class AdminController extends BaseController
             $defaultRate = ($inactiveMembers / $totalMembers) * 100;
         }
         
+        // Paginate members
+        $totalItems = count($members);
+        $totalPages = ceil($totalItems / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $members = array_slice($members, $offset, $perPage);
+        
         // Get pending approvals (members with pending status)
         $pendingMembers = $this->memberModel->getPendingMembers();
         $pending_approvals = [];
         
-        foreach ($pendingMembers as $pending) {
-            $pending_approvals[] = [
-                'id' => $pending['id'],
-                'name' => $pending['first_name'] . ' ' . $pending['last_name'],
-                'package' => $pending['package'] ?? 'Standard',
-                'tag' => 'AWAITING ACTIVATION',
-                'tag_class' => 'awaiting',
-                'code' => $pending['payment_reference'] ?? '',
-                'action_text' => !empty($pending['payment_reference']) ? 'Verify & Activate' : 'Validate Code'
+        // Ensure $pendingMembers is an array before iterating
+        if (is_array($pendingMembers)) {
+            foreach ($pendingMembers as $pending) {
+                $pending_approvals[] = [
+                    'id' => $pending['id'],
+                    'name' => $pending['first_name'] . ' ' . $pending['last_name'],
+                    'package' => $pending['package'] ?? 'Standard',
+                    'tag' => 'AWAITING ACTIVATION',
+                    'tag_class' => 'awaiting',
+                    'code' => $pending['transaction_id'] ?? '',
+                    'action_text' => !empty($pending['transaction_id']) ? 'Verify & Activate' : 'Validate Code'
+                ];
+            }
+        }
+        
+        // Get most recent pending claim for emergency alert
+        $recentClaims = $this->claimModel->getPendingClaims();
+        $recent_claim = null;
+        
+        if (!empty($recentClaims)) {
+            // Get the first pending claim
+            $claim = $recentClaims[0];
+            $recent_claim = [
+                'id' => $claim['id'],
+                'member_name' => $claim['first_name'] . ' ' . $claim['last_name'],
+                'member_number' => $claim['member_number'] ?? 'N/A',
+                'deceased_name' => $claim['deceased_name'] ?? 'N/A',
+                'date_of_death' => $claim['date_of_death'] ?? null
             ];
         }
         
@@ -201,12 +228,100 @@ class AdminController extends BaseController
                 'default_rate' => $defaultRate
             ],
             'pending_approvals' => $pending_approvals,
+            'recent_claim' => $recent_claim,
             'search' => $search,
             'status' => $status,
-            'package' => $package
+            'package' => $package,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'per_page' => $perPage,
+                'total_items' => $totalItems
+            ]
         ];
         
         $this->view('admin.members', $data);
+    }
+
+    /**
+     * Export Members to CSV
+     */
+    public function exportMembersCSV()
+    {
+        $this->requireAdminAccess();
+        
+        $search = $_GET['search'] ?? '';
+        $status = $_GET['status'] ?? 'all';
+        $package = $_GET['package'] ?? 'all';
+        
+        $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="members_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Open output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'Member Number',
+            'First Name',
+            'Last Name',
+            'National ID',
+            'Email',
+            'Phone',
+            'Package',
+            'Status',
+            'Registration Date',
+            'Last Payment Date',
+            'Last Payment Amount'
+        ]);
+        
+        // Add member data
+        foreach ($members as $member) {
+            fputcsv($output, [
+                $member['member_number'] ?? '',
+                $member['first_name'] ?? '',
+                $member['last_name'] ?? '',
+                $member['national_id'] ?? $member['id_number'] ?? '',
+                $member['email'] ?? '',
+                $member['phone'] ?? '',
+                $member['package'] ?? 'Standard',
+                ucfirst($member['status'] ?? 'active'),
+                $member['registration_date'] ?? $member['created_at'] ?? '',
+                $member['last_payment_date'] ?? '',
+                $member['last_payment_amount'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Register New Member
+     */
+    public function registerMember()
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            // Show registration form
+            $data = [
+                'title' => 'Register New Member - Admin'
+            ];
+            
+            $this->view('admin.register-member', $data);
+            return;
+        }
+        
+        // Handle POST - process registration
+        // This will be implemented based on your registration flow
+        $_SESSION['info'] = 'Member registration form loaded. Complete the form to register a new member.';
+        $this->redirect('/admin/members');
     }
 
     /**
@@ -298,6 +413,135 @@ class AdminController extends BaseController
         }
         
         $this->redirect('/admin/members');
+    }
+
+    /**
+     * View Individual Member Details
+     */
+    public function viewMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        // Get member details
+        $member = $this->memberModel->find($id);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/admin/members');
+            return;
+        }
+        
+        // Get member statistics
+        $payments = $this->paymentModel->getMemberPayments($id);
+        $totalContributions = array_sum(array_column($payments, 'amount'));
+        $lastPayment = !empty($payments) ? $payments[0] : null;
+        
+        // Calculate membership duration
+        $membershipMonths = 0;
+        if (!empty($member['registration_date'])) {
+            $registrationDate = new DateTime($member['registration_date']);
+            $now = new DateTime();
+            $membershipMonths = $registrationDate->diff($now)->m + ($registrationDate->diff($now)->y * 12);
+        } elseif (!empty($member['created_at'])) {
+            $registrationDate = new DateTime($member['created_at']);
+            $now = new DateTime();
+            $membershipMonths = $registrationDate->diff($now)->m + ($registrationDate->diff($now)->y * 12);
+        }
+        
+        // Get beneficiaries
+        $beneficiaries = $this->memberModel->getMemberDependents($id);
+        
+        $data = [
+            'title' => 'Member Details - Admin',
+            'member' => $member,
+            'payments' => $payments,
+            'beneficiaries' => $beneficiaries,
+            'stats' => [
+                'total_contributions' => $totalContributions,
+                'last_payment_date' => $lastPayment ? $lastPayment['payment_date'] : null,
+                'membership_months' => $membershipMonths
+            ]
+        ];
+        
+        $this->view('admin.member-details', $data);
+    }
+
+    /**
+     * Edit Member Page
+     */
+    public function editMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        $member = $this->memberModel->find($id);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/admin/members');
+            return;
+        }
+        
+        $data = [
+            'title' => 'Edit Member - Admin',
+            'member' => $member
+        ];
+        
+        $this->view('admin.member-edit', $data);
+    }
+
+    /**
+     * Update Member
+     */
+    public function updateMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/members/edit/' . $id);
+            return;
+        }
+        
+        $data = [
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'id_number' => $_POST['id_number'] ?? '',
+            'phone' => $_POST['phone'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'county' => $_POST['county'] ?? '',
+            'sub_county' => $_POST['sub_county'] ?? '',
+            'address' => $_POST['address'] ?? '',
+            'package' => $_POST['package'] ?? 'basic',
+            'status' => $_POST['status'] ?? 'active',
+            'date_of_birth' => $_POST['date_of_birth'] ?? null,
+            'gender' => $_POST['gender'] ?? null,
+            'nok_name' => $_POST['nok_name'] ?? '',
+            'nok_relationship' => $_POST['nok_relationship'] ?? '',
+            'nok_phone' => $_POST['nok_phone'] ?? '',
+            'nok_id_number' => $_POST['nok_id_number'] ?? ''
+        ];
+        
+        if ($this->memberModel->update($id, $data)) {
+            $_SESSION['success_message'] = 'Member updated successfully!';
+        } else {
+            $_SESSION['error_message'] = 'Failed to update member.';
+        }
+        
+        $this->redirect('/admin/members/view/' . $id);
+    }
+
+    /**
+     * Suspend Member
+     */
+    public function suspendMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->memberModel->update($id, ['status' => 'suspended']);
+            $_SESSION['success_message'] = 'Member suspended successfully!';
+        }
+        
+        $this->redirect('/admin/members/view/' . $id);
     }
 
     /**

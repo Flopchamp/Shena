@@ -24,19 +24,33 @@ const ShenaApp = {
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('confirm-delete') || 
                 e.target.closest('.confirm-delete')) {
-                if (!confirm('Are you sure you want to delete this item?')) {
-                    e.preventDefault();
-                    return false;
-                }
+                e.preventDefault();
+                ShenaApp.confirmAction('Are you sure you want to delete this item?', function() {
+                    if (e.target.tagName === 'FORM') {
+                        e.target.submit();
+                    } else if (e.target.closest('form')) {
+                        e.target.closest('form').submit();
+                    } else if (e.target.href) {
+                        window.location.href = e.target.href;
+                    }
+                });
+                return false;
             }
 
             if (e.target.classList.contains('confirm-action') || 
                 e.target.closest('.confirm-action')) {
+                e.preventDefault();
                 const message = e.target.dataset.message || 'Are you sure you want to perform this action?';
-                if (!confirm(message)) {
-                    e.preventDefault();
-                    return false;
-                }
+                ShenaApp.confirmAction(message, function() {
+                    if (e.target.tagName === 'FORM') {
+                        e.target.submit();
+                    } else if (e.target.closest('form')) {
+                        e.target.closest('form').submit();
+                    } else if (e.target.href) {
+                        window.location.href = e.target.href;
+                    }
+                });
+                return false;
             }
         });
 
@@ -318,6 +332,171 @@ const ShenaApp = {
             .catch(error => {
                 console.error('Error checking payment status:', error);
             });
+        }
+    },
+
+    // Modern Modal System
+    confirmAction: function(message, onConfirm, onCancel = null, options = {}) {
+        const title = options.title || 'Confirm Action';
+        const confirmText = options.confirmText || 'Confirm';
+        const cancelText = options.cancelText || 'Cancel';
+        const type = options.type || 'primary'; // primary, danger, warning, success
+
+        this.showModal({
+            title: title,
+            message: message,
+            confirmText: confirmText,
+            cancelText: cancelText,
+            type: type,
+            onConfirm: onConfirm,
+            onCancel: onCancel
+        });
+    },
+
+    alert: function(message, type = 'info', title = null) {
+        const titles = {
+            success: 'Success!',
+            error: 'Error!',
+            warning: 'Warning!',
+            info: 'Information'
+        };
+        
+        const icons = {
+            success: '<i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>',
+            error: '<i class="fas fa-exclamation-circle text-danger" style="font-size: 3rem;"></i>',
+            warning: '<i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>',
+            info: '<i class="fas fa-info-circle text-info" style="font-size: 3rem;"></i>'
+        };
+
+        this.showModal({
+            title: title || titles[type] || titles.info,
+            message: message,
+            icon: icons[type] || icons.info,
+            confirmText: 'OK',
+            showCancel: false,
+            type: type,
+            onConfirm: function() {}
+        });
+    },
+
+    showModal: function(options) {
+        // Remove any existing custom modals
+        const existingModal = document.getElementById('shena-custom-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const {
+            title = 'Confirmation',
+            message = '',
+            icon = '',
+            confirmText = 'Confirm',
+            cancelText = 'Cancel',
+            showCancel = true,
+            type = 'primary',
+            onConfirm = function() {},
+            onCancel = function() {}
+        } = options;
+
+        const buttonColors = {
+            primary: 'btn-primary',
+            danger: 'btn-danger',
+            warning: 'btn-warning',
+            success: 'btn-success',
+            info: 'btn-info',
+            error: 'btn-danger'
+        };
+
+        const buttonClass = buttonColors[type] || buttonColors.primary;
+
+        const modalHTML = `
+            <div class="modal fade" id="shena-custom-modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content shadow-lg border-0">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">${title}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center py-4">
+                            ${icon ? `<div class="mb-3">${icon}</div>` : ''}
+                            <p class="mb-0 fs-6">${message}</p>
+                        </div>
+                        <div class="modal-footer border-0 justify-content-center pt-0">
+                            ${showCancel ? `<button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">${cancelText}</button>` : ''}
+                            <button type="button" class="btn ${buttonClass} px-4" id="modal-confirm-btn">${confirmText}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Append modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        const modalElement = document.getElementById('shena-custom-modal');
+        const modal = new bootstrap.Modal(modalElement);
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+
+        // Handle confirm
+        confirmBtn.addEventListener('click', function() {
+            modal.hide();
+            if (typeof onConfirm === 'function') {
+                onConfirm();
+            }
+        });
+
+        // Handle cancel
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            if (!confirmBtn.hasAttribute('data-confirmed') && typeof onCancel === 'function') {
+                onCancel();
+            }
+            modalElement.remove();
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            this.setAttribute('data-confirmed', 'true');
+        });
+
+        // Show modal
+        modal.show();
+    },
+
+    showNotification: function(message, type = 'info', duration = 3000) {
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+
+        const colors = {
+            success: 'bg-success',
+            error: 'bg-danger', 
+            warning: 'bg-warning',
+            info: 'bg-info'
+        };
+
+        const notificationHTML = `
+            <div class="shena-notification ${colors[type] || colors.info} text-white shadow-lg animate__animated animate__fadeInRight" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 8px; padding: 15px 20px;">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icons[type] || icons.info} me-2 fs-5"></i>
+                    <span class="flex-grow-1">${message}</span>
+                    <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
+
+        // Auto remove after duration
+        if (duration > 0) {
+            setTimeout(function() {
+                const notification = document.querySelector('.shena-notification:last-of-type');
+                if (notification) {
+                    notification.classList.add('animate__fadeOutRight');
+                    setTimeout(() => notification.remove(), 500);
+                }
+            }, duration);
         }
     },
 

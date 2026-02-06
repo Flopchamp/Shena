@@ -733,7 +733,7 @@ function showTab(tabName) {
 }
 
 function generateReport(type) {
-    alert('Generating ' + type + ' report...');
+    ShenaApp.showNotification('Generating ' + type + ' report...', 'info', 2000);
 }
 
 // Payment Trends Chart

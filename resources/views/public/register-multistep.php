@@ -407,12 +407,12 @@ function nextStep() {
         });
         
         if (!valid && currentStep === 1) {
-            alert('Please fill in all required fields');
+            ShenaApp.alert('Please fill in all required fields', 'warning');
             return;
         }
         
         if (currentStep === 2 && !document.getElementById('package_id').value) {
-            alert('Please select a package');
+            ShenaApp.alert('Please select a package', 'warning');
             return;
         }
         
@@ -458,15 +458,15 @@ document.getElementById('registrationForm').addEventListener('submit', function(
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Registration successful! Redirecting...');
+            ShenaApp.showNotification('Registration successful! Redirecting...', 'success', 2000);
             window.location.href = data.redirect || '/dashboard';
         } else {
-            alert('Error: ' + (data.message || 'Registration failed'));
+            ShenaApp.alert('Error: ' + (data.message || 'Registration failed'), 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        ShenaApp.alert('An error occurred. Please try again.', 'error');
     });
 });
 

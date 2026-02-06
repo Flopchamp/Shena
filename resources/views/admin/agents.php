@@ -1,3 +1,10 @@
+<?php 
+$latest_claim = $latest_claim ?? null;
+$agents = $agents ?? [];
+$stats = $stats ?? ['total_agents' => 0, 'pending_commissions' => 0, 'monthly_accounts' => 0, 'total_portfolios' => 0, 'new_agents' => 0];
+$pending_commissions_data = $pending_commissions_data ?? [];
+$top_performers = $top_performers ?? [];
+?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
@@ -97,6 +104,167 @@
 
     .alert-button:hover {
         background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Tabs Styles */
+    .tabs-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .tabs-nav {
+        display: flex;
+        background: #F9FAFB;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 4px;
+        gap: 4px;
+        overflow-x: auto;
+    }
+
+    .tab-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 8px;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .tab-item:hover {
+        background: rgba(127, 61, 158, 0.1);
+        color: #7F3D9E;
+    }
+
+    .tab-item.active {
+        background: white;
+        color: #7F3D9E;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: #7F3D9E;
+        color: white;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .tab-item.active .tab-badge {
+        background: #7F3D9E;
+    }
+
+    .tab-content {
+        padding: 24px;
+    }
+
+    .tab-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .tab-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .tab-action-btn:hover {
+        border-color: #7F3D9E;
+        color: #7F3D9E;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(127, 61, 158, 0.1);
+    }
+
+    .tab-action-btn.primary {
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
+        color: white;
+        border-color: #7F3D9E;
+    }
+
+    .tab-action-btn.primary:hover {
+        background: linear-gradient(135deg, #6D2B8C 0%, #6A28DB 100%);
+        color: white;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .status-badge.suspended {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .status-badge.inactive {
+        background: #F3F4F6;
+        color: #6B7280;
     }
 
     /* Stats Grid */
@@ -675,6 +843,7 @@
 </div>
 
 <!-- Emergency Alert -->
+<?php if (!empty($latest_claim)): ?>
 <div class="emergency-alert">
     <div class="alert-content">
         <div class="alert-icon">
@@ -682,12 +851,13 @@
         </div>
         <div class="alert-text">
             <span class="alert-badge">SYSTEM NOTIFICATION</span>
-            <div class="alert-title">Death Claim Alert: Member ID: #D-9022</div>
-            <div class="alert-description">Assigned Agent: Martin Maguza. Immediate verification required for funeral payout</div>
+            <div class="alert-title">Death Claim Alert: <?php echo htmlspecialchars($latest_claim['deceased_name'] ?? 'N/A'); ?></div>
+            <div class="alert-description">Member: <?php echo htmlspecialchars(($latest_claim['first_name'] ?? '') . ' ' . ($latest_claim['last_name'] ?? '')); ?>. Immediate verification required for funeral payout</div>
         </div>
     </div>
-    <button class="alert-button">COORDINATE AGENT</button>
+    <a href="/admin/claims" class="alert-button">VIEW CLAIM</a>
 </div>
+<?php endif; ?>
 
 <!-- Statistics Cards -->
 <div class="stats-row">
@@ -699,8 +869,8 @@
             </div>
         </div>
         <div class="stat-label">Total Field Agents</div>
-        <div class="stat-value">482</div>
-        <div class="stat-change">+24 New</div>
+        <div class="stat-value"><?php echo number_format($stats['total_agents'] ?? 0); ?></div>
+        <div class="stat-change">+<?php echo $stats['new_agents'] ?? 0; ?> New</div>
     </div>
 
     <!-- Pending Commissions -->
@@ -711,8 +881,8 @@
             </div>
         </div>
         <div class="stat-label">Pending Commissions</div>
-        <div class="stat-value">KES 142.5K</div>
-        <div class="stat-change">8 Pending</div>
+        <div class="stat-value">KES <?php echo number_format($stats['pending_commissions'] ?? 0, 0); ?></div>
+        <div class="stat-change"><?php echo count($pending_commissions_data ?? []); ?> Pending</div>
     </div>
 
     <!-- Monthly Accounts -->
@@ -723,8 +893,8 @@
             </div>
         </div>
         <div class="stat-label">Monthly Accounts</div>
-        <div class="stat-value">1,240</div>
-        <div class="stat-change">Single View</div>
+        <div class="stat-value"><?php echo number_format($stats['monthly_accounts'] ?? 0); ?></div>
+        <div class="stat-change">All Agents</div>
     </div>
 
     <!-- Assigned Portfolios -->
@@ -735,8 +905,8 @@
             </div>
         </div>
         <div class="stat-label">Assigned Portfolios</div>
-        <div class="stat-value">8,902</div>
-        <div class="stat-change">Top Performer</div>
+        <div class="stat-value"><?php echo number_format($stats['total_portfolios'] ?? 0); ?></div>
+        <div class="stat-change">All Regions</div>
     </div>
 </div>
 
@@ -754,8 +924,8 @@
                     <div class="growth-subtitle">Heatmap of recruitment and active agents indexed by region</div>
                 </div>
                 <div class="growth-filters">
-                    <button class="filter-btn active">Monthly</button>
-                    <button class="filter-btn">Quarterly</button>
+                    <button class="filter-btn active" onclick="window.location.href='/admin/agents?period=monthly';">Monthly</button>
+                    <button class="filter-btn" onclick="window.location.href='/admin/agents?period=quarterly';">Quarterly</button>
                 </div>
             </div>
 
@@ -791,170 +961,499 @@
                 <span class="payout-badge">NEEDS REVIEW</span>
             </div>
 
-            <!-- Sarah Williams -->
-            <div class="payout-item">
-                <div class="payout-agent">Sarah Williams</div>
-                <div class="payout-amount">KES 12,461</div>
-                <div class="payout-info">Agent: AGT-3826<br>8 Portfolios cleared</div>
-                <button class="payout-button">Approve Payout</button>
-            </div>
-
-            <!-- Robert King'era -->
-            <div class="payout-item">
-                <div class="payout-agent">Robert King'era</div>
-                <div class="payout-amount">KES 9,200</div>
-                <div class="payout-info">Agent: AGT-4567<br>6 Portfolios cleared</div>
-                <button class="payout-button audit">Audit</button>
-            </div>
+            <?php if (!empty($pending_commissions_data)): ?>
+                <?php foreach ($pending_commissions_data as $commission): ?>
+                <div class="payout-item">
+                    <div class="payout-agent"><?php echo htmlspecialchars($commission['agent_name'] ?? 'N/A'); ?></div>
+                    <div class="payout-amount">KES <?php echo number_format($commission['commission_amount'] ?? 0, 2); ?></div>
+                    <div class="payout-info">
+                        Agent: <?php echo htmlspecialchars($commission['agent_number'] ?? 'N/A'); ?><br>
+                        <?php echo number_format($commission['total_members'] ?? 0); ?> Portfolios
+                    </div>
+                    <button class="payout-button" onclick="window.location.href='/admin/agents/view/<?php echo $commission['agent_id']; ?>'">View Details</button>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="payout-item">
+                    <div class="payout-agent">No Pending Payouts</div>
+                    <div class="payout-info">All commissions have been processed</div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <!-- Registered Field Agents Table -->
-<div class="agents-table-card">
-    <div class="table-header">
-        <div class="table-title">Registered Field Agents</div>
-        <div class="table-actions">
-            <button class="table-btn">
-                <i class="fas fa-download"></i> Export Data
-            </button>
-            <button class="table-btn primary">
-                <i class="fas fa-user-plus"></i> Register New Agent
-            </button>
-        </div>
+<div class="tabs-container">
+    <div class="tabs-nav">
+        <button class="tab-item active" onclick="switchTab('all')">
+            <i class="fas fa-users"></i>
+            All Agents
+            <span class="tab-badge"><?= $stats['total_agents'] ?? 0 ?></span>
+        </button>
+        <button class="tab-item" onclick="switchTab('active')">
+            <i class="fas fa-user-check"></i>
+            Active Agents
+        </button>
+        <button class="tab-item" onclick="switchTab('suspended')">
+            <i class="fas fa-user-slash"></i>
+            Suspended
+        </button>
+        <button class="tab-item" onclick="switchTab('commissions')">
+            <i class="fas fa-money-bill-wave"></i>
+            Pending Commissions
+            <span class="tab-badge"><?= count($pending_commissions_data ?? []) ?></span>
+        </button>
+        <button class="tab-item" onclick="switchTab('leaderboard')">
+            <i class="fas fa-trophy"></i>
+            Leaderboard
+        </button>
+        <button class="tab-item" onclick="switchTab('tools')">
+            <i class="fas fa-tools"></i>
+            Tools & Reports
+        </button>
     </div>
 
+    <!-- All Agents Tab -->
+    <div id="tab-all" class="tab-content active">
+        <div class="tab-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; gap: 12px;">
+                <a href="/admin/agents/create" class="tab-action-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Register New Agent
+                </a>
+                <a href="/admin/agents/export-csv" class="tab-action-btn">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </a>
+            </div>
+            <div class="search-container" style="width: 300px;">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchAgents" placeholder="Search by name, number, region..." onkeyup="filterAgents()">
+            </div>
+        </div>
+
+<div class="agents-table-card">
     <div style="overflow-x: auto;">
-        <table class="agents-table">
+        <table class="agents-table" id="agentsTable">
             <thead>
                 <tr>
                     <th>Agent Details</th>
                     <th>Region</th>
                     <th>Active Portfolios</th>
-                    <th>New Recruits</th>
-                    <th>Pending Earnings</th>
+                    <th>Total Commission</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- David Ndungu -->
-                <tr>
-                    <td>
-                        <div class="agent-profile">
-                            <div class="agent-avatar">DM</div>
-                            <div class="agent-info">
-                                <div class="agent-name">David Ndungu</div>
-                                <div class="agent-number">AGT-2891</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Nairobi<br>Makua</td>
-                    <td><span class="portfolio-badge">432</span></td>
-                    <td>
-                        <span class="status-indicator">
-                            <i class="fas fa-arrow-up"></i>
-                        </span>
-                    </td>
-                    <td><span class="earnings-value">KES 22,450</span></td>
-                    <td><button class="action-btn">Details</button></td>
-                </tr>
-
-                <!-- Jane Mwema -->
-                <tr>
-                    <td>
-                        <div class="agent-profile">
-                            <div class="agent-avatar" style="background: #F59E0B;">JM</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Jane Mwema</div>
-                                <div class="agent-number">AGT-3456</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Kitsumu<br>Region</td>
-                    <td><span class="portfolio-badge">388</span></td>
-                    <td>
-                        <span class="status-indicator">
-                            <i class="fas fa-arrow-up"></i>
-                        </span>
-                    </td>
-                    <td><span class="earnings-value">KES 8,960</span></td>
-                    <td><button class="action-btn">Details</button></td>
-                </tr>
-
-                <!-- Andrew Gichuki -->
-                <tr>
-                    <td>
-                        <div class="agent-profile">
-                            <div class="agent-avatar" style="background: #10B981;">AG</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Andrew Gichuki</div>
-                                <div class="agent-number">AGT-4823</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Mombasa<br>Region</td>
-                    <td><span class="portfolio-badge">4.0</span></td>
-                    <td>
-                        <span class="status-indicator down">
-                            <i class="fas fa-arrow-down"></i> -1
-                        </span>
-                    </td>
-                    <td><span class="earnings-value">KES 0.00</span></td>
-                    <td><button class="action-btn">Details</button></td>
-                </tr>
+                <?php if (!empty($agents)): ?>
+                    <?php 
+                    $avatarColors = ['#8B5CF6', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];
+                    $colorIndex = 0;
+                    ?>
+                    <?php foreach ($agents as $agent): ?>
+                        <?php 
+                        $initials = strtoupper(substr($agent['first_name'] ?? 'A', 0, 1) . substr($agent['last_name'] ?? 'G', 0, 1));
+                        $avatarColor = $avatarColors[$colorIndex % count($avatarColors)];
+                        $colorIndex++;
+                        $status = $agent['status'] ?? 'active';
+                        ?>
+                        <tr data-status="<?= $status ?>" onclick="window.location.href='/admin/agents/view/<?php echo $agent['id']; ?>'" style="cursor: pointer;">
+                            <td>
+                                <div class="agent-profile">
+                                    <div class="agent-avatar" style="background: <?php echo $avatarColor; ?>;"><?php echo $initials; ?></div>
+                                    <div class="agent-info">
+                                        <div class="agent-name"><?php echo htmlspecialchars(($agent['first_name'] ?? '') . ' ' . ($agent['last_name'] ?? '')); ?></div>
+                                        <div class="agent-number"><?php echo htmlspecialchars($agent['agent_number'] ?? 'N/A'); ?></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><?php echo htmlspecialchars($agent['region'] ?? 'N/A'); ?></td>
+                            <td><span class="portfolio-badge"><?php echo number_format($agent['total_members'] ?? 0); ?></span></td>
+                            <td><span class="earnings-value">KES <?php echo number_format($agent['total_commission'] ?? 0, 2); ?></span></td>
+                            <td>
+                                <?php if ($status === 'active'): ?>
+                                    <span class="status-badge active">Active</span>
+                                <?php elseif ($status === 'suspended'): ?>
+                                    <span class="status-badge suspended">Suspended</span>
+                                <?php else: ?>
+                                    <span class="status-badge inactive">Inactive</span>
+                                <?php endif; ?>
+                            </td>
+                            <td onclick="event.stopPropagation();">
+                                <button class="action-btn" onclick="window.location.href='/admin/agents/view/<?php echo $agent['id']; ?>'">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #9CA3AF;">
+                            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                            <div style="font-size: 16px; font-weight: 600;">No Agents Found</div>
+                            <div style="font-size: 14px; margin-top: 8px;">Start by registering field agents</div>
+                        </td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <div style="text-align: center; padding: 16px; color: #9CA3AF; font-size: 13px;">
-        Displaying 3 OF 482 AGENTS
-        <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Previous</button>
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Next Page</button>
+        Displaying <span id="displayCount"><?php echo count($agents ?? []); ?></span> OF <?php echo number_format($stats['total_agents'] ?? 0); ?> AGENTS
+    </div>
+</div>
+    </div>
+
+    <!-- Active Agents Tab -->
+    <div id="tab-active" class="tab-content" style="display:none;">
+        <div class="tab-actions">
+            <h3 style="margin: 0; color: #1F2937;">Active Agents</h3>
+        </div>
+        <div class="agents-table-card" id="activeAgentsContent">
+            <!-- Content will be filtered from main table -->
+        </div>
+    </div>
+
+    <!-- Suspended Agents Tab -->
+    <div id="tab-suspended" class="tab-content" style="display:none;">
+        <div class="tab-actions">
+            <h3 style="margin: 0; color: #1F2937;">Suspended Agents</h3>
+            <button class="tab-action-btn" onclick="bulkReactivateAgents()">
+                <i class="fas fa-undo"></i>
+                Reactivate Selected
+            </button>
+        </div>
+        <div class="agents-table-card" id="suspendedAgentsContent">
+            <!-- Content will be filtered from main table -->
+        </div>
+    </div>
+
+    <!-- Commissions Tab -->
+    <div id="tab-commissions" class="tab-content" style="display:none;">
+        <div class="tab-actions">
+            <h3 style="margin: 0; color: #1F2937;">Pending Commission Payouts</h3>
+            <div>
+                <button class="tab-action-btn" onclick="exportCommissions()">
+                    <i class="fas fa-file-excel"></i>
+                    Export Report
+                </button>
+                <button class="tab-action-btn primary" onclick="processAllCommissions()">
+                    <i class="fas fa-check-double"></i>
+                    Process All
+                </button>
+            </div>
+        </div>
+
+        <div class="payout-card">
+            <?php if (!empty($pending_commissions_data)): ?>
+                <?php foreach ($pending_commissions_data as $commission): ?>
+                <div class="payout-item">
+                    <div class="payout-agent"><?php echo htmlspecialchars($commission['agent_name'] ?? 'N/A'); ?></div>
+                    <div class="payout-amount">KES <?php echo number_format($commission['commission_amount'] ?? 0, 2); ?></div>
+                    <div class="payout-info">
+                        Agent: <?php echo htmlspecialchars($commission['agent_number'] ?? 'N/A'); ?><br>
+                        <?php echo number_format($commission['total_members'] ?? 0); ?> Portfolios
+                    </div>
+                    <button class="payout-button" onclick="approveCommission(<?php echo $commission['agent_id']; ?>)">
+                        <i class="fas fa-check"></i> Approve Payout
+                    </button>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="text-align: center; padding: 60px; color: #9CA3AF;">
+                    <i class="fas fa-check-circle" style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;"></i>
+                    <div style="font-size: 18px; font-weight: 600;">All Commissions Processed</div>
+                    <div style="font-size: 14px; margin-top: 8px;">No pending commission payouts at this time</div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Leaderboard Tab -->
+    <div id="tab-leaderboard" class="tab-content" style="display:none;">
+        <div class="tab-actions">
+            <h3 style="margin: 0; color: #1F2937;">Top Performing Agents</h3>
+            <button class="tab-action-btn">
+                <i class="fas fa-calendar"></i>
+                This Month
+            </button>
+        </div>
+
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-md-12">
+                <div class="leaderboard-card" style="background: white; border-radius: 12px; padding: 24px;">
+                    <table class="agents-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Agent</th>
+                                <th>Region</th>
+                                <th>Portfolios</th>
+                                <th>Total Earnings</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($top_performers)): ?>
+                                <?php 
+                                $rank = 1;
+                                foreach ($top_performers as $performer): 
+                                    $trophyIcon = '';
+                                    if ($rank === 1) $trophyIcon = '🏆';
+                                    elseif ($rank === 2) $trophyIcon = '🥈';
+                                    elseif ($rank === 3) $trophyIcon = '🥉';
+                                ?>
+                                <tr>
+                                    <td><span style="font-size: 24px;"><?= $trophyIcon ?: $rank ?></span></td>
+                                    <td>
+                                        <div class="agent-profile">
+                                            <div class="agent-info">
+                                                <div class="agent-name"><?= htmlspecialchars($performer['name'] ?? 'N/A') ?></div>
+                                                <div class="agent-number"><?= htmlspecialchars($performer['agent_number'] ?? '') ?></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><?= htmlspecialchars($performer['region'] ?? 'N/A') ?></td>
+                                    <td><span class="portfolio-badge"><?= number_format($performer['portfolios'] ?? 0) ?></span></td>
+                                    <td><span class="earnings-value">KES <?= number_format($performer['earnings'] ?? 0, 2) ?></span></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="flex: 1; background: #E5E7EB; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div style="background: #10B981; height: 100%; width: <?= min(100, ($performer['performance'] ?? 75)) ?>%;"></div>
+                                            </div>
+                                            <span style="font-weight: 600; color: #10B981;"><?= ($performer['performance'] ?? 75) ?>%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php 
+                                $rank++;
+                                endforeach; 
+                                ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: #9CA3AF;">
+                                        <i class="fas fa-chart-line" style="font-size: 48px; opacity: 0.3;"></i>
+                                        <div style="margin-top: 16px;">No performance data available</div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools & Reports Tab -->
+    <div id="tab-tools" class="tab-content" style="display:none;">
+        <div class="tab-actions">
+            <h3 style="margin: 0; color: #1F2937;">Tools & Reports</h3>
+        </div>
+
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-md-4">
+                <div class="tool-card" style="background: white; border-radius: 12px; padding: 24px; text-align: center;">
+                    <i class="fas fa-download" style="font-size: 48px; color: #7F3D9E; margin-bottom: 16px;"></i>
+                    <h5>Export Agents Data</h5>
+                    <p style="color: #6B7280; font-size: 14px;">Download complete agent roster with performance metrics</p>
+                    <button class="tab-action-btn primary" onclick="window.location.href='/admin/agents/export-csv'">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tool-card" style="background: white; border-radius: 12px; padding: 24px; text-align: center;">
+                    <i class="fas fa-chart-bar" style="font-size: 48px; color: #10B981; margin-bottom: 16px;"></i>
+                    <h5>Performance Report</h5>
+                    <p style="color: #6B7280; font-size: 14px;">Generate detailed agent performance analytics</p>
+                    <button class="tab-action-btn primary" onclick="generatePerformanceReport()">
+                        <i class="fas fa-file-pdf"></i> Generate PDF
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tool-card" style="background: white; border-radius: 12px; padding: 24px; text-align: center;">
+                    <i class="fas fa-money-check-alt" style="font-size: 48px; color: #F59E0B; margin-bottom: 16px;"></i>
+                    <h5>Commission Report</h5>
+                    <p style="color: #6B7280; font-size: 14px;">Export commission history and pending payouts</p>
+                    <button class="tab-action-btn primary" onclick="exportCommissions()">
+                        <i class="fas fa-file-excel"></i> Export Report
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Monthly Top Performers -->
-<div class="performers-card">
-    <div class="performers-header">
-        <div>
-            <div class="performers-title">Monthly Top Performers</div>
-            <div class="performers-subtitle">Elite agents driving SHENA's growth mission</div>
-        </div>
-        <div class="trophy-icon">
-            <i class="fas fa-trophy"></i>
-        </div>
-    </div>
+<script>
+// Tab Switching Function
+function switchTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.style.display = 'none';
+    });
 
-    <div class="performers-grid">
-        <!-- 1st Place -->
-        <div class="performer-item">
-            <div class="performer-rank">1</div>
-            <div>
-                <div class="performer-name">David Ndungu</div>
-                <div class="performer-stat">24 new portfolio accounts</div>
-            </div>
-        </div>
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-item');
+    tabButtons.forEach(button => {
+        button.classList.remove('active');
+    });
 
-        <!-- 2nd Place -->
-        <div class="performer-item">
-            <div class="performer-rank">2</div>
-            <div>
-                <div class="performer-name">Ann Kamau</div>
-                <div class="performer-stat">18 new portfolio accounts</div>
-            </div>
-        </div>
+    // Show selected tab content
+    const selectedTab = document.getElementById('tab-' + tabName);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
 
-        <!-- 3rd Place -->
-        <div class="performer-item">
-            <div class="performer-rank">3</div>
-            <div>
-                <div class="performer-name">Sam Olouch</div>
-                <div class="performer-stat">15 new portfolio accounts</div>
-            </div>
-        </div>
-    </div>
-</div>
+    // Add active class to clicked tab button
+    event.target.closest('.tab-item').classList.add('active');
+
+    //  Filter agents based on tab
+    if (tabName === 'active' || tabName === 'suspended') {
+        filterAgentsByStatus(tabName);
+    }
+}
+
+// Filter agents by status
+function filterAgentsByStatus(status) {
+    const rows = document.querySelectorAll('#agentsTable tbody tr[data-status]');
+    const container = document.getElementById(status === 'active' ? 'activeAgentsContent' : 'suspendedAgentsContent');
+    
+    // Clone the table structure
+    const tableClone = document.getElementById('agentsTable').cloneNode(true);
+    tableClone.id = status + 'Table';
+    const tbody = tableClone.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    let count = 0;
+    rows.forEach(row => {
+        if (row.getAttribute('data-status') === status) {
+            tbody.appendChild(row.cloneNode(true));
+            count++;
+        }
+    });
+
+    if (count === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #9CA3AF;">
+                    <i class="fas fa-inbox" style="font-size: 48px; opacity: 0.3; margin-bottom: 16px;"></i>
+                    <div style="font-size: 16px; font-weight: 600;">No ${status} agents found</div>
+                </td>
+            </tr>
+        `;
+    }
+
+    container.innerHTML = '<div style="overflow-x: auto;"></div>';
+    container.querySelector('div').appendChild(tableClone);
+}
+
+// Search/Filter agents
+function filterAgents() {
+    const input = document.getElementById('searchAgents');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('agentsTable');
+    const tr = table.getElementsByTagName('tr');
+    let visibleCount = 0;
+
+    for (let i = 1; i < tr.length; i++) {
+        const row = tr[i];
+        const td = row.getElementsByTagName('td');
+        let found = false;
+
+        for (let j = 0; j < td.length; j++) {
+            const cell = td[j];
+            if (cell) {
+                const txtValue = cell.textContent || cell.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    }
+
+    document.getElementById('displayCount').textContent = visibleCount;
+}
+
+// Commission approval
+function approveCommission(agentId) {
+    ShenaApp.confirmAction(
+        'Approve commission payout for this agent?',
+        function() {
+            fetch(`/admin/commissions/approve/${agentId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ShenaApp.showNotification('Commission approved successfully!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    ShenaApp.alert('Failed to approve commission: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                ShenaApp.alert('An error occurred while processing the request', 'error');
+            });
+        },
+        null,
+        { type: 'success', title: 'Approve Commission' }
+    );
+}
+
+// Bulk reactivate agents
+function bulkReactivateAgents() {
+    ShenaApp.confirmAction(
+        'Reactivate all suspended agents?',
+        function() {
+            ShenaApp.showNotification('Bulk reactivation feature coming soon', 'info');
+        },
+        null,
+        { type: 'warning', title: 'Reactivate Agents' }
+    );
+}
+
+// Process all commissions
+function processAllCommissions() {
+    ShenaApp.confirmAction(
+        'Process all pending commission payouts?',
+        function() {
+            ShenaApp.showNotification('Processing all commissions...', 'info');
+            // Add actual processing logic here
+        },
+        null,
+        { type: 'primary', title: 'Process Commissions' }
+    );
+}
+
+// Export commissions
+function exportCommissions() {
+    ShenaApp.showNotification('Generating commission report...', 'info', 2000);
+    setTimeout(() => {
+        window.location.href = '/admin/commissions/export';
+    }, 500);
+}
+
+// Generate performance report
+function generatePerformanceReport() {
+    ShenaApp.showNotification('Generating performance report...', 'info', 2000);
+    setTimeout(() => {
+        window.location.href = '/admin/agents/performance-report';
+    }, 500);
+}
+</script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

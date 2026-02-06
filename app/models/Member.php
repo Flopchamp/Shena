@@ -271,13 +271,13 @@ class Member extends BaseModel
     }
     
     /**
-     * Get pending members count
+     * Get pending members (awaiting activation)
      * 
-     * @return int Pending members
+     * @return array Pending members with details
      */
     public function getPendingMembers()
     {
-        $sql = "SELECT m.*, u.email, u.phone, u.first_name, u.last_name, p.payment_reference
+        $sql = "SELECT m.*, u.email, u.phone, u.first_name, u.last_name, p.transaction_id
                 FROM {$this->table} m
                 JOIN users u ON m.user_id = u.id
                 LEFT JOIN payments p ON m.id = p.member_id AND p.status = 'pending'
