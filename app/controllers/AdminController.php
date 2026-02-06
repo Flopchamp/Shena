@@ -1032,6 +1032,82 @@ class AdminController extends BaseController
     }
 
     /**
+     * System Notifications Page
+     */
+    public function notifications()
+    {
+        $this->requireAdminAccess();
+        
+        // Get notification logs from database
+        // This could be extended to show SMS logs, email logs, system alerts, etc.
+        
+        // Sample notification data (replace with actual database queries)
+        $notifications = [
+            [
+                'title' => 'New Member Registration',
+                'message' => 'Member John Doe (ID: MB123456) successfully registered for Platinum Plan',
+                'type' => 'success',
+                'icon' => 'user-plus',
+                'time' => '2 hours ago',
+                'recipient' => 'System Admin',
+                'category' => 'Membership'
+            ],
+            [
+                'title' => 'M-Pesa Payment Received',
+                'message' => 'Payment of KES 5,000 received from phone 0712345678. Transaction: ABC123XYZ',
+                'type' => 'success',
+                'icon' => 'money-bill-wave',
+                'time' => '3 hours ago',
+                'recipient' => 'Finance Team',
+                'category' => 'Payment'
+            ],
+            [
+                'title' => 'Claim Submitted',
+                'message' => 'New death claim submitted by member Sarah Jane (MB987654). Policy: POL-2024-001',
+                'type' => 'warning',
+                'icon' => 'file-medical',
+                'time' => '5 hours ago',
+                'recipient' => 'Claims Officer',
+                'category' => 'Claims'
+            ],
+            [
+                'title' => 'Email Notification Sent',
+                'message' => 'Welcome email sent to newmember@example.com - Status: Delivered',
+                'type' => 'info',
+                'icon' => 'envelope',
+                'time' => '1 day ago',
+                'recipient' => '5 Members',
+                'category' => 'Email'
+            ],
+            [
+                'title' => 'SMS Campaign Delivered',
+                'message' => 'Monthly reminder SMS sent to 150 members - 145 delivered, 5 failed',
+                'type' => 'info',
+                'icon' => 'sms',
+                'time' => '2 days ago',
+                'recipient' => '150 Members',
+                'category' => 'SMS'
+            ],
+            [
+                'title' => 'System Backup Completed',
+                'message' => 'Daily database backup completed successfully. Size: 245 MB',
+                'type' => 'success',
+                'icon' => 'database',
+                'time' => '3 days ago',
+                'recipient' => 'System',
+                'category' => 'System'
+            ]
+        ];
+        
+        $data = [
+            'title' => 'System Notifications - Admin',
+            'notifications' => $notifications
+        ];
+        
+        $this->view('admin.notifications', $data);
+    }
+
+    /**
      * Send Email to Members
      */
     public function sendEmail()

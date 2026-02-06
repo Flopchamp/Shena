@@ -758,17 +758,11 @@
 
                     <!-- Communications -->
                     <li class="nav-item">
-                        <a class="nav-link has-submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/communications') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/sms-campaigns') !== false) ? 'active' : ''; ?>" href="#" onclick="toggleSubmenu(event, 'communications-submenu')">
+                        <a class="nav-link has-submenu <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/email-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/sms-campaigns') !== false || strpos($_SERVER['REQUEST_URI'], '/admin/notifications') !== false) ? 'active' : ''; ?>" href="#" onclick="toggleSubmenu(event, 'communications-submenu')">
                             <i class="fas fa-comments"></i>
                             <span>Communications</span>
                         </a>
                         <ul class="nav-submenu" id="communications-submenu">
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo ($_SERVER['REQUEST_URI'] == '/admin/communications') ? 'active' : ''; ?>" href="/admin/communications">
-                                    <i class="fas fa-inbox"></i>
-                                    <span>Communications Hub</span>
-                                </a>
-                            </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'email-campaigns') !== false) ? 'active' : ''; ?>" href="/admin/email-campaigns">
                                     <i class="fas fa-envelope"></i>
@@ -782,7 +776,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'notification-settings') !== false) ? 'active' : ''; ?>" href="/admin/notification-settings">
+                                <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], '/admin/notifications') !== false) ? 'active' : ''; ?>" href="/admin/notifications">
                                     <i class="fas fa-bell"></i>
                                     <span>Notifications</span>
                                 </a>
@@ -986,10 +980,9 @@
             { title: 'Financial Dashboard', subtitle: 'Payments', url: '/admin/financial-dashboard' },
             
             // Communications
-            { title: 'Communications Hub', subtitle: 'Communications', url: '/admin/communications' },
             { title: 'Email Campaigns', subtitle: 'Communications', url: '/admin/email-campaigns' },
             { title: 'SMS Campaigns', subtitle: 'Communications', url: '/admin/sms-campaigns' },
-            { title: 'Notifications', subtitle: 'Communications', url: '/admin/notification-settings' },
+            { title: 'System Notifications', subtitle: 'Communications', url: '/admin/notifications' },
             
             // Reports
             { title: 'Reports & Analysis', subtitle: 'Reports', url: '/admin/reports' },

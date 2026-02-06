@@ -210,6 +210,7 @@ class Router
         $this->addRoute('GET', '/admin/bulk-sms/preview-recipients', 'BulkSmsController@previewRecipients');
         
         // Settings Routes (Admin & Manager)
+        $this->addRoute('GET', '/admin/notifications', 'AdminController@notifications');
         $this->addRoute('GET', '/admin/notification-settings', 'SettingsController@index');
         $this->addRoute('POST', '/admin/settings/update', 'SettingsController@update');
         $this->addRoute('POST', '/admin/settings/test-fallback', 'SettingsController@testFallback');
