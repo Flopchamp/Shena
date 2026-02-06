@@ -963,32 +963,54 @@
             
             // Members
             { title: 'Member Management', subtitle: 'View & Manage Members', url: '/admin/members' },
+            { title: 'Register New Member', subtitle: 'Members', url: '/admin/members/register' },
+            { title: 'Add Member', subtitle: 'Members', url: '/admin/members/register' },
             
             // Agents
+            { title: 'Manage Agents', subtitle: 'Agent Management', url: '/admin/agents' },
             { title: 'Agent Portal', subtitle: 'Agent Management', url: '/admin/agents' },
             { title: 'Resource Library', subtitle: 'Agent Resources', url: '/admin/agents/resources' },
-            { title: 'Add New Agent', subtitle: 'Agent Management', url: '/admin/agents/create' },
-            { title: 'Agent Commissions', subtitle: 'Agent Management', url: '/admin/agents/commissions' },
             { title: 'Agent Resources', subtitle: 'Agent Management', url: '/admin/agents/resources' },
             
             // Claims
+            { title: 'Claims Management', subtitle: 'Claims', url: '/admin/claims' },
             { title: 'All Claims', subtitle: 'Claims', url: '/admin/claims' },
+            { title: 'Submit Claim', subtitle: 'Claims', url: '/admin/claims/submit' },
+            { title: 'New Claim', subtitle: 'Claims', url: '/admin/claims/submit' },
             
             // Payments
             { title: 'All Payments', subtitle: 'Payments', url: '/admin/payments' },
+            { title: 'Payment History', subtitle: 'Payments', url: '/admin/payments' },
             { title: 'Reconciliation', subtitle: 'Payments', url: '/admin/payments-reconciliation' },
+            { title: 'Payment Reconciliation', subtitle: 'Payments', url: '/admin/payments-reconciliation' },
             { title: 'Financial Dashboard', subtitle: 'Payments', url: '/admin/financial-dashboard' },
+            { title: 'Finance Dashboard', subtitle: 'Payments', url: '/admin/financial-dashboard' },
+            { title: 'M-Pesa Payments', subtitle: 'Payments', url: '/admin/payments' },
             
             // Communications
+            { title: 'Communications', subtitle: 'Communications Hub', url: '/admin/communications' },
             { title: 'Email Campaigns', subtitle: 'Communications', url: '/admin/email-campaigns' },
+            { title: 'Bulk Email', subtitle: 'Communications', url: '/admin/email-campaigns' },
             { title: 'SMS Campaigns', subtitle: 'Communications', url: '/admin/sms-campaigns' },
+            { title: 'Bulk SMS', subtitle: 'Communications', url: '/admin/sms-campaigns' },
+            { title: 'Notifications', subtitle: 'Communications', url: '/admin/notifications' },
             { title: 'System Notifications', subtitle: 'Communications', url: '/admin/notifications' },
+            { title: 'Notification Logs', subtitle: 'Communications', url: '/admin/notifications' },
             
             // Reports
             { title: 'Reports & Analysis', subtitle: 'Reports', url: '/admin/reports' },
+            { title: 'Analytics', subtitle: 'Reports', url: '/admin/reports' },
+            { title: 'System Reports', subtitle: 'Reports', url: '/admin/reports' },
             
             // Settings
-            { title: 'System Settings', subtitle: 'Settings', url: '/admin/settings' }
+            { title: 'System Settings', subtitle: 'Settings', url: '/admin/settings' },
+            { title: 'Settings', subtitle: 'Configuration', url: '/admin/settings' },
+            { title: 'Notification Settings', subtitle: 'Settings', url: '/admin/notification-settings' },
+            { title: 'Email Settings', subtitle: 'Settings', url: '/admin/settings' },
+            { title: 'SMS Settings', subtitle: 'Settings', url: '/admin/settings' },
+            { title: 'Payment Settings', subtitle: 'Settings', url: '/admin/settings' },
+            { title: 'M-Pesa Configuration', subtitle: 'Settings', url: '/admin/settings' },
+            { title: 'Security Settings', subtitle: 'Settings', url: '/admin/settings' }
         ];
 
         function searchAdmin(query) {

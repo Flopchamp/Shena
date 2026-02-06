@@ -13,7 +13,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="mb-1">Service Delivery Tracking</h2>
-                    <p class="text-muted mb-0">Claim #<?= e($claim['id']) ?> - <?= e($claim['deceased_name']) ?></p>
+                    <p class="text-muted mb-0">Claim #<?= e($claim->id) ?> - <?= e($claim->deceased_name) ?></p>
                 </div>
                 <a href="/admin/claims" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Claims
@@ -47,32 +47,32 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                             <table class="table table-sm table-borderless">
                                 <tr>
                                     <th>Claim ID:</th>
-                                    <td><?= e($claim['id']) ?></td>
+                                    <td><?= e($claim->id) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Member:</th>
-                                    <td><?= e($claim['first_name'] . ' ' . $claim['last_name']) ?></td>
+                                    <td><?= e($claim->first_name . ' ' . $claim->last_name) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Deceased:</th>
-                                    <td><?= e($claim['deceased_name']) ?></td>
+                                    <td><?= e($claim->deceased_name) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Date of Death:</th>
-                                    <td><?= formatDate($claim['date_of_death']) ?></td>
+                                    <td><?= formatDate($claim->date_of_death) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Status:</th>
                                     <td>
-                                        <span class="badge bg-<?= $claim['status'] === 'approved' ? 'success' : 'info' ?>">
-                                            <?= ucfirst(str_replace('_', ' ', e($claim['status']))) ?>
+                                        <span class="badge bg-<?= $claim->status === 'approved' ? 'success' : 'info' ?>">
+                                            <?= ucfirst(str_replace('_', ' ', e($claim->status))) ?>
                                         </span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Service Type:</th>
                                     <td>
-                                        <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
+                                        <?php if ($claim->service_delivery_type === 'cash_alternative'): ?>
                                             <span class="badge bg-warning text-dark">
                                                 <i class="fas fa-money-bill"></i> Cash Alternative
                                             </span>
@@ -85,11 +85,11 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                 </tr>
                                 <tr>
                                     <th>Delivery Date:</th>
-                                    <td><?= $claim['services_delivery_date'] ? formatDate($claim['services_delivery_date']) : 'Not set' ?></td>
+                                    <td><?= $claim->services_delivery_date ? formatDate($claim->services_delivery_date) : 'Not set' ?></td>
                                 </tr>
                                 <tr>
                                     <th>Mortuary Days:</th>
-                                    <td><?= e($claim['mortuary_days_count']) ?> days (max 14)</td>
+                                    <td><?= e($claim->mortuary_days_count) ?> days (max 14)</td>
                                 </tr>
                             </table>
                         </div>
@@ -119,14 +119,14 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                     <i class="fas fa-check-circle"></i> All services completed!
                                 </div>
                                 <form method="POST" action="/admin/claims/complete" id="complete-claim-form">
-                                    <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
+                                    <input type="hidden" name="claim_id" value="<?= $claim->id ?>">
                                     <button type="button" onclick="confirmCompleteClaim()" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-check-double"></i> Complete Claim
                                     </button>
                                 </form>
                             <?php else: ?>
                                 <p class="text-muted mb-0">
-                                    <?= count(array_filter($checklist, fn($c) => $c['completed'])) ?> of <?= count($checklist) ?> services completed
+                                    <?= count(array_filter($checklist, fn($c) => $c->completed)) ?> of <?= count($checklist) ?> services completed
                                 </p>
                             <?php endif; ?>
                         </div>
@@ -165,12 +165,12 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                     
                                     foreach ($checklist as $item): 
                                     ?>
-                                        <div class="list-group-item <?= $item['completed'] ? 'list-group-item-success' : '' ?>">
+                                        <div class="list-group-item <?= $item->completed ? 'list-group-item-success' : '' ?>">
                                             <div class="row align-items-center">
                                                 <div class="col-md-6">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-3">
-                                                            <?php if ($item['completed']): ?>
+                                                            <?php if ($item->completed): ?>
                                                                 <i class="fas fa-check-circle text-success fa-2x"></i>
                                                             <?php else: ?>
                                                                 <i class="far fa-circle text-muted fa-2x"></i>
@@ -178,13 +178,13 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                                         </div>
                                                         <div>
                                                             <h6 class="mb-1">
-                                                                <i class="<?= $serviceIcons[$item['service_type']] ?>"></i>
-                                                                <?= $serviceLabels[$item['service_type']] ?>
+                                                                <i class="<?= $serviceIcons[$item->service_type] ?>"></i>
+                                                                <?= $serviceLabels[$item->service_type] ?>
                                                             </h6>
-                                                            <?php if ($item['completed']): ?>
+                                                            <?php if ($item->completed): ?>
                                                                 <small class="text-muted">
-                                                                    Completed by <?= e($item['first_name'] . ' ' . $item['last_name']) ?>
-                                                                    on <?= formatDateTime($item['completed_at']) ?>
+                                                                    Completed by <?= e($item->first_name . ' ' . $item->last_name) ?>
+                                                                    on <?= formatDateTime($item->completed_at) ?>
                                                                 </small>
                                                             <?php else: ?>
                                                                 <small class="text-muted">Pending completion</small>
@@ -193,22 +193,22 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6 text-end">
-                                                    <?php if (!$item['completed']): ?>
+                                                    <?php if (!$item->completed): ?>
                                                         <button type="button" class="btn btn-sm btn-primary" 
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="#completeServiceModal"
-                                                                data-service-type="<?= e($item['service_type']) ?>"
-                                                                data-service-label="<?= e($serviceLabels[$item['service_type']]) ?>">
+                                                                data-service-type="<?= e($item->service_type) ?>"
+                                                                data-service-label="<?= e($serviceLabels[$item->service_type]) ?>">
                                                             <i class="fas fa-check"></i> Mark Completed
                                                         </button>
                                                     <?php else: ?>
                                                         <span class="badge bg-success">Completed</span>
-                                                        <?php if ($item['service_notes']): ?>
+                                                        <?php if ($item->service_notes): ?>
                                                             <button type="button" class="btn btn-sm btn-info" 
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#viewNotesModal"
-                                                                    data-notes="<?= e($item['service_notes']) ?>"
-                                                                    data-service-label="<?= e($serviceLabels[$item['service_type']]) ?>">
+                                                                    data-notes="<?= e($item->service_notes) ?>"
+                                                                    data-service-label="<?= e($serviceLabels[$item->service_type]) ?>">
                                                                 <i class="fas fa-eye"></i> View Notes
                                                             </button>
                                                         <?php endif; ?>
@@ -231,7 +231,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
 <div class="modal fade" id="completeServiceModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="/admin/claims/track/<?= $claim['id'] ?>">
+            <form method="POST" action="/admin/claims/track/<?= $claim->id ?>">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="fas fa-check-circle"></i> Complete Service</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

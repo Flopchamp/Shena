@@ -660,7 +660,8 @@ $top_performers = $top_performers ?? [];
     }
 
     .agents-table tbody tr:hover {
-        background: #F9FAFB;
+        background: #FAF5FF;
+        transform: translateX(2px);
     }
 
     .agent-profile {
