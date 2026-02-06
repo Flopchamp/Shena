@@ -707,26 +707,14 @@
                         <ul class="nav-submenu" id="agents-submenu">
                             <li class="nav-item">
                                 <a class="nav-link <?php echo ($_SERVER['REQUEST_URI'] == '/admin/agents') ? 'active' : ''; ?>" href="/admin/agents">
-                                    <i class="fas fa-list"></i>
-                                    <span>All Agents</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'agents/create') !== false) ? 'active' : ''; ?>" href="/admin/agents/create">
-                                    <i class="fas fa-plus"></i>
-                                    <span>Add New Agent</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'agents/commissions') !== false) ? 'active' : ''; ?>" href="/admin/agents/commissions">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <span>Commissions</span>
+                                    <i class="fas fa-users-cog"></i>
+                                    <span>Manage Agents</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (strpos($_SERVER['REQUEST_URI'], 'agents/resources') !== false) ? 'active' : ''; ?>" href="/admin/agents/resources">
-                                    <i class="fas fa-book"></i>
-                                    <span>Agent Resources</span>
+                                    <i class="fas fa-folder-open"></i>
+                                    <span>Resource Library</span>
                                 </a>
                             </li>
                         </ul>
@@ -983,7 +971,8 @@
             { title: 'Member Management', subtitle: 'View & Manage Members', url: '/admin/members' },
             
             // Agents
-            { title: 'All Agents', subtitle: 'Agent Management', url: '/admin/agents' },
+            { title: 'Agent Portal', subtitle: 'Agent Management', url: '/admin/agents' },
+            { title: 'Resource Library', subtitle: 'Agent Resources', url: '/admin/agents/resources' },
             { title: 'Add New Agent', subtitle: 'Agent Management', url: '/admin/agents/create' },
             { title: 'Agent Commissions', subtitle: 'Agent Management', url: '/admin/agents/commissions' },
             { title: 'Agent Resources', subtitle: 'Agent Management', url: '/admin/agents/resources' },

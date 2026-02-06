@@ -1,4 +1,5 @@
 <?php 
+// Real data from controller
 $pendingClaims = $pendingClaims ?? 0;
 $approvedClaims = $approvedClaims ?? 0;
 $rejectedClaims = $rejectedClaims ?? 0;
@@ -6,101 +7,43 @@ $totalClaimAmount = $totalClaimAmount ?? 0;
 $pending_claims = $pending_claims ?? [];
 $all_claims = $all_claims ?? [];
 $completed_claims = $completed_claims ?? [];
+
+// Calculate real statistics
+$submittedCount = count(array_filter($all_claims, fn($c) => $c['status'] === 'submitted'));
+$underReviewCount = count(array_filter($all_claims, fn($c) => $c['status'] === 'under_review'));
+$inServiceCount = count(array_filter($all_claims, fn($c) => $c['status'] === 'approved'));
+$actionNeededCount = count(array_filter($all_claims, fn($c) => 
+    ($c['status'] === 'submitted' && empty($c['documents'])) || 
+    ($c['status'] === 'under_review')
+));
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
     /* Page Header */
     .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-bottom: 24px;
     }
 
     .page-title {
-        font-size: 24px;
+        font-family: 'Playfair Display', serif;
+        font-size: 28px;
         font-weight: 700;
         color: #1F2937;
-        margin-bottom: 4px;
+        margin: 0 0 4px 0;
     }
 
     .page-subtitle {
-        font-size: 14px;
-        color: #9CA3AF;
-    }
-
-    /* Alert Banner */
-    .alert-banner {
-        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        display: <?php echo $pendingClaims > 0 ? 'flex' : 'none'; ?>;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.02); }
-    }
-
-    .alert-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .alert-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-    }
-
-    .alert-text h4 {
-        color: white;
-        font-size: 16px;
-        font-weight: 700;
-        margin-bottom: 4px;
-    }
-
-    .alert-text p {
-        color: rgba(255, 255, 255, 0.95);
         font-size: 13px;
+        color: #9CA3AF;
         margin: 0;
     }
 
-    .btn-alert-action {
-        padding: 12px 24px;
-        background: white;
-        color: #DC2626;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-alert-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
     /* Stats Grid */
-    .stats-grid {
+    .stats-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap:20px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
         margin-bottom: 30px;
     }
 
@@ -121,12 +64,12 @@ $completed_claims = $completed_claims ?? [];
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
     }
 
     .stat-icon {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -134,640 +77,835 @@ $completed_claims = $completed_claims ?? [];
         font-size: 18px;
     }
 
-    .stat-icon.red {
-        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
-        color: #EF4444;
-    }
-
-    .stat-icon.green {
-        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-        color: #10B981;
+    .stat-icon.blue {
+        background: #DBEAFE;
+        color: #3B82F6;
     }
 
     .stat-icon.orange {
-        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-        color: #F59E0B;
+        background: #FED7AA;
+        color: #F97316;
     }
 
-    .stat-icon.purple {
-        background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
-        color: #7F3D9E;
+    .stat-icon.green {
+        background: #D1FAE5;
+        color: #10B981;
+    }
+
+    .stat-icon.red {
+        background: #FEE2E2;
+        color: #EF4444;
     }
 
     .stat-label {
-        font-size: 13px;
+        font-size: 11px;
         color: #9CA3AF;
-        font-weight: 500;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .stat-value {
         font-size: 28px;
         font-weight: 700;
         color: #1F2937;
+    }
+
+    /* Main Content Layout */
+    .content-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    /* Active Claims */
+    .claims-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .claims-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 20px;
+    }
+
+    .claim-item {
+        padding: 16px;
+        background: #F9FAFB;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .claim-item:hover {
+        background: #F3F4F6;
+    }
+
+    .claim-item.active {
+        background: white;
+        border: 2px solid #7F3D9E;
+    }
+
+    .claim-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .claim-badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .claim-badge.doc-review {
+        background: #DBEAFE;
+        color: #3B82F6;
+    }
+
+    .claim-badge.logistics {
+        background: #FED7AA;
+        color: #F97316;
+    }
+
+    .claim-badge.settled {
+        background: #D1FAE5;
+        color: #10B981;
+    }
+
+    .claim-number {
+        font-size: 11px;
+        color: #9CA3AF;
+    }
+
+    .claim-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1F2937;
         margin-bottom: 4px;
     }
 
-    .stat-subtext {
+    .claim-beneficiary {
         font-size: 12px;
         color: #6B7280;
+        margin-bottom: 8px;
     }
 
-    /* Tabs */
+    .claim-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #7F3D9E;
+    }
+
+    .claim-progress i {
+        font-size: 14px;
+    }
+
+    .claim-logistics-info {
+        font-size: 12px;
+        color: #6B7280;
+        margin-bottom: 4px;
+    }
+
+    .claim-pickup {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #F97316;
+    }
+
+    .claim-settled-info {
+        font-size: 12px;
+        color: #10B981;
+    }
+
+    /* Verification Panel */
+    .verification-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .verification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .verification-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .verification-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+        margin-bottom: 24px;
+    }
+
+    .claim-amount-label {
+        font-size: 11px;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .claim-amount-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #7F3D9E;
+    }
+
+    /* Document Upload Grid */
+    .document-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .document-slot {
+        aspect-ratio: 1;
+        border: 2px dashed #E5E7EB;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #F9FAFB;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(139, 92, 246, 0.05) 10px,
+            rgba(139, 92, 246, 0.05) 20px
+        );
+    }
+
+    .document-slot:hover {
+        border-color: #8B5CF6;
+        background: rgba(139, 92, 246, 0.02);
+    }
+
+    .document-slot.verified {
+        border-color: #7F3D9E;
+        border-style: solid;
+        background: #F0FDF4;
+        background-image: none;
+    }
+
+    .document-slot.review {
+        border-color: #7F3D9E;
+        border-style: solid;
+        background: #FAF5FF;
+        background-image: none;
+    }
+
+    .document-icon {
+        font-size: 36px;
+        color: #D1D5DB;
+        margin-bottom: 12px;
+    }
+
+    .document-slot.verified .document-icon {
+        color: #7F3D9E;
+    }
+
+    .document-slot.review .document-icon {
+        color: #7F3D9E;
+    }
+
+    .document-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7280;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .document-status {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .document-status.verified {
+        background: #7F3D9E;
+        color: white;
+    }
+
+    .document-status.review {
+        background: #7F3D9E;
+        color: white;
+    }
+
+    /* Logistics Section */
+    .logistics-section {
+        background: #F9FAFB;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .logistics-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .logistics-icon {
+        width: 40px;
+        height: 40px;
+        background: #7F3D9E;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+
+    .logistics-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+    }
+
+    .form-section {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #1F2937;
+        background: white;
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #7F3D9E;
+        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+    }
+
+    /* Checklist */
+    .checklist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .checklist-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #7F3D9E;
+    }
+
+    .checklist-label {
+        font-size: 13px;
+        color: #1F2937;
+        cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+        .content-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .document-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .checklist-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .tabs-nav {
+            overflow-x: auto;
+        }
+    }
+
+    /* Tabs Styles */
     .tabs-container {
         background: white;
         border-radius: 12px;
-        border: 1px solid #E5E7EB;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
-    .tabs-header {
+    .tabs-nav {
         display: flex;
-        border-bottom: 1px solid #E5E7EB;
-        padding: 0;
         background: #F9FAFB;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 4px;
+        gap: 4px;
+        overflow-x: auto;
     }
 
-    .tab-btn {
-        padding: 16px 24px;
+    .tab-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
         border: none;
         background: transparent;
         color: #6B7280;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
+        border-radius: 8px;
+        white-space: nowrap;
         transition: all 0.2s;
-        border-bottom: 2px solid transparent;
-        position: relative;
     }
 
-    .tab-btn:hover {
+    .tab-item:hover {
+        background: rgba(127, 61, 158, 0.1);
         color: #7F3D9E;
-        background: rgba(127, 61, 158, 0.05);
     }
 
-    .tab-btn.active {
-        color: #7F3D9E;
+    .tab-item.active {
         background: white;
-        border-bottom-color: #7F3D9E;
+        color: #7F3D9E;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .tab-badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: #7F3D9E;
+        color: white;
+        border-radius: 10px;
         font-size: 11px;
         font-weight: 700;
-        margin-left: 8px;
-    }
-
-    .tab-badge.red {
-        background: #FEE2E2;
-        color: #DC2626;
-    }
-
-    .tab-badge.green {
-        background: #D1FAE5;
-        color: #059669;
     }
 
     .tab-content {
-        display: none;
         padding: 24px;
     }
 
-    .tab-content.active {
-        display: block;
-    }
-
-    /* Table Styles */
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .search-box {
-        position: relative;
-        width: 300px;
-    }
-
-    .search-box input {
+    .claims-table {
         width: 100%;
-        padding: 10px 16px 10px 40px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-size: 14px;
+        border-collapse: collapse;
     }
 
-    .search-box i {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #9CA3AF;
-    }
-
-    .filter-group {
-        display: flex;
-        gap: 12px;
-    }
-
-    .filter-btn {
-        padding: 10px 16px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        color: #6B7280;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .filter-btn:hover {
-        border-color: #7F3D9E;
-        color: #7F3D9E;
-    }
-
-    .custom-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .custom-table thead {
-        background: #F9FAFB;
-    }
-
-    .custom-table th {
-        padding: 12px 16px;
+    .claims-table thead th {
         text-align: left;
-        font-size: 12px;
+        padding: 12px;
+        font-size: 11px;
         font-weight: 700;
-        color: #6B7280;
+        color: #9CA3AF;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-bottom: 1px solid #E5E7EB;
     }
 
-    .custom-table td {
-        padding: 16px;
+    .claims-table tbody td {
+        padding: 16px 12px;
         border-bottom: 1px solid #F3F4F6;
-        font-size: 14px;
-        color: #1F2937;
     }
 
-    .custom-table tbody tr {
-        transition: background 0.2s;
-    }
-
-    .custom-table tbody tr:hover {
+    .claims-table tbody tr:hover {
         background: #F9FAFB;
     }
 
-    /* Status Badges */
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
+    .claim-member-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .claim-member-name {
         font-weight: 600;
+        color: #1F2937;
+        font-size: 14px;
     }
 
-    .status-badge.pending {
-        background: #FEF3C7;
-        color: #F59E0B;
+    .claim-deceased-name {
+        font-size: 12px;
+        color: #6B7280;
     }
 
-    .status-badge.approved {
-        background: #D1FAE5;
-        color: #059669;
-    }
-
-    .status-badge.rejected {
-        background: #FEE2E2;
-        color: #DC2626;
-    }
-
-    .status-badge.processing {
-        background: #DBEAFE;
-        color: #3B82F6;
-    }
-
-    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 8px;
     }
 
-    .btn-action {
+    .btn-view {
         padding: 6px 12px;
-        border-radius: 6px;
         font-size: 12px;
-        font-weight: 600;
+        border-radius: 6px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
         cursor: pointer;
         transition: all 0.2s;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .btn-view {
-        background: #EDE9FE;
-        color: #7F3D9E;
     }
 
     .btn-view:hover {
-        background: #DDD6FE;
+        border-color: #7F3D9E;
+        color: #7F3D9E;
     }
 
     .btn-approve {
-        background: #D1FAE5;
-        color: #059669;
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: none;
+        background: #10B981;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
     .btn-approve:hover {
-        background: #A7F3D0;
+        background: #059669;
     }
 
     .btn-reject {
-        background: #FEE2E2;
-        color: #DC2626;
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: none;
+        background: #EF4444;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
     .btn-reject:hover {
-        background: #FECACA;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .empty-icon {
-        width: 80px;
-        height: 80px;
-        background: #F3F4F6;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 32px;
-        color: #9CA3AF;
-    }
-
-    .empty-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1F2937;
-        margin-bottom: 8px;
-    }
-
-    .empty-text {
-        font-size: 14px;
-        color: #9CA3AF;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .tabs-header {
-            overflow-x: auto;
-        }
-
-        .table-header {
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .search-box {
-            width: 100%;
-        }
-
-        .custom-table {
-            font-size: 12px;
-        }
-
-        .custom-table td {
-            padding: 12px;
-        }
+        background: #DC2626;
     }
 </style>
 
 <!-- Page Header -->
 <div class="page-header">
-    <div>
-        <h1 class="page-title">Claims Management</h1>
-        <p class="page-subtitle">Process and manage all member claims</p>
-    </div>
+    <h1 class="page-title">Claims & Logistics Hub</h1>
+    <p class="page-subtitle">Verification and funeral coordination management</p>
 </div>
 
-<!-- Alert for Unprocessed Claims -->
-<div class="alert-banner">
-    <div class="alert-content">
-        <div class="alert-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="alert-text">
-            <h4>Urgent: Pending Claims Require Attention</h4>
-            <p><strong><?php echo $pendingClaims; ?> claim<?php echo $pendingClaims > 1 ? 's are' : ' is'; ?></strong> awaiting your review and processing</p>
-        </div>
-    </div>
-    <button class="btn-alert-action" onclick="showTab('pending')">
-        Process Now
-    </button>
-</div>
-
-<!-- Claims Analytics -->
-<div class="stats-grid">
+<!-- Statistics Cards -->
+<div class="stats-row">
+    <!-- Submitted Claims -->
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon red">
-                <i class="fas fa-hourglass-half"></i>
+            <div class="stat-icon blue">
+                <i class="fas fa-file-alt"></i>
             </div>
-            <span class="stat-label">Pending Claims</span>
         </div>
-        <div class="stat-value"><?php echo $pendingClaims; ?></div>
-        <div class="stat-subtext">Awaiting processing</div>
+        <div class="stat-label">Submitted</div>
+        <div class="stat-value"><?= str_pad($submittedCount, 2, '0', STR_PAD_LEFT) ?> Claims</div>
     </div>
 
+    <!-- Under Review -->
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon orange">
+                <i class="fas fa-search"></i>
+            </div>
+        </div>
+        <div class="stat-label">Under Review</div>
+        <div class="stat-value"><?= str_pad($underReviewCount, 2, '0', STR_PAD_LEFT) ?> Claims</div>
+    </div>
+
+    <!-- Approved/In Service -->
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon green">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <span class="stat-label">Approved Claims</span>
         </div>
-        <div class="stat-value"><?php echo $approvedClaims; ?></div>
-        <div class="stat-subtext">Successfully processed</div>
+        <div class="stat-label">In Service</div>
+        <div class="stat-value"><?= str_pad($inServiceCount, 2, '0', STR_PAD_LEFT) ?> Active</div>
     </div>
 
+    <!-- Completed -->
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon orange">
-                <i class="fas fa-times-circle"></i>
+            <div class="stat-icon green">
+                <i class="fas fa-check-double"></i>
             </div>
-            <span class="stat-label">Rejected Claims</span>
         </div>
-        <div class="stat-value"><?php echo $rejectedClaims; ?></div>
-        <div class="stat-subtext">Did not meet criteria</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon purple">
-                <i class="fas fa-coins"></i>
-            </div>
-            <span class="stat-label">Total Amount</span>
-        </div>
-        <div class="stat-value">KSh <?php echo number_format($totalClaimAmount); ?></div>
-        <div class="stat-subtext">Paid out to date</div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-value"><?= str_pad(count($completed_claims), 2, '0', STR_PAD_LEFT) ?> Total</div>
     </div>
 </div>
 
-<!-- Claims Tabs -->
+<!-- Tabbed Interface -->
 <div class="tabs-container">
-    <div class="tabs-header">
-        <button class="tab-btn active" onclick="showTab('pending')" id="tab-pending">
-            <i class="fas fa-hourglass-half"></i>
-            Pending Claims
-            <span class="tab-badge red"><?php echo $pendingClaims; ?></span>
-        </button>
-        <button class="tab-btn" onclick="showTab('all')" id="tab-all">
+    <div class="tabs-nav">
+        <button class="tab-item active" onclick="switchClaimTab('all')">
             <i class="fas fa-list"></i>
             All Claims
+            <span class="tab-badge"><?= count($all_claims) ?></span>
         </button>
-        <button class="tab-btn" onclick="showTab('completed')" id="tab-completed">
+        <button class="tab-item" onclick="switchClaimTab('submitted')">
+            <i class="fas fa-file-alt"></i>
+            Submitted
+            <span class="tab-badge"><?= $submittedCount ?></span>
+        </button>
+        <button class="tab-item" onclick="switchClaimTab('review')">
+            <i class="fas fa-search"></i>
+            Under Review
+            <span class="tab-badge"><?= $underReviewCount ?></span>
+        </button>
+        <button class="tab-item" onclick="switchClaimTab('approved')">
+            <i class="fas fa-truck"></i>
+            Approved/Service
+            <span class="tab-badge"><?= $inServiceCount ?></span>
+        </button>
+        <button class="tab-item" onclick="switchClaimTab('completed')">
             <i class="fas fa-check-circle"></i>
-            Completed Claims
-            <span class="tab-badge green"><?php echo $approvedClaims; ?></span>
+            Completed
+            <span class="tab-badge"><?= count($completed_claims) ?></span>
         </button>
-    </div>
-
-    <!-- Pending Claims Tab -->
-    <div class="tab-content active" id="content-pending">
-        <div class="table-header">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search claims by member name or ID...">
-            </div>
-            <div class="filter-group">
-                <button class="filter-btn">
-                    <i class="fas fa-filter"></i>
-                    Filter
-                </button>
-                <button class="filter-btn">
-                    <i class="fas fa-download"></i>
-                    Export
-                </button>
-            </div>
-        </div>
-
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>Claim ID</th>
-                    <th>Member Name</th>
-                    <th>Deceased Name</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Date Submitted</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($pending_claims)): ?>
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
-                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
-                        <p>No pending claims</p>
-                    </td>
-                </tr>
-                <?php else: ?>
-                    <?php foreach ($pending_claims as $claim): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
-                        <td><strong>KSh <?php echo number_format($claim['amount'], 2); ?></strong></td>
-                        <td><?php echo date('M d, Y', strtotime($claim['submitted_date'])); ?></td>
-                        <td><span class="status-badge pending">Pending</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
-                                    <i class="fas fa-eye"></i>
-                                    View
-                                </button>
-                                <button class="btn-action btn-approve">
-                                    <i class="fas fa-check"></i>
-                                    Approve
-                                </button>
-                                <button class="btn-action btn-reject">
-                                    <i class="fas fa-times"></i>
-                                    Reject
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <button class="tab-item" onclick="switchClaimTab('rejected')">
+            <i class="fas fa-times-circle"></i>
+            Rejected
+            <span class="tab-badge"><?= $rejectedClaims ?></span>
+        </button>
     </div>
 
     <!-- All Claims Tab -->
-    <div class="tab-content" id="content-all">
-        <div class="table-header">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search all claims...">
-            </div>
-            <div class="filter-group">
-                <button class="filter-btn">
-                    <i class="fas fa-filter"></i>
-                    Filter
-                </button>
-                <button class="filter-btn">
-                    <i class="fas fa-download"></i>
-                    Export
-                </button>
-            </div>
-        </div>
-
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>Claim ID</th>
-                    <th>Member Name</th>
-                    <th>Deceased Name</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Date Submitted</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($all_claims)): ?>
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
-                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
-                        <p>No claims found</p>
-                    </td>
-                </tr>
-                <?php else: ?>
+    <div id="tab-all" class="tab-content">
+        <?php if (!empty($all_claims)): ?>
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>Claim #</th>
+                        <th>Member</th>
+                        <th>Deceased</th>
+                        <th>Date of Death</th>
+                        <th>Service Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php foreach ($all_claims as $claim): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
-                        <td><strong>KSh <?php echo number_format($claim['amount'], 2); ?></strong></td>
-                        <td><?php echo date('M d, Y', strtotime($claim['submitted_date'])); ?></td>
-                        <td><span class="status-badge <?php echo $claim['status']; ?>"><?php echo ucfirst($claim['status']); ?></span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
-                                    <i class="fas fa-eye"></i>
-                                    View
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td><?= 'CLM-' . date('Y') . '-' . str_pad($claim['id'], 4, '0', STR_PAD_LEFT) ?></td>
+                            <td>
+                                <div class="claim-member-info">
+                                    <span class="claim-member-name"><?= htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']) ?></span>
+                                    <span class="claim-deceased-name">Member #<?= htmlspecialchars($claim['member_number'] ?? 'N/A') ?></span>
+                                </div>
+                            </td>
+                            <td><?= htmlspecialchars($claim['deceased_name'] ?? 'N/A') ?></td>
+                            <td><?= $claim['date_of_death'] ? date('M d, Y', strtotime($claim['date_of_death'])) : 'N/A' ?></td>
+                            <td>
+                                <?php if (($claim['settlement_type'] ?? 'services') === 'cash_alternative'): ?>
+                                    <span class="claim-badge" style="background: #FED7AA; color: #92400E;">Cash (KES 20K)</span>
+                                <?php else: ?>
+                                    <span class="claim-badge" style="background: #D1FAE5; color: #065F46;">Standard Services</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                $status = $claim['status'] ?? 'submitted';
+                                $statusColors = [
+                                    'submitted' => 'background: #DBEAFE; color: #1E40AF;',
+                                    'under_review' => 'background: #FED7AA; color: #92400E;',
+                                    'approved' => 'background: #D1FAE5; color: #065F46;',
+                                    'paid' => 'background: #D1FAE5; color: #065F46;',
+                                    'rejected' => 'background: #FEE2E2; color: #991B1B;',
+                                    'completed' => 'background: #D1FAE5; color: #065F46;'
+                                ];
+                                ?>
+                                <span class="claim-badge" style="<?= $statusColors[$status] ?? '' ?>">
+                                    <?= ucfirst(str_replace('_', ' ', $status)) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-view" onclick="window.location.href='/admin/claims/view/<?= $claim['id'] ?>'">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <?php if ($status === 'submitted' || $status === 'under_review'): ?>
+                                        <button class="btn-approve" onclick="reviewClaim(<?= $claim['id'] ?>)" title="Review & Approve">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($status === 'approved'): ?>
+                                        <button class="btn-view" onclick="window.location.href='/admin/claims/track/<?= $claim['id'] ?>'" title="Track Services">
+                                            <i class="fas fa-truck"></i> Track
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div style="text-align: center; padding: 60px; color: #9CA3AF;">
+                <i class="fas fa-inbox" style="font-size: 64px; opacity: 0.3;"></i>
+                <div style="font-size: 18px; font-weight: 600; margin-top: 16px;">No Claims Found</div>
+                <p style="font-size: 14px; margin-top: 8px;">Claims will appear here when members submit them</p>
+            </div>
+        <?php endif; ?>
     </div>
 
-    <!-- Completed Claims Tab -->
-    <div class="tab-content" id="content-completed">
-        <div class="table-header">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search completed claims...">
-            </div>
-            <div class="filter-group">
-                <button class="filter-btn">
-                    <i class="fas fa-filter"></i>
-                    Filter
-                </button>
-                <button class="filter-btn">
-                    <i class="fas fa-download"></i>
-                    Export PDF
-                </button>
-            </div>
-        </div>
-
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th>Claim ID</th>
-                    <th>Member Name</th>
-                    <th>Deceased Name</th>
-                    <th>Plan</th>
-                    <th>Amount Paid</th>
-                    <th>Date Completed</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($completed_claims)): ?>
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 40px; color: #6B7280;">
-                        <i class="fas fa-clipboard-check" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
-                        <p>No completed claims</p>
-                    </td>
-                </tr>
-                <?php else: ?>
-                    <?php foreach ($completed_claims as $claim): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($claim['claim_number']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($claim['member_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['deceased_name']); ?></td>
-                        <td><?php echo htmlspecialchars($claim['plan']); ?></td>
-                        <td><strong>KSh <?php echo number_format($claim['amount_paid'], 2); ?></strong></td>
-                        <td><?php echo date('M d, Y', strtotime($claim['completed_date'])); ?></td>
-                        <td><span class="status-badge approved">Approved</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="window.location.href='/admin/claims/view/<?php echo $claim['id']; ?>'">
-                                    <i class="fas fa-eye"></i>
-                                    View Details
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+    <!-- Other tabs content (filtered dynamically) -->
+    <div id="tab-submitted" class="tab-content" style="display:none;"></div>
+    <div id="tab-review" class="tab-content" style="display:none;"></div>
+    <div id="tab-approved" class="tab-content" style="display:none;"></div>
+    <div id="tab-completed" class="tab-content" style="display:none;"></div>
+    <div id="tab-rejected" class="tab-content" style="display:none;"></div>
 </div>
 
 <script>
-function showTab(tabName) {
+function switchClaimTab(tabName) {
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
     });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+
+    // Remove active class
+    document.querySelectorAll('.tab-item').forEach(button => {
+        button.classList.remove('active');
     });
 
     // Show selected tab
-    document.getElementById('content-' + tabName).classList.add('active');
-    document.getElementById('tab-' + tabName).classList.add('active');
+    const selectedTab = document.getElementById('tab-' + tabName);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
+
+    // Add active class
+    event.target.closest('.tab-item').classList.add('active');
+
+    // Filter and display data
+    if (tabName !== 'all') {
+        filterClaimsByStatus(tabName);
+    }
+}
+
+function filterClaimsByStatus(status) {
+    const allClaims = <?= json_encode($all_claims) ?>;
+    const statusMap = {
+        'submitted': 'submitted',
+        'review': 'under_review',
+        'approved': 'approved',
+        'completed': ['completed', 'paid'],
+        'rejected': 'rejected'
+    };
+
+    const filtered = allClaims.filter(claim => {
+        if (Array.isArray(statusMap[status])) {
+            return statusMap[status].includes(claim.status);
+        }
+        return claim.status === statusMap[status];
+    });
+
+    const container = document.getElementById('tab-' + status);
+    container.innerHTML = renderClaimsTable(filtered, status);
+}
+
+function renderClaimsTable(claims, status) {
+    if (claims.length === 0) {
+        return `
+            <div style="text-align: center; padding: 60px; color: #9CA3AF;">
+                <i class="fas fa-inbox" style="font-size: 64px; opacity: 0.3;"></i>
+                <div style="font-size: 18px; font-weight: 600; margin-top: 16px;">No ${status} claims</div>
+            </div>
+        `;
+    }
+
+    let html = '<table class="claims-table"><thead><tr><th>Claim #</th><th>Member</th><th>Deceased</th><th>Date of Death</th><th>Service Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+    claims.forEach(claim => {
+        const claimNumber = 'CLM-' + new Date().getFullYear() + '-' + String(claim.id).padStart(4, '0');
+        const memberName = claim.first_name + ' ' + claim.last_name;
+        const serviceType = (claim.settlement_type === 'cash_alternative') ? 
+            '<span class="claim-badge" style="background: #FED7AA; color: #92400E;">Cash (KES 20K)</span>' :
+            '<span class="claim-badge" style="background: #D1FAE5; color: #065F46;">Standard Services</span>';
+
+        html += `
+            <tr>
+                <td>${claimNumber}</td>
+                <td>
+                    <div class="claim-member-info">
+                        <span class="claim-member-name">${memberName}</span>
+                        <span class="claim-deceased-name">Member #${claim.member_number || 'N/A'}</span>
+                    </div>
+                </td>
+                <td>${claim.deceased_name || 'N/A'}</td>
+                <td>${claim.date_of_death ? new Date(claim.date_of_death).toLocaleDateString() : 'N/A'}</td>
+                <td>${serviceType}</td>
+                <td><span class="claim-badge">${claim.status.replace('_', ' ')}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-view" onclick="window.location.href='/admin/claims/view/${claim.id}'">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        ${(claim.status === 'submitted' || claim.status === 'under_review') ? 
+                            `<button class="btn-approve" onclick="reviewClaim(${claim.id})"><i class="fas fa-check"></i></button>` : ''}
+                        ${claim.status === 'approved' ? 
+                            `<button class="btn-view" onclick="window.location.href='/admin/claims/track/${claim.id}'"><i class="fas fa-truck"></i> Track</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    return html;
+}
+
+function reviewClaim(claimId) {
+    window.location.href = '/admin/claims/view/' + claimId;
 }
 </script>
 
