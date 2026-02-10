@@ -405,6 +405,61 @@ class Agent extends BaseModel
         
         return $this->db->query($sql, [$limit])->fetchAll();
     }
+
+    /**
+     * Get commissions for export (optional status filter)
+     *
+     * @param string $status Optional status filter
+     * @return array
+     */
+    public function getCommissionsForExport($status = '')
+    {
+        $sql = "SELECT ac.*, a.agent_number, a.first_name, a.last_name,
+                       m.member_number, m.package
+                FROM agent_commissions ac
+                JOIN agents a ON ac.agent_id = a.id
+                JOIN members m ON ac.member_id = m.id
+                WHERE 1=1";
+
+        $params = [];
+        if (!empty($status)) {
+            $sql .= " AND ac.status = ?";
+            $params[] = $status;
+        }
+
+        $sql .= " ORDER BY ac.created_at DESC";
+
+        return $this->db->query($sql, $params)->fetchAll();
+    }
+
+    /**
+     * Approve all pending commissions
+     *
+     * @param int $approvedBy
+     * @return bool
+     */
+    public function approveAllPendingCommissions($approvedBy)
+    {
+        $sql = "UPDATE agent_commissions
+                SET status = 'approved', approved_by = ?, approved_at = NOW()
+                WHERE status = 'pending'";
+
+        return $this->db->query($sql, [$approvedBy]);
+    }
+
+    /**
+     * Reactivate all suspended agents
+     *
+     * @return bool
+     */
+    public function reactivateSuspendedAgents()
+    {
+        $sql = "UPDATE agents
+                SET status = 'active', activated_at = NOW()
+                WHERE status = 'suspended'";
+
+        return $this->db->query($sql);
+    }
     
     /**
      * Check if agent exists by national ID

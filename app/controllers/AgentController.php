@@ -473,6 +473,147 @@ class AgentController extends BaseController
         fclose($output);
         exit;
     }
+
+    /**
+     * Export commissions report to CSV
+     */
+    public function exportCommissions()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        $status = $_GET['status'] ?? '';
+        $commissions = $this->agentModel->getCommissionsForExport($status);
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agent_commissions_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, [
+            'Agent Number',
+            'Agent Name',
+            'Member Number',
+            'Package',
+            'Commission Type',
+            'Amount',
+            'Commission Rate',
+            'Commission Amount',
+            'Status',
+            'Created At'
+        ]);
+
+        foreach ($commissions as $commission) {
+            fputcsv($output, [
+                $commission['agent_number'] ?? '',
+                trim(($commission['first_name'] ?? '') . ' ' . ($commission['last_name'] ?? '')),
+                $commission['member_number'] ?? '',
+                $commission['package'] ?? '',
+                $commission['commission_type'] ?? '',
+                $commission['amount'] ?? 0,
+                $commission['commission_rate'] ?? 0,
+                $commission['commission_amount'] ?? 0,
+                $commission['status'] ?? 'pending',
+                $commission['created_at'] ?? ''
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Approve all pending commissions
+     */
+    public function approveAllCommissions()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+            return;
+        }
+
+        $userId = $_SESSION['user_id'] ?? 0;
+        $success = $this->agentModel->approveAllPendingCommissions($userId);
+
+        $this->json([
+            'success' => (bool)$success,
+            'message' => $success ? 'All pending commissions approved.' : 'Failed to approve commissions.'
+        ]);
+    }
+
+    /**
+     * Reactivate all suspended agents
+     */
+    public function reactivateSuspendedAgents()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+            return;
+        }
+
+        $success = $this->agentModel->reactivateSuspendedAgents();
+
+        $this->json([
+            'success' => (bool)$success,
+            'message' => $success ? 'Suspended agents reactivated.' : 'No suspended agents to reactivate.'
+        ]);
+    }
+
+    /**
+     * Agent performance report (PDF)
+     */
+    public function performanceReport()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        $agents = $this->agentModel->getAllAgents([], 10000, 0);
+        $html = $this->renderPdfView('admin/agents-performance-report-pdf', [
+            'agents' => $agents,
+            'generatedAt' => date('Y-m-d H:i')
+        ]);
+
+        $this->streamPdf($html, 'agent-performance-report-' . date('Ymd_His') . '.pdf');
+    }
+
+    private function renderPdfView($template, $data = [])
+    {
+        $templatePath = VIEWS_PATH . '/' . str_replace('.', '/', $template) . '.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception("Template {$template} not found");
+        }
+
+        extract($data);
+        ob_start();
+        include $templatePath;
+        return ob_get_clean();
+    }
+
+    private function streamPdf($html, $filename)
+    {
+        $autoloadPath = ROOT_PATH . '/vendor/autoload.php';
+        if (!file_exists($autoloadPath)) {
+            http_response_code(500);
+            echo 'PDF library not installed.';
+            return;
+        }
+
+        require_once $autoloadPath;
+
+        $dompdf = new \Dompdf\Dompdf([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true
+        ]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
     
     /**
      * Agent Resources Management
@@ -515,6 +656,46 @@ class AgentController extends BaseController
         
         $this->setFlashMessage('Resource uploaded successfully', 'success');
         redirect('/admin/agents/resources');
+    }
+
+    /**
+     * Export resource catalog to CSV
+     */
+    public function exportResources()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        // TODO: Replace with actual resource query once implemented
+        $resources = [
+            'marketing_materials' => [],
+            'training_documents' => [],
+            'policy_documents' => [],
+            'forms' => []
+        ];
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agent_resources_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['ID', 'Name', 'Category', 'Size', 'Date', 'Description']);
+
+        foreach ($resources as $category => $items) {
+            foreach ($items as $resource) {
+                fputcsv($output, [
+                    $resource['id'] ?? '',
+                    $resource['name'] ?? '',
+                    $category,
+                    $resource['size'] ?? '',
+                    $resource['date'] ?? '',
+                    $resource['description'] ?? ''
+                ]);
+            }
+        }
+
+        fclose($output);
+        exit;
     }
     
     /**

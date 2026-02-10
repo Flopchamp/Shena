@@ -161,18 +161,26 @@
 
     .stat-action-link {
         color: #7F3D9E;
-        font-size: 0.875rem;
-        font-weight: 600;
+        font-size: 0.8125rem;
+        font-weight: 700;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.2s;
+        padding: 0.5rem 0.875rem;
+        border-radius: 999px;
+        border: 1px solid rgba(127, 61, 158, 0.2);
+        background: rgba(127, 61, 158, 0.08);
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
     }
 
     .stat-action-link:hover {
         color: #7C3AED;
         gap: 0.75rem;
+        border-color: rgba(127, 61, 158, 0.4);
+        background: rgba(127, 61, 158, 0.12);
+        transform: translateY(-1px);
     }
 
     /* Main Content Layout */
@@ -327,16 +335,26 @@
 
     .data-card-link {
         color: #7F3D9E;
-        font-size: 0.875rem;
-        font-weight: 600;
+        font-size: 0.8125rem;
+        font-weight: 700;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(127, 61, 158, 0.2);
+        background: rgba(127, 61, 158, 0.08);
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
     }
 
     .data-card-link:hover {
         color: #7C3AED;
+        gap: 0.6rem;
+        border-color: rgba(127, 61, 158, 0.4);
+        background: rgba(127, 61, 158, 0.12);
+        transform: translateY(-1px);
     }
 
     .data-card-body {

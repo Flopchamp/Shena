@@ -1045,7 +1045,7 @@ $pending_approvals = $pending_approvals ?? [];
     <!-- Reports Tab -->
     <div id="tab-reports" class="tab-content">
         <div class="tab-actions">
-            <a href="/admin/reports/members" class="tab-action-btn primary">
+            <a href="/admin/reports?report_type=members" class="tab-action-btn primary">
                 <i class="fas fa-chart-bar"></i>
                 Full Analytics
             </a>
@@ -1064,14 +1064,6 @@ $pending_approvals = $pending_approvals ?? [];
                 <i class="fas fa-file-export"></i>
                 Export All Members
             </a>
-            <a href="/admin/members/import" class="tab-action-btn">
-                <i class="fas fa-file-import"></i>
-                Import Members (CSV)
-            </a>
-            <button class="tab-action-btn" onclick="downloadTemplate()">
-                <i class="fas fa-file-download"></i>
-                Download Template
-            </button>
         </div>
         <p style="color: #6B7280; font-size: 14px;">Bulk import/export operations for member data management.</p>
     </div>
@@ -1336,12 +1328,7 @@ function refreshPending() {
 // Generate report
 function generateReport() {
     ShenaApp.showNotification('Generating PDF report...', 'info', 2000);
-    // Redirect to report generation endpoint
-}
-
-// Download CSV template
-function downloadTemplate() {
-    window.location.href = '/admin/members/download-template';
+    window.location.href = '/admin/reports/export?type=members';
 }
 
 // Handle active tab on page load based on URL parameter

@@ -987,29 +987,29 @@ $top_performers = $top_performers ?? [];
 <!-- Registered Field Agents Table -->
 <div class="tabs-container">
     <div class="tabs-nav">
-        <button class="tab-item active" onclick="switchTab('all')">
+        <button class="tab-item active" onclick="switchTab('all', this)">
             <i class="fas fa-users"></i>
             All Agents
             <span class="tab-badge"><?= $stats['total_agents'] ?? 0 ?></span>
         </button>
-        <button class="tab-item" onclick="switchTab('active')">
+        <button class="tab-item" onclick="switchTab('active', this)">
             <i class="fas fa-user-check"></i>
             Active Agents
         </button>
-        <button class="tab-item" onclick="switchTab('suspended')">
+        <button class="tab-item" onclick="switchTab('suspended', this)">
             <i class="fas fa-user-slash"></i>
             Suspended
         </button>
-        <button class="tab-item" onclick="switchTab('commissions')">
+        <button class="tab-item" onclick="switchTab('commissions', this)">
             <i class="fas fa-money-bill-wave"></i>
             Pending Commissions
             <span class="tab-badge"><?= count($pending_commissions_data ?? []) ?></span>
         </button>
-        <button class="tab-item" onclick="switchTab('leaderboard')">
+        <button class="tab-item" onclick="switchTab('leaderboard', this)">
             <i class="fas fa-trophy"></i>
             Leaderboard
         </button>
-        <button class="tab-item" onclick="switchTab('tools')">
+        <button class="tab-item" onclick="switchTab('tools', this)">
             <i class="fas fa-tools"></i>
             Tools & Reports
         </button>
@@ -1177,10 +1177,10 @@ $top_performers = $top_performers ?? [];
     <div id="tab-leaderboard" class="tab-content" style="display:none;">
         <div class="tab-actions">
             <h3 style="margin: 0; color: #1F2937;">Top Performing Agents</h3>
-            <button class="tab-action-btn">
+            <a class="tab-action-btn" href="/admin/agents?tab=leaderboard&range=month">
                 <i class="fas fa-calendar"></i>
                 This Month
-            </button>
+            </a>
         </div>
 
         <div class="row" style="margin-top: 20px;">
@@ -1311,7 +1311,17 @@ function switchTab(tabName) {
     }
 
     // Add active class to clicked tab button
-    event.target.closest('.tab-item').classList.add('active');
+    if (typeof event !== 'undefined' && event && event.target) {
+        const targetButton = event.target.closest('.tab-item');
+        if (targetButton) {
+            targetButton.classList.add('active');
+        }
+    } else {
+        const fallbackButton = document.querySelector(`.tab-item[onclick*="'${tabName}'"]`);
+        if (fallbackButton) {
+            fallbackButton.classList.add('active');
+        }
+    }
 
     //  Filter agents based on tab
     if (tabName === 'active' || tabName === 'suspended') {
@@ -1420,7 +1430,22 @@ function bulkReactivateAgents() {
     ShenaApp.confirmAction(
         'Reactivate all suspended agents?',
         function() {
-            ShenaApp.showNotification('Bulk reactivation feature coming soon', 'info');
+            fetch('/admin/agents/reactivate-suspended', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ShenaApp.showNotification(data.message || 'Agents reactivated successfully!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    ShenaApp.alert(data.message || 'Failed to reactivate agents', 'error');
+                }
+            })
+            .catch(() => {
+                ShenaApp.alert('An error occurred while processing the request', 'error');
+            });
         },
         null,
         { type: 'warning', title: 'Reactivate Agents' }
@@ -1433,7 +1458,22 @@ function processAllCommissions() {
         'Process all pending commission payouts?',
         function() {
             ShenaApp.showNotification('Processing all commissions...', 'info');
-            // Add actual processing logic here
+            fetch('/admin/commissions/approve-all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ShenaApp.showNotification(data.message || 'All commissions approved.', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    ShenaApp.alert(data.message || 'Failed to approve commissions', 'error');
+                }
+            })
+            .catch(() => {
+                ShenaApp.alert('An error occurred while processing the request', 'error');
+            });
         },
         null,
         { type: 'primary', title: 'Process Commissions' }
@@ -1455,6 +1495,14 @@ function generatePerformanceReport() {
         window.location.href = '/admin/agents/performance-report';
     }, 500);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        switchTab(tab);
+    }
+});
 </script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

@@ -837,10 +837,10 @@
         </div>
 
         <div class="header-actions">
-            <button class="notification-btn">
+            <a href="/admin/notifications" class="notification-btn">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge"></span>
-            </button> 
+            </a> 
 
             <!-- Admin Profile in Top Nav -->
             <div class="header-admin-profile" onclick="toggleHeaderAdminMenu(event)">

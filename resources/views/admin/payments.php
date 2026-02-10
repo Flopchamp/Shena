@@ -655,10 +655,10 @@ $successRate = $successRate ?? 0;
             </div>
         </div>
 
-        <button class="btn-action btn-primary" style="margin-top: 20px;">
+        <a class="btn-action btn-primary" style="margin-top: 20px;" href="/admin/payments-reconciliation">
             <i class="fas fa-play"></i>
             Run Reconciliation
-        </button>
+        </a>
     </div>
 
     <!-- Financial Dashboard Tab -->

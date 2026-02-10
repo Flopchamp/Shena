@@ -982,6 +982,66 @@ class AdminController extends BaseController
     }
 
     /**
+     * Export reports (PDF)
+     */
+    public function exportReport()
+    {
+        $this->requireAdminAccess();
+
+        $type = $_GET['type'] ?? '';
+        if ($type !== 'members') {
+            http_response_code(400);
+            echo 'Unsupported report type.';
+            return;
+        }
+
+        set_time_limit(120);
+
+        $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
+        $html = $this->renderPdfView('admin/reports-members-pdf', [
+            'members' => $members,
+            'generatedAt' => date('Y-m-d H:i')
+        ]);
+
+        $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
+    }
+
+    private function renderPdfView($template, $data = [])
+    {
+        $templatePath = VIEWS_PATH . '/' . str_replace('.', '/', $template) . '.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception("Template {$template} not found");
+        }
+
+        extract($data);
+        ob_start();
+        include $templatePath;
+        return ob_get_clean();
+    }
+
+    private function streamPdf($html, $filename)
+    {
+        $autoloadPath = ROOT_PATH . '/vendor/autoload.php';
+        if (!file_exists($autoloadPath)) {
+            http_response_code(500);
+            echo 'PDF library not installed.';
+            return;
+        }
+
+        require_once $autoloadPath;
+
+        $dompdf = new \Dompdf\Dompdf([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true
+        ]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+
+    /**
      * Communications Center with SMS Campaigns
      */
     public function communications()

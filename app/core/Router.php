@@ -178,11 +178,16 @@ class Router
         $this->addRoute('GET', '/admin/agents/edit/{id}', 'AgentController@edit');
         $this->addRoute('POST', '/admin/agents/update/{id}', 'AgentController@update');
         $this->addRoute('POST', '/admin/agents/status/{id}', 'AgentController@updateStatus');
+        $this->addRoute('POST', '/admin/agents/reactivate-suspended', 'AgentController@reactivateSuspendedAgents');
+        $this->addRoute('GET', '/admin/agents/performance-report', 'AgentController@performanceReport');
         $this->addRoute('GET', '/admin/commissions', 'AgentController@commissions');
+        $this->addRoute('GET', '/admin/commissions/export', 'AgentController@exportCommissions');
         $this->addRoute('POST', '/admin/commissions/approve/{id}', 'AgentController@approveCommission');
+        $this->addRoute('POST', '/admin/commissions/approve-all', 'AgentController@approveAllCommissions');
         $this->addRoute('POST', '/admin/commissions/pay/{id}', 'AgentController@markCommissionPaid');
         $this->addRoute('GET', '/admin/agents/resources', 'AgentController@resources');
         $this->addRoute('POST', '/admin/agents/resources/upload', 'AgentController@uploadResource');
+        $this->addRoute('GET', '/admin/agents/resources/export', 'AgentController@exportResources');
 
         // Agent Dashboard Routes (Agent Only)
         $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');

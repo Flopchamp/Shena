@@ -42,6 +42,26 @@
         animation: pulse 2s infinite;
     }
 
+    .header-action-btn {
+        background: #7F3D9E;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .header-action-btn:hover {
+        background: #6F3490;
+    }
+
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
@@ -120,6 +140,10 @@
         transition: all 0.2s;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .alert-button:hover {
@@ -342,6 +366,10 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .feed-button:hover {
@@ -391,6 +419,10 @@
         border: 1px solid #E5E7EB;
         background: white;
         color: #6B7280;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .table-btn.primary {
@@ -518,6 +550,10 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .action-btn:hover {
@@ -564,9 +600,9 @@
             <i class="fas fa-circle"></i>
             LIVE M-PESA FEED ACTIVE
         </div>
-        <button style="background: #7F3D9E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+        <a class="header-action-btn" href="/admin/reports?report_type=payments&filter=defaulters">
             <i class="fas fa-file-alt"></i> Defaulter Report
-        </button>
+        </a>
     </div>
 </div>
 
@@ -582,7 +618,7 @@
             <div class="alert-description">Pending immediate court support fund disbursement: KES 50,000</div>
         </div>
     </div>
-    <button class="alert-button">PROCESS CLAIM</button>
+    <a class="alert-button" href="/admin/claims">PROCESS CLAIM</a>
 </div>
 
 <!-- Statistics Cards -->
@@ -666,7 +702,7 @@
                 <div class="feed-amount">KES 1,200.00</div>
                 <div class="feed-description">No contribution - Amani...</div>
                 <div class="feed-meta">E-Pay Member ID</div>
-                <button class="feed-button">Link</button>
+                <a class="feed-button" href="/admin/payments?tab=reconciliation">Link</a>
             </div>
 
             <!-- OUTGEARED -->
@@ -678,7 +714,7 @@
                 <div class="feed-amount">KES 500.00</div>
                 <div class="feed-description">No transaction found</div>
                 <div class="feed-meta">E-Pay Member ID</div>
-                <button class="feed-button">Link</button>
+                <a class="feed-button" href="/admin/payments?tab=reconciliation">Link</a>
             </div>
         </div>
     </div>
@@ -692,12 +728,12 @@
             <div class="table-subtitle">Auto-match ongoing, queue for instant & manual verification</div>
         </div>
         <div class="table-actions">
-            <button class="table-btn">
+            <a class="table-btn" href="/admin/payments-reconciliation?filter=1">
                 <i class="fas fa-filter"></i> Filter
-            </button>
-            <button class="table-btn primary">
+            </a>
+            <a class="table-btn primary" href="/admin/payments-reconciliation?import=statement">
                 <i class="fas fa-download"></i> Import Statement
-            </button>
+            </a>
         </div>
     </div>
 
@@ -739,7 +775,11 @@
                         <td><strong><?php echo number_format($payment['amount'], 2); ?></strong></td>
                         <td><span class="status-badge <?php echo $payment['status']; ?>"><?php echo strtoupper($payment['status']); ?></span></td>
                         <td><?php echo date('M d, h:i A', strtotime($payment['timestamp'])); ?></td>
-                        <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
+                        <td>
+                            <a class="action-btn edit" href="/admin/payments?search=<?php echo urlencode($payment['transaction_id'] ?? ''); ?>">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -750,8 +790,12 @@
     <div style="text-align: center; padding: 16px; color: #9CA3AF; font-size: 13px;">
         VIEWING 3,436 RECONCILED PAYMENTS
         <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Previous</button>
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Next Page</button>
+            <a href="/admin/payments-reconciliation?page=prev" style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #1F2937;">
+                Previous
+            </a>
+            <a href="/admin/payments-reconciliation?page=next" style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #1F2937;">
+                Next Page
+            </a>
         </div>
     </div>
 </div>
