@@ -271,11 +271,28 @@ class Member extends BaseModel
     }
     
     /**
-     * Get pending members count
+     * Get pending members (awaiting activation)
      * 
-     * @return int Pending members
+     * @return array Pending members with details
      */
     public function getPendingMembers()
+    {
+        $sql = "SELECT m.*, u.email, u.phone, u.first_name, u.last_name, p.transaction_id
+                FROM {$this->table} m
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN payments p ON m.id = p.member_id AND p.status = 'pending'
+                WHERE m.status = 'inactive' OR m.status = 'pending'
+                ORDER BY m.created_at DESC";
+        
+        return $this->db->fetchAll($sql);
+    }
+    
+    /**
+     * Get count of pending members
+     * 
+     * @return int Count of pending members
+     */
+    public function getPendingMembersCount()
     {
         $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE status = 'inactive' OR status = 'pending'";
         $result = $this->db->fetch($sql);
@@ -565,5 +582,46 @@ class Member extends BaseModel
         }
         
         return $this->db->fetchAll($sql, ['member_id' => $memberId]);
+    }
+    
+    /**
+     * Get member growth statistics
+     * Returns the percentage growth of members compared to previous month
+     * 
+     * @return array Growth statistics
+     */
+    public function getMemberGrowth()
+    {
+        // Get current month member count
+        $currentMonthSql = "SELECT COUNT(*) as count 
+                           FROM members 
+                           WHERE YEAR(created_at) = YEAR(CURRENT_DATE)
+                           AND MONTH(created_at) = MONTH(CURRENT_DATE)";
+        
+        $currentMonth = $this->db->query($currentMonthSql)->fetch();
+        $currentCount = $currentMonth ? (int)$currentMonth['count'] : 0;
+        
+        // Get previous month member count
+        $previousMonthSql = "SELECT COUNT(*) as count 
+                            FROM members 
+                            WHERE YEAR(created_at) = YEAR(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))
+                            AND MONTH(created_at) = MONTH(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))";
+        
+        $previousMonth = $this->db->query($previousMonthSql)->fetch();
+        $previousCount = $previousMonth ? (int)$previousMonth['count'] : 0;
+        
+        // Calculate percentage growth
+        $growth = 0;
+        if ($previousCount > 0) {
+            $growth = (($currentCount - $previousCount) / $previousCount) * 100;
+        } elseif ($currentCount > 0) {
+            $growth = 100; // 100% growth if no previous members
+        }
+        
+        return [
+            'current_month' => $currentCount,
+            'previous_month' => $previousCount,
+            'growth_percentage' => round($growth, 2)
+        ];
     }
 }

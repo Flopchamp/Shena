@@ -8,7 +8,8 @@ class AdminController extends BaseController
     private $paymentModel;
     private $claimModel;
     private $userModel;
-    
+    private $agentModel;
+
     public function __construct()
     {
         parent::__construct();
@@ -16,6 +17,7 @@ class AdminController extends BaseController
         $this->paymentModel = new Payment();
         $this->claimModel = new Claim();
         $this->userModel = new User();
+        $this->agentModel = new Agent();
     }
 
     private function requireAdminAccess()
@@ -122,15 +124,20 @@ class AdminController extends BaseController
             'stats' => [
                 'total_members' => $this->memberModel->getTotalMembers(),
                 'active_members' => $this->memberModel->getActiveMembers(),
-                'pending_members' => $this->memberModel->getPendingMembers(),
+                'pending_members' => $this->memberModel->getPendingMembersCount(),
                 'total_payments' => $this->paymentModel->getTotalPayments(),
                 'monthly_revenue' => $this->paymentModel->getMonthlyRevenue(),
                 'pending_claims' => $this->claimModel->getPendingClaimsCount(),
-                'approved_claims' => $this->claimModel->getApprovedClaimsCount()
+                'approved_claims' => $this->claimModel->getApprovedClaimsCount(),
+                'total_commissions' => $this->agentModel->getTotalCommissions(),
+                'active_agents' => $this->agentModel->getActiveAgentsCount(),
+                'member_growth' => $this->memberModel->getMemberGrowth(),
+                'contribution_count' => $this->paymentModel->getContributionCount()
             ],
             'recent_members' => $this->memberModel->getRecentMembers(5),
             'recent_payments' => $this->paymentModel->getRecentPayments(5),
-            'recent_claims' => $this->claimModel->getRecentClaims(5)
+            'recent_claims' => $this->claimModel->getRecentClaims(5),
+            'recent_activities' => $this->getRecentActivities(5)
         ];
         
         $this->view('admin.dashboard', $data);
@@ -146,19 +153,175 @@ class AdminController extends BaseController
         $search = $_GET['search'] ?? '';
         $status = $_GET['status'] ?? 'all';
         $package = $_GET['package'] ?? 'all';
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = 50; // Show 50 members per page for better performance
         
         $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
+        
+        // Calculate statistics
+        $totalMembers = $this->memberModel->getTotalMembers();
+        $activeMembers = $this->memberModel->getActiveMembers();
+        $gracePeriodMembers = 0;
+        $defaultRate = 0;
+        
+        // Count grace period members
+        foreach ($members as $member) {
+            if ($member['status'] === 'grace_period') {
+                $gracePeriodMembers++;
+            }
+        }
+        
+        // Calculate default rate
+        if ($totalMembers > 0) {
+            $inactiveMembers = $this->memberModel->getInactiveMembers();
+            $defaultRate = ($inactiveMembers / $totalMembers) * 100;
+        }
+        
+        // Paginate members
+        $totalItems = count($members);
+        $totalPages = ceil($totalItems / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $members = array_slice($members, $offset, $perPage);
+        
+        // Get pending approvals (members with pending status)
+        $pendingMembers = $this->memberModel->getPendingMembers();
+        $pending_approvals = [];
+        
+        // Ensure $pendingMembers is an array before iterating
+        if (is_array($pendingMembers)) {
+            foreach ($pendingMembers as $pending) {
+                $pending_approvals[] = [
+                    'id' => $pending['id'],
+                    'name' => $pending['first_name'] . ' ' . $pending['last_name'],
+                    'package' => $pending['package'] ?? 'Standard',
+                    'tag' => 'AWAITING ACTIVATION',
+                    'tag_class' => 'awaiting',
+                    'code' => $pending['transaction_id'] ?? '',
+                    'action_text' => !empty($pending['transaction_id']) ? 'Verify & Activate' : 'Validate Code'
+                ];
+            }
+        }
+        
+        // Get most recent pending claim for emergency alert
+        $recentClaims = $this->claimModel->getPendingClaims();
+        $recent_claim = null;
+        
+        if (!empty($recentClaims)) {
+            // Get the first pending claim
+            $claim = $recentClaims[0];
+            $recent_claim = [
+                'id' => $claim['id'],
+                'member_name' => $claim['first_name'] . ' ' . $claim['last_name'],
+                'member_number' => $claim['member_number'] ?? 'N/A',
+                'deceased_name' => $claim['deceased_name'] ?? 'N/A',
+                'date_of_death' => $claim['date_of_death'] ?? null
+            ];
+        }
         
         $data = [
             'title' => 'Members - Admin',
             'members' => $members,
             'total_members' => count($members),
+            'stats' => [
+                'total_members' => $totalMembers,
+                'grace_period' => $gracePeriodMembers,
+                'default_rate' => $defaultRate
+            ],
+            'pending_approvals' => $pending_approvals,
+            'recent_claim' => $recent_claim,
             'search' => $search,
             'status' => $status,
-            'package' => $package
+            'package' => $package,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'per_page' => $perPage,
+                'total_items' => $totalItems
+            ]
         ];
         
         $this->view('admin.members', $data);
+    }
+
+    /**
+     * Export Members to CSV
+     */
+    public function exportMembersCSV()
+    {
+        $this->requireAdminAccess();
+        
+        $search = $_GET['search'] ?? '';
+        $status = $_GET['status'] ?? 'all';
+        $package = $_GET['package'] ?? 'all';
+        
+        $members = $this->memberModel->getAllMembersWithDetails($search, $status, $package);
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="members_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Open output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'Member Number',
+            'First Name',
+            'Last Name',
+            'National ID',
+            'Email',
+            'Phone',
+            'Package',
+            'Status',
+            'Registration Date',
+            'Last Payment Date',
+            'Last Payment Amount'
+        ]);
+        
+        // Add member data
+        foreach ($members as $member) {
+            fputcsv($output, [
+                $member['member_number'] ?? '',
+                $member['first_name'] ?? '',
+                $member['last_name'] ?? '',
+                $member['national_id'] ?? $member['id_number'] ?? '',
+                $member['email'] ?? '',
+                $member['phone'] ?? '',
+                $member['package'] ?? 'Standard',
+                ucfirst($member['status'] ?? 'active'),
+                $member['registration_date'] ?? $member['created_at'] ?? '',
+                $member['last_payment_date'] ?? '',
+                $member['last_payment_amount'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Register New Member
+     */
+    public function registerMember()
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            // Show registration form
+            $data = [
+                'title' => 'Register New Member - Admin'
+            ];
+            
+            $this->view('admin.register-member', $data);
+            return;
+        }
+        
+        // Handle POST - process registration
+        // This will be implemented based on your registration flow
+        $_SESSION['info'] = 'Member registration form loaded. Complete the form to register a new member.';
+        $this->redirect('/admin/members');
     }
 
     /**
@@ -253,6 +416,135 @@ class AdminController extends BaseController
     }
 
     /**
+     * View Individual Member Details
+     */
+    public function viewMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        // Get member details
+        $member = $this->memberModel->find($id);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/admin/members');
+            return;
+        }
+        
+        // Get member statistics
+        $payments = $this->paymentModel->getMemberPayments($id);
+        $totalContributions = array_sum(array_column($payments, 'amount'));
+        $lastPayment = !empty($payments) ? $payments[0] : null;
+        
+        // Calculate membership duration
+        $membershipMonths = 0;
+        if (!empty($member['registration_date'])) {
+            $registrationDate = new DateTime($member['registration_date']);
+            $now = new DateTime();
+            $membershipMonths = $registrationDate->diff($now)->m + ($registrationDate->diff($now)->y * 12);
+        } elseif (!empty($member['created_at'])) {
+            $registrationDate = new DateTime($member['created_at']);
+            $now = new DateTime();
+            $membershipMonths = $registrationDate->diff($now)->m + ($registrationDate->diff($now)->y * 12);
+        }
+        
+        // Get beneficiaries
+        $beneficiaries = $this->memberModel->getMemberDependents($id);
+        
+        $data = [
+            'title' => 'Member Details - Admin',
+            'member' => $member,
+            'payments' => $payments,
+            'beneficiaries' => $beneficiaries,
+            'stats' => [
+                'total_contributions' => $totalContributions,
+                'last_payment_date' => $lastPayment ? $lastPayment['payment_date'] : null,
+                'membership_months' => $membershipMonths
+            ]
+        ];
+        
+        $this->view('admin.member-details', $data);
+    }
+
+    /**
+     * Edit Member Page
+     */
+    public function editMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        $member = $this->memberModel->find($id);
+        
+        if (!$member) {
+            $_SESSION['error'] = 'Member not found.';
+            $this->redirect('/admin/members');
+            return;
+        }
+        
+        $data = [
+            'title' => 'Edit Member - Admin',
+            'member' => $member
+        ];
+        
+        $this->view('admin.member-edit', $data);
+    }
+
+    /**
+     * Update Member
+     */
+    public function updateMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/members/edit/' . $id);
+            return;
+        }
+        
+        $data = [
+            'first_name' => $_POST['first_name'] ?? '',
+            'last_name' => $_POST['last_name'] ?? '',
+            'id_number' => $_POST['id_number'] ?? '',
+            'phone' => $_POST['phone'] ?? '',
+            'email' => $_POST['email'] ?? '',
+            'county' => $_POST['county'] ?? '',
+            'sub_county' => $_POST['sub_county'] ?? '',
+            'address' => $_POST['address'] ?? '',
+            'package' => $_POST['package'] ?? 'basic',
+            'status' => $_POST['status'] ?? 'active',
+            'date_of_birth' => $_POST['date_of_birth'] ?? null,
+            'gender' => $_POST['gender'] ?? null,
+            'nok_name' => $_POST['nok_name'] ?? '',
+            'nok_relationship' => $_POST['nok_relationship'] ?? '',
+            'nok_phone' => $_POST['nok_phone'] ?? '',
+            'nok_id_number' => $_POST['nok_id_number'] ?? ''
+        ];
+        
+        if ($this->memberModel->update($id, $data)) {
+            $_SESSION['success_message'] = 'Member updated successfully!';
+        } else {
+            $_SESSION['error_message'] = 'Failed to update member.';
+        }
+        
+        $this->redirect('/admin/members/view/' . $id);
+    }
+
+    /**
+     * Suspend Member
+     */
+    public function suspendMember($id)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->memberModel->update($id, ['status' => 'suspended']);
+            $_SESSION['success_message'] = 'Member suspended successfully!';
+        }
+        
+        $this->redirect('/admin/members/view/' . $id);
+    }
+
+    /**
      * Payment Management
      */
     public function payments()
@@ -289,9 +581,61 @@ class AdminController extends BaseController
             $conditions['status'] = $status;
         }
         
+        // Get all claims
+        $allClaims = $this->claimModel->getAllClaimsWithDetails($conditions);
+        
+        // Calculate statistics and format data
+        $pendingClaims = 0;
+        $approvedClaims = 0;
+        $rejectedClaims = 0;
+        $totalClaimAmount = 0;
+        $pending_claims = [];
+        $completed_claims = [];
+        
+        // Format claims data for the view
+        foreach ($allClaims as &$claim) {
+            // Generate claim number if not exists
+            $claim['claim_number'] = 'CLM-' . date('Y') . '-' . str_pad($claim['id'], 4, '0', STR_PAD_LEFT);
+            
+            // Format member name
+            $claim['member_name'] = $claim['first_name'] . ' ' . $claim['last_name'];
+            
+            // Use claim_amount as amount
+            $claim['amount'] = $claim['claim_amount'] ?? 0;
+            
+            // Format submitted date
+            $claim['submitted_date'] = $claim['created_at'];
+            
+            // Get package/plan info
+            $claim['plan'] = $claim['settlement_type'] ?? 'services';
+            
+            // Calculate totals
+            $totalClaimAmount += $claim['amount'];
+            
+            // Categorize claims
+            if ($claim['status'] === 'submitted' || $claim['status'] === 'under_review') {
+                $pendingClaims++;
+                $pending_claims[] = $claim;
+            } elseif ($claim['status'] === 'approved' || $claim['status'] === 'paid') {
+                $approvedClaims++;
+                $claim['amount_paid'] = $claim['approved_amount'] ?? $claim['amount'];
+                $claim['completed_date'] = $claim['approved_at'] ?? $claim['processed_at'];
+                $completed_claims[] = $claim;
+            } elseif ($claim['status'] === 'rejected') {
+                $rejectedClaims++;
+            }
+        }
+        
         $data = [
             'title' => 'Claims - Admin',
-            'claims' => $this->claimModel->getAllClaimsWithDetails($conditions),
+            'claims' => $allClaims,
+            'all_claims' => $allClaims,
+            'pending_claims' => $pending_claims,
+            'completed_claims' => $completed_claims,
+            'pendingClaims' => $pendingClaims,
+            'approvedClaims' => $approvedClaims,
+            'rejectedClaims' => $rejectedClaims,
+            'totalClaimAmount' => $totalClaimAmount,
             'status' => $status
         ];
         
@@ -311,24 +655,6 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.claims-completed', $data);
-    }
-
-    /**
-     * View Track Services - Overview of all claims being tracked
-     */
-    public function viewTrackServices()
-    {
-        $this->requireAdminAccess();
-        
-        // Get all approved claims that are in progress
-        $data = [
-            'title' => 'Track Services - Admin',
-            'claims' => $this->claimModel->getAllClaimsWithDetails([
-                'status' => 'approved'
-            ])
-        ];
-        
-        $this->view('admin/track-services', $data);
     }
 
     /**
@@ -633,7 +959,7 @@ class AdminController extends BaseController
             'totalMembers' => $this->memberModel->getTotalMembers(),
             'activeMembers' => $this->memberModel->getActiveMembers(),
             'inactiveMembers' => $this->memberModel->getInactiveMembers(),
-            'pendingMembers' => $this->memberModel->getPendingMembers(),
+            'pendingMembers' => $this->memberModel->getPendingMembersCount(),
             'totalRevenue' => $this->paymentModel->getTotalRevenue($startDate, $endDate),
             'monthlyRevenue' => $this->paymentModel->getMonthlyRevenue(),
             'totalClaimsPaid' => $this->claimModel->getTotalClaimsValue(),
@@ -656,200 +982,62 @@ class AdminController extends BaseController
     }
 
     /**
-     * Export Report (PDF or Excel)
+     * Export reports (PDF)
      */
     public function exportReport()
     {
         $this->requireAdminAccess();
-        
-        $format = $_GET['format'] ?? 'excel';
-        $reportType = $_GET['type'] ?? 'overview';
-        $startDate = $_GET['date_from'] ?? date('Y-m-01');
-        $endDate = $_GET['date_to'] ?? date('Y-m-d');
-        
-        // Gather report data
-        $data = [
-            'reportType' => $reportType,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'totalMembers' => $this->memberModel->getTotalMembers(),
-            'activeMembers' => $this->memberModel->getActiveMembers(),
-            'inactiveMembers' => $this->memberModel->getInactiveMembers(),
-            'pendingMembers' => $this->memberModel->getPendingMembers(),
-            'totalRevenue' => $this->paymentModel->getTotalRevenue($startDate, $endDate),
-            'monthlyRevenue' => $this->paymentModel->getMonthlyRevenue(),
-            'totalClaimsPaid' => $this->claimModel->getTotalClaimsValue(),
-            'newMembersThisMonth' => count($this->memberModel->getNewRegistrations(date('Y-m-01'), date('Y-m-d'))),
-            'renewalDue' => count($this->paymentModel->getMembersWithOverduePayments()),
-            'pendingPayments' => count($this->paymentModel->getPendingPayments()),
-            'failedPayments' => count($this->paymentModel->getFailedPayments())
-        ];
-        
-        // Add specific report data based on type
-        if ($reportType === 'members') {
-            $data['memberReports'] = $this->memberModel->getNewRegistrations($startDate, $endDate);
-        } elseif ($reportType === 'payments') {
-            $data['paymentReports'] = $this->paymentModel->getPaymentReport($startDate, $endDate);
-        } elseif ($reportType === 'claims') {
-            $data['claimReports'] = $this->claimModel->getClaimReport($startDate, $endDate);
+
+        $type = $_GET['type'] ?? '';
+        if ($type !== 'members') {
+            http_response_code(400);
+            echo 'Unsupported report type.';
+            return;
         }
-        
-        if ($format === 'pdf') {
-            $this->exportPDF($data);
-        } else {
-            $this->exportExcel($data);
-        }
+
+        set_time_limit(120);
+
+        $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
+        $html = $this->renderPdfView('admin/reports-members-pdf', [
+            'members' => $members,
+            'generatedAt' => date('Y-m-d H:i')
+        ]);
+
+        $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
     }
-    
-    /**
-     * Export Report as PDF
-     */
-    private function exportPDF($data)
+
+    private function renderPdfView($template, $data = [])
     {
-        // Set headers for PDF download
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="report_' . $data['reportType'] . '_' . date('Y-m-d') . '.pdf"');
-        
-        // For now, generate a simple PDF using HTML2PDF or similar
-        // This is a basic implementation - you can enhance with libraries like TCPDF, FPDF, or Dompdf
-        
-        // Simple HTML content for PDF
-        $html = '<!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { color: #8B5CF6; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #8B5CF6; color: white; }
-                .header { margin-bottom: 30px; }
-                .stat { display: inline-block; margin: 10px; padding: 10px; background: #f0f0f0; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>Shena Companion Welfare - ' . ucfirst($data['reportType']) . ' Report</h1>
-                <p><strong>Period:</strong> ' . $data['startDate'] . ' to ' . $data['endDate'] . '</p>
-                <p><strong>Generated:</strong> ' . date('Y-m-d H:i:s') . '</p>
-            </div>
-            
-            <h2>Summary Statistics</h2>
-            <div class="stat"><strong>Total Members:</strong> ' . $data['totalMembers'] . '</div>
-            <div class="stat"><strong>Active Members:</strong> ' . $data['activeMembers'] . '</div>
-            <div class="stat"><strong>Total Revenue:</strong> KES ' . number_format($data['totalRevenue'], 2) . '</div>
-            <div class="stat"><strong>Total Claims Paid:</strong> KES ' . number_format($data['totalClaimsPaid'], 2) . '</div>';
-        
-        if ($data['reportType'] === 'members' && !empty($data['memberReports'])) {
-            $html .= '<h2>Member Details</h2>
-            <table>
-                <tr>
-                    <th>Member Number</th>
-                    <th>Name</th>
-                    <th>Package</th>
-                    <th>Status</th>
-                    <th>Registration Date</th>
-                </tr>';
-            foreach ($data['memberReports'] as $member) {
-                $html .= '<tr>
-                    <td>' . htmlspecialchars($member['member_number']) . '</td>
-                    <td>' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</td>
-                    <td>' . htmlspecialchars($member['package']) . '</td>
-                    <td>' . htmlspecialchars($member['status']) . '</td>
-                    <td>' . date('Y-m-d', strtotime($member['created_at'])) . '</td>
-                </tr>';
-            }
-            $html .= '</table>';
+        $templatePath = VIEWS_PATH . '/' . str_replace('.', '/', $template) . '.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception("Template {$template} not found");
         }
-        
-        $html .= '</body></html>';
-        
-        // Output HTML that can be printed to PDF by the browser
-        // User can use browser's "Print to PDF" feature
-        header('Content-Type: text/html; charset=UTF-8');
-        echo $html;
-        echo '<script>window.print();</script>';
-        exit;
+
+        extract($data);
+        ob_start();
+        include $templatePath;
+        return ob_get_clean();
     }
-    
-    /**
-     * Export Report as Excel
-     */
-    private function exportExcel($data)
+
+    private function streamPdf($html, $filename)
     {
-        $filename = 'report_' . $data['reportType'] . '_' . date('Y-m-d') . '.csv';
-        
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        
-        $output = fopen('php://output', 'w');
-        
-        // Report Header
-        fputcsv($output, ['Shena Companion Welfare - ' . ucfirst($data['reportType']) . ' Report']);
-        fputcsv($output, ['Period:', $data['startDate'] . ' to ' . $data['endDate']]);
-        fputcsv($output, ['Generated:', date('Y-m-d H:i:s')]);
-        fputcsv($output, []);
-        
-        // Summary Statistics
-        fputcsv($output, ['SUMMARY STATISTICS']);
-        fputcsv($output, ['Metric', 'Value']);
-        fputcsv($output, ['Total Members', $data['totalMembers']]);
-        fputcsv($output, ['Active Members', $data['activeMembers']]);
-        fputcsv($output, ['Inactive Members', $data['inactiveMembers']]);
-        fputcsv($output, ['Pending Members', $data['pendingMembers']]);
-        fputcsv($output, ['Total Revenue', 'KES ' . number_format($data['totalRevenue'], 2)]);
-        fputcsv($output, ['Total Claims Paid', 'KES ' . number_format($data['totalClaimsPaid'], 2)]);
-        fputcsv($output, ['New Members This Month', $data['newMembersThisMonth']]);
-        fputcsv($output, ['Renewals Due', $data['renewalDue']]);
-        fputcsv($output, ['Pending Payments', $data['pendingPayments']]);
-        fputcsv($output, ['Failed Payments', $data['failedPayments']]);
-        fputcsv($output, []);
-        
-        // Detailed data based on report type
-        if ($data['reportType'] === 'members' && !empty($data['memberReports'])) {
-            fputcsv($output, ['MEMBER DETAILS']);
-            fputcsv($output, ['Member Number', 'First Name', 'Last Name', 'Package', 'Status', 'Registration Date']);
-            
-            foreach ($data['memberReports'] as $member) {
-                fputcsv($output, [
-                    $member['member_number'],
-                    $member['first_name'],
-                    $member['last_name'],
-                    $member['package'],
-                    $member['status'],
-                    date('Y-m-d', strtotime($member['created_at']))
-                ]);
-            }
-        } elseif ($data['reportType'] === 'payments' && !empty($data['paymentReports'])) {
-            fputcsv($output, ['PAYMENT DETAILS']);
-            fputcsv($output, ['Member Number', 'Amount', 'Method', 'Status', 'Date']);
-            
-            foreach ($data['paymentReports'] as $payment) {
-                fputcsv($output, [
-                    $payment['member_number'] ?? 'N/A',
-                    'KES ' . number_format($payment['amount'], 2),
-                    $payment['payment_method'] ?? 'N/A',
-                    $payment['status'],
-                    date('Y-m-d H:i', strtotime($payment['payment_date']))
-                ]);
-            }
-        } elseif ($data['reportType'] === 'claims' && !empty($data['claimReports'])) {
-            fputcsv($output, ['CLAIM DETAILS']);
-            fputcsv($output, ['Claim Number', 'Member Number', 'Amount', 'Status', 'Date']);
-            
-            foreach ($data['claimReports'] as $claim) {
-                fputcsv($output, [
-                    $claim['claim_number'] ?? 'N/A',
-                    $claim['member_number'] ?? 'N/A',
-                    'KES ' . number_format($claim['claim_amount'], 2),
-                    $claim['status'],
-                    date('Y-m-d', strtotime($claim['created_at']))
-                ]);
-            }
+        $autoloadPath = ROOT_PATH . '/vendor/autoload.php';
+        if (!file_exists($autoloadPath)) {
+            http_response_code(500);
+            echo 'PDF library not installed.';
+            return;
         }
-        
-        fclose($output);
+
+        require_once $autoloadPath;
+
+        $dompdf = new \Dompdf\Dompdf([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true
+        ]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
         exit;
     }
 
@@ -860,20 +1048,123 @@ class AdminController extends BaseController
     {
         $this->requireAdminAccess();
         
+        // Load BulkSmsService for campaign management
+        require_once __DIR__ . '/../services/BulkSmsService.php';
+        $bulkSmsService = new BulkSmsService();
+        
         $type = $_GET['type'] ?? 'all';
         $status = $_GET['status'] ?? 'all';
         
-        // Get recent communications from the communications log
-        $communications = $this->getRecentCommunications($type, $status);
+        // Get campaigns
+        $filters = [
+            'status' => $_GET['campaign_status'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? ''
+        ];
+        $campaigns = $bulkSmsService->getAllCampaigns($filters);
         
-        $data = [
-            'title' => 'Communications Hub - Admin',
-            'type' => $type,
-            'status' => $status,
-            'communications' => $communications
+        // Get queue items
+        $queue_items = $bulkSmsService->getQueueItems(50);
+        
+        // Get templates
+        $templates = $bulkSmsService->getTemplates();
+        
+        // Get statistics
+        $stats = [
+            'active_campaigns' => $bulkSmsService->getActiveCampaignCount(),
+            'sent_today' => $bulkSmsService->getSentCountToday(),
+            'queue_pending' => $bulkSmsService->getQueuePendingCount(),
+            'sms_credits' => $bulkSmsService->getSmsCredits()
         ];
         
-        $this->view('admin.communications', $data);
+        $data = [
+            'title' => 'Communications - Admin',
+            'type' => $type,
+            'status' => $status,
+            'communications' => $this->getRecentCommunications($type, $status),
+            'campaigns' => $campaigns,
+            'queue_items' => $queue_items,
+            'templates' => $templates,
+            'stats' => $stats
+        ];
+        
+        $this->view('admin.sms-campaigns', $data);
+    }
+
+    /**
+     * System Notifications Page
+     */
+    public function notifications()
+    {
+        $this->requireAdminAccess();
+        
+        // Get notification logs from database
+        // This could be extended to show SMS logs, email logs, system alerts, etc.
+        
+        // Sample notification data (replace with actual database queries)
+        $notifications = [
+            [
+                'title' => 'New Member Registration',
+                'message' => 'Member John Doe (ID: MB123456) successfully registered for Platinum Plan',
+                'type' => 'success',
+                'icon' => 'user-plus',
+                'time' => '2 hours ago',
+                'recipient' => 'System Admin',
+                'category' => 'Membership'
+            ],
+            [
+                'title' => 'M-Pesa Payment Received',
+                'message' => 'Payment of KES 5,000 received from phone 0712345678. Transaction: ABC123XYZ',
+                'type' => 'success',
+                'icon' => 'money-bill-wave',
+                'time' => '3 hours ago',
+                'recipient' => 'Finance Team',
+                'category' => 'Payment'
+            ],
+            [
+                'title' => 'Claim Submitted',
+                'message' => 'New death claim submitted by member Sarah Jane (MB987654). Policy: POL-2024-001',
+                'type' => 'warning',
+                'icon' => 'file-medical',
+                'time' => '5 hours ago',
+                'recipient' => 'Claims Officer',
+                'category' => 'Claims'
+            ],
+            [
+                'title' => 'Email Notification Sent',
+                'message' => 'Welcome email sent to newmember@example.com - Status: Delivered',
+                'type' => 'info',
+                'icon' => 'envelope',
+                'time' => '1 day ago',
+                'recipient' => '5 Members',
+                'category' => 'Email'
+            ],
+            [
+                'title' => 'SMS Campaign Delivered',
+                'message' => 'Monthly reminder SMS sent to 150 members - 145 delivered, 5 failed',
+                'type' => 'info',
+                'icon' => 'sms',
+                'time' => '2 days ago',
+                'recipient' => '150 Members',
+                'category' => 'SMS'
+            ],
+            [
+                'title' => 'System Backup Completed',
+                'message' => 'Daily database backup completed successfully. Size: 245 MB',
+                'type' => 'success',
+                'icon' => 'database',
+                'time' => '3 days ago',
+                'recipient' => 'System',
+                'category' => 'System'
+            ]
+        ];
+        
+        $data = [
+            'title' => 'System Notifications - Admin',
+            'notifications' => $notifications
+        ];
+        
+        $this->view('admin.notifications', $data);
     }
 
     /**
@@ -1119,18 +1410,12 @@ class AdminController extends BaseController
         $db = Database::getInstance()->getConnection();
         
         // Get current configuration
-        $config = [];
-        try {
-            $stmt = $db->query("SELECT * FROM mpesa_config ORDER BY id DESC LIMIT 1");
-            $config = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
-            // Table doesn't exist yet, use empty config
-            error_log("M-Pesa config table not found: " . $e->getMessage());
-        }
+        $stmt = $db->query("SELECT * FROM mpesa_config ORDER BY id DESC LIMIT 1");
+        $config = $stmt->fetch(PDO::FETCH_ASSOC);
         
         $data = [
             'title' => 'M-Pesa Configuration - ' . APP_NAME,
-            'config' => $config
+            'config' => $config ?: []
         ];
         
         $this->view('admin.mpesa-config', $data);
@@ -1166,26 +1451,6 @@ class AdminController extends BaseController
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         
         try {
-            // Check if mpesa_config table exists, if not create it
-            $stmt = $db->query("SHOW TABLES LIKE 'mpesa_config'");
-            if (!$stmt->fetch()) {
-                // Create table if it doesn't exist
-                $db->exec("
-                    CREATE TABLE mpesa_config (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        environment VARCHAR(20) DEFAULT 'sandbox',
-                        consumer_key VARCHAR(255) NOT NULL,
-                        consumer_secret VARCHAR(255) NOT NULL,
-                        short_code VARCHAR(20) NOT NULL,
-                        pass_key VARCHAR(255) NOT NULL,
-                        callback_url VARCHAR(255),
-                        is_active TINYINT(1) DEFAULT 1,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                    )
-                ");
-            }
-            
             // Check if configuration exists
             $stmt = $db->query("SELECT id FROM mpesa_config LIMIT 1");
             $exists = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -1238,81 +1503,68 @@ class AdminController extends BaseController
     {
         $this->requireAdminAccess();
         
-        try {
-            $db = Database::getInstance()->getConnection();
-            
-            // Get statistics
-            $stats = [
-                'pending' => 0,
-                'completed' => 0,
-                'cancelled' => 0,
-                'total_revenue' => 0
-            ];
-            
-            $stmt = $db->query("
-                SELECT 
-                    status,
-                    COUNT(*) as count,
-                    SUM(prorated_amount) as total
-                FROM plan_upgrade_requests
-                GROUP BY status
-            ");
-            
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $stats[$row['status']] = $row['count'];
-                if ($row['status'] === 'completed') {
-                    $stats['total_revenue'] = $row['total'];
-                }
+        $db = Database::getInstance()->getConnection();
+        
+        // Get statistics
+        $stats = [
+            'pending' => 0,
+            'completed' => 0,
+            'cancelled' => 0,
+            'total_revenue' => 0
+        ];
+        
+        $stmt = $db->query("
+            SELECT 
+                status,
+                COUNT(*) as count,
+                SUM(prorated_amount) as total
+            FROM plan_upgrade_requests
+            GROUP BY status
+        ");
+        
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $stats[$row['status']] = $row['count'];
+            if ($row['status'] === 'completed') {
+                $stats['total_revenue'] = $row['total'];
             }
-            
-            // Build filter query
-            $where = ['1=1'];
-            $params = [];
-            
-            if (!empty($_GET['status'])) {
-                $where[] = 'pur.status = ?';
-                $params[] = $_GET['status'];
-            }
-            
-            if (!empty($_GET['from_date'])) {
-                $where[] = 'DATE(pur.requested_at) >= ?';
-                $params[] = $_GET['from_date'];
-            }
-            
-            if (!empty($_GET['to_date'])) {
-                $where[] = 'DATE(pur.requested_at) <= ?';
-                $params[] = $_GET['to_date'];
-            }
-            
-            // Get upgrade requests
-            $sql = "
-                SELECT 
-                    pur.*,
-                    u.first_name, u.last_name, m.member_number,
-                    CONCAT(u.first_name, ' ', u.last_name) as member_name
-                FROM plan_upgrade_requests pur
-                JOIN members m ON pur.member_id = m.id
-                JOIN users u ON m.user_id = u.id
-                WHERE " . implode(' AND ', $where) . "
-                ORDER BY pur.requested_at DESC
-                LIMIT 100
-            ";
-            
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-            $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (Exception $e) {
-            // Handle missing table gracefully
-            $stats = [
-                'pending' => 0,
-                'completed' => 0,
-                'cancelled' => 0,
-                'total_revenue' => 0
-            ];
-            $upgrades = [];
-            error_log("Plan Upgrades Error: " . $e->getMessage());
         }
+        
+        // Build filter query
+        $where = ['1=1'];
+        $params = [];
+        
+        if (!empty($_GET['status'])) {
+            $where[] = 'pur.status = ?';
+            $params[] = $_GET['status'];
+        }
+        
+        if (!empty($_GET['from_date'])) {
+            $where[] = 'DATE(pur.requested_at) >= ?';
+            $params[] = $_GET['from_date'];
+        }
+        
+        if (!empty($_GET['to_date'])) {
+            $where[] = 'DATE(pur.requested_at) <= ?';
+            $params[] = $_GET['to_date'];
+        }
+        
+        // Get upgrade requests
+        $sql = "
+            SELECT 
+                pur.*,
+                u.first_name, u.last_name, m.member_number,
+                CONCAT(u.first_name, ' ', u.last_name) as member_name
+            FROM plan_upgrade_requests pur
+            JOIN members m ON pur.member_id = m.id
+            JOIN users u ON m.user_id = u.id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY pur.requested_at DESC
+            LIMIT 100
+        ";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
             'title' => 'Plan Upgrade Management - ' . APP_NAME,
@@ -1321,100 +1573,6 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.plan-upgrades', $data);
-    }
-
-    /**
-     * Export Plan Upgrades to CSV
-     */
-    public function exportPlanUpgrades()
-    {
-        $this->requireAdminAccess();
-        
-        try {
-            $db = Database::getInstance()->getConnection();
-            
-            // Build filter query
-            $where = ['1=1'];
-            $params = [];
-            
-            if (!empty($_GET['status'])) {
-                $where[] = 'pur.status = ?';
-                $params[] = $_GET['status'];
-            }
-            
-            if (!empty($_GET['from_date'])) {
-                $where[] = 'DATE(pur.requested_at) >= ?';
-                $params[] = $_GET['from_date'];
-            }
-            
-            if (!empty($_GET['to_date'])) {
-                $where[] = 'DATE(pur.requested_at) <= ?';
-                $params[] = $_GET['to_date'];
-            }
-            
-            // Get upgrade requests
-            $sql = "
-                SELECT 
-                    pur.id,
-                    u.first_name, u.last_name, m.member_number,
-                    pur.from_package, pur.to_package,
-                    pur.prorated_amount, pur.payment_status,
-                    pur.status, pur.requested_at, pur.processed_at
-                FROM plan_upgrade_requests pur
-                JOIN members m ON pur.member_id = m.id
-                JOIN users u ON m.user_id = u.id
-                WHERE " . implode(' AND ', $where) . "
-                ORDER BY pur.requested_at DESC
-            ";
-            
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-            $upgrades = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (Exception $e) {
-            $upgrades = [];
-            error_log("Export Plan Upgrades Error: " . $e->getMessage());
-        }
-        
-        // Set headers for CSV download
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="plan_upgrades_' . date('Y-m-d') . '.csv"');
-        
-        // Open output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add CSV headers
-        fputcsv($output, [
-            'ID',
-            'Member Name',
-            'Member Number',
-            'From Package',
-            'To Package',
-            'Amount (KES)',
-            'Payment Status',
-            'Status',
-            'Requested Date',
-            'Processed Date'
-        ]);
-        
-        // Add data rows
-        foreach ($upgrades as $upgrade) {
-            fputcsv($output, [
-                $upgrade['id'],
-                $upgrade['first_name'] . ' ' . $upgrade['last_name'],
-                $upgrade['member_number'] ?? 'N/A',
-                $upgrade['from_package'],
-                $upgrade['to_package'],
-                number_format($upgrade['prorated_amount'], 2),
-                ucfirst($upgrade['payment_status']),
-                ucfirst($upgrade['status']),
-                date('Y-m-d H:i:s', strtotime($upgrade['requested_at'])),
-                $upgrade['processed_at'] ? date('Y-m-d H:i:s', strtotime($upgrade['processed_at'])) : 'N/A'
-            ]);
-        }
-        
-        fclose($output);
-        exit();
     }
 
     /**
@@ -1560,241 +1718,114 @@ class AdminController extends BaseController
         $fromDate = $_GET['from_date'] ?? date('Y-m-01');
         $toDate = $_GET['to_date'] ?? date('Y-m-d');
         
-        // Initialize default empty data
-        $kpis = [
-            'total_payments' => 0,
-            'total_commissions' => 0,
-            'total_upgrades' => 0,
-            'total_refunds' => 0,
-            'paying_members' => 0,
-            'earning_agents' => 0,
-            'net_revenue' => 0,
-            'revenue_change' => 0,
-            'total_revenue' => 0
-        ];
-        $monthlySummary = [];
-        $topAgents = [];
-        $recentTransactions = [];
+        // Get KPIs
+        $stmt = $db->prepare("
+            SELECT 
+                SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
+                SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
+                SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
+                SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
+                COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
+                COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
+            FROM financial_transactions
+            WHERE DATE(transaction_date) BETWEEN ? AND ?
+            AND status = 'completed'
+        ");
+        $stmt->execute([$fromDate, $toDate]);
+        $kpis = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        try {
-            // Get KPIs
-            $stmt = $db->prepare("
-                SELECT 
-                    SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
-                    SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
-                    SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
-                    SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
-                    COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
-                    COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
-                FROM financial_transactions
-                WHERE DATE(transaction_date) BETWEEN ? AND ?
-                AND status = 'completed'
-            ");
-            $stmt->execute([$fromDate, $toDate]);
-            $fetchedKpis = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($fetchedKpis) {
-                $kpis = $fetchedKpis;
-                $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
-                                       ($kpis['total_commissions'] + $kpis['total_refunds']);
-                $kpis['revenue_change'] = 0; // Calculate vs previous period if needed
-                $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
-            }
-            
-            // Get monthly summary
-            $stmt = $db->query("
-                SELECT * FROM vw_financial_summary
-                ORDER BY month DESC
-                LIMIT 12
-            ");
-            $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Get top agents
-            $stmt = $db->query("
-                SELECT * FROM vw_agent_leaderboard
-                LIMIT 10
-            ");
-            $topAgents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Get recent transactions
-            $stmt = $db->prepare("
-                SELECT 
-                    ft.*,
-                    m.member_number,
-                    m.package
-                FROM financial_transactions ft
-                LEFT JOIN members m ON ft.member_id = m.id
-                WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
-                ORDER BY ft.transaction_date DESC
-                LIMIT 20
-            ");
-            $stmt->execute([$fromDate, $toDate]);
-            $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch (Exception $e) {
-            // Tables don't exist yet, use empty data
-            error_log("Financial dashboard tables not found: " . $e->getMessage());
-        }
+        $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
+                               ($kpis['total_commissions'] + $kpis['total_refunds']);
+        $kpis['revenue_change'] = 0; // Calculate vs previous period if needed
+        $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
+        
+        // Get monthly summary
+        $stmt = $db->query("
+            SELECT * FROM vw_financial_summary
+            ORDER BY month DESC
+            LIMIT 12
+        ");
+        $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get top agents
+        $stmt = $db->query("
+            SELECT * FROM vw_agent_leaderboard
+            LIMIT 10
+        ");
+        $topAgents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get recent transactions
+        $stmt = $db->prepare("
+            SELECT 
+                ft.*,
+                m.member_number,
+                m.package
+            FROM financial_transactions ft
+            LEFT JOIN members m ON ft.member_id = m.id
+            WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
+            ORDER BY ft.transaction_date DESC
+            LIMIT 20
+        ");
+        $stmt->execute([$fromDate, $toDate]);
+        $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
             'title' => 'Financial Dashboard - ' . APP_NAME,
             'kpis' => $kpis,
             'monthly_summary' => $monthlySummary,
             'top_agents' => $topAgents,
-            'recent_transactions' => $recentTransactions,
-            'from_date' => $fromDate,
-            'to_date' => $toDate
+            'recent_transactions' => $recentTransactions
         ];
         
-        $this->view('admin/financial-dashboard', $data);
+        $this->view('admin.financial-dashboard', $data);
     }
 
     /**
-     * Export Financial Report
+     * Get recent activities for dashboard
      */
-    public function exportFinancialReport()
+    private function getRecentActivities($limit = 5)
     {
-        $this->requireAdminAccess();
-        
-        $db = Database::getInstance()->getConnection();
-        
-        // Date range from filters or default to current month
-        $fromDate = $_GET['from_date'] ?? date('Y-m-01');
-        $toDate = $_GET['to_date'] ?? date('Y-m-d');
-        
-        // Initialize default empty data
-        $kpis = [
-            'total_payments' => 0,
-            'total_commissions' => 0,
-            'total_upgrades' => 0,
-            'total_refunds' => 0,
-            'paying_members' => 0,
-            'earning_agents' => 0,
-            'net_revenue' => 0,
-            'total_revenue' => 0
-        ];
-        $monthlySummary = [];
-        $recentTransactions = [];
-        
         try {
-            // Get KPIs
-            $stmt = $db->prepare("
-                SELECT 
-                    SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments,
-                    SUM(CASE WHEN transaction_type = 'commission' THEN amount ELSE 0 END) as total_commissions,
-                    SUM(CASE WHEN transaction_type = 'upgrade' THEN amount ELSE 0 END) as total_upgrades,
-                    SUM(CASE WHEN transaction_type = 'refund' THEN amount ELSE 0 END) as total_refunds,
-                    COUNT(DISTINCT CASE WHEN transaction_type = 'payment' THEN member_id END) as paying_members,
-                    COUNT(DISTINCT CASE WHEN transaction_type = 'commission' THEN agent_id END) as earning_agents
-                FROM financial_transactions
-                WHERE DATE(transaction_date) BETWEEN ? AND ?
-                AND status = 'completed'
-            ");
-            $stmt->execute([$fromDate, $toDate]);
-            $fetchedKpis = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($fetchedKpis) {
-                $kpis = $fetchedKpis;
-                $kpis['net_revenue'] = ($kpis['total_payments'] + $kpis['total_upgrades']) - 
-                                       ($kpis['total_commissions'] + $kpis['total_refunds']);
-                $kpis['total_revenue'] = $kpis['total_payments'] + $kpis['total_upgrades'];
-            }
-            
-            // Get monthly summary
-            $stmt = $db->query("
-                SELECT * FROM vw_financial_summary
-                ORDER BY month DESC
-                LIMIT 12
-            ");
-            $monthlySummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Get all transactions in the period
-            $stmt = $db->prepare("
-                SELECT 
-                    ft.*,
-                    m.member_number,
-                    m.package
-                FROM financial_transactions ft
-                LEFT JOIN members m ON ft.member_id = m.id
-                WHERE DATE(ft.transaction_date) BETWEEN ? AND ?
-                ORDER BY ft.transaction_date DESC
-            ");
-            $stmt->execute([$fromDate, $toDate]);
-            $recentTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+            $db = Database::getInstance();
+            $query = "
+                SELECT
+                    'member_registration' as type,
+                    CONCAT(u.first_name, ' ', u.last_name) as title,
+                    'New member registered' as description,
+                    u.created_at as activity_time,
+                    m.id as reference_id
+                FROM users u
+                JOIN members m ON u.id = m.user_id
+                WHERE u.role = 'member'
+                UNION ALL
+                SELECT
+                    'payment' as type,
+                    CONCAT('KES ', p.amount) as title,
+                    CONCAT('Payment received from ', COALESCE(u.first_name, 'Unknown')) as description,
+                    p.payment_date as activity_time,
+                    p.id as reference_id
+                FROM payments p
+                LEFT JOIN members m ON p.member_id = m.id
+                LEFT JOIN users u ON m.user_id = u.id
+                WHERE p.status = 'completed'
+                UNION ALL
+                SELECT
+                    'claim' as type,
+                    CONCAT('Claim #', c.id) as title,
+                    CONCAT('Claim submitted for ', COALESCE(c.deceased_name, 'Unknown')) as description,
+                    c.created_at as activity_time,
+                    c.id as reference_id
+                FROM claims c
+                ORDER BY activity_time DESC
+                LIMIT ?
+            ";
+
+            $result = $db->query($query, [$limit]);
+            return $result ? $result->fetchAll(PDO::FETCH_ASSOC) : [];
         } catch (Exception $e) {
-            // Tables don't exist yet, continue with empty data
-            error_log("Financial export tables not found: " . $e->getMessage());
+            error_log('Failed to fetch recent activities: ' . $e->getMessage());
+            return [];
         }
-        
-        // Generate CSV
-        $filename = 'financial_report_' . $fromDate . '_to_' . $toDate . '.csv';
-        
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        
-        $output = fopen('php://output', 'w');
-        
-        // Report Header
-        fputcsv($output, ['Financial Report']);
-        fputcsv($output, ['Period:', $fromDate . ' to ' . $toDate]);
-        fputcsv($output, ['Generated:', date('Y-m-d H:i:s')]);
-        fputcsv($output, []);
-        
-        // KPIs Summary
-        fputcsv($output, ['KEY PERFORMANCE INDICATORS']);
-        fputcsv($output, ['Metric', 'Value']);
-        fputcsv($output, ['Total Revenue', 'KES ' . number_format($kpis['total_revenue'], 2)]);
-        fputcsv($output, ['Total Payments', 'KES ' . number_format($kpis['total_payments'], 2)]);
-        fputcsv($output, ['Total Commissions', 'KES ' . number_format($kpis['total_commissions'], 2)]);
-        fputcsv($output, ['Total Upgrades', 'KES ' . number_format($kpis['total_upgrades'], 2)]);
-        fputcsv($output, ['Total Refunds', 'KES ' . number_format($kpis['total_refunds'], 2)]);
-        fputcsv($output, ['Net Revenue', 'KES ' . number_format($kpis['net_revenue'], 2)]);
-        fputcsv($output, ['Paying Members', $kpis['paying_members']]);
-        fputcsv($output, ['Earning Agents', $kpis['earning_agents']]);
-        fputcsv($output, []);
-        
-        // Transactions
-        if (!empty($recentTransactions)) {
-            fputcsv($output, ['TRANSACTIONS']);
-            fputcsv($output, ['Date', 'Type', 'Member Number', 'Package', 'Amount', 'Status']);
-            
-            foreach ($recentTransactions as $txn) {
-                fputcsv($output, [
-                    date('Y-m-d H:i', strtotime($txn['transaction_date'])),
-                    ucfirst($txn['transaction_type']),
-                    $txn['member_number'] ?? 'N/A',
-                    $txn['package'] ?? 'N/A',
-                    'KES ' . number_format($txn['amount'], 2),
-                    ucfirst($txn['status'])
-                ]);
-            }
-            fputcsv($output, []);
-        }
-        
-        // Monthly Summary
-        if (!empty($monthlySummary)) {
-            fputcsv($output, ['MONTHLY SUMMARY']);
-            fputcsv($output, ['Month', 'Payments', 'Commissions', 'Upgrades', 'Refunds', 'Net Revenue', 'Members']);
-            
-            foreach ($monthlySummary as $month) {
-                $net = $month['total_payments'] + $month['total_upgrades'] - 
-                       $month['total_commissions'] - $month['total_refunds'];
-                       
-                fputcsv($output, [
-                    date('F Y', strtotime($month['month'] . '-01')),
-                    'KES ' . number_format($month['total_payments'], 2),
-                    'KES ' . number_format($month['total_commissions'], 2),
-                    'KES ' . number_format($month['total_upgrades'], 2),
-                    'KES ' . number_format($month['total_refunds'], 2),
-                    'KES ' . number_format($net, 2),
-                    $month['paying_members']
-                ]);
-            }
-        }
-        
-        fclose($output);
-        exit;
     }
 }
 ?>

@@ -1,3 +1,9 @@
+<?php 
+$totalPayments = $totalPayments ?? 0;
+$monthlyPayments = $monthlyPayments ?? 0;
+$pendingReconciliation = $pendingReconciliation ?? 0;
+$successRate = $successRate ?? 0;
+?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <!-- Page Header -->
@@ -66,20 +72,18 @@
     }
 
     .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
         color: #1F2937;
-        margin: 0 0 4px 0;
+        margin-bottom: 4px;
     }
 
     .page-subtitle {
-        font-size: 13px;
+        font-size: 14px;
         color: #9CA3AF;
-        margin: 0;
     }
 
-    .header-actions {
+    .quick-actions {
         display: flex;
         gap: 12px;
     }
@@ -90,36 +94,38 @@
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        border: none;
         transition: all 0.2s;
         display: flex;
         align-items: center;
         gap: 8px;
+        border: none;
+        text-decoration: none;
     }
 
     .btn-primary {
-        background: #7F3D9E;
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
         color: white;
     }
 
     .btn-primary:hover {
-        background: #7F3D9E;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
     }
 
     .btn-secondary {
-        background: #F3F4F6;
-        color: #6B7280;
+        background: white;
+        color: #7F3D9E;
+        border: 1px solid #E5E7EB;
     }
 
     .btn-secondary:hover {
-        background: #E5E7EB;
+        background: #F9FAFB;
     }
 
     /* Stats Grid */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 20px;
         margin-bottom: 30px;
     }
@@ -127,7 +133,7 @@
     .stat-card {
         background: white;
         border-radius: 12px;
-        padding: 24px;
+        padding: 20px;
         border: 1px solid #E5E7EB;
         transition: all 0.2s;
     }
@@ -139,22 +145,14 @@
 
     .stat-header {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 12px;
-    }
-
-    .stat-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #6B7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
     }
 
     .stat-icon {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         border-radius: 10px;
         display: flex;
         align-items: center;
@@ -162,83 +160,144 @@
         font-size: 18px;
     }
 
-    .stat-icon.success {
-        background: #D1FAE5;
+    .stat-icon.green {
+        background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
         color: #10B981;
     }
 
-    .stat-icon.info {
-        background: #DBEAFE;
+    .stat-icon.blue {
+        background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
         color: #3B82F6;
     }
 
-    .stat-icon.warning {
-        background: #FEF3C7;
+    .stat-icon.orange {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
         color: #F59E0B;
     }
 
-    .stat-icon.primary {
-        background: #EDE9FE;
+    .stat-icon.purple {
+        background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
         color: #7F3D9E;
     }
 
-    .stat-value {
-        font-size: 32px;
-        font-weight: 700;
-        color: #1F2937;
-        margin-bottom: 8px;
+    .stat-label {
+        font-size: 13px;
+        color: #9CA3AF;
+        font-weight: 500;
     }
 
-    .stat-change {
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 4px;
+    }
+
+    .stat-subtext {
         font-size: 12px;
         color: #6B7280;
     }
 
-    /* Table Card */
-    .table-card {
+    /* Tabs */
+    .tabs-container {
         background: white;
         border-radius: 12px;
-        padding: 24px;
         border: 1px solid #E5E7EB;
-        margin-bottom: 30px;
+        overflow: hidden;
     }
 
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 0;
+        background: #F9FAFB;
+        overflow-x: auto;
+    }
+
+    .tab-btn {
+        padding: 16px 24px;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+        color: #7F3D9E;
+        background: rgba(127, 61, 158, 0.05);
+    }
+
+    .tab-btn.active {
+        color: #7F3D9E;
+        background: white;
+        border-bottom-color: #7F3D9E;
+    }
+
+    .tab-content {
+        display: none;
+        padding: 24px;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Table Styles */
     .table-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #F3F4F6;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
-    .table-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1F2937;
+    .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 250px;
+        max-width: 400px;
     }
 
-    .table-subtitle {
-        font-size: 13px;
+    .search-box input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
         color: #9CA3AF;
-        margin-top: 4px;
     }
 
     .filter-group {
         display: flex;
-        gap: 8px;
+        gap: 12px;
     }
 
     .filter-btn {
-        padding: 8px 16px;
+        padding: 10px 16px;
         border: 1px solid #E5E7EB;
         background: white;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
         color: #6B7280;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .filter-btn:hover {
@@ -246,104 +305,59 @@
         color: #7F3D9E;
     }
 
-    .filter-btn.active {
-        background: #7F3D9E;
-        color: white;
-        border-color: #7F3D9E;
-    }
-
-    /* Payments Table */
-    .payments-table {
+    .custom-table {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
     }
 
-    .payments-table thead th {
+    .custom-table thead {
         background: #F9FAFB;
+    }
+
+    .custom-table th {
         padding: 12px 16px;
         text-align: left;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border-bottom: 2px solid #E5E7EB;
+        border-bottom: 1px solid #E5E7EB;
     }
 
-    .payments-table tbody td {
+    .custom-table td {
         padding: 16px;
         border-bottom: 1px solid #F3F4F6;
         font-size: 14px;
         color: #1F2937;
     }
 
-    .payments-table tbody tr:hover {
+    .custom-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .custom-table tbody tr:hover {
         background: #F9FAFB;
     }
 
-    .member-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .member-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 13px;
-        color: white;
-    }
-
-    .member-avatar.blue {
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-    }
-
-    .member-avatar.green {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    }
-
-    .member-avatar.purple {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
-    }
-
-    .member-avatar.orange {
-        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-    }
-
-    .member-details .member-name {
-        font-weight: 600;
-        color: #1F2937;
-        margin-bottom: 2px;
-    }
-
-    .member-details .member-number {
-        font-size: 12px;
-        color: #9CA3AF;
-    }
-
+    /* Status Badges */
     .status-badge {
+        display: inline-block;
         padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
     }
 
-    .status-badge.completed {
+    .status-badge.success {
         background: #D1FAE5;
         color: #059669;
     }
 
     .status-badge.pending {
         background: #FEF3C7;
-        color: #D97706;
+        color: #F59E0B;
     }
 
     .status-badge.failed {
@@ -351,501 +365,492 @@
         color: #DC2626;
     }
 
-    .type-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        background: #F3F4F6;
-        color: #6B7280;
+    /* Reconciliation Section */
+    .reconciliation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
     }
 
-    .action-btns {
-        display: flex;
-        gap: 6px;
-    }
-
-    .action-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid #E5E7EB;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #6B7280;
-    }
-
-    .action-btn:hover {
-        background: #7F3D9E;
-        color: white;
-        border-color: #7F3D9E;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .empty-state i {
-        font-size: 64px;
-        color: #E5E7EB;
-        margin-bottom: 20px;
-    }
-
-    .empty-state h5 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #6B7280;
-        margin-bottom: 8px;
-    }
-
-    .empty-state p {
-        font-size: 14px;
-        color: #9CA3AF;
-    }
-
-    /* Modal Styles */
-    .modal-content {
+    .reconciliation-card {
+        background: #F9FAFB;
         border-radius: 12px;
-        border: none;
+        padding: 20px;
+        border: 1px solid #E5E7EB;
     }
 
-    .modal-header {
-        border-bottom: 2px solid #F3F4F6;
-        padding: 20px 24px;
-    }
-
-    .modal-title {
-        font-size: 18px;
+    .reconciliation-card h4 {
+        font-size: 14px;
         font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 12px;
+    }
+
+    .reconciliation-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .reconciliation-item:last-child {
+        border-bottom: none;
+    }
+
+    .reconciliation-label {
+        font-size: 13px;
+        color: #6B7280;
+    }
+
+    .reconciliation-value {
+        font-size: 13px;
+        font-weight: 600;
         color: #1F2937;
     }
 
-    .modal-body {
+    /* Financial Dashboard Cards */
+    .financial-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 12px;
         padding: 24px;
-    }
-
-    .form-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px 16px;
         border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.2s;
     }
 
-    .form-control:focus {
-        outline: none;
-        border-color: #7F3D9E;
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    }
-
-    .alert {
-        padding: 12px 16px;
-        border-radius: 8px;
+    .chart-header {
         margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
     }
 
-    .alert-info {
-        background: #EFF6FF;
-        border: 1px solid #DBEAFE;
-        color: #1E40AF;
+    .chart-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 4px;
+    }
+
+    .chart-subtitle {
+        font-size: 13px;
+        color: #9CA3AF;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .financial-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .reconciliation-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-group {
+            flex-wrap: wrap;
+        }
     }
 </style>
 
 <!-- Page Header -->
 <div class="page-header">
     <div>
-        <h1 class="page-title">Payments Management</h1>
-        <p class="page-subtitle">Track and manage all payment transactions</p>
+        <h1 class="page-title">Payment Management</h1>
+        <p class="page-subtitle">Track, reconcile, and manage all payment operations</p>
     </div>
-    <div class="header-actions">
-        <button class="btn-action btn-secondary" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal">
-            <i class="fas fa-search"></i>
-            Verify Payment
-        </button>
+    <div class="quick-actions">
         <button class="btn-action btn-primary" onclick="window.location.href='/admin/payments-reconciliation'">
             <i class="fas fa-sync-alt"></i>
-            Reconciliation
+            Reconcile Payments
+        </button>
+        <button class="btn-action btn-secondary">
+            <i class="fas fa-download"></i>
+            Export Report
         </button>
     </div>
 </div>
 
-<!-- Statistics Cards -->
+<!-- Payment Analytics -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-label">Total Revenue</div>
-            <div class="stat-icon success">
-                <i class="fas fa-dollar-sign"></i>
+            <div class="stat-icon green">
+                <i class="fas fa-coins"></i>
             </div>
+            <span class="stat-label">Total Payments</span>
         </div>
-        <div class="stat-value">KES <?php echo number_format(array_sum(array_column($payments ?? [], 'amount')), 0); ?></div>
-        <div class="stat-change">All-time collections</div>
+        <div class="stat-value">KSh <?php echo number_format($totalPayments); ?></div>
+        <div class="stat-subtext">All-time collection</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-label">Total Payments</div>
-            <div class="stat-icon info">
-                <i class="fas fa-receipt"></i>
+            <div class="stat-icon blue">
+                <i class="fas fa-calendar-alt"></i>
             </div>
+            <span class="stat-label">This Month</span>
         </div>
-        <div class="stat-value"><?php echo count($payments ?? []); ?></div>
-        <div class="stat-change">Total transactions</div>
+        <div class="stat-value">KSh <?php echo number_format($monthlyPayments); ?></div>
+        <div class="stat-subtext">Current month collection</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-label">Pending</div>
-            <div class="stat-icon warning">
-                <i class="fas fa-clock"></i>
+            <div class="stat-icon orange">
+                <i class="fas fa-hourglass-half"></i>
             </div>
+            <span class="stat-label">Pending Reconciliation</span>
         </div>
-        <div class="stat-value"><?php echo count(array_filter($payments ?? [], fn($p) => $p['status'] === 'pending')); ?></div>
-        <div class="stat-change">Awaiting verification</div>
+        <div class="stat-value"><?php echo $pendingReconciliation; ?></div>
+        <div class="stat-subtext">Transactions to review</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-label">This Month</div>
-            <div class="stat-icon primary">
-                <i class="fas fa-calendar"></i>
+            <div class="stat-icon purple">
+                <i class="fas fa-check-circle"></i>
             </div>
+            <span class="stat-label">Success Rate</span>
         </div>
-        <div class="stat-value">KES <?php 
-            $thisMonth = array_filter($payments ?? [], fn($p) => 
-                date('Y-m', strtotime($p['created_at'])) === date('Y-m')
-            );
-            echo number_format(array_sum(array_column($thisMonth, 'amount')), 0);
-        ?></div>
-        <div class="stat-change"><?php echo date('F Y'); ?></div>
+        <div class="stat-value"><?php echo $successRate; ?>%</div>
+        <div class="stat-subtext">Transaction success rate</div>
     </div>
 </div>
 
-<!-- Payments Table -->
-<div class="table-card">
-    <div class="table-header">
-        <div>
-            <div class="table-title">Payment Transactions</div>
-            <div class="table-subtitle">View and manage all payment records</div>
-        </div>
-        <div class="filter-group">
-            <button class="filter-btn active" onclick="filterPayments('all')">All</button>
-            <button class="filter-btn" onclick="filterPayments('completed')">Completed</button>
-            <button class="filter-btn" onclick="filterPayments('pending')">Pending</button>
-            <button class="filter-btn" onclick="filterPayments('failed')">Failed</button>
-        </div>
+<!-- Payment Tabs -->
+<div class="tabs-container">
+    <div class="tabs-header">
+        <button class="tab-btn active" onclick="showTab('all')" id="tab-all">
+            <i class="fas fa-list"></i>
+            All Payments
+        </button>
+        <button class="tab-btn" onclick="showTab('mpesa')" id="tab-mpesa">
+            <i class="fas fa-mobile-alt"></i>
+            M-Pesa Payments
+        </button>
+        <button class="tab-btn" onclick="showTab('reconciliation')" id="tab-reconciliation">
+            <i class="fas fa-sync-alt"></i>
+            Reconciliation
+        </button> 
+        <button class="tab-btn" onclick="showTab('reports')" id="tab-reports">
+            <i class="fas fa-file-alt"></i>
+            Reports
+        </button>
     </div>
 
-    <?php if (!empty($payments)): ?>
-    <div style="overflow-x: auto;">
-        <table class="payments-table">
+    <!-- All Payments Tab -->
+    <div class="tab-content active" id="content-all">
+        <div class="table-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search payments by member, transaction ID...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn">
+                    <i class="fas fa-calendar"></i>
+                    Date Range
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <table class="custom-table">
             <thead>
                 <tr>
                     <th>Transaction ID</th>
-                    <th>Member</th>
+                    <th>Member Name</th>
                     <th>Amount</th>
-                    <th>Type</th>
-                    <th>Method</th>
+                    <th>Payment Method</th>
+                    <th>Date & Time</th>
                     <th>Status</th>
-                    <th>Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                $avatarColors = ['blue', 'green', 'purple', 'orange'];
-                $index = 0;
-                foreach ($payments as $payment): 
-                    $initials = strtoupper(substr($payment['first_name'], 0, 1) . substr($payment['last_name'], 0, 1));
-                    $avatarColor = $avatarColors[$index % 4];
-                    $index++;
-                ?>
-                <tr data-status="<?php echo $payment['status']; ?>">
-                    <td><strong><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></strong></td>
+                <tr>
+                    <td><strong>TXN2026001</strong></td>
+                    <td>John Kamau</td>
+                    <td><strong>KSh 5,000</strong></td>
+                    <td>M-Pesa</td>
+                    <td>Feb 5, 2026 10:30 AM</td>
+                    <td><span class="status-badge success">Success</span></td>
                     <td>
-                        <div class="member-info">
-                            <div class="member-avatar <?php echo $avatarColor; ?>"><?php echo $initials; ?></div>
-                            <div class="member-details">
-                                <div class="member-name"><?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?></div>
-                                <div class="member-number"><?php echo htmlspecialchars($payment['member_number']); ?></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><strong>KES <?php echo number_format($payment['amount'], 2); ?></strong></td>
-                    <td><span class="type-badge"><?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?></span></td>
-                    <td><span class="type-badge"><?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?></span></td>
-                    <td>
-                        <span class="status-badge <?php echo $payment['status']; ?>">
-                            <?php echo ucfirst($payment['status']); ?>
-                        </span>
-                    </td>
-                    <td><?php echo date('M j, Y H:i', strtotime($payment['created_at'])); ?></td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#paymentModal<?php echo $payment['id']; ?>" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn" data-bs-toggle="modal" data-bs-target="#verifyPaymentModal" title="Verify">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </div>
+                        <button class="filter-btn" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
                     </td>
                 </tr>
-
-                <!-- Payment Details Modal -->
-                <div class="modal fade" id="paymentModal<?php echo $payment['id']; ?>" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Payment Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Transaction ID</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
-                                            <?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Amount</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px; font-weight: 600;">
-                                            KES <?php echo number_format($payment['amount'], 2); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Member Name</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo htmlspecialchars($payment['first_name'] . ' ' . $payment['last_name']); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Member Number</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo htmlspecialchars($payment['member_number']); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Payment Type</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo ucfirst($payment['payment_type'] ?? 'monthly'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Payment Method</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo strtoupper($payment['payment_method'] ?? 'mpesa'); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Status</label>
-                                        <div style="padding: 10px;">
-                                            <span class="status-badge <?php echo $payment['status']; ?>">
-                                                <?php echo ucfirst($payment['status']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Date & Time</label>
-                                        <div style="padding: 10px; background: #F9FAFB; border-radius: 6px;">
-                                            <?php echo date('M j, Y H:i:s', strtotime($payment['created_at'])); ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                <tr>
+                    <td><strong>TXN2026002</strong></td>
+                    <td>Mary Wanjiku</td>
+                    <td><strong>KSh 10,000</strong></td>
+                    <td>M-Pesa</td>
+                    <td>Feb 5, 2026 09:15 AM</td>
+                    <td><span class="status-badge success">Success</span></td>
+                    <td>
+                        <button class="filter-btn" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <?php else: ?>
-    <div class="empty-state">
-        <i class="fas fa-money-bill-wave"></i>
-        <h5>No payments found</h5>
-        <p>Payment transactions will appear here</p>
-    </div>
-    <?php endif; ?>
-</div>
 
-<!-- Verify Payment Modal -->
-<div class="modal fade" id="verifyPaymentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Verify Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- M-Pesa Payments Tab -->
+    <div class="tab-content" id="content-mpesa">
+        <div class="table-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search M-Pesa transactions...">
             </div>
-            <form id="verifyPaymentForm">
-                <?php if (isset($_SESSION['csrf_token'])): ?>
-                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                <?php endif; ?>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Use this to verify a Paybill payment or STK push when a member reports missing payment</span>
-                    </div>
+            <div class="filter-group">
+                <button class="filter-btn">
+                    <i class="fas fa-calendar"></i>
+                    Date Range
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Verification Method</label>
-                            <select class="form-control" name="method" id="verifyMethod" required>
-                                <option value="stk">STK Push</option>
-                                <option value="paybill">Paybill Receipt</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Payment Type</label>
-                            <select class="form-control" name="payment_type">
-                                <option value="monthly">Monthly Contribution</option>
-                                <option value="registration">Registration Fee</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>M-Pesa Code</th>
+                    <th>Member</th>
+                    <th>Phone Number</th>
+                    <th>Amount</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>QAX123DEFG</strong></td>
+                    <td>John Kamau</td>
+                    <td>+254712345678</td>
+                    <td><strong>KSh 5,000</strong></td>
+                    <td>Feb 5, 2026 10:30 AM</td>
+                    <td><span class="status-badge success">Confirmed</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Amount (KES)</label>
-                            <input type="number" class="form-control" name="amount" min="1" step="1" placeholder="e.g. 500">
-                        </div>
-                        <div class="col-md-6 mb-3" id="stkField">
-                            <label class="form-label">Checkout Request ID</label>
-                            <input type="text" class="form-control" name="checkout_request_id" id="checkoutRequestId" placeholder="ws_CO_...">
-                        </div>
-                        <div class="col-md-6 mb-3" id="receiptField" style="display: none;">
-                            <label class="form-label">M-Pesa Receipt</label>
-                            <input type="text" class="form-control" name="mpesa_receipt_number" id="mpesaReceiptNumber" placeholder="RH81M7...">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Member ID (Optional)</label>
-                            <input type="number" class="form-control" name="member_id" id="memberIdInput" placeholder="Member ID">
-                        </div>
-                    </div>
-
-                    <div id="verifyResults" style="display: none; margin-top: 20px;"></div>
+    <!-- Reconciliation Tab -->
+    <div class="tab-content" id="content-reconciliation">
+        <div class="reconciliation-grid">
+            <div class="reconciliation-card">
+                <h4><i class="fas fa-database"></i> System Records</h4>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Total Transactions</span>
+                    <span class="reconciliation-value">1,245</span>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-action btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-action btn-primary">
-                        <i class="fas fa-check"></i>
-                        Verify Payment
-                    </button>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Total Amount</span>
+                    <span class="reconciliation-value">KSh 5,250,000</span>
                 </div>
-            </form>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Successful</span>
+                    <span class="reconciliation-value">1,233</span>
+                </div>
+            </div>
+
+            <div class="reconciliation-card">
+                <h4><i class="fas fa-mobile-alt"></i> M-Pesa Records</h4>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Total Transactions</span>
+                    <span class="reconciliation-value">1,243</span>
+                </div>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Total Amount</span>
+                    <span class="reconciliation-value">KSh 5,240,000</span>
+                </div>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Confirmed</span>
+                    <span class="reconciliation-value">1,243</span>
+                </div>
+            </div>
+
+            <div class="reconciliation-card">
+                <h4><i class="fas fa-exclamation-triangle"></i> Discrepancies</h4>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Missing Transactions</span>
+                    <span class="reconciliation-value" style="color: #DC2626;">2</span>
+                </div>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Amount Difference</span>
+                    <span class="reconciliation-value" style="color: #DC2626;">KSh 10,000</span>
+                </div>
+                <div class="reconciliation-item">
+                    <span class="reconciliation-label">Pending Review</span>
+                    <span class="reconciliation-value" style="color: #F59E0B;">12</span>
+                </div>
+            </div>
+        </div>
+
+        <a class="btn-action btn-primary" style="margin-top: 20px;" href="/admin/payments-reconciliation">
+            <i class="fas fa-play"></i>
+            Run Reconciliation
+        </a>
+    </div>
+
+    <!-- Financial Dashboard Tab -->
+    <!-- <div class="tab-content" id="content-financial">
+        <div class="financial-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Payment Trends</h3>
+                    <p class="chart-subtitle">Monthly collection patterns</p>
+                </div>
+                <canvas id="paymentTrendsChart" height="300"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Payment Methods</h3>
+                    <p class="chart-subtitle">Distribution by method</p>
+                </div>
+                <canvas id="paymentMethodsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Reports Tab -->
+    <div class="tab-content" id="content-reports">
+        <h4 style="margin-bottom: 20px; color: #1F2937;">Generate Payment Reports</h4>
+        
+        <div class="reconciliation-grid">
+            <div class="reconciliation-card" style="cursor: pointer;" onclick="generateReport('monthly')">
+                <h4><i class="fas fa-calendar-alt"></i> Monthly Report</h4>
+                <p style="font-size: 13px; color: #6B7280; margin-top: 8px;">Comprehensive monthly payment summary</p>
+                <button class="btn-action btn-primary" style="margin-top: 12px; width: 100%;">
+                    <i class="fas fa-download"></i>
+                    Generate Report
+                </button>
+            </div>
+
+            <div class="reconciliation-card" style="cursor: pointer;" onclick="generateReport('member')">
+                <h4><i class="fas fa-user"></i> Member Report</h4>
+                <p style="font-size: 13px; color: #6B7280; margin-top: 8px;">Individual member payment history</p>
+                <button class="btn-action btn-primary" style="margin-top: 12px; width: 100%;">
+                    <i class="fas fa-download"></i>
+                    Generate Report
+                </button>
+            </div>
+
+            <div class="reconciliation-card" style="cursor: pointer;" onclick="generateReport('financial')">
+                <h4><i class="fas fa-chart-line"></i> Financial Report</h4>
+                <p style="font-size: 13px; color: #6B7280; margin-top: 8px;">Detailed financial analysis and trends</p>
+                <button class="btn-action btn-primary" style="margin-top: 12px; width: 100%;">
+                    <i class="fas fa-download"></i>
+                    Generate Report
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// Filter payments by status
-function filterPayments(status) {
-    const rows = document.querySelectorAll('.payments-table tbody tr[data-status]');
-    const buttons = document.querySelectorAll('.filter-btn');
-    
-    // Update button states
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // Filter rows
-    rows.forEach(row => {
-        if (status === 'all' || row.dataset.status === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById('content-' + tabName).classList.add('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+}
+
+function generateReport(type) {
+    ShenaApp.showNotification('Generating ' + type + ' report...', 'info', 2000);
+}
+
+// Payment Trends Chart
+const ctx1 = document.getElementById('paymentTrendsChart');
+if (ctx1) {
+    new Chart(ctx1.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Payments (KSh)',
+                data: [380000, 420000, 445000, 410000, 480000, 450000],
+                borderColor: '#7F3D9E',
+                backgroundColor: 'rgba(127, 61, 158, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'KSh ' + (value / 1000) + 'K';
+                        }
+                    }
+                }
+            }
         }
     });
 }
 
-// Toggle verification method fields
-document.getElementById('verifyMethod')?.addEventListener('change', function() {
-    const stkField = document.getElementById('stkField');
-    const receiptField = document.getElementById('receiptField');
-    
-    if (this.value === 'stk') {
-        stkField.style.display = 'block';
-        receiptField.style.display = 'none';
-    } else {
-        stkField.style.display = 'none';
-        receiptField.style.display = 'block';
-    }
-});
-
-// Verify payment form submission
-document.getElementById('verifyPaymentForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const resultsDiv = document.getElementById('verifyResults');
-    resultsDiv.style.display = 'block';
-    resultsDiv.innerHTML = `
-        <div class="alert alert-info">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Verifying payment...</span>
-        </div>
-    `;
-    
-    const formData = new FormData(this);
-    
-    fetch('/admin/payments/verify', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            resultsDiv.innerHTML = `
-                <div class="alert" style="background: #D1FAE5; border: 1px solid #10B981; color: #065F46;">
-                    <i class="fas fa-check-circle"></i>
-                    <span>${data.message}</span>
-                </div>
-            `;
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        } else {
-            resultsDiv.innerHTML = `
-                <div class="alert" style="background: #FEE2E2; border: 1px solid #DC2626; color: #991B1B;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>${data.message || 'Verification failed'}</span>
-                </div>
-            `;
+// Payment Methods Chart
+const ctx2 = document.getElementById('paymentMethodsChart');
+if (ctx2) {
+    new Chart(ctx2.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['M-Pesa', 'Bank Transfer', 'Cash'],
+            datasets: [{
+                data: [85, 10, 5],
+                backgroundColor: ['#7F3D9E', '#3B82F6', '#F59E0B']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
         }
-    })
-    .catch(error => {
-        resultsDiv.innerHTML = `
-            <div class="alert" style="background: #FEE2E2; border: 1px solid #DC2626; color: #991B1B;">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>Error verifying payment. Please try again.</span>
-            </div>
-        `;
     });
-});
+}
 </script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

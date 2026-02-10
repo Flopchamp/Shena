@@ -52,6 +52,26 @@
         animation: pulse 2s infinite;
     }
 
+    .header-action-btn {
+        background: #7F3D9E;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .header-action-btn:hover {
+        background: #6F3490;
+    }
+
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
@@ -130,6 +150,10 @@
         transition: all 0.2s;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .alert-button:hover {
@@ -352,6 +376,10 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .feed-button:hover {
@@ -401,6 +429,10 @@
         border: 1px solid #E5E7EB;
         background: white;
         color: #6B7280;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .table-btn.primary {
@@ -528,6 +560,10 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .action-btn:hover {
@@ -574,9 +610,9 @@
             <i class="fas fa-circle"></i>
             LIVE M-PESA FEED ACTIVE
         </div>
-        <button style="background: #7F3D9E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+        <a class="header-action-btn" href="/admin/reports?report_type=payments&filter=defaulters">
             <i class="fas fa-file-alt"></i> Defaulter Report
-        </button>
+        </a>
     </div>
 </div>
 
@@ -592,7 +628,7 @@
             <div class="alert-description">Pending immediate court support fund disbursement: KES 50,000</div>
         </div>
     </div>
-    <button class="alert-button">PROCESS CLAIM</button>
+    <a class="alert-button" href="/admin/claims">PROCESS CLAIM</a>
 </div>
 
 <!-- Statistics Cards -->
@@ -676,7 +712,7 @@
                 <div class="feed-amount">KES 1,200.00</div>
                 <div class="feed-description">No contribution - Amani...</div>
                 <div class="feed-meta">E-Pay Member ID</div>
-                <button class="feed-button">Link</button>
+                <a class="feed-button" href="/admin/payments?tab=reconciliation">Link</a>
             </div>
 
             <!-- OUTGEARED -->
@@ -688,7 +724,7 @@
                 <div class="feed-amount">KES 500.00</div>
                 <div class="feed-description">No transaction found</div>
                 <div class="feed-meta">E-Pay Member ID</div>
-                <button class="feed-button">Link</button>
+                <a class="feed-button" href="/admin/payments?tab=reconciliation">Link</a>
             </div>
         </div>
     </div>
@@ -702,12 +738,12 @@
             <div class="table-subtitle">Auto-match ongoing, queue for instant & manual verification</div>
         </div>
         <div class="table-actions">
-            <button class="table-btn">
+            <a class="table-btn" href="/admin/payments-reconciliation?filter=1">
                 <i class="fas fa-filter"></i> Filter
-            </button>
-            <button class="table-btn primary">
+            </a>
+            <a class="table-btn primary" href="/admin/payments-reconciliation?import=statement">
                 <i class="fas fa-download"></i> Import Statement
-            </button>
+            </a>
         </div>
     </div>
 
@@ -724,59 +760,39 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Alice Mwangi -->
+                <?php if (empty($reconciled_payments)): ?>
                 <tr>
-                    <td><strong>RLK2XKDZM</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar green">AM</div>
-                            <div class="member-info">
-                                <div class="member-name">Alice Mwangi</div>
-                                <div class="member-number">SHENA-001-2891</div>
-                            </div>
-                        </div>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #6B7280;">
+                        <i class="fas fa-file-invoice-dollar" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>No reconciled payments found</p>
                     </td>
-                    <td><strong>1,500.00</strong></td>
-                    <td><span class="status-badge reconciled">RECONCILED</span></td>
-                    <td>Oct 25, 10:32 AM</td>
-                    <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
                 </tr>
-
-                <!-- John Kamau -->
-                <tr>
-                    <td><strong>RAC2SK359P</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar orange">JK</div>
-                            <div class="member-info">
-                                <div class="member-name">John Kamau</div>
-                                <div class="member-number">SHENA-001-3726</div>
+                <?php else: ?>
+                    <?php foreach ($reconciled_payments as $payment): ?>
+                    <tr>
+                        <td><strong><?php echo htmlspecialchars($payment['transaction_id']); ?></strong></td>
+                        <td>
+                            <div class="member-profile">
+                                <div class="member-avatar <?php echo $payment['avatar_color'] ?? 'green'; ?>">
+                                    <?php echo strtoupper(substr($payment['first_name'] ?? 'M', 0, 1) . substr($payment['last_name'] ?? 'M', 0, 1)); ?>
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name"><?php echo htmlspecialchars($payment['member_name'] ?? 'N/A'); ?></div>
+                                    <div class="member-number"><?php echo htmlspecialchars($payment['member_number'] ?? 'N/A'); ?></div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td><strong>1,200.00</strong></td>
-                    <td><span class="status-badge signaling">SIGNALING REQUIRED</span></td>
-                    <td>Oct 25, 10:25 AM</td>
-                    <td><button class="action-btn">Resolve</button></td>
-                </tr>
-
-                <!-- Samuel Kiplagat -->
-                <tr>
-                    <td><strong>RPK33LJX28</strong></td>
-                    <td>
-                        <div class="member-profile">
-                            <div class="member-avatar green">SK</div>
-                            <div class="member-info">
-                                <div class="member-name">Samuel Kiplagat</div>
-                                <div class="member-number">SHENA-001-4589</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><strong>8,000.00</strong></td>
-                    <td><span class="status-badge reconciled">RECONCILED</span></td>
-                    <td>Oct 24, 09:12 AM</td>
-                    <td><button class="action-btn edit"><i class="fas fa-edit"></i></button></td>
-                </tr>
+                        </td>
+                        <td><strong><?php echo number_format($payment['amount'], 2); ?></strong></td>
+                        <td><span class="status-badge <?php echo $payment['status']; ?>"><?php echo strtoupper($payment['status']); ?></span></td>
+                        <td><?php echo date('M d, h:i A', strtotime($payment['timestamp'])); ?></td>
+                        <td>
+                            <a class="action-btn edit" href="/admin/payments?search=<?php echo urlencode($payment['transaction_id'] ?? ''); ?>">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -784,8 +800,12 @@
     <div style="text-align: center; padding: 16px; color: #9CA3AF; font-size: 13px;">
         VIEWING 3,436 RECONCILED PAYMENTS
         <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Previous</button>
-            <button style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer;">Next Page</button>
+            <a href="/admin/payments-reconciliation?page=prev" style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #1F2937;">
+                Previous
+            </a>
+            <a href="/admin/payments-reconciliation?page=next" style="padding: 6px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #1F2937;">
+                Next Page
+            </a>
         </div>
     </div>
 </div>
@@ -798,10 +818,10 @@ if (ctx) {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            labels: <?php echo json_encode($chart_labels ?? ['Week 1', 'Week 2', 'Week 3', 'Week 4']); ?>,
             datasets: [{
                 label: 'Revenue',
-                data: [30000, 42000, 58000, 72000],
+                data: <?php echo json_encode($chart_data ?? [0, 0, 0, 0]); ?>,
                 borderColor: '#8B5CF6',
                 backgroundColor: 'rgba(139, 92, 246, 0.1)',
                 tension: 0.4,

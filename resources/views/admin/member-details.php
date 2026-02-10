@@ -1,12 +1,13 @@
 <?php 
-$agent = $agent ?? [];
-$stats = $stats ?? ['total_members' => 0];
-$commissions = $commissions ?? [];
+$member = $member ?? [];
+$stats = $stats ?? [];
+$payments = $payments ?? [];
+$beneficiaries = $beneficiaries ?? [];
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
-    .agent-details-container {
+    .member-details-container {
         padding: 20px;
         max-width: 1400px;
         margin: 0 auto;
@@ -51,14 +52,28 @@ $commissions = $commissions ?? [];
         color: white;
     }
 
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
+    }
+
     .btn-secondary {
         background: white;
         color: #374151;
         border: 1px solid #D1D5DB;
     }
 
+    .btn-secondary:hover {
+        background: #F9FAFB;
+    }
+
     .btn-warning {
         background: #F59E0B;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #EF4444;
         color: white;
     }
 
@@ -98,7 +113,7 @@ $commissions = $commissions ?? [];
         gap: 24px;
     }
 
-    .agent-info-card {
+    .member-info-card {
         background: white;
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -111,7 +126,7 @@ $commissions = $commissions ?? [];
         color: white;
         display: flex;
         justify-content: space-between;
-align-items: center;
+        align-items: center;
     }
 
     .card-title {
@@ -138,16 +153,16 @@ align-items: center;
         color: #92400E;
     }
 
-    .status-badge.inactive {
-        background: #F3F4F6;
-        color: #6B7280;
+    .status-badge.grace_period {
+        background: #FEE2E2;
+        color: #991B1B;
     }
 
     .card-body {
         padding: 20px;
     }
 
-    .agent-avatar {
+    .member-avatar {
         text-align: center;
         margin-bottom: 20px;
     }
@@ -165,14 +180,14 @@ align-items: center;
         margin-bottom: 12px;
     }
 
-    .agent-name {
+    .member-name {
         font-size: 20px;
         font-weight: 700;
         color: #1F2937;
         margin-bottom: 4px;
     }
 
-    .agent-number {
+    .member-number {
         color: #9CA3AF;
         font-size: 14px;
     }
@@ -251,18 +266,18 @@ align-items: center;
     }
 </style>
 
-<div class="agent-details-container">
+<div class="member-details-container">
     <!-- Page Header -->
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-user-tie"></i> Agent Details - <?= htmlspecialchars($agent['agent_number'] ?? 'N/A') ?>
+            <i class="fas fa-user"></i> Member Details - <?= htmlspecialchars($member['member_number'] ?? 'N/A') ?>
         </h1>
         <div class="header-actions">
-            <a href="/admin/agents" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Agents
+            <a href="/admin/members" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Members
             </a>
-            <a href="/admin/agents/edit/<?= $agent['id'] ?>" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit Agent
+            <a href="/admin/members/edit/<?= $member['id'] ?>" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit Member
             </a>
         </div>
     </div>
@@ -270,137 +285,146 @@ align-items: center;
     <!-- Statistics -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Members Recruited</div>
-            <div class="stat-value"><?= $stats['total_members'] ?? 0 ?></div>
+            <div class="stat-label">Total Contributions</div>
+            <div class="stat-value">KES <?= number_format($stats['total_contributions'] ?? 0, 2) ?></div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Total Commission</div>
-            <div class="stat-value">KES <?= number_format($stats['paid_commission'] ?? 0, 2) ?></div>
+            <div class="stat-label">Last Payment</div>
+            <div class="stat-value"><?= !empty($stats['last_payment_date']) ? date('M j, Y', strtotime($stats['last_payment_date'])) : 'N/A' ?></div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Pending Commission</div>
-            <div class="stat-value">KES <?= number_format($stats['pending_commission'] ?? 0, 2) ?></div>
+            <div class="stat-label">Membership Duration</div>
+            <div class="stat-value"><?= $stats['membership_months'] ?? 0 ?> mon</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Active Members</div>
-            <div class="stat-value"><?= $stats['active_members'] ?? 0 ?></div>
+            <div class="stat-label">Beneficiaries</div>
+            <div class="stat-value"><?= count($beneficiaries) ?></div>
         </div>
     </div>
 
     <!-- Content Grid -->
     <div class="content-grid">
-        <!-- Left: Agent Info -->
+        <!-- Left: Member Info -->
         <div>
-            <div class="agent-info-card">
+            <div class="member-info-card">
                 <div class="card-header">
                     <span class="card-title">
-                        <i class="fas fa-info-circle"></i> Agent Information
+                        <i class="fas fa-info-circle"></i> Member Information
                     </span>
-                    <span class="status-badge <?= $agent['status'] ?? 'active' ?>">
-                        <?= ucfirst($agent['status'] ?? 'Active') ?>
+                    <span class="status-badge <?= $member['status'] ?? 'active' ?>">
+                        <?= ucfirst(str_replace('_', ' ', $member['status'] ?? 'Active')) ?>
                     </span>
                 </div>
                 <div class="card-body">
-                    <div class="agent-avatar">
+                    <div class="member-avatar">
                         <div class="avatar-circle">
-                            <?= strtoupper(substr($agent['first_name'] ?? 'A', 0, 1) . substr($agent['last_name'] ?? 'A', 0, 1)) ?>
+                            <?= strtoupper(substr($member['first_name'] ?? 'M', 0, 1) . substr($member['last_name'] ?? 'M', 0, 1)) ?>
                         </div>
-                        <div class="agent-name"><?= htmlspecialchars(($agent['first_name'] ?? '') . ' ' . ($agent['last_name'] ?? '')) ?></div>
-                        <div class="agent-number">Agent #<?= htmlspecialchars($agent['agent_number'] ?? 'N/A') ?></div>
+                        <div class="member-name"><?= htmlspecialchars(($member['first_name'] ?? '') . ' ' . ($member['last_name'] ?? '')) ?></div>
+                        <div class="member-number">Member #<?= htmlspecialchars($member['member_number'] ?? 'N/A') ?></div>
                     </div>
                     
                     <hr class="divider">
                     
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-id-card"></i> National ID</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['national_id'] ?? 'N/A') ?></div>
+                        <div class="info-value"><?= htmlspecialchars($member['id_number'] ?? 'N/A') ?></div>
                     </div>
                     
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-phone"></i> Phone</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['phone'] ?? 'N/A') ?></div>
+                        <div class="info-value"><?= htmlspecialchars($member['phone'] ?? 'N/A') ?></div>
                     </div>
                     
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-envelope"></i> Email</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['email'] ?? 'N/A') ?></div>
+                        <div class="info-value"><?= htmlspecialchars($member['email'] ?? 'N/A') ?></div>
                     </div>
                     
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-map-marker-alt"></i> County</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['county'] ?? 'N/A') ?></div>
+                        <div class="info-value"><?= htmlspecialchars($member['county'] ?? 'N/A') ?></div>
                     </div>
                     
-                    <?php if (!empty($agent['address'])): ?>
                     <div class="info-item">
-                        <div class="info-label"><i class="fas fa-home"></i> Address</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['address']) ?></div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-percentage"></i> Commission Rate</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['commission_rate'] ?? 0) ?>%</div>
+                        <div class="info-label"><i class="fas fa-box"></i> Package</div>
+                        <div class="info-value"><?= ucfirst($member['package'] ?? 'Basic') ?></div>
                     </div>
                     
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-calendar-alt"></i> Registered</div>
-                        <div class="info-value"><?= date('M j, Y', strtotime($agent['registration_date'] ?? 'now')) ?></div>
+                        <div class="info-value">
+                            <?php 
+                            $regDate = $member['registration_date'] ?? $member['created_at'] ?? null;
+                            echo $regDate ? date('M j, Y', strtotime($regDate)) : 'N/A';
+                            ?>
+                        </div>
                     </div>
+                    
+                    <?php if (!empty($member['agent_id'])): ?>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-user-tie"></i> Recruited By</div>
+                        <div class="info-value">
+                            <a href="/admin/agents/view/<?= $member['agent_id'] ?>" style="color: #7F3D9E;">
+                                Agent #<?= htmlspecialchars($member['agent_number'] ?? 'N/A') ?>
+                            </a>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     
                     <hr class="divider">
                     
                     <div class="action-buttons">
-                        <?php if (($agent['status'] ?? 'active') === 'active'): ?>
-                            <form method="POST" action="/admin/agents/status/<?= $agent['id'] ?>" id="agent-suspend-form">
-                                <input type="hidden" name="status" value="suspended">
-                                <button type="button" onclick="confirmAgentSuspend()" class="btn btn-warning" style="width: 100%;">
-                                    <i class="fas fa-ban"></i> Suspend Agent
+                        <?php if (($member['status'] ?? 'active') === 'active'): ?>
+                            <form method="POST" action="/admin/members/suspend/<?= $member['id'] ?>" id="suspend-form">
+                                <button type="button" onclick="confirmSuspend()" class="btn btn-warning" style="width: 100%;">
+                                    <i class="fas fa-ban"></i> Suspend Member
                                 </button>
                             </form>
-                        <?php elseif (($agent['status'] ?? '') === 'suspended'): ?>
-                            <form method="POST" action="/admin/agents/status/<?= $agent['id'] ?>" id="agent-activate-form">
-                                <input type="hidden" name="status" value="active">
-                                <button type="button" onclick="confirmAgentActivate()" class="btn btn-primary" style="width: 100%;">
-                                    <i class="fas fa-check"></i> Activate Agent
+                        <?php elseif (($member['status'] ?? '') === 'suspended'): ?>
+                            <form method="POST" action="/admin/members/activate/<?= $member['id'] ?>" id="activate-form">
+                                <button type="button" onclick="confirmActivate()" class="btn btn-primary" style="width: 100%;">
+                                    <i class="fas fa-check"></i> Activate Member
                                 </button>
                             </form>
                         <?php endif; ?>
                         
-                        <a href="/admin/agents/edit/<?= $agent['id'] ?>" class="btn btn-primary" style="width: 100%;">
+                        <a href="/admin/members/edit/<?= $member['id'] ?>" class="btn btn-primary" style="width: 100%;">
                             <i class="fas fa-edit"></i> Edit Details
+                        </a>
+                        
+                        <a href="/admin/members/payments/<?= $member['id'] ?>" class="btn btn-secondary" style="width: 100%;">
+                            <i class="fas fa-money-bill-wave"></i> View Payments
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Bank Details -->
-            <?php if (!empty($agent['bank_account']) || !empty($agent['bank_name'])): ?>
-            <div class="agent-info-card" style="margin-top: 24px;">
+            <!-- Next of Kin -->
+            <?php if (!empty($member['nok_name'])): ?>
+            <div class="member-info-card" style="margin-top: 24px;">
                 <div class="card-header">
                     <span class="card-title">
-                        <i class="fas fa-university"></i> Bank Details
+                        <i class="fas fa-users"></i> Next of Kin
                     </span>
                 </div>
                 <div class="card-body">
-                    <?php if (!empty($agent['bank_name'])): ?>
                     <div class="info-item">
-                        <div class="info-label">Bank Name</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['bank_name']) ?></div>
+                        <div class="info-label">Name</div>
+                        <div class="info-value"><?= htmlspecialchars($member['nok_name']) ?></div>
+                    </div>
+                    
+                    <?php if (!empty($member['nok_relationship'])): ?>
+                    <div class="info-item">
+                        <div class="info-label">Relationship</div>
+                        <div class="info-value"><?= htmlspecialchars($member['nok_relationship']) ?></div>
                     </div>
                     <?php endif; ?>
                     
-                    <?php if (!empty($agent['bank_account'])): ?>
+                    <?php if (!empty($member['nok_phone'])): ?>
                     <div class="info-item">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['bank_account']) ?></div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?php if (!empty($agent['bank_branch'])): ?>
-                    <div class="info-item">
-                        <div class="info-label">Branch</div>
-                        <div class="info-value"><?= htmlspecialchars($agent['bank_branch']) ?></div>
+                        <div class="info-label">Phone</div>
+                        <div class="info-value"><?= htmlspecialchars($member['nok_phone']) ?></div>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -410,13 +434,13 @@ align-items: center;
 
         <!-- Right: Tables -->
         <div>
-            <!-- Commission History -->
+            <!-- Payment History -->
             <div class="data-table-card">
                 <div class="card-header">
                     <span class="card-title">
-                        <i class="fas fa-money-bill-wave"></i> Commission History
+                        <i class="fas fa-money-bill-wave"></i> Payment History
                     </span>
-                    <a href="/admin/commissions?agent_id=<?= $agent['id'] ?>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                    <a href="/admin/payments?member_id=<?= $member['id'] ?>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
                         View All
                     </a>
                 </div>
@@ -425,34 +449,32 @@ align-items: center;
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Member</th>
-                                <th>Type</th>
+                                <th>Transaction ID</th>
                                 <th>Amount</th>
-                                <th>Commission</th>
+                                <th>Method</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($commissions)): ?>
+                            <?php if (empty($payments)): ?>
                                 <tr>
-                                    <td colspan="6">
+                                    <td colspan="5">
                                         <div class="empty-state">
                                             <i class="fas fa-inbox"></i>
-                                            <p>No commission records yet</p>
+                                            <p>No payment records yet</p>
                                         </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach (array_slice($commissions, 0, 10) as $commission): ?>
+                                <?php foreach (array_slice($payments, 0, 10) as $payment): ?>
                                 <tr>
-                                    <td><?= date('M j, Y', strtotime($commission['created_at'])) ?></td>
-                                    <td><?= htmlspecialchars($commission['member_number'] ?? 'N/A') ?></td>
-                                    <td><?= ucfirst(str_replace('_', ' ', $commission['commission_type'])) ?></td>
-                                    <td>KES <?= number_format($commission['amount'], 2) ?></td>
-                                    <td style="color: #059669; font-weight: 700;">KES <?= number_format($commission['commission_amount'], 2) ?></td>
+                                    <td><?= date('M j, Y', strtotime($payment['payment_date'])) ?></td>
+                                    <td style="font-family: monospace;"><?= htmlspecialchars($payment['transaction_id'] ?? 'N/A') ?></td>
+                                    <td style="color: #059669; font-weight: 700;">KES <?= number_format($payment['amount'], 2) ?></td>
+                                    <td><?= ucfirst($payment['payment_method'] ?? 'M-Pesa') ?></td>
                                     <td>
-                                        <span class="status-badge <?= $commission['status'] ?>">
-                                            <?= ucfirst($commission['status']) ?>
+                                        <span class="status-badge <?= $payment['status'] ?? 'completed' ?>">
+                                            <?= ucfirst($payment['status'] ?? 'Completed') ?>
                                         </span>
                                     </td>
                                 </tr>
@@ -463,53 +485,40 @@ align-items: center;
                 </div>
             </div>
 
-            <!-- Recent Members -->
+            <!-- Beneficiaries -->
             <div class="data-table-card">
                 <div class="card-header">
                     <span class="card-title">
-                        <i class="fas fa-users"></i> Recent Members Recruited
+                        <i class="fas fa-heart"></i> Registered Beneficiaries
                     </span>
-                    <a href="/admin/members?agent_id=<?= $agent['id'] ?>" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
-                        View All
-                    </a>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Member #</th>
                                 <th>Name</th>
-                                <th>Package</th>
-                                <th>Status</th>
-                                <th>Registered</th>
+                                <th>Relationship</th>
+                                <th>ID Number</th>
+                                <th>Phone</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($stats['recent_members'])): ?>
+                            <?php if (empty($beneficiaries)): ?>
                                 <tr>
-                                    <td colspan="5">
+                                    <td colspan="4">
                                         <div class="empty-state">
                                             <i class="fas fa-user-slash"></i>
-                                            <p>No members recruited yet</p>
+                                            <p>No beneficiaries registered</p>
                                         </div>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($stats['recent_members'] as $member): ?>
+                                <?php foreach ($beneficiaries as $beneficiary): ?>
                                 <tr>
-                                    <td>
-                                        <a href="/admin/members/view/<?= $member['id'] ?>" style="color: #7F3D9E; font-weight: 600;">
-                                            <?= htmlspecialchars($member['member_number']) ?>
-                                        </a>
-                                    </td>
-                                    <td><?= htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) ?></td>
-                                    <td><span class="status-badge active"><?= ucfirst($member['package']) ?></span></td>
-                                    <td>
-                                        <span class="status-badge <?= $member['status'] ?>">
-                                            <?= ucfirst(str_replace('_', ' ', $member['status'])) ?>
-                                        </span>
-                                    </td>
-                                    <td><?= date('M j, Y', strtotime($member['registration_date'])) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['relationship']) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['id_number'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['phone'] ?? 'N/A') ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -522,25 +531,25 @@ align-items: center;
 </div>
 
 <script>
-function confirmAgentSuspend() {
+function confirmSuspend() {
     ShenaApp.confirmAction(
-        'Are you sure you want to suspend this agent? They will lose access to their account and cannot recruit new members.',
+        'Are you sure you want to suspend this member? They will lose access to their account.',
         function() {
-            document.getElementById('agent-suspend-form').submit();
+            document.getElementById('suspend-form').submit();
         },
         null,
-        { type: 'danger', title: 'Suspend Agent', confirmText: 'Yes, Suspend' }
+        { type: 'danger', title: 'Suspend Member', confirmText: 'Yes, Suspend' }
     );
 }
 
-function confirmAgentActivate() {
+function confirmActivate() {
     ShenaApp.confirmAction(
-        'Activate this agent and restore their access?',
+        'Activate this member and restore their access?',
         function() {
-            document.getElementById('agent-activate-form').submit();
+            document.getElementById('activate-form').submit();
         },
         null,
-        { type: 'success', title: 'Activate Agent', confirmText: 'Yes, Activate' }
+        { type: 'success', title: 'Activate Member', confirmText: 'Yes, Activate' }
     );
 }
 </script>

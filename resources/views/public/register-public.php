@@ -441,7 +441,7 @@ function nextStep() {
         });
         
         if (!valid && currentStep === 1) {
-            alert('Please fill in all required fields');
+            ShenaApp.alert('Please fill in all required fields', 'warning');
             return;
         }
         
@@ -451,20 +451,20 @@ function nextStep() {
             const confirmPassword = document.getElementById('confirm_password').value;
             
             if (password.length < 8) {
-                alert('Password must be at least 8 characters long');
+                ShenaApp.alert('Password must be at least 8 characters long', 'warning');
                 document.getElementById('password').style.borderColor = '#ef4444';
                 return;
             }
             
             if (password !== confirmPassword) {
-                alert('Passwords do not match');
+                ShenaApp.alert('Passwords do not match', 'warning');
                 document.getElementById('confirm_password').style.borderColor = '#ef4444';
                 return;
             }
         }
         
         if (currentStep === 2 && !document.getElementById('package_id').value) {
-            alert('Please select a package');
+            ShenaApp.alert('Please select a package', 'warning');
             return;
         }
         
@@ -557,12 +557,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 5000);
             } else {
-                alert('Error: ' + (data.message || 'Registration failed'));
+                ShenaApp.alert('Error: ' + (data.message || 'Registration failed'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
+            ShenaApp.alert('An error occurred. Please try again.', 'error');
         });
     });
     

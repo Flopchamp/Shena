@@ -319,10 +319,31 @@ class Claim extends BaseModel
                 FROM {$this->table} c 
                 JOIN members m ON c.member_id = m.id 
                 JOIN users u ON m.user_id = u.id 
-                WHERE c.status = 'pending' 
+                WHERE c.status IN ('submitted', 'under_review')
                 ORDER BY c.created_at DESC";
         
         return $this->db->fetchAll($sql);
+    }
+    
+    /**
+     * Get the latest pending claim (for emergency alert)
+     */
+    public function getLatestPendingClaim()
+    {
+        $sql = "SELECT c.*, 
+                       m.member_number,
+                       CONCAT(u.first_name, ' ', u.last_name) as member_name,
+                       CONCAT(au.first_name, ' ', au.last_name) as agent_name
+                FROM {$this->table} c 
+                JOIN members m ON c.member_id = m.id 
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN agents a ON m.agent_id = a.id
+                LEFT JOIN users au ON a.user_id = au.id
+                WHERE c.status IN ('submitted', 'under_review')
+                ORDER BY c.created_at DESC
+                LIMIT 1";
+        
+        return $this->db->fetch($sql);
     }
     
     public function getApprovedClaims()

@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data[key] = value;
             }
             localStorage.setItem('registrationProgress', JSON.stringify(data));
-            alert('Progress saved successfully!');
+            ShenaApp.showNotification('Progress saved successfully!', 'success', 2000);
         });
     });
     

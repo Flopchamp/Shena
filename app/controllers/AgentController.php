@@ -8,12 +8,14 @@
 
 require_once __DIR__ . '/../models/Agent.php';
 require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Claim.php';
 require_once __DIR__ . '/../services/EmailService.php';
 
 class AgentController extends BaseController
 {
     private $agentModel;
     private $userModel;
+    private $claimModel;
     private $emailService;
     
     public function __construct()
@@ -21,6 +23,7 @@ class AgentController extends BaseController
         parent::__construct();
         $this->agentModel = new Agent();
         $this->userModel = new User();
+        $this->claimModel = new Claim();
         $this->emailService = new EmailService();
     }
     
@@ -38,11 +41,91 @@ class AgentController extends BaseController
         
         $agents = $this->agentModel->getAllAgents($filters);
         
+        // Calculate statistics
+        $totalAgents = $this->agentModel->getActiveAgentsCount();
+        $pendingCommissions = $this->agentModel->getTotalCommissions();
+        
+        // Get pending commissions and aggregate by agent
+        $pendingCommissionsRaw = $this->agentModel->getPendingCommissions(100);
+        $pendingCommissionsData = $this->aggregateCommissionsByAgent($pendingCommissionsRaw);
+        
+        // Calculate monthly accounts (members registered this month)
+        $monthlyAccounts = 0;
+        $totalPortfolios = 0;
+        $newAgents = 0;
+        
+        foreach ($agents as $agent) {
+            $monthlyAccounts += $agent['total_members'] ?? 0;
+            $totalPortfolios += $agent['total_members'] ?? 0;
+        }
+        
+        // Get top performers (agents with most members)
+        $topPerformers = $this->getTopPerformers($agents, 3);
+        
+        // Get latest pending claim if exists
+        $pendingClaims = $this->claimModel->getPendingClaims();
+        $latestClaim = !empty($pendingClaims) ? $pendingClaims[0] : null;
+        
         $this->render('admin/agents', [
             'agents' => $agents,
             'filters' => $filters,
+            'stats' => [
+                'total_agents' => $totalAgents,
+                'pending_commissions' => $pendingCommissions,
+                'monthly_accounts' => $monthlyAccounts,
+                'total_portfolios' => $totalPortfolios,
+                'new_agents' => $newAgents
+            ],
+            'pending_commissions_data' => array_slice($pendingCommissionsData, 0, 5), // Top 5 for display
+            'top_performers' => $topPerformers,
+            'latest_claim' => $latestClaim,
             'pageTitle' => 'Agent Management'
         ]);
+    }
+    
+    /**
+     * Aggregate pending commissions by agent
+     */
+    private function aggregateCommissionsByAgent($commissions)
+    {
+        $aggregated = [];
+        
+        foreach ($commissions as $commission) {
+            $agentId = $commission['agent_id'];
+            
+            if (!isset($aggregated[$agentId])) {
+                $aggregated[$agentId] = [
+                    'agent_id' => $agentId,
+                    'agent_number' => $commission['agent_number'] ?? 'N/A',
+                    'agent_name' => trim(($commission['first_name'] ?? '') . ' ' . ($commission['last_name'] ?? '')),
+                    'commission_amount' => 0,
+                    'total_members' => 0
+                ];
+            }
+            
+            $aggregated[$agentId]['commission_amount'] += floatval($commission['commission_amount'] ?? 0);
+            $aggregated[$agentId]['total_members']++;
+        }
+        
+        // Sort by commission amount descending
+        usort($aggregated, function($a, $b) {
+            return $b['commission_amount'] <=> $a['commission_amount'];
+        });
+        
+        return array_values($aggregated);
+    }
+    
+    /**
+     * Get top performing agents
+     */
+    private function getTopPerformers($agents, $limit = 3)
+    {
+        // Sort agents by total_members descending
+        usort($agents, function($a, $b) {
+            return ($b['total_members'] ?? 0) <=> ($a['total_members'] ?? 0);
+        });
+        
+        return array_slice($agents, 0, $limit);
     }
     
     /**
@@ -332,6 +415,287 @@ class AgentController extends BaseController
         }
         
         redirect('/admin/commissions');
+    }
+    
+    /**
+     * Export Agents to CSV
+     */
+    public function exportAgentsCSV()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        $search = $_GET['search'] ?? '';
+        $status = $_GET['status'] ?? 'all';
+        
+        $agents = $this->agentModel->getAllAgents($search, $status);
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agents_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Open output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'Agent Number',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'County',
+            'Status',
+            'Total Members',
+            'Total Commission',
+            'Pending Commission',
+            'Registration Date'
+        ]);
+        
+        // Add agent data
+        foreach ($agents as $agent) {
+            fputcsv($output, [
+                $agent['agent_number'] ?? '',
+                $agent['first_name'] ?? '',
+                $agent['last_name'] ?? '',
+                $agent['email'] ?? '',
+                $agent['phone'] ?? '',
+                $agent['county'] ?? '',
+                ucfirst($agent['status'] ?? 'active'),
+                $agent['total_members'] ?? 0,
+                $agent['total_commission'] ?? 0,
+                $agent['pending_commission'] ?? 0,
+                $agent['created_at'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Export commissions report to CSV
+     */
+    public function exportCommissions()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        $status = $_GET['status'] ?? '';
+        $commissions = $this->agentModel->getCommissionsForExport($status);
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agent_commissions_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, [
+            'Agent Number',
+            'Agent Name',
+            'Member Number',
+            'Package',
+            'Commission Type',
+            'Amount',
+            'Commission Rate',
+            'Commission Amount',
+            'Status',
+            'Created At'
+        ]);
+
+        foreach ($commissions as $commission) {
+            fputcsv($output, [
+                $commission['agent_number'] ?? '',
+                trim(($commission['first_name'] ?? '') . ' ' . ($commission['last_name'] ?? '')),
+                $commission['member_number'] ?? '',
+                $commission['package'] ?? '',
+                $commission['commission_type'] ?? '',
+                $commission['amount'] ?? 0,
+                $commission['commission_rate'] ?? 0,
+                $commission['commission_amount'] ?? 0,
+                $commission['status'] ?? 'pending',
+                $commission['created_at'] ?? ''
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Approve all pending commissions
+     */
+    public function approveAllCommissions()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+            return;
+        }
+
+        $userId = $_SESSION['user_id'] ?? 0;
+        $success = $this->agentModel->approveAllPendingCommissions($userId);
+
+        $this->json([
+            'success' => (bool)$success,
+            'message' => $success ? 'All pending commissions approved.' : 'Failed to approve commissions.'
+        ]);
+    }
+
+    /**
+     * Reactivate all suspended agents
+     */
+    public function reactivateSuspendedAgents()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+            return;
+        }
+
+        $success = $this->agentModel->reactivateSuspendedAgents();
+
+        $this->json([
+            'success' => (bool)$success,
+            'message' => $success ? 'Suspended agents reactivated.' : 'No suspended agents to reactivate.'
+        ]);
+    }
+
+    /**
+     * Agent performance report (PDF)
+     */
+    public function performanceReport()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        $agents = $this->agentModel->getAllAgents([], 10000, 0);
+        $html = $this->renderPdfView('admin/agents-performance-report-pdf', [
+            'agents' => $agents,
+            'generatedAt' => date('Y-m-d H:i')
+        ]);
+
+        $this->streamPdf($html, 'agent-performance-report-' . date('Ymd_His') . '.pdf');
+    }
+
+    private function renderPdfView($template, $data = [])
+    {
+        $templatePath = VIEWS_PATH . '/' . str_replace('.', '/', $template) . '.php';
+        if (!file_exists($templatePath)) {
+            throw new Exception("Template {$template} not found");
+        }
+
+        extract($data);
+        ob_start();
+        include $templatePath;
+        return ob_get_clean();
+    }
+
+    private function streamPdf($html, $filename)
+    {
+        $autoloadPath = ROOT_PATH . '/vendor/autoload.php';
+        if (!file_exists($autoloadPath)) {
+            http_response_code(500);
+            echo 'PDF library not installed.';
+            return;
+        }
+
+        require_once $autoloadPath;
+
+        $dompdf = new \Dompdf\Dompdf([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true
+        ]);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+    
+    /**
+     * Agent Resources Management
+     */
+    public function resources()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        // TODO: Fetch resources from database
+        // For now, using empty arrays
+        $resources = [
+            'marketing_materials' => [],
+            'training_documents' => [],
+            'policy_documents' => [],
+            'forms' => []
+        ];
+        
+        $this->render('admin/resources', [
+            'resources' => $resources,
+            'pageTitle' => 'Agent Resources'
+        ]);
+    }
+    
+    /**
+     * Upload Resource
+     */
+    public function uploadResource()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // TODO: Implement file upload logic
+        // 1. Validate file
+        // 2. Save to storage/uploads/resources/
+        // 3. Save metadata to database
+        
+        $this->setFlashMessage('Resource uploaded successfully', 'success');
+        redirect('/admin/agents/resources');
+    }
+
+    /**
+     * Export resource catalog to CSV
+     */
+    public function exportResources()
+    {
+        $this->requireRole(['admin', 'super_admin']);
+
+        // TODO: Replace with actual resource query once implemented
+        $resources = [
+            'marketing_materials' => [],
+            'training_documents' => [],
+            'policy_documents' => [],
+            'forms' => []
+        ];
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="agent_resources_' . date('Y-m-d_His') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['ID', 'Name', 'Category', 'Size', 'Date', 'Description']);
+
+        foreach ($resources as $category => $items) {
+            foreach ($items as $resource) {
+                fputcsv($output, [
+                    $resource['id'] ?? '',
+                    $resource['name'] ?? '',
+                    $category,
+                    $resource['size'] ?? '',
+                    $resource['date'] ?? '',
+                    $resource['description'] ?? ''
+                ]);
+            }
+        }
+
+        fclose($output);
+        exit;
     }
     
     /**

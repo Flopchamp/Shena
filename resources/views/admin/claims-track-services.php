@@ -13,7 +13,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="mb-1">Service Delivery Tracking</h2>
-                    <p class="text-muted mb-0">Claim #<?= e($claim['id']) ?> - <?= e($claim['deceased_name']) ?></p>
+                    <p class="text-muted mb-0">Claim #<?= e($claim->id) ?> - <?= e($claim->deceased_name) ?></p>
                 </div>
                 <a href="/admin/claims" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Claims
@@ -47,32 +47,32 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                             <table class="table table-sm table-borderless">
                                 <tr>
                                     <th>Claim ID:</th>
-                                    <td><?= e($claim['id']) ?></td>
+                                    <td><?= e($claim->id) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Member:</th>
-                                    <td><?= e($claim['first_name'] . ' ' . $claim['last_name']) ?></td>
+                                    <td><?= e($claim->first_name . ' ' . $claim->last_name) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Deceased:</th>
-                                    <td><?= e($claim['deceased_name']) ?></td>
+                                    <td><?= e($claim->deceased_name) ?></td>
                                 </tr>
-                                <tr>
+                                <tr> 
                                     <th>Date of Death:</th>
-                                    <td><?= formatDate($claim['date_of_death']) ?></td>
+                                    <td><?= formatDate($claim->date_of_death) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Status:</th>
                                     <td>
-                                        <span class="badge bg-<?= $claim['status'] === 'approved' ? 'success' : 'info' ?>">
-                                            <?= ucfirst(str_replace('_', ' ', e($claim['status']))) ?>
+                                        <span class="badge bg-<?= $claim->status === 'approved' ? 'success' : 'info' ?>">
+                                            <?= ucfirst(str_replace('_', ' ', e($claim->status))) ?>
                                         </span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Service Type:</th>
                                     <td>
-                                        <?php if ($claim['service_delivery_type'] === 'cash_alternative'): ?>
+                                        <?php if ($claim->service_delivery_type === 'cash_alternative'): ?>
                                             <span class="badge bg-warning text-dark">
                                                 <i class="fas fa-money-bill"></i> Cash Alternative
                                             </span>
@@ -85,11 +85,11 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                 </tr>
                                 <tr>
                                     <th>Delivery Date:</th>
-                                    <td><?= $claim['services_delivery_date'] ? formatDate($claim['services_delivery_date']) : 'Not set' ?></td>
+                                    <td><?= $claim->services_delivery_date ? formatDate($claim->services_delivery_date) : 'Not set' ?></td>
                                 </tr>
                                 <tr>
                                     <th>Mortuary Days:</th>
-                                    <td><?= e($claim['mortuary_days_count']) ?> days (max 14)</td>
+                                    <td><?= e($claim->mortuary_days_count) ?> days (max 14)</td>
                                 </tr>
                             </table>
                         </div>
@@ -118,9 +118,9 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                 <div class="alert alert-success mt-3">
                                     <i class="fas fa-check-circle"></i> All services completed!
                                 </div>
-                                <form method="POST" action="/admin/claims/complete">
+                                <form method="POST" action="/admin/claims/complete" id="complete-claim-form">
                                     <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
-                                    <button type="submit" class="btn btn-success btn-lg w-100" onclick="return confirm('Mark this claim as completed?')">
+                                    <button type="button" onclick="confirmCompleteClaim()" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-check-double"></i> Complete Claim
                                     </button>
                                 </form>
@@ -231,7 +231,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
 <div class="modal fade" id="completeServiceModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="/admin/claims/track/<?= $claim['id'] ?>">
+            <form method="POST" action="/admin/claims/track/<?= $claim->id ?>">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="fas fa-check-circle"></i> Complete Service</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -301,6 +301,18 @@ document.getElementById('viewNotesModal').addEventListener('show.bs.modal', func
     document.getElementById('notes_service_label').textContent = serviceLabel;
     document.getElementById('notes_content').textContent = notes;
 });
+
+// Confirm Complete Claim
+function confirmCompleteClaim() {
+    ShenaApp.confirmAction(
+        'Mark this claim as completed? This finalizes all service deliveries and closes the claim.',
+        function() {
+            document.getElementById('complete-claim-form').submit();
+        },
+        null,
+        { type: 'success', title: 'Complete Claim', confirmText: 'Yes, Complete' }
+    );
+}
 </script>
 
 <?php require_once __DIR__ . '/../layouts/admin-footer.php'; ?>

@@ -1,0 +1,221 @@
+/**
+ * Modern Modal Styles for Shena Companion Welfare Association
+ */
+
+/* Custom Modal Animations */
+#shena-custom-modal .modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+    border-radius: 12px;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#shena-custom-modal .modal-header {
+    background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
+    color: white;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 1.25rem 1.5rem;
+}
+
+#shena-custom-modal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+#shena-custom-modal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+#shena-custom-modal .modal-body {
+    padding: 2rem 1.5rem;
+    font-size: 1rem;
+    color: #4a5568;
+}
+
+#shena-custom-modal .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    background-color: #f8f9fa;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+#shena-custom-modal .modal-footer .btn {
+    min-width: 100px;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#shena-custom-modal .modal-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#shena-custom-modal .modal-footer .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+#shena-custom-modal .modal-footer .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+#shena-custom-modal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
+    border: none;
+}
+
+#shena-custom-modal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #6D2B8C 0%, #6A28DB 100%);
+}
+
+#shena-custom-modal .modal-footer .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#shena-custom-modal .modal-footer .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+#shena-custom-modal .modal-footer .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+#shena-custom-modal .modal-footer .btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+#shena-custom-modal .modal-footer .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+#shena-custom-modal .modal-footer .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Notification Styles */
+.shena-notification {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.shena-notification.animate__fadeOutRight {
+    animation: slideOutRight 0.3s ease-in;
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.shena-notification .btn-close {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+}
+
+/* Icon Pulse Animation */
+#shena-custom-modal .fa-check-circle,
+#shena-custom-modal .fa-exclamation-circle,
+#shena-custom-modal .fa-exclamation-triangle,
+#shena-custom-modal .fa-info-circle {
+    animation: iconPulse 0.5s ease-out;
+}
+
+@keyframes iconPulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modal Backdrop */
+#shena-custom-modal.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    #shena-custom-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .shena-notification {
+        min-width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+    }
+    
+    #shena-custom-modal .modal-footer {
+        flex-direction: column;
+    }
+    
+    #shena-custom-modal .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    #shena-custom-modal .modal-footer .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Loading spinner for modal */
+.modal-loading {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

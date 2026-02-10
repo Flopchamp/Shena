@@ -641,17 +641,27 @@
             <tbody>
                 <?php foreach ($paymentReports as $payment): ?>
                 <tr>
-                    <td><strong><?php echo htmlspecialchars($payment['transaction_id']); ?></strong></td>
-                    <td><?php echo htmlspecialchars($payment['member_name'] ?? 'N/A'); ?></td>
-                    <td>KES <?php echo number_format($payment['amount'], 0); ?></td>
-                    <td><?php echo !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly'; ?></td>
-                    <td><?php echo !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A'; ?></td>
+                    <?php
+                    $transactionId = $payment['transaction_id'] ?? 'N/A';
+                    $memberName = $payment['member_name'] ?? 'N/A';
+                    $amount = (float)($payment['amount'] ?? 0);
+                    $paymentType = !empty($payment['payment_type']) ? ucfirst($payment['payment_type']) : 'Monthly';
+                    $paymentMethod = !empty($payment['payment_method']) ? strtoupper($payment['payment_method']) : 'N/A';
+                    $status = $payment['status'] ?? 'pending';
+                    $createdAt = $payment['created_at'] ?? null;
+                    $statusClass = $status === 'completed' ? 'completed' : ($status === 'pending' ? 'pending' : 'failed');
+                    ?>
+                    <td><strong><?php echo htmlspecialchars($transactionId); ?></strong></td>
+                    <td><?php echo htmlspecialchars($memberName); ?></td>
+                    <td>KES <?php echo number_format($amount, 0); ?></td>
+                    <td><?php echo $paymentType; ?></td>
+                    <td><?php echo $paymentMethod; ?></td>
                     <td>
-                        <span class="status-badge <?php echo $payment['status'] === 'completed' ? 'completed' : ($payment['status'] === 'pending' ? 'pending' : 'failed'); ?>">
-                            <?php echo !empty($payment['status']) ? ucfirst($payment['status']) : 'Pending'; ?>
+                        <span class="status-badge <?php echo $statusClass; ?>">
+                            <?php echo !empty($status) ? ucfirst($status) : 'Pending'; ?>
                         </span>
                     </td>
-                    <td><?php echo date('M j, Y', strtotime($payment['created_at'])); ?></td>
+                    <td><?php echo !empty($createdAt) ? date('M j, Y', strtotime($createdAt)) : 'N/A'; ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>

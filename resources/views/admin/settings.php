@@ -175,6 +175,55 @@
         transform: translateX(24px);
     }
 
+    /* Tabs */
+    .nav-tabs {
+        border-bottom: 2px solid #E5E7EB;
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .nav-tabs .nav-item {
+        margin-bottom: -2px;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 20px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #7F3D9E;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #7F3D9E;
+        border-bottom-color: #7F3D9E;
+    }
+
+    .nav-tabs .nav-link i {
+        margin-right: 6px;
+    }
+
+    .tab-content {
+        margin-bottom: 24px;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
     /* Quick Links */
     .quick-links-card {
         background: white;
@@ -388,7 +437,7 @@
     }
 
     .btn-save {
-        background: #7F3D9E;
+        background: linear-gradient(135deg, #7F3D9E 0%, #9333EA 100%);
         color: white;
         border: none;
         padding: 12px 32px;
@@ -403,9 +452,9 @@
     }
 
     .btn-save:hover {
-        background: #7F3D9E;
+        background: linear-gradient(135deg, #6D2D8C 0%, #7E22CE 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3);
+        box-shadow: 0 4px 16px rgba(127, 61, 158, 0.4);
     }
 
     .btn-reset {
@@ -441,8 +490,9 @@
         <h1 class="h3 mb-0"><i class="fas fa-cog me-2"></i>System Settings</h1>
         <p class="text-muted small mb-0">Configure system-wide settings and preferences</p>
     </div>
-    <button type="submit" form="settingsForm" class="btn btn-primary btn-sm">
-        <i class="fas fa-save me-2"></i>Save Settings
+    <button type="submit" form="settingsForm" class="btn-save">
+        <i class="fas fa-save"></i>
+        <span>Save Settings</span>
     </button>
 </div>
 
@@ -486,7 +536,8 @@
     
     <!-- Tab Content -->
     <div class="tab-content" id="settingsTabContent">
-            
+    <!-- General Tab -->
+    <div class="tab-pane active" id="general" role="tabpanel">
             <!-- General Settings -->
             <div class="settings-card">
                 <div class="settings-card-header">
@@ -614,20 +665,276 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Save Actions -->
-            <div class="save-actions">
-                <button type="submit" class="btn-save">
-                    <i class="fas fa-save"></i>
-                    <span>Save Settings</span>
-                </button>
-                <button type="reset" class="btn-reset">
-                    <i class="fas fa-undo"></i>
-                    <span>Reset</span>
-                </button>
+        <!-- Email Configuration Tab -->
+        <div class="tab-pane" id="email" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="settings-card-title">Email Configuration</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_host">SMTP Host</label>
+                        <input type="text" class="form-input" id="smtp_host" name="smtp_host" 
+                               value="<?php echo htmlspecialchars($settings['smtp_host'] ?? 'smtp.gmail.com'); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_port">SMTP Port</label>
+                        <input type="number" class="form-input" id="smtp_port" name="smtp_port" 
+                               value="<?php echo $settings['smtp_port'] ?? 587; ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_username">SMTP Username</label>
+                        <input type="text" class="form-input" id="smtp_username" name="smtp_username" 
+                               value="<?php echo htmlspecialchars($settings['smtp_username'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_password">SMTP Password</label>
+                        <input type="password" class="form-input" id="smtp_password" name="smtp_password" 
+                               value="<?php echo htmlspecialchars($settings['smtp_password'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_from_email">From Email</label>
+                        <input type="email" class="form-input" id="smtp_from_email" name="smtp_from_email" 
+                               value="<?php echo htmlspecialchars($settings['smtp_from_email'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="smtp_from_name">From Name</label>
+                        <input type="text" class="form-input" id="smtp_from_name" name="smtp_from_name" 
+                               value="<?php echo htmlspecialchars($settings['smtp_from_name'] ?? 'Shena Welfare'); ?>">
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
+
+        <!-- SMS Configuration Tab -->
+        <div class="tab-pane" id="sms" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="settings-card-title">SMS Configuration</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="sms_provider">SMS Provider</label>
+                        <select class="form-input" id="sms_provider" name="sms_provider">
+                            <option value="twilio" <?php echo ($settings['sms_provider'] ?? 'twilio') === 'twilio' ? 'selected' : ''; ?>>Twilio</option>
+                            <option value="hostpinnacle" <?php echo ($settings['sms_provider'] ?? 'twilio') === 'hostpinnacle' ? 'selected' : ''; ?>>HostPinnacle</option>
+                            <option value="africastalking" <?php echo ($settings['sms_provider'] ?? 'twilio') === 'africastalking' ? 'selected' : ''; ?>>Africa's Talking</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="sms_api_key">API Key</label>
+                        <input type="text" class="form-input" id="sms_api_key" name="sms_api_key" 
+                               value="<?php echo htmlspecialchars($settings['sms_api_key'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="sms_api_secret">API Secret</label>
+                        <input type="password" class="form-input" id="sms_api_secret" name="sms_api_secret" 
+                               value="<?php echo htmlspecialchars($settings['sms_api_secret'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="sms_sender_id">Sender ID</label>
+                        <input type="text" class="form-input" id="sms_sender_id" name="sms_sender_id" 
+                               value="<?php echo htmlspecialchars($settings['sms_sender_id'] ?? 'SHENA'); ?>">
+                        <div class="form-help">Max 11 characters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Settings Tab -->
+        <div class="tab-pane" id="payment" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="settings-card-title">M-Pesa Configuration</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="mpesa_environment">Environment</label>
+                        <select class="form-input" id="mpesa_environment" name="mpesa_environment">
+                            <option value="sandbox" <?php echo ($settings['mpesa_environment'] ?? 'sandbox') === 'sandbox' ? 'selected' : ''; ?>>Sandbox</option>
+                            <option value="production" <?php echo ($settings['mpesa_environment'] ?? 'sandbox') === 'production' ? 'selected' : ''; ?>>Production</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="mpesa_consumer_key">Consumer Key</label>
+                        <input type="text" class="form-input" id="mpesa_consumer_key" name="mpesa_consumer_key" 
+                               value="<?php echo htmlspecialchars($settings['mpesa_consumer_key'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="mpesa_consumer_secret">Consumer Secret</label>
+                        <input type="password" class="form-input" id="mpesa_consumer_secret" name="mpesa_consumer_secret" 
+                               value="<?php echo htmlspecialchars($settings['mpesa_consumer_secret'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="mpesa_shortcode">Shortcode</label>
+                        <input type="text" class="form-input" id="mpesa_shortcode" name="mpesa_shortcode" 
+                               value="<?php echo htmlspecialchars($settings['mpesa_shortcode'] ?? ''); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="mpesa_passkey">Passkey</label>
+                        <input type="password" class="form-input" id="mpesa_passkey" name="mpesa_passkey" 
+                               value="<?php echo htmlspecialchars($settings['mpesa_passkey'] ?? ''); ?>">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div class="tab-pane" id="notification" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="settings-card-title">Notification Preferences</div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">New Member Registration</div>
+                        <div class="toggle-description">Send notification when new member registers</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_new_member" 
+                               <?php echo !empty($settings['notify_new_member']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Payment Received</div>
+                        <div class="toggle-description">Notify admin when payment is received</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_payment" 
+                               <?php echo !empty($settings['notify_payment']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Claim Submitted</div>
+                        <div class="toggle-description">Alert when new claim is submitted</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_claim" 
+                               <?php echo !empty($settings['notify_claim']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Low Balance Alert</div>
+                        <div class="toggle-description">Notify when member balance is low</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="notify_low_balance" 
+                               <?php echo !empty($settings['notify_low_balance']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div class="tab-pane" id="security" role="tabpanel">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="settings-card-title">Security Settings</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="password_min_length">Minimum Password Length</label>
+                        <input type="number" class="form-input" id="password_min_length" name="password_min_length" 
+                               value="<?php echo $settings['password_min_length'] ?? 8; ?>" min="6" max="32">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="max_login_attempts">Max Login Attempts</label>
+                        <input type="number" class="form-input" id="max_login_attempts" name="max_login_attempts" 
+                               value="<?php echo $settings['max_login_attempts'] ?? 5; ?>" min="3" max="10">
+                        <div class="form-help">Before account lockout</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="lockout_duration">Lockout Duration (minutes)</label>
+                        <input type="number" class="form-input" id="lockout_duration" name="lockout_duration" 
+                               value="<?php echo $settings['lockout_duration'] ?? 30; ?>" min="5" max="1440">
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Two-Factor Authentication</div>
+                        <div class="toggle-description">Require 2FA for admin accounts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="require_2fa" 
+                               <?php echo !empty($settings['require_2fa']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Security Logging</div>
+                        <div class="toggle-description">Log all security-related events</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="security_logging" 
+                               <?php echo !empty($settings['security_logging']) ? 'checked' : ''; ?>>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Save Actions -->
+    <div class="save-actions">
+        <button type="submit" class="btn-save">
+            <i class="fas fa-save"></i>
+            <span>Save Settings</span>
+        </button>
+        <button type="reset" class="btn-reset">
+            <i class="fas fa-undo"></i>
+            <span>Reset</span>
+        </button>
+    </div>
+</form>
     
     <!-- Right Column: Quick Links & Status -->
     <div>
@@ -767,5 +1074,32 @@
         </div>
     </div>
 </div>
+
+<script>
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs and panes
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const targetId = this.getAttribute('data-bs-target');
+            const targetPane = document.querySelector(targetId);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+        });
+    });
+});
+</script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>
