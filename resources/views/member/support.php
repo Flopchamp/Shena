@@ -394,7 +394,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Phone</h6>
-                        <p><a href="tel:+254712345678">+254 712 345 678</a></p>
+                        <p><a href="tel:+254748585067">+254 748 585 067</a></p>
                     </div>
                 </li>
                 
@@ -404,7 +404,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Email</h6>
-                        <p><a href="mailto:support@shena.com">support@shena.com</a></p>
+                        <p><a href="mailto:info@shenacompanion.org">info@shenacompanion.org</a></p>
                     </div>
                 </li>
                 
@@ -414,7 +414,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>WhatsApp</h6>
-                        <p><a href="https://wa.me/254712345678" target="_blank">+254 712 345 678</a></p>
+                        <p><a href="https://wa.me/+254748585067" target="_blank">+254 748 585 067</a></p>
                     </div>
                 </li>
                 
@@ -424,7 +424,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Office Location</h6>
-                        <p>Nairobi, Kenya<br>P.O. Box 12345</p>
+                        <p>Kisumu, Kenya<br>P.O. Box 40148</p>
                     </div>
                 </li>
             </ul>

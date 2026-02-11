@@ -49,7 +49,10 @@ class Router
         $this->addRoute('GET', '/dashboard', 'MemberController@dashboard');
         $this->addRoute('GET', '/profile', 'MemberController@profile');
         $this->addRoute('POST', '/profile', 'MemberController@updateProfile');
+        $this->addRoute('POST', '/profile/next-of-kin', 'MemberController@updateNextOfKin');
         $this->addRoute('GET', '/payments', 'MemberController@payments');
+        $this->addRoute('GET', '/member/payments/export', 'MemberController@exportPaymentHistory');
+        $this->addRoute('GET', '/member/payments/export-receipt', 'MemberController@exportPaymentReceipt');
         $this->addRoute('POST', '/payments/verify-transaction', 'MemberController@verifyTransaction');
         $this->addRoute('GET', '/beneficiaries', 'MemberController@beneficiaries');
         $this->addRoute('POST', '/beneficiaries', 'MemberController@addBeneficiary');
@@ -106,6 +109,7 @@ class Router
         $this->addRoute('GET', '/admin/payments/confirm/{id}', 'PaymentController@confirmPayment');
         $this->addRoute('GET', '/admin/payments/fail/{id}', 'PaymentController@failPayment');
         $this->addRoute('GET', '/admin/claims', 'AdminController@claims');
+        $this->addRoute('GET', '/admin/claims/view/{id}', 'AdminController@viewClaim');
         $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
         $this->addRoute('GET', '/admin/claims/track-services', 'AdminController@viewTrackServices');
         $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
@@ -207,7 +211,6 @@ class Router
         $this->addRoute('POST', '/agent/profile/update', 'AgentDashboardController@updateProfile');
         $this->addRoute('POST', '/agent/password/update', 'AgentDashboardController@updatePassword');
         $this->addRoute('GET', '/agent/members', 'AgentDashboardController@members');
-        $this->addRoute('GET', '/agent/commissions', 'AgentDashboardController@commissions');
         $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');

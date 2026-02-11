@@ -8,13 +8,15 @@ class Claim extends BaseModel
     
     public function getMemberClaims($memberId)
     {
-        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name 
-                FROM {$this->table} c 
-                JOIN members m ON c.member_id = m.id 
-                JOIN users u ON m.user_id = u.id 
-                WHERE c.member_id = :member_id 
+        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name,
+                       b.relationship, b.full_name as beneficiary_name
+                FROM {$this->table} c
+                JOIN members m ON c.member_id = m.id
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN beneficiaries b ON c.beneficiary_id = b.id
+                WHERE c.member_id = :member_id
                 ORDER BY c.created_at DESC";
-        
+
         return $this->db->fetchAll($sql, ['member_id' => $memberId]);
     }
     
@@ -76,15 +78,18 @@ class Claim extends BaseModel
         // Set service delivery defaults
         $data['service_delivery_type'] = $data['service_delivery_type'] ?? 'standard_services';
         $data['mortuary_days_count'] = $data['mortuary_days_count'] ?? 0;
-        
+
+        // For service-based claims, set claim_amount to 0 (services provided instead of cash)
+        $data['claim_amount'] = 0.00;
+
         // Validate mortuary days (max 14 per policy)
         if (isset($data['mortuary_days_count']) && $data['mortuary_days_count'] > 14) {
             throw new Exception("Mortuary preservation coverage limited to 14 days per policy");
         }
-        
+
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['status'] = 'submitted';
-        
+
         $claimId = $this->create($data);
         
         // Initialize service checklist for standard services

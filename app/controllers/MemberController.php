@@ -49,6 +49,60 @@ class MemberController extends BaseController
         $currentMonth = date('n');
         $currentMonthPayment = $this->paymentModel->getMonthlyPaymentStatus($member['id'], $currentYear, $currentMonth);
 
+        $completedPayments = array_filter($allPayments ?? [], fn($p) => ($p['status'] ?? '') === 'completed');
+        $totalPaid = 0.0;
+        $monthsCovered = 0;
+
+        foreach ($completedPayments as $payment) {
+            $paymentDate = $payment['payment_date'] ?? $payment['created_at'] ?? null;
+            if ($paymentDate && date('Y', strtotime($paymentDate)) === (string)$currentYear) {
+                $totalPaid += (float)($payment['amount'] ?? 0);
+                $monthsCovered++;
+            }
+        }
+
+        $lastCompletedPayment = null;
+        foreach ($allPayments as $payment) {
+            if (($payment['status'] ?? '') === 'completed') {
+                $lastCompletedPayment = $payment;
+                break;
+            }
+        }
+
+        $nextDueDate = null;
+        if ($lastCompletedPayment) {
+            $lastDate = new DateTime($lastCompletedPayment['payment_date'] ?? $lastCompletedPayment['created_at']);
+            $lastDate->modify('+1 month');
+            $nextDueDate = $lastDate;
+        } elseif (!empty($member['created_at'])) {
+            $createdDate = new DateTime($member['created_at']);
+            $createdDate->modify('+1 month');
+            $nextDueDate = $createdDate;
+        }
+
+        $currentMonthStatus = (!empty($currentMonthPayment) && (int)($currentMonthPayment['completed_payments'] ?? 0) > 0)
+            ? 'PAID'
+            : 'DUE';
+
+        if (($member['status'] ?? '') !== 'active') {
+            $currentMonthStatus = strtoupper($member['status'] ?? 'INACTIVE');
+        }
+
+        $maturityProgress = 0;
+        $maturityMonthsCompleted = 0;
+        $maturityMonthsTotal = 0;
+
+        if (!empty($member['maturity_ends']) && !empty($member['created_at'])) {
+            $created = new DateTime($member['created_at']);
+            $maturityEnds = new DateTime($member['maturity_ends']);
+            $totalInterval = $created->diff($maturityEnds);
+            $maturityMonthsTotal = max(1, ($totalInterval->y * 12) + $totalInterval->m);
+
+            $elapsedInterval = $created->diff(new DateTime());
+            $maturityMonthsCompleted = min($maturityMonthsTotal, ($elapsedInterval->y * 12) + $elapsedInterval->m);
+            $maturityProgress = (int)round(($maturityMonthsCompleted / $maturityMonthsTotal) * 100);
+        }
+
         // Dashboard stats
         $stats = [
             'total_payments' => is_array($allPayments) ? count(array_filter($allPayments, fn($p) => $p['status'] === 'completed')) : 0,
@@ -63,7 +117,14 @@ class MemberController extends BaseController
             'recent_claims' => $recentClaims,
             'current_month_paid' => !empty($currentMonthPayment),
             'current_month_payment' => $currentMonthPayment,
-            'stats' => $stats
+            'stats' => $stats,
+            'total_paid' => $totalPaid,
+            'months_covered' => $monthsCovered,
+            'next_due_date' => $nextDueDate ? $nextDueDate->format('M d') : 'N/A',
+            'current_month_status' => $currentMonthStatus,
+            'maturity_progress' => $maturityProgress,
+            'maturity_months_completed' => $maturityMonthsCompleted,
+            'maturity_months_total' => $maturityMonthsTotal
         ];
 
         $this->view('member.dashboard', $data);
@@ -99,19 +160,50 @@ class MemberController extends BaseController
                 $this->redirect('/profile');
                 return;
             }
-            
+
+            $fullName = $this->sanitizeInput($_POST['full_name'] ?? '');
+            $nameParts = preg_split('/\s+/', trim($fullName));
+            $firstName = !empty($nameParts[0]) ? $nameParts[0] : ($member['first_name'] ?? '');
+            $lastName = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : ($member['last_name'] ?? '');
+            $email = $this->sanitizeInput($_POST['email'] ?? '');
+            $phone = $this->sanitizeInput($_POST['phone'] ?? '');
+            $nationalId = $this->sanitizeInput($_POST['national_id'] ?? '');
+            $address = $this->sanitizeInput($_POST['address'] ?? '');
+
+            if (!empty($email) && !$this->validateEmail($email)) {
+                $_SESSION['error'] = 'Please enter a valid email address.';
+                $this->redirect('/profile');
+                return;
+            }
+
+            if (!empty($phone) && !$this->validatePhone($phone)) {
+                $_SESSION['error'] = 'Please enter a valid phone number.';
+                $this->redirect('/profile');
+                return;
+            }
+
+            if (!empty($email) && $email !== ($member['email'] ?? '')) {
+                $stmt = $this->db->getConnection()->prepare('SELECT id FROM users WHERE email = :email AND id <> :id');
+                $stmt->execute([':email' => $email, ':id' => $_SESSION['user_id']]);
+                if ($stmt->fetch()) {
+                    $_SESSION['error'] = 'This email address is already in use.';
+                    $this->redirect('/profile');
+                    return;
+                }
+            }
+
             // Update user data
             $userData = [
-                'first_name' => $this->sanitizeInput($_POST['first_name'] ?? ''),
-                'last_name' => $this->sanitizeInput($_POST['last_name'] ?? ''),
-                'phone' => $this->sanitizeInput($_POST['phone'] ?? '')
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone' => $phone,
+                'email' => $email
             ];
             
             // Update member data
             $memberData = [
-                'address' => $this->sanitizeInput($_POST['address'] ?? ''),
-                'next_of_kin' => $this->sanitizeInput($_POST['next_of_kin'] ?? ''),
-                'next_of_kin_phone' => $this->sanitizeInput($_POST['next_of_kin_phone'] ?? '')
+                'address' => $address,
+                'id_number' => $nationalId
             ];
             
             // Validate phone
@@ -139,6 +231,49 @@ class MemberController extends BaseController
         
         $this->redirect('/profile');
     }
+
+    public function updateNextOfKin()
+    {
+        try {
+            $this->validateCsrf();
+
+            $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+            if (!$member) {
+                $_SESSION['error'] = 'Member profile not found.';
+                $this->redirect('/profile');
+                return;
+            }
+
+            $nextOfKinName = $this->sanitizeInput($_POST['next_of_kin_name'] ?? '');
+            $nextOfKinRelationship = $this->sanitizeInput($_POST['next_of_kin_relationship'] ?? '');
+            $nextOfKinPhone = $this->sanitizeInput($_POST['next_of_kin_phone'] ?? '');
+
+            if (empty($nextOfKinName) || empty($nextOfKinRelationship)) {
+                $_SESSION['error'] = 'Please provide next of kin name and relationship.';
+                $this->redirect('/profile');
+                return;
+            }
+
+            if (!empty($nextOfKinPhone) && !$this->validatePhone($nextOfKinPhone)) {
+                $_SESSION['error'] = 'Please enter a valid next of kin phone number.';
+                $this->redirect('/profile');
+                return;
+            }
+
+            $this->memberModel->update($member['id'], [
+                'next_of_kin' => $nextOfKinName,
+                'next_of_kin_relationship' => $nextOfKinRelationship,
+                'next_of_kin_phone' => $nextOfKinPhone
+            ]);
+
+            $_SESSION['success'] = 'Next of kin updated successfully.';
+        } catch (Exception $e) {
+            error_log('Next of kin update error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to update next of kin. Please try again.';
+        }
+
+        $this->redirect('/profile');
+    }
     
     public function payments()
     {
@@ -150,6 +285,10 @@ class MemberController extends BaseController
         }
         
         $payments = $this->paymentModel->getMemberPayments($member['id']);
+        $statusFilter = $this->sanitizeInput($_GET['status'] ?? '');
+        $yearFilter = $this->sanitizeInput($_GET['year'] ?? '');
+        $availableYears = $this->getPaymentYears($payments);
+        $payments = $this->filterPayments($payments, $statusFilter, $yearFilter);
 
         // Calculate total paid and pending count
         $total_paid = 0;
@@ -169,10 +308,283 @@ class MemberController extends BaseController
             'member' => $member,
             'payments' => $payments,
             'total_paid' => $total_paid,
-            'pending_count' => $pending_count
+            'pending_count' => $pending_count,
+            'available_years' => $availableYears,
+            'selected_status' => $statusFilter,
+            'selected_year' => $yearFilter
         ];
 
         $this->view('member.payments', $data);
+    }
+
+    public function exportPaymentHistory()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/dashboard');
+            return;
+        }
+
+        $payments = $this->paymentModel->getMemberPayments($member['id']);
+        $statusFilter = $this->sanitizeInput($_GET['status'] ?? '');
+        $yearFilter = $this->sanitizeInput($_GET['year'] ?? '');
+        $payments = $this->filterPayments($payments, $statusFilter, $yearFilter);
+
+        $filename = 'payment-history-' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Date', 'Reference Number', 'Amount (KES)', 'Period', 'Payment Method', 'Status'], ',', '"', '\\', '');
+
+        foreach ($payments as $payment) {
+            $reference = strip_tags(html_entity_decode($payment['transaction_id']
+                ?? $payment['mpesa_receipt_number']
+                ?? $payment['transaction_reference']
+                ?? 'N/A', ENT_QUOTES | ENT_HTML5));
+            fputcsv($output, [
+                date('Y-m-d', strtotime($payment['payment_date'] ?? $payment['created_at'] ?? 'now')),
+                $reference,
+                number_format((float)($payment['amount'] ?? 0), 2, '.', ''),
+                strip_tags(html_entity_decode($payment['period'] ?? 'N/A', ENT_QUOTES | ENT_HTML5)),
+                strip_tags(html_entity_decode($payment['payment_method'] ?? 'M-Pesa', ENT_QUOTES | ENT_HTML5)),
+                strip_tags(html_entity_decode($payment['status'] ?? 'pending', ENT_QUOTES | ENT_HTML5))
+            ], ',', '"', '\\', '');
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    public function exportPaymentReceipt()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/dashboard');
+            return;
+        }
+
+        $paymentId = (int)($_GET['payment_id'] ?? 0);
+        if (!$paymentId) {
+            $_SESSION['error'] = 'Invalid payment ID.';
+            $this->redirect('/payments');
+            return;
+        }
+
+        $payment = $this->paymentModel->find($paymentId);
+        if (!$payment || $payment['member_id'] != $member['id']) {
+            $_SESSION['error'] = 'Payment not found or access denied.';
+            $this->redirect('/payments');
+            return;
+        }
+
+        // Generate PDF receipt using Dompdf
+        require_once 'vendor/autoload.php';
+        $dompdf = new Dompdf\Dompdf();
+
+        $html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Payment Receipt - ' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; }
+                .receipt-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+                .header { background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%); color: white; padding: 30px; text-align: center; position: relative; }
+                .header::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMyIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+Cjwvc3ZnPg==") repeat; opacity: 0.1; }
+                .logo { font-size: 28px; font-weight: bold; margin-bottom: 10px; position: relative; z-index: 1; }
+                .company-name { font-size: 16px; opacity: 0.9; position: relative; z-index: 1; }
+                .receipt-title { font-size: 24px; font-weight: bold; margin: 30px 0 20px 0; color: #1F2937; text-align: center; }
+                .receipt-details { padding: 30px; }
+                .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+                .detail-row:last-child { border-bottom: none; }
+                .detail-label { font-weight: 600; color: #6B7280; font-size: 14px; }
+                .detail-value { font-size: 14px; color: #1F2937; }
+                .amount-highlight { font-size: 18px; font-weight: bold; color: #059669; }
+                .member-info { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #7F20B0; }
+                .member-info h5 { margin: 0 0 10px 0; color: #1F2937; font-size: 16px; }
+                .member-info p { margin: 5px 0; color: #6B7280; font-size: 14px; }
+                .footer { background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef; }
+                .footer p { margin: 5px 0; font-size: 12px; color: #6B7280; }
+                .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+                .status-completed { background: #D1FAE5; color: #059669; }
+                .status-pending { background: #FEF3C7; color: #D97706; }
+                .status-failed { background: #FEE2E2; color: #DC2626; }
+                @media print { body { background: white; } .receipt-container { box-shadow: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="receipt-container">
+                <div class="header">
+                    <div class="logo">SHENA</div>
+                    <div class="company-name">Companion Welfare Association</div>
+                </div>
+
+                <div class="receipt-details">
+                    <h2 class="receipt-title">Payment Receipt</h2>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Receipt Number:</span>
+                        <span class="detail-value">' . htmlspecialchars($payment['transaction_id'] ?? $payment['mpesa_receipt_number'] ?? 'N/A') . '</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Payment Date:</span>
+                        <span class="detail-value">' . date('M d, Y', strtotime($payment['payment_date'] ?? $payment['created_at'] ?? 'now')) . '</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Amount Paid:</span>
+                        <span class="detail-value amount-highlight">KES ' . number_format((float)($payment['amount'] ?? 0), 2) . '</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Period:</span>
+                        <span class="detail-value">' . htmlspecialchars($payment['period'] ?? 'N/A') . '</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Payment Method:</span>
+                        <span class="detail-value">' . htmlspecialchars($payment['payment_method'] ?? 'M-Pesa') . '</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value">
+                            <span class="status-badge status-' . ($payment['status'] ?? 'pending') . '">' . strtoupper($payment['status'] ?? 'pending') . '</span>
+                        </span>
+                    </div>';
+
+        if (!empty($payment['mpesa_receipt_number']) && $payment['mpesa_receipt_number'] !== $payment['transaction_id']) {
+            $html .= '<div class="detail-row">
+                        <span class="detail-label">M-Pesa Code:</span>
+                        <span class="detail-value">' . htmlspecialchars($payment['mpesa_receipt_number']) . '</span>
+                    </div>';
+        }
+
+        $html .= '<div class="member-info">
+                        <h5>Member Information</h5>
+                        <p><strong>Name:</strong> ' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</p>
+                        <p><strong>Member ID:</strong> ' . htmlspecialchars($member['member_id'] ?? 'N/A') . '</p>
+                        <p><strong>Phone:</strong> ' . htmlspecialchars($member['phone'] ?? 'N/A') . '</p>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p><strong>SHENA Companion Welfare Association</strong></p>
+                    <p>This is an official payment receipt. Generated on ' . date('F d, Y \a\t H:i') . '</p>
+                    <p>For any inquiries, please contact our support team.</p>
+                </div>
+            </div>
+        </body>
+        </html>';
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'receipt-' . ($payment['transaction_id'] ?? $payment['mpesa_receipt_number'] ?? 'payment') . '.pdf';
+        $dompdf->stream($filename, array('Attachment' => true));
+        exit;
+    }
+
+    public function exportPaymentHistoryPdf()
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/dashboard');
+            return;
+        }
+
+        $payments = $this->paymentModel->getMemberPayments($member['id']);
+        $statusFilter = $this->sanitizeInput($_GET['status'] ?? '');
+        $yearFilter = $this->sanitizeInput($_GET['year'] ?? '');
+        $payments = $this->filterPayments($payments, $statusFilter, $yearFilter);
+
+        // Generate PDF using Dompdf
+        require_once 'vendor/autoload.php';
+        $dompdf = new Dompdf\Dompdf();
+
+        $html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Payment History - ' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #7F3D9E; text-align: center; }
+                .header-info { margin-bottom: 30px; }
+                .header-info p { margin: 5px 0; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .total-row { background-color: #e8f4fd; font-weight: bold; }
+                .status-completed { color: #10B981; }
+                .status-pending { color: #F59E0B; }
+                .status-failed { color: #EF4444; }
+            </style>
+        </head>
+        <body>
+            <h1>Payment History Report</h1>
+            <div class="header-info">
+                <p><strong>Member:</strong> ' . htmlspecialchars($member['first_name'] . ' ' . $member['last_name']) . '</p>
+                <p><strong>Member ID:</strong> ' . htmlspecialchars($member['member_id'] ?? 'N/A') . '</p>
+                <p><strong>Report Date:</strong> ' . date('F d, Y') . '</p>
+                <p><strong>Period:</strong> ' . (!empty($yearFilter) ? $yearFilter : 'All Years') . ' ' . (!empty($statusFilter) ? ' - ' . ucfirst($statusFilter) . ' Payments' : '') . '</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Amount (KES)</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+        $totalAmount = 0;
+        foreach ($payments as $payment) {
+            $reference = $payment['transaction_id']
+                ?? $payment['mpesa_receipt_number']
+                ?? $payment['transaction_reference']
+                ?? 'N/A';
+            $amount = (float)($payment['amount'] ?? 0);
+            $totalAmount += $amount;
+            $statusClass = 'status-' . ($payment['status'] ?? 'pending');
+
+            $html .= '<tr>
+                <td>' . date('M d, Y', strtotime($payment['payment_date'] ?? $payment['created_at'] ?? 'now')) . '</td>
+                <td>' . htmlspecialchars($reference) . '</td>
+                <td>KES ' . number_format($amount, 2) . '</td>
+                <td>' . htmlspecialchars($payment['payment_type'] ?? 'monthly') . '</td>
+                <td class="' . $statusClass . '">' . htmlspecialchars(strtoupper($payment['status'] ?? 'pending')) . '</td>
+            </tr>';
+        }
+
+        $html .= '<tr class="total-row">
+                <td colspan="2"><strong>Total Amount</strong></td>
+                <td><strong>KES ' . number_format($totalAmount, 2) . '</strong></td>
+                <td colspan="2"></td>
+            </tr>';
+
+        $html .= '</tbody>
+            </table>
+        </body>
+        </html>';
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'payment-history-' . date('Y-m-d') . '.pdf';
+        $dompdf->stream($filename, array('Attachment' => true));
+        exit;
     }
     
     /**
@@ -526,6 +938,9 @@ class MemberController extends BaseController
                     }
                     continue;
                 }
+
+                // Include the helper functions
+                require_once 'app/helpers/functions.php';
 
                 $uploadResult = uploadFile($_FILES[$inputName], 'claims/' . $claimId);
                 if ($uploadResult === false) {
@@ -995,10 +1410,8 @@ class MemberController extends BaseController
             $this->redirect('/login');
             return;
         }
-        
-        // TODO: Get notifications from database
-        // For now, we'll pass empty array and let the view handle sample data
-        $notifications = [];
+
+        $notifications = $this->getMemberNotifications($_SESSION['user_id']);
         
         $data = [
             'title' => 'Notifications - Shena Companion Welfare Association',
@@ -1015,9 +1428,28 @@ class MemberController extends BaseController
      */
     public function markNotificationAsRead()
     {
-        $this->validateCsrf();
-        // TODO: Implement notification mark as read logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notification as read.'], 500);
+        }
     }
     
     /**
@@ -1025,9 +1457,20 @@ class MemberController extends BaseController
      */
     public function markAllNotificationsAsRead()
     {
-        $this->validateCsrf();
-        // TODO: Implement mark all as read logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE user_id = :user_id AND status <> "read"
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notifications as read.'], 500);
+        }
     }
     
     /**
@@ -1035,9 +1478,27 @@ class MemberController extends BaseController
      */
     public function deleteNotification()
     {
-        $this->validateCsrf();
-        // TODO: Implement notification delete logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                DELETE FROM communication_recipients
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to delete notification.'], 500);
+        }
     }
     
     /**
@@ -1045,9 +1506,165 @@ class MemberController extends BaseController
      */
     public function clearAllNotifications()
     {
-        $this->validateCsrf();
-        // TODO: Implement clear all notifications logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                DELETE FROM communication_recipients
+                WHERE user_id = :user_id
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to clear notifications.'], 500);
+        }
+    }
+
+    private function filterPayments($payments, $status, $year)
+    {
+        if (empty($payments)) {
+            return [];
+        }
+
+        return array_values(array_filter($payments, function ($payment) use ($status, $year) {
+            if (!empty($status) && ($payment['status'] ?? '') !== $status) {
+                return false;
+            }
+
+            if (!empty($year)) {
+                $paymentDate = $payment['payment_date'] ?? $payment['created_at'] ?? null;
+                if (!$paymentDate || date('Y', strtotime($paymentDate)) !== $year) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
+    }
+
+    private function getPaymentYears($payments)
+    {
+        $years = [];
+        foreach ($payments as $payment) {
+            $paymentDate = $payment['payment_date'] ?? $payment['created_at'] ?? null;
+            if ($paymentDate) {
+                $years[] = date('Y', strtotime($paymentDate));
+            }
+        }
+
+        $years = array_values(array_unique($years));
+        rsort($years);
+        return $years;
+    }
+
+    private function getMemberNotifications($userId)
+    {
+        $stmt = $this->db->getConnection()->prepare('
+            SELECT cr.id AS notification_id,
+                   cr.status,
+                   cr.read_at,
+                   cr.sent_at,
+                   c.subject,
+                   c.message,
+                   c.action_url,
+                   c.action_text,
+                   c.type,
+                   c.created_at
+            FROM communication_recipients cr
+            INNER JOIN communications c ON c.id = cr.communication_id
+            WHERE cr.user_id = :user_id
+            ORDER BY COALESCE(cr.sent_at, c.sent_at, c.created_at) DESC
+            LIMIT 100
+        ');
+        $stmt->execute([':user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $notifications = [];
+        foreach ($rows as $row) {
+            $title = $row['subject'] ?: 'Notification';
+            $message = $row['message'] ?: '';
+            $category = $this->inferNotificationCategory($title, $message);
+            $actionUrl = !empty($row['action_url']) ? $row['action_url'] : $category['action_url'];
+            $actionText = !empty($row['action_text']) ? $row['action_text'] : $category['action_text'];
+
+            $notifications[] = [
+                'id' => (int)$row['notification_id'],
+                'type' => $category['type'],
+                'icon' => $category['icon'],
+                'color' => $category['color'],
+                'title' => $title,
+                'message' => $message,
+                'time' => $this->formatTimeAgo($row['sent_at'] ?? $row['created_at'] ?? 'now'),
+                'read' => !empty($row['read_at']) || ($row['status'] ?? '') === 'read',
+                'action_url' => $actionUrl,
+                'action_text' => $actionText
+            ];
+        }
+
+        return $notifications;
+    }
+
+    private function inferNotificationCategory($title, $message)
+    {
+        $haystack = strtolower($title . ' ' . $message);
+
+        if (preg_match('/payment|mpesa|contribution|invoice|receipt/', $haystack)) {
+            return [
+                'type' => 'payments',
+                'icon' => 'fa-credit-card',
+                'color' => '#10B981',
+                'action_url' => '/payments',
+                'action_text' => 'View Payments'
+            ];
+        }
+
+        if (preg_match('/claim|burial|mortuary/', $haystack)) {
+            return [
+                'type' => 'claims',
+                'icon' => 'fa-file-medical',
+                'color' => '#3B82F6',
+                'action_url' => '/claims',
+                'action_text' => 'View Claims'
+            ];
+        }
+
+        return [
+            'type' => 'system',
+            'icon' => 'fa-bell',
+            'color' => '#6B7280',
+            'action_url' => '/dashboard',
+            'action_text' => 'Go to Dashboard'
+        ];
+    }
+
+    private function formatTimeAgo($datetime)
+    {
+        try {
+            $time = new DateTime($datetime);
+            $now = new DateTime();
+            $diff = $now->diff($time);
+
+            if ($diff->y > 0) {
+                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->m > 0) {
+                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->d > 0) {
+                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->h > 0) {
+                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->i > 0) {
+                return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+            }
+
+            return 'just now';
+        } catch (Exception $e) {
+            return 'recently';
+        }
     }
     
     /**

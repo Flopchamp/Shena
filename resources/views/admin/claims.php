@@ -615,11 +615,13 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 
     .tab-content {
         padding: 24px;
+        overflow-x: auto;
     }
 
     .claims-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 900px;
     }
 
     .claims-table thead th {
@@ -658,9 +660,16 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
         color: #6B7280;
     }
 
+    .claims-table .actions-cell {
+        text-align: right;
+        white-space: nowrap;
+    }
+
     .action-buttons {
         display: flex;
         gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     .btn-view {
@@ -810,14 +819,14 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
                         <th>Date of Death</th>
                         <th>Service Type</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th class="actions-cell">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($all_claims as $claim): ?>
                         <tr>
                             <td><?= 'CLM-' . date('Y') . '-' . str_pad($claim['id'], 4, '0', STR_PAD_LEFT) ?></td>
-                            <td>
+                            <td class="actions-cell">
                                 <div class="claim-member-info">
                                     <span class="claim-member-name"><?= htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']) ?></span>
                                     <span class="claim-deceased-name">Member #<?= htmlspecialchars($claim['member_number'] ?? 'N/A') ?></span>
@@ -944,7 +953,7 @@ function renderClaimsTable(claims, status) {
         `;
     }
 
-    let html = '<table class="claims-table"><thead><tr><th>Claim #</th><th>Member</th><th>Deceased</th><th>Date of Death</th><th>Service Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="claims-table"><thead><tr><th>Claim #</th><th>Member</th><th>Deceased</th><th>Date of Death</th><th>Service Type</th><th>Status</th><th class="actions-cell">Actions</th></tr></thead><tbody>';
 
     claims.forEach(claim => {
         const claimNumber = 'CLM-' + new Date().getFullYear() + '-' + String(claim.id).padStart(4, '0');
@@ -956,7 +965,7 @@ function renderClaimsTable(claims, status) {
         html += `
             <tr>
                 <td>${claimNumber}</td>
-                <td>
+                <td class="actions-cell">
                     <div class="claim-member-info">
                         <span class="claim-member-name">${memberName}</span>
                         <span class="claim-deceased-name">Member #${claim.member_number || 'N/A'}</span>

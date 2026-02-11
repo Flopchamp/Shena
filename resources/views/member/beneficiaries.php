@@ -349,6 +349,13 @@ main {
     margin: 0 0 4px 0;
 }
 
+.benefit-limit .currency-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #7F3D9E;
+    margin-right: 4px;
+}
+
 .benefit-limit p {
     font-size: 0.8rem;
     color: #9333EA;
@@ -449,54 +456,16 @@ main {
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="active-badge-card">ACTIVE</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar">J</div>
+                    <div class="beneficiary-card" style="text-align: center;">
+                        <div class="beneficiary-header" style="justify-content: center;">
+                            <div class="beneficiary-avatar">?</div>
                             <div class="beneficiary-info">
-                                <h3>Jane Doe</h3>
-                                <p>Spouse</p>
-                                <p class="age-bracket">Age Bracket: 35-40 years</p>
+                                <h3>No beneficiaries yet</h3>
+                                <p>Add a dependent to start managing your covered family members.</p>
                             </div>
                         </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
-                        </button>
-                    </div>
-                    
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="active-badge-card">ACTIVE</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar male">L</div>
-                            <div class="beneficiary-info">
-                                <h3>Leo Doe</h3>
-                                <p>Son</p>
-                                <p class="age-bracket">Age Bracket: 5-10 years</p>
-                            </div>
-                        </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
-                        </button>
-                    </div>
-                    
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="waiting-badge-card">WAITING</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar">M</div>
-                            <div class="beneficiary-info">
-                                <h3>Mary Smith</h3>
-                                <p>Mother-in-law</p>
-                                <p class="age-bracket">Age Bracket: 65-70 years</p>
-                            </div>
-                        </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
+                        <button class="edit-details-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                            <i class="fas fa-user-plus"></i> Add Beneficiary
                         </button>
                     </div>
                 <?php endif; ?>
@@ -505,7 +474,7 @@ main {
                     <div class="add-icon">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <h4>Add Member</h4>
+                    <h4>Add Beneficiary</h4>
                     <p>Available slots: <?php echo $availableSlots; ?></p>
                 </div>
             </div>
@@ -533,7 +502,7 @@ main {
                 
                 <div class="benefit-limit">
                     <h4>BENEFIT LIMIT</h4>
-                    <h2>$15,000</h2>
+                    <h2>KES 15,000</h2>
                     <p>per member</p>
                 </div>
             </div>
@@ -541,7 +510,7 @@ main {
             <div class="need-help-card">
                 <h3>Need Help?</h3>
                 <p>Unsure about relationship proof documents? Chat with our support team.</p>
-                <button class="chat-btn">START CHAT</button>
+                <button class="chat-btn" onclick="window.location.href='/member/support'">START CHAT</button>
             </div>
         </div>
     </div>

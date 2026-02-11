@@ -462,6 +462,86 @@
 			transform: translateY(-1px);
 			box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 		}
+
+		.profile-menu {
+			position: relative;
+			display: flex;
+			align-items: center;
+		}
+
+		.profile-button {
+			background: transparent;
+			border: none;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			cursor: pointer;
+		}
+
+		.profile-button:focus {
+			outline: none;
+		}
+
+		.profile-caret {
+			font-size: 12px;
+			color: #9CA3AF;
+		}
+
+		.profile-dropdown {
+			position: absolute;
+			top: calc(100% + 10px);
+			right: 0;
+			min-width: 200px;
+			background: white;
+			border: 1px solid #E5E7EB;
+			border-radius: 12px;
+			box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+			padding: 8px;
+			opacity: 0;
+			visibility: hidden;
+			transform: translateY(-6px);
+			transition: all 0.2s ease;
+			z-index: 1003;
+		}
+
+		.profile-menu:focus-within .profile-dropdown,
+		.profile-menu:hover .profile-dropdown {
+			opacity: 1;
+			visibility: visible;
+			transform: translateY(0);
+		}
+
+		.profile-dropdown-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 12px;
+			border-radius: 8px;
+			color: #374151;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 600;
+			background: transparent;
+			border: none;
+			width: 100%;
+			cursor: pointer;
+			text-align: left;
+		}
+
+		.profile-dropdown-item:hover {
+			background: #F9FAFB;
+			color: #7F20B0;
+		}
+
+		.profile-dropdown-item.logout {
+			color: #DC2626;
+		}
+
+		.profile-dropdown-item.logout:hover {
+			background: #FEF2F2;
+			color: #B91C1C;
+		}
 		
 		.user-profile {
 			display: flex;
@@ -608,17 +688,33 @@
 						<div class="search-results" id="searchResults" style="display: none;"></div>
 					</div>				<button class="icon-btn" onclick="location.href='/member/notifications'" title="Notifications">
 					<i class="fas fa-bell"></i>
-				</button>					<button class="logout-btn" onclick="handleLogout()">
-						<i class="fas fa-sign-out-alt"></i>
-						Logout
 					</button>
-					<div class="user-profile">
-						<div class="user-profile-text">
-							<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
-							<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
-						</div>
-						<div class="user-avatar">
-							<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
+					<div class="profile-menu">
+						<button class="profile-button" type="button" aria-haspopup="true" aria-expanded="false">
+							<div class="user-profile">
+								<div class="user-profile-text">
+									<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
+									<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
+								</div>
+								<div class="user-avatar">
+									<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
+								</div>
+							</div>
+							<i class="fas fa-chevron-down profile-caret"></i>
+						</button>
+						<div class="profile-dropdown" role="menu">
+							<a class="profile-dropdown-item" href="/profile">
+								<i class="fas fa-user-cog"></i>
+								Profile Settings
+							</a>
+							<a class="profile-dropdown-item" href="/member/notification-settings">
+								<i class="fas fa-bell"></i>
+								Notifications
+							</a>
+							<button class="profile-dropdown-item logout" type="button" onclick="handleLogout()">
+								<i class="fas fa-sign-out-alt"></i>
+								Logout
+							</button>
 						</div>
 					</div>
 				</div>

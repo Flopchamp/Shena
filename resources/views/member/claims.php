@@ -4,8 +4,10 @@ include __DIR__ . '/../layouts/member-header.php';
 
 // Sample data for demonstration
 $claims = $claims ?? [];
+$beneficiaries = $beneficiaries ?? [];
 $activeClaims = array_filter($claims, fn($c) => $c['status'] !== 'approved' && $c['status'] !== 'rejected');
 $pastClaims = array_filter($claims, fn($c) => $c['status'] === 'approved' || $c['status'] === 'rejected');
+$hasBeneficiaries = !empty($beneficiaries);
 
 // No mock data - use real data from controller
 ?>
@@ -559,78 +561,72 @@ main {
             <div class="section-header">
                 <h3>Track My Claims</h3>
                 <div class="tabs">
-                    <button class="tab active">All Claims</button>
-                    <button class="tab">Active (<?php echo count($activeClaims); ?>)</button>
+                    <button class="tab active" data-tab="all">All Claims</button>
+                    <button class="tab" data-tab="active">Active (<?php echo count($activeClaims); ?>)</button>
+                    <button class="tab" data-tab="past">Past (<?php echo count($pastClaims); ?>)</button>
                 </div>
             </div>
             
             <!-- Active Claims -->
-            <?php foreach ($activeClaims as $claim): ?>
-            <div class="claim-card">
-                <div class="claim-header">
-                    <div class="claim-info">
-                        <h4>Claim ID: <?php echo htmlspecialchars($claim['id']); ?></h4>
-                        <h3><?php echo htmlspecialchars($claim['deceased_name'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($claim['relationship'] ?? 'N/A'); ?>)</h3>
-                    </div>
-                    <div class="claim-meta">
-                        <p>ESTIMATED PAYOUT</p>
-                        <h3>KES <?php echo number_format($claim['estimated_payout'] ?? 0, 2); ?></h3>
-                        <span class="status-badge">IN PROGRESS</span>
-                    </div>
-                </div>
-                
-                <!-- Progress Tracker -->
-                <div class="progress-tracker">
-                    <?php foreach ($claim['steps'] ?? [] as $step): ?>
-                    <div class="progress-step">
-                        <div class="step-icon <?php echo $step['status']; ?>">
-                            <?php if ($step['status'] === 'completed'): ?>
-                                <i class="fas fa-check"></i>
-                            <?php elseif ($step['status'] === 'processing'): ?>
-                                <i class="fas fa-file-alt"></i>
-                            <?php else: ?>
-                                <i class="fas fa-circle"></i>
-                            <?php endif; ?>
+            <div class="claims-section" data-section="active">
+                <?php if (!empty($activeClaims)): ?>
+                    <?php foreach ($activeClaims as $claim): ?>
+                    <div class="claim-card">
+                        <div class="claim-header">
+                            <div class="claim-info">
+                                <h4>Claim ID: <?php echo htmlspecialchars($claim['id']); ?></h4>
+                                <h3><?php echo htmlspecialchars($claim['deceased_name'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($claim['relationship'] ?? 'N/A'); ?>)</h3>
+                                <p>Date of Death: <?php echo htmlspecialchars($claim['date_of_death'] ?? 'N/A'); ?></p>
+                                <p>Place of Death: <?php echo htmlspecialchars($claim['place_of_death'] ?? 'N/A'); ?></p>
+                            </div>
+                            <div class="claim-meta">
+                                <p>STATUS</p>
+                                <span class="status-badge"><?php echo strtoupper(htmlspecialchars($claim['status'] ?? 'submitted')); ?></span>
+                                <p style="margin-top: 10px; font-size: 0.8rem; color: #6B7280;">
+                                    Submitted: <?php echo htmlspecialchars(date('M d, Y', strtotime($claim['created_at'] ?? 'now'))); ?>
+                                </p>
+                            </div>
                         </div>
-                        <div class="step-label"><?php echo htmlspecialchars($step['name']); ?></div>
-                        <?php if (!empty($step['date'])): ?>
-                            <div class="step-date"><?php echo htmlspecialchars($step['date']); ?></div>
-                        <?php elseif ($step['status'] === 'processing'): ?>
-                            <div class="step-status">Processing</div>
-                        <?php endif; ?>
+
+                        <!-- Next Step -->
+                        <div class="next-step-card">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="next-step-content">
+                                <h4>Next Step:</h4>
+                                <p>Your claim has been submitted and is under review. SHENA will contact you within 1-3 business days.</p>
+                            </div>
+                        </div>
                     </div>
                     <?php endforeach; ?>
-                </div>
-                
-                <!-- Next Step -->
-                <div class="next-step-card">
-                    <i class="fas fa-info-circle"></i>
-                    <div class="next-step-content">
-                        <h4>Next Step:</h4>
-                        <p><?php echo htmlspecialchars($claim['next_step'] ?? ''); ?></p>
+                <?php else: ?>
+                    <div class="claim-card" style="text-align: center; color: #6B7280;">
+                        <p style="margin: 0;">No active claims at the moment.</p>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
-            <?php endforeach; ?>
             
             <!-- Past Claims -->
-            <div class="past-claims-section">
+            <div class="past-claims-section claims-section" data-section="past">
                 <h3>PAST CLAIMS</h3>
-                <?php foreach ($pastClaims as $claim): ?>
-                <div class="past-claim-item">
-                    <div class="past-claim-icon">
-                        <i class="fas fa-check"></i>
+                <?php if (!empty($pastClaims)): ?>
+                    <?php foreach ($pastClaims as $claim): ?>
+                    <div class="past-claim-item">
+                        <div class="past-claim-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="past-claim-info">
+                            <h4><?php echo htmlspecialchars($claim['deceased_name'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($claim['relationship'] ?? 'N/A'); ?>)</h4>
+                            <p>Claim ID: <?php echo htmlspecialchars($claim['id']); ?> • Paid <?php echo htmlspecialchars($claim['paid_date'] ?? 'N/A'); ?></p>
+                        </div>
+                        <div class="past-claim-amount">KES <?php echo number_format($claim['payout'] ?? 0, 2); ?></div>
+                        <div class="past-claim-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
-                    <div class="past-claim-info">
-                        <h4><?php echo htmlspecialchars($claim['deceased_name'] ?? 'Unknown'); ?> (<?php echo htmlspecialchars($claim['relationship'] ?? 'N/A'); ?>)</h4>
-                        <p>Claim ID: <?php echo htmlspecialchars($claim['id']); ?> • Paid <?php echo htmlspecialchars($claim['paid_date'] ?? 'N/A'); ?></p>
-                    </div>
-                    <div class="past-claim-amount">KES <?php echo number_format($claim['payout'] ?? 0, 2); ?></div>
-                    <div class="past-claim-arrow">
-                        <i class="fas fa-chevron-right"></i>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="color: #6B7280;">No past claims to show.</div>
+                <?php endif; ?>
             </div>
         </div>
         
@@ -684,15 +680,18 @@ main {
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Relationship to Deceased <span class="text-danger">*</span></label>
-                            <select name="relationship_to_deceased" class="form-select" required>
-                                <option value="">Select relationship</option>
-                                <option value="spouse">Spouse</option>
-                                <option value="parent">Parent</option>
-                                <option value="child">Child</option>
-                                <option value="sibling">Sibling</option>
-                                <option value="dependent">Registered Dependent</option>
+                            <label class="form-label">Beneficiary <span class="text-danger">*</span></label>
+                            <select name="beneficiary_id" class="form-select" required <?php echo !$hasBeneficiaries ? 'disabled' : ''; ?>>
+                                <option value="">Select beneficiary</option>
+                                <?php foreach ($beneficiaries as $beneficiary): ?>
+                                    <option value="<?php echo (int)$beneficiary['id']; ?>">
+                                        <?php echo htmlspecialchars($beneficiary['full_name'] . ' (' . $beneficiary['relationship'] . ')'); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
+                            <?php if (!$hasBeneficiaries): ?>
+                                <small class="text-muted">Add a beneficiary before submitting a claim.</small>
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Date of Death <span class="text-danger">*</span></label>
@@ -721,6 +720,10 @@ main {
                             <small class="text-muted">Maximum 14 days covered per policy</small>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mortuary Bill Amount (KES) <span class="text-danger">*</span></label>
+                        <input type="number" name="mortuary_bill_amount" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                    </div>
                     
                     <h6><i class="fas fa-paperclip"></i> Required Documents</h6>
                     <p class="text-muted small mb-3">
@@ -745,11 +748,30 @@ main {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-check-circle"></i> Submit Claim</button>
+                    <button type="submit" class="btn btn-primary" <?php echo !$hasBeneficiaries ? 'disabled' : ''; ?>><i class="fas fa-check-circle"></i> Submit Claim</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+
+        const selected = this.dataset.tab;
+        document.querySelectorAll('.claims-section').forEach(section => {
+            if (selected === 'all') {
+                section.style.display = '';
+                return;
+            }
+
+            section.style.display = section.dataset.section === selected ? '' : 'none';
+        });
+    });
+});
+</script>
 
 <?php include __DIR__ . '/../layouts/member-footer.php'; ?>

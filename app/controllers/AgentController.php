@@ -502,7 +502,7 @@ class AgentController extends BaseController
             'Commission Amount',
             'Status',
             'Created At'
-        ]);
+        ], ',', '"', '\\', '');
 
         foreach ($commissions as $commission) {
             fputcsv($output, [
@@ -516,7 +516,7 @@ class AgentController extends BaseController
                 $commission['commission_amount'] ?? 0,
                 $commission['status'] ?? 'pending',
                 $commission['created_at'] ?? ''
-            ]);
+            ], ',', '"', '\\', '');
         }
 
         fclose($output);
@@ -679,7 +679,7 @@ class AgentController extends BaseController
         header('Expires: 0');
 
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['ID', 'Name', 'Category', 'Size', 'Date', 'Description']);
+        fputcsv($output, ['ID', 'Name', 'Category', 'Size', 'Date', 'Description'], ',', '"', '\\', '');
 
         foreach ($resources as $category => $items) {
             foreach ($items as $resource) {
@@ -690,7 +690,7 @@ class AgentController extends BaseController
                     $resource['size'] ?? '',
                     $resource['date'] ?? '',
                     $resource['description'] ?? ''
-                ]);
+                ], ',', '"', '\\', '');
             }
         }
 

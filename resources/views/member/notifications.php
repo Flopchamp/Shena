@@ -2,81 +2,7 @@
 $page = 'notifications';
 include __DIR__ . '/../layouts/member-header.php';
 
-// Sample notification data - will be passed from controller
-$notifications = $notifications ?? [
-    [
-        'id' => 1,
-        'type' => 'payment',
-        'icon' => 'fa-check-circle',
-        'color' => '#10B981',
-        'title' => 'Payment Confirmed',
-        'message' => 'Your October 2023 contribution of KES 1,200 has been successfully processed.',
-        'time' => '2 hours ago',
-        'read' => false,
-        'action_url' => '/payments',
-        'action_text' => 'View Payment'
-    ],
-    [
-        'id' => 2,
-        'type' => 'claim',
-        'icon' => 'fa-file-medical',
-        'color' => '#3B82F6',
-        'title' => 'Claim Update',
-        'message' => 'Your claim #CLM-2023-001 has been approved. Processing payment.',
-        'time' => '5 hours ago',
-        'read' => false,
-        'action_url' => '/claims',
-        'action_text' => 'View Claim'
-    ],
-    [
-        'id' => 3,
-        'type' => 'reminder',
-        'icon' => 'fa-calendar-alt',
-        'color' => '#F59E0B',
-        'title' => 'Payment Reminder',
-        'message' => 'Your November contribution is due on Nov 15, 2023.',
-        'time' => '1 day ago',
-        'read' => true,
-        'action_url' => '/payments',
-        'action_text' => 'Pay Now'
-    ],
-    [
-        'id' => 4,
-        'type' => 'benefit',
-        'icon' => 'fa-users',
-        'color' => '#8B5CF6',
-        'title' => 'Beneficiary Updated',
-        'message' => 'Jane Doe has been successfully added as your beneficiary.',
-        'time' => '2 days ago',
-        'read' => true,
-        'action_url' => '/beneficiaries',
-        'action_text' => 'View Beneficiaries'
-    ],
-    [
-        'id' => 5,
-        'type' => 'account',
-        'icon' => 'fa-user-shield',
-        'color' => '#6B7280',
-        'title' => 'Security Update',
-        'message' => 'Your password was changed successfully.',
-        'time' => '3 days ago',
-        'read' => true,
-        'action_url' => '/profile',
-        'action_text' => 'View Profile'
-    ],
-    [
-        'id' => 6,
-        'type' => 'system',
-        'icon' => 'fa-info-circle',
-        'color' => '#06B6D4',
-        'title' => 'System Announcement',
-        'message' => 'Our mobile app is now available! Download from App Store or Play Store.',
-        'time' => '1 week ago',
-        'read' => true,
-        'action_url' => '#',
-        'action_text' => 'Learn More'
-    ]
-];
+$notifications = $notifications ?? [];
 
 $unread_count = count(array_filter($notifications, fn($n) => !$n['read']));
 $total_count = count($notifications);
@@ -455,6 +381,7 @@ main {
 </style>
 
 <div class="notifications-container">
+    <input type="hidden" id="csrfToken" value="<?php echo $csrf_token ?? ''; ?>">
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-top">
@@ -551,10 +478,12 @@ main {
                             <span class="notification-time"><?php echo htmlspecialchars($notification['time']); ?></span>
                         </div>
                         <p class="notification-message"><?php echo htmlspecialchars($notification['message']); ?></p>
-                        <a href="<?php echo htmlspecialchars($notification['action_url']); ?>" class="notification-action">
-                            <?php echo htmlspecialchars($notification['action_text']); ?>
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
+                        <?php if (!empty($notification['action_url']) && !empty($notification['action_text'])): ?>
+                            <a href="<?php echo htmlspecialchars($notification['action_url']); ?>" class="notification-action">
+                                <?php echo htmlspecialchars($notification['action_text']); ?>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        <?php endif; ?>
                     </div>
                     <div class="notification-actions">
                         <?php if (!$notification['read']): ?>
@@ -595,73 +524,108 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
+function postNotificationAction(url, payload = {}) {
+    const csrfToken = document.getElementById('csrfToken')?.value;
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken || '');
+    Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+    return fetch(url, {
+        method: 'POST',
+        body: formData
+    }).then(response => response.json());
+}
+
 // Mark as Read
 function markAsRead(id) {
-    // AJAX call to mark as read
-    console.log('Marking notification ' + id + ' as read');
-    
-    // Update UI
-    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-    if (item) {
-        item.classList.remove('unread');
-        const actionBtn = item.querySelector('.action-icon-btn[onclick*="markAsRead"]');
-        if (actionBtn) {
-            actionBtn.remove();
-        }
-    }
+    postNotificationAction('/member/notifications/mark-read', { id: id })
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to mark notification as read.');
+                return;
+            }
+
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) {
+                item.classList.remove('unread');
+                const actionBtn = item.querySelector('.action-icon-btn[onclick*="markAsRead"]');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+            }
+        })
+        .catch(() => alert('Failed to mark notification as read.'));
 }
 
 // Mark All as Read
 function markAllAsRead() {
     if (!confirm('Mark all notifications as read?')) return;
     
-    // AJAX call to mark all as read
-    console.log('Marking all notifications as read');
-    
-    // Update UI
-    document.querySelectorAll('.notification-item.unread').forEach(item => {
-        item.classList.remove('unread');
-    });
+    postNotificationAction('/member/notifications/mark-all-read')
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to mark notifications as read.');
+                return;
+            }
+
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                const actionBtn = item.querySelector('.action-icon-btn[onclick*="markAsRead"]');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+            });
+        })
+        .catch(() => alert('Failed to mark notifications as read.'));
 }
 
 // Delete Notification
 function deleteNotification(id) {
     if (!confirm('Delete this notification?')) return;
     
-    // AJAX call to delete
-    console.log('Deleting notification ' + id);
-    
-    // Update UI
-    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-    if (item) {
-        item.style.opacity = '0';
-        setTimeout(() => item.remove(), 300);
-    }
+    postNotificationAction('/member/notifications/delete', { id: id })
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to delete notification.');
+                return;
+            }
+
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                setTimeout(() => item.remove(), 300);
+            }
+        })
+        .catch(() => alert('Failed to delete notification.'));
 }
 
 // Clear All Notifications
 function clearAllNotifications() {
     if (!confirm('This will delete all notifications. Continue?')) return;
     
-    // AJAX call to clear all
-    console.log('Clearing all notifications');
-    
-    // Update UI
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.style.opacity = '0';
-    });
-    
-    setTimeout(() => {
-        document.querySelector('.notifications-list').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-bell-slash"></i>
-                </div>
-                <h3>No Notifications</h3>
-                <p>You're all caught up! We'll notify you when there's something new.</p>
-            </div>
-        `;
-    }, 300);
+    postNotificationAction('/member/notifications/clear-all')
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to clear notifications.');
+                return;
+            }
+
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.style.opacity = '0';
+            });
+            
+            setTimeout(() => {
+                document.querySelector('.notifications-list').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <h3>No Notifications</h3>
+                        <p>You're all caught up! We'll notify you when there's something new.</p>
+                    </div>
+                `;
+            }, 300);
+        })
+        .catch(() => alert('Failed to clear notifications.'));
 }
 </script>
 

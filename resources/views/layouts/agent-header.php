@@ -688,12 +688,6 @@
         <div class="sidebar-menu-label">FINANCIALS</div>
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
-                <a href="/agent/commissions" class="sidebar-nav-link<?php echo (isset($page) && $page === 'commissions') ? ' active' : ''; ?>">
-                    <i class="fas fa-percentage"></i>
-                    <span>Commissions</span>
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
                 <a href="/agent/payouts" class="sidebar-nav-link<?php echo (isset($page) && $page === 'payouts') ? ' active' : ''; ?>">
                     <i class="fas fa-money-check-alt"></i>
                     <span>Payouts</span>

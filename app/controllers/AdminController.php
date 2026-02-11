@@ -137,7 +137,8 @@ class AdminController extends BaseController
             'recent_members' => $this->memberModel->getRecentMembers(5),
             'recent_payments' => $this->paymentModel->getRecentPayments(5),
             'recent_claims' => $this->claimModel->getRecentClaims(5),
-            'recent_activities' => $this->getRecentActivities(5)
+            'recent_activities' => $this->getRecentActivities(5),
+            'alerts' => $this->getDashboardAlerts()
         ];
         
         $this->view('admin.dashboard', $data);
@@ -278,8 +279,8 @@ class AdminController extends BaseController
             'Registration Date',
             'Last Payment Date',
             'Last Payment Amount'
-        ]);
-        
+        ], ',', '"', '\\', '');
+
         // Add member data
         foreach ($members as $member) {
             fputcsv($output, [
@@ -294,7 +295,7 @@ class AdminController extends BaseController
                 $member['registration_date'] ?? $member['created_at'] ?? '',
                 $member['last_payment_date'] ?? '',
                 $member['last_payment_amount'] ?? ''
-            ]);
+            ], ',', '"', '\\', '');
         }
         
         fclose($output);
@@ -640,6 +641,43 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.claims', $data);
+    }
+
+    /**
+     * View Claim Details
+     */
+    public function viewClaim($id)
+    {
+        $this->requireAdminAccess();
+
+        $claimId = (int)$id;
+        if ($claimId <= 0) {
+            $_SESSION['error'] = 'Invalid claim ID.';
+            $this->redirect('/admin/claims');
+            return;
+        }
+
+        $claim = $this->claimModel->getClaimDetails($claimId);
+        if (!$claim) {
+            $_SESSION['error'] = 'Claim not found.';
+            $this->redirect('/admin/claims');
+            return;
+        }
+
+        $documentModel = new ClaimDocument();
+        $documents = $documentModel->getClaimDocuments($claimId);
+        $documentStatus = $documentModel->checkClaimDocumentCompleteness($claimId);
+        $requiredDocuments = $documentModel->getRequiredDocuments();
+
+        $data = [
+            'title' => 'Claim Details - ' . $claimId,
+            'claim' => $claim,
+            'documents' => $documents,
+            'document_status' => $documentStatus,
+            'required_documents' => $requiredDocuments
+        ];
+
+        $this->view('admin.claim-view', $data);
     }
     
     /**
@@ -1778,6 +1816,118 @@ class AdminController extends BaseController
         ];
         
         $this->view('admin.financial-dashboard', $data);
+    }
+
+    /**
+     * Get dashboard alerts for urgent notifications
+     */
+    private function getDashboardAlerts()
+    {
+        $alerts = [];
+
+        try {
+            $db = Database::getInstance();
+
+            // Check for new claims submitted in the last 24 hours
+            $newClaims = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM claims
+                WHERE status = 'submitted'
+                AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+            ");
+
+            if ($newClaims && $newClaims['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => 'fas fa-file-medical',
+                    'title' => 'New Claims Submitted',
+                    'message' => $newClaims['count'] . ' new claim(s) submitted in the last 24 hours requiring review.',
+                    'action_url' => '/admin/claims',
+                    'action_text' => 'Review Claims',
+                    'priority' => 'high'
+                ];
+            }
+
+            // Check for pending claims older than 7 days
+            $oldPendingClaims = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM claims
+                WHERE status = 'submitted'
+                AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)
+            ");
+
+            if ($oldPendingClaims && $oldPendingClaims['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'danger',
+                    'icon' => 'fas fa-exclamation-triangle',
+                    'title' => 'Overdue Claims',
+                    'message' => $oldPendingClaims['count'] . ' claim(s) have been pending for more than 7 days.',
+                    'action_url' => '/admin/claims?status=submitted',
+                    'action_text' => 'Process Now',
+                    'priority' => 'high'
+                ];
+            }
+
+            // Check for members with overdue payments
+            $overduePayments = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM members m
+                LEFT JOIN (
+                    SELECT member_id, MAX(payment_date) as last_payment_date
+                    FROM payments
+                    WHERE status = 'completed'
+                    GROUP BY member_id
+                ) p ON m.id = p.member_id
+                WHERE m.status = 'active'
+                AND (
+                    p.last_payment_date IS NULL
+                    OR p.last_payment_date < DATE_SUB(NOW(), INTERVAL 30 DAY)
+                )
+            ");
+
+            if ($overduePayments && $overduePayments['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => 'fas fa-clock',
+                    'title' => 'Overdue Payments',
+                    'message' => $overduePayments['count'] . ' active members have overdue payments.',
+                    'action_url' => '/admin/members?status=active',
+                    'action_text' => 'View Members',
+                    'priority' => 'medium'
+                ];
+            }
+
+            // Check for low agent commissions
+            $lowCommissionAgents = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM agents a
+                LEFT JOIN (
+                    SELECT agent_id, SUM(amount) as total_commission
+                    FROM agent_commissions
+                    WHERE commission_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                    GROUP BY agent_id
+                ) ac ON a.id = ac.agent_id
+                WHERE a.status = 'active'
+                AND (ac.total_commission IS NULL OR ac.total_commission < 1000)
+            ");
+
+            if ($lowCommissionAgents && $lowCommissionAgents['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => 'fas fa-chart-line',
+                    'title' => 'Low Agent Performance',
+                    'message' => $lowCommissionAgents['count'] . ' active agents have low commission earnings this month.',
+                    'action_url' => '/admin/agents',
+                    'action_text' => 'View Agents',
+                    'priority' => 'low'
+                ];
+            }
+
+        } catch (Exception $e) {
+            error_log('Failed to fetch dashboard alerts: ' . $e->getMessage());
+        }
+
+        return $alerts;
     }
 
     /**

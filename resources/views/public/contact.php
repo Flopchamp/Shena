@@ -247,4 +247,38 @@
     });
 </script>
 
+<!-- Floating Support Module -->
+<div id="floating-support" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;">
+    <div id="support-buttons" style="display: none; flex-direction: column; gap: 10px;">
+        <a href="tel:+254748585067" style="background: #7F3D9E; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.3s;">
+            <i class="fas fa-phone" style="font-size: 18px;"></i>
+        </a>
+        <a href="https://wa.me/254748585071" target="_blank" style="background: #25D366; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.3s;">
+            <i class="fab fa-whatsapp" style="font-size: 18px;"></i>
+        </a>
+    </div>
+    <button id="toggle-support" style="background: #7F3D9E; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.3s;">
+        <i class="fas fa-comments" style="font-size: 20px;"></i>
+    </button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggle-support');
+    const supportButtons = document.getElementById('support-buttons');
+    let isOpen = false;
+
+    toggleBtn.addEventListener('click', function() {
+        isOpen = !isOpen;
+        if (isOpen) {
+            supportButtons.style.display = 'flex';
+            toggleBtn.innerHTML = '<i class="fas fa-times" style="font-size: 20px;"></i>';
+        } else {
+            supportButtons.style.display = 'none';
+            toggleBtn.innerHTML = '<i class="fas fa-comments" style="font-size: 20px;"></i>';
+        }
+    });
+});
+</script>
+
 <?php include VIEWS_PATH . '/layouts/footer.php'; ?>

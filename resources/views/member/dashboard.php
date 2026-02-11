@@ -3,18 +3,16 @@ $page = 'dashboard';
 include __DIR__ . '/../layouts/member-header.php';
 
 $memberData = is_array($member ?? null) ? $member : (is_object($member ?? null) ? get_object_vars($member) : []); 
-$totalPaid = 0;
-$monthsCovered = 0;
-$nextDueDate = 'Oct 15';
-$currentMonthStatus = 'PAID';
-
-if (!empty($recent_payments)) {
-    $totalPaid = array_sum(array_column($recent_payments, 'amount'));
-    $monthsCovered = count(array_filter($recent_payments, function($p) { return $p['status'] === 'completed'; }));
-}
-
-$maturityProgress = 60; // Calculate based on actual maturity period
-$maturityMonths = 3; // out of 5
+$totalPaid = $total_paid ?? 0;
+$monthsCovered = $months_covered ?? 0;
+$nextDueDate = $next_due_date ?? 'N/A';
+$currentMonthStatus = $current_month_status ?? 'DUE';
+$maturityProgress = $maturity_progress ?? 0;
+$maturityMonthsCompleted = $maturity_months_completed ?? 0;
+$maturityMonthsTotal = $maturity_months_total ?? 0;
+$beneficiaryList = $beneficiaries ?? [];
+$memberStatus = strtoupper($memberData['status'] ?? 'ACTIVE');
+$statusLabel = ($memberData['status'] ?? '') === 'active' ? 'ACTIVE MEMBER' : $memberStatus;
 ?>
 
 <style>
@@ -42,6 +40,7 @@ $maturityMonths = 3; // out of 5
     height: 200px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
+    z-index: 0;
 }
 
 .hero-profile {
@@ -108,6 +107,8 @@ $maturityMonths = 3; // out of 5
     gap: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s;
+    text-decoration: none;
+    z-index: 2;
 }
 
 .pay-btn:hover {
@@ -490,7 +491,7 @@ $maturityMonths = 3; // out of 5
                 <h2>
                     <?php echo htmlspecialchars($memberData['first_name'] ?? 'John') . ' ' . htmlspecialchars($memberData['last_name'] ?? 'Doe'); ?>
                     <span class="status-badge">
-                        <i class="fas fa-check-circle"></i> ACTIVE MEMBER
+                        <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($statusLabel); ?>
                     </span>
                 </h2>
                 <p class="hero-subtitle">
@@ -498,9 +499,9 @@ $maturityMonths = 3; // out of 5
                 </p>
             </div>
         </div>
-        <button class="pay-btn" onclick="window.location.href='/payments'">
+        <a class="pay-btn" href="/payments" role="button">
             <i class="fas fa-credit-card"></i> Pay Contribution
-        </button>
+        </a>
     </div>
 
     <!-- Stats Grid -->
@@ -508,7 +509,7 @@ $maturityMonths = 3; // out of 5
         <!-- Contribution Overview -->
         <div class="stat-card">
             <h3>Contribution Overview</h3>
-            <p>Tracking your 2023 contribution history</p>
+            <p>Tracking your <?php echo date('Y'); ?> contribution history</p>
             <div class="contribution-overview" style="margin-top: 20px;">
                 <div class="contribution-item">
                     <h4>TOTAL PAID</h4>
@@ -516,7 +517,7 @@ $maturityMonths = 3; // out of 5
                 </div>
                 <div class="contribution-item">
                     <h4>MONTHS COVERED</h4>
-                    <h2><?php echo $monthsCovered > 0 ? $monthsCovered : 12; ?>/12</h2>
+                    <h2><?php echo $monthsCovered; ?>/12</h2>
                 </div>
                 <div class="contribution-item">
                     <h4>CURRENT MONTH</h4>
@@ -538,7 +539,9 @@ $maturityMonths = 3; // out of 5
             </h3>
             <p>Waiting period completion status for full funeral benefit coverage.</p>
             <div class="progress-info">
-                <span><?php echo $maturityMonths; ?> OF 5 MONTHS</span>
+                <span>
+                    <?php echo $maturityMonthsTotal > 0 ? $maturityMonthsCompleted . ' OF ' . $maturityMonthsTotal . ' MONTHS' : 'NOT STARTED'; ?>
+                </span>
                 <strong><?php echo $maturityProgress; ?>%</strong>
             </div>
             <div class="progress-bar-container">
@@ -548,7 +551,7 @@ $maturityMonths = 3; // out of 5
                 <i class="fas fa-calendar-check"></i>
                 <div>
                     <h5>Full Coverage Effective</h5>
-                    <p><?php echo isset($memberData['maturity_ends']) ? date('M j, Y', strtotime($memberData['maturity_ends'])) : 'Nov 12, 2023'; ?></p>
+                    <p><?php echo isset($memberData['maturity_ends']) ? date('M j, Y', strtotime($memberData['maturity_ends'])) : 'Pending'; ?></p>
                 </div>
             </div>
         </div>
@@ -560,7 +563,7 @@ $maturityMonths = 3; // out of 5
         <div class="payment-history-card">
             <div class="card-header-custom">
                 <h3>Recent Payment History</h3>
-                <button class="export-btn">
+                <button class="export-btn" type="button" <?php echo !empty($recent_payments) ? 'onclick="window.location.href=\'/member/payments/export\'"' : 'disabled'; ?>>
                     <i class="fas fa-download"></i> Export History
                 </button>
             </div>
@@ -580,25 +583,16 @@ $maturityMonths = 3; // out of 5
                         <tr>
                             <td><?php echo date('M d, Y', strtotime($payment['payment_date'])); ?></td>
                             <td class="ref-number">TXN-<?php echo $payment['mpesa_receipt_number'] ?? 'RR2941'; ?></td>
-                            <td class="amount-cell">$<?php echo number_format($payment['amount'], 2); ?></td>
+                            <td class="amount-cell">KES <?php echo number_format($payment['amount'], 2); ?></td>
                             <td><span class="success-badge"><?php echo strtoupper($payment['status'] ?? 'SUCCESS'); ?></span></td>
                             <td><i class="fas fa-receipt receipt-icon"></i></td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td>Sep 02, 2023</td>
-                            <td class="ref-number">TXN-RR2941</td>
-                            <td class="amount-cell">$120.00</td>
-                            <td><span class="success-badge">SUCCESS</span></td>
-                            <td><i class="fas fa-receipt receipt-icon"></i></td>
-                        </tr>
-                        <tr>
-                            <td>Aug 03, 2023</td>
-                            <td class="ref-number">TXN-RR2733</td>
-                            <td class="amount-cell">$120.00</td>
-                            <td><span class="success-badge">SUCCESS</span></td>
-                            <td><i class="fas fa-receipt receipt-icon"></i></td>
+                            <td colspan="5" style="text-align: center; color: #6B7280; padding: 30px;">
+                                No payments recorded yet. Start by making your first contribution.
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -613,21 +607,21 @@ $maturityMonths = 3; // out of 5
                     <i class="fas fa-plus"></i> Add Dependent
                 </button>
             </div>
-            <?php if (!empty($dependents)): ?>
-                <?php foreach ($dependents as $dependent): ?>
+            <?php if (!empty($beneficiaryList)): ?>
+                <?php foreach ($beneficiaryList as $dependent): ?>
                 <div class="dependent-item">
-                    <div class="dependent-avatar"><?php echo strtoupper(substr($dependent['first_name'], 0, 1)); ?></div>
+                    <div class="dependent-avatar"><?php echo strtoupper(substr($dependent['full_name'] ?? 'B', 0, 1)); ?></div>
                     <div class="dependent-info">
-                        <h4><?php echo htmlspecialchars($dependent['first_name'] . ' ' . $dependent['last_name']); ?></h4>
-                        <p><?php echo htmlspecialchars($dependent['relationship']); ?></p>
+                        <h4><?php echo htmlspecialchars($dependent['full_name'] ?? ''); ?></h4>
+                        <p><?php echo htmlspecialchars($dependent['relationship'] ?? ''); ?></p>
                     </div>
-                    <span class="active-badge"><?php echo strtoupper($dependent['status'] ?? 'ACTIVE'); ?></span>
+                    <span class="active-badge"><?php echo !empty($dependent['is_active']) ? 'ACTIVE' : 'INACTIVE'; ?></span>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div style="text-align: center; padding: 20px; color: #6B7280;">
                     <i class="fas fa-users" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
-                    <p style="margin: 0;">No dependents registered yet.</p>
+                    <p style="margin: 0;">No beneficiaries registered yet.</p>
                     <p style="font-size: 0.85rem; margin: 8px 0 0 0;">Click "Add Dependent" to register your family members.</p>
                 </div>
             <?php endif; ?>

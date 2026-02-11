@@ -518,9 +518,10 @@
         <div class="stat-label">Total Members</div>
         <div class="stat-value"><?php echo number_format($stats['total_members'] ?? 0); ?></div>
         <div class="stat-meta">
-            <?php 
-            $memberGrowthData = $stats['member_growth'] ?? ['growth_percentage' => 0];
+            <?php
+            $memberGrowthData = $stats['member_growth'] ?? 0;
             $growth = is_array($memberGrowthData) ? ($memberGrowthData['growth_percentage'] ?? 0) : $memberGrowthData;
+            $growth = is_numeric($growth) ? (float) $growth : 0;
             $trendClass = $growth > 0 ? 'positive' : ($growth < 0 ? 'negative' : 'neutral');
             ?>
             <span class="stat-trend <?php echo $trendClass; ?>">
