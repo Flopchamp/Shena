@@ -9,6 +9,15 @@ ALTER TABLE claims MODIFY COLUMN claim_amount DECIMAL(10,2) DEFAULT 0 COMMENT 'D
 
 ALTER TABLE claims MODIFY COLUMN approved_amount DECIMAL(10,2) DEFAULT 0 COMMENT 'Only used for cash alternative';
 
+-- Ensure member view fields exist (safe to skip if already present)
+ALTER TABLE claims ADD COLUMN place_of_death VARCHAR(200) NULL;
+
+ALTER TABLE claims ADD COLUMN cause_of_death TEXT;
+
+ALTER TABLE claims ADD COLUMN mortuary_name VARCHAR(200);
+
+ALTER TABLE claims ADD COLUMN mortuary_bill_amount DECIMAL(10,2) DEFAULT 0;
+
 ALTER TABLE claims ADD COLUMN service_delivery_type ENUM('standard_services', 'cash_alternative') DEFAULT 'standard_services';
 
 ALTER TABLE claims ADD COLUMN cash_alternative_reason TEXT;

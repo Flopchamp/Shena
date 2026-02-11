@@ -111,14 +111,22 @@ try {
     $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     $newColumns = [
+        'place_of_death',
+        'cause_of_death',
+        'mortuary_name',
+        'mortuary_bill_amount',
         'service_delivery_type',
+        'cash_alternative_reason',
+        'cash_alternative_agreement_signed',
+        'cash_alternative_amount',
         'mortuary_bill_settled',
         'body_dressing_completed',
         'coffin_delivered',
         'transportation_arranged',
         'equipment_delivered',
         'services_delivery_date',
-        'mortuary_days_count'
+        'mortuary_days_count',
+        'mortuary_bill_reference'
     ];
     
     foreach ($newColumns as $column) {
@@ -132,13 +140,15 @@ try {
     echo "\n===========================================\n";
     echo "Phase 1 Migration Complete!\n";
     echo "===========================================\n\n";
+    echo "✓ All member claim form fields are ready\n";
+    echo "✓ Service-based claims system is active\n";
+    echo "✓ Cash alternative (KSH 20,000) support enabled\n\n";
     echo "Next Steps:\n";
-    echo "1. Update claim submission forms to remove 'claim_amount' field\n";
-    echo "2. Add 'mortuary_days_count' field (max 14)\n";
-    echo "3. Test claim submission process\n";
-    echo "4. Test admin approval for services\n";
-    echo "5. Test service delivery tracking\n";
-    echo "6. Test cash alternative approval (KSH 20,000)\n\n";
+    echo "1. Test member claim submission with all required documents\n";
+    echo "2. Test admin claim approval for standard services\n";
+    echo "3. Test service delivery tracking and checklist\n";
+    echo "4. Test cash alternative approval workflow\n";
+    echo "5. Verify mortuary days validation (max 14 days)\n\n";
     
 } catch (PDOException $e) {
     echo "\n✗ Migration failed!\n";

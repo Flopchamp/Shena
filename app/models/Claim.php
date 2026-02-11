@@ -5,6 +5,46 @@
 class Claim extends BaseModel 
 {
     protected $table = 'claims';
+    protected $columnCache = null;
+
+    private function getTableColumns()
+    {
+        if ($this->columnCache !== null) {
+            return $this->columnCache;
+        }
+
+        $columns = $this->db->fetchAll("DESCRIBE {$this->table}");
+        $this->columnCache = array_map(static function ($column) {
+            return $column['Field'];
+        }, $columns);
+
+        return $this->columnCache;
+    }
+
+    private function mapLegacyColumns(array $data)
+    {
+        $columns = $this->getTableColumns();
+
+        if (!in_array('service_delivery_type', $columns, true) && in_array('settlement_type', $columns, true)) {
+            $data['settlement_type'] = ($data['service_delivery_type'] ?? 'standard_services') === 'cash_alternative'
+                ? 'cash'
+                : 'services';
+        }
+
+        if (!in_array('cash_alternative_amount', $columns, true) && in_array('cash_settlement_amount', $columns, true)) {
+            if (isset($data['cash_alternative_amount'])) {
+                $data['cash_settlement_amount'] = $data['cash_alternative_amount'];
+            }
+        }
+
+        return $data;
+    }
+
+    private function filterDataToColumns(array $data)
+    {
+        $columns = $this->getTableColumns();
+        return array_intersect_key($data, array_flip($columns));
+    }
     
     public function getMemberClaims($memberId)
     {
@@ -90,12 +130,22 @@ class Claim extends BaseModel
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['status'] = 'submitted';
 
+        $data = $this->mapLegacyColumns($data);
+        $data = $this->filterDataToColumns($data);
+
         $claimId = $this->create($data);
         
-        // Initialize service checklist for standard services
-        if ($data['service_delivery_type'] === 'standard_services') {
-            $checklistModel = new ClaimServiceChecklist();
-            $checklistModel->initializeChecklist($claimId);
+        // Initialize service checklist for standard services (if table exists)
+        if (($data['service_delivery_type'] ?? 'standard_services') === 'standard_services') {
+            try {
+                if (class_exists('ClaimServiceChecklist')) {
+                    $checklistModel = new ClaimServiceChecklist();
+                    $checklistModel->initializeChecklist($claimId);
+                }
+            } catch (Exception $e) {
+                // Log but don't fail the claim submission if checklist fails
+                error_log('Failed to initialize service checklist: ' . $e->getMessage());
+            }
         }
         
         return $claimId;

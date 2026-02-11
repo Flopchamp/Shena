@@ -19,84 +19,7 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-file-medical me-2"></i>Claims Management</h1>
-    <div class="header-actions">
-        <button class="btn btn-danger btn-sm" id="unprocessedAlert" style="display: none;">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <span id="unprocessedCount">0</span> Unprocessed Claims
-        </button>
-    </div>
-</div>
-
-<!-- Claims Analytics Stats Row -->
-<div class="stats-row">
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon blue">
-                <i class="fas fa-file-medical"></i>
-            </div>
-        </div>
-        <div class="stat-label">Total Claims</div>
-        <div class="stat-value"><?php echo number_format($stats['total_claims'] ?? 0); ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon orange">
-                <i class="fas fa-clock"></i>
-            </div>
-        </div>
-        <div class="stat-label">Pending Claims</div>
-        <div class="stat-value"><?php echo number_format($stats['pending_claims'] ?? 0); ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon green">
-                <i class="fas fa-check-circle"></i>
-            </div>
-        </div>
-        <div class="stat-label">Completed Claims</div>
-        <div class="stat-value"><?php echo number_format($stats['completed_claims'] ?? 0); ?></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon red">
-                <i class="fas fa-money-bill-wave"></i>
-            </div>
-        </div>
-        <div class="stat-label">Total Disbursed</div>
-        <div class="stat-value">KES <?php echo number_format($stats['total_disbursed'] ?? 0); ?></div>
-    </div>
-</div>
-
-<!-- Claims Tabs -->
-<ul class="nav nav-tabs mb-4" id="claimsTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pendingClaims" type="button" role="tab">
-            <i class="fas fa-clock"></i> Pending Claims
-            <?php if (($stats['pending_claims'] ?? 0) > 0): ?>
-                <span class="badge bg-warning ms-1"><?php echo $stats['pending_claims']; ?></span>
-            <?php endif; ?>
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approvedClaims" type="button" role="tab">
-            <i class="fas fa-check"></i> Approved Claims
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completedClaims" type="button" role="tab">
-            <i class="fas fa-check-circle"></i> Completed Claims
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#allClaims" type="button" role="tab">
-            <i class="fas fa-list"></i> All Claims
-        </button>
-    </li>
-</ul>
-
+ 
 <!-- Tab Content -->
 <div class="tab-content" id="claimsTabContent">
 
@@ -724,6 +647,40 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
     <h1 class="page-title">Claims & Logistics Hub</h1>
     <p class="page-subtitle">Verification and funeral coordination management</p>
 </div>
+
+<!-- Cash Alternative Requests Alert -->
+<?php if (!empty($cash_alternative_requests)): ?>
+<div class="alert alert-warning" style="margin-bottom: 24px; border-left: 4px solid #F59E0B;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #F59E0B;"></i>
+        <div style="flex: 1;">
+            <h5 style="margin: 0 0 8px 0; font-weight: 600;">Cash Alternative Requests Pending</h5>
+            <p style="margin: 0; font-size: 14px;"><?= count($cash_alternative_requests) ?> member(s) have requested cash alternative (KSH 20,000) instead of service delivery.</p>
+        </div>
+    </div>
+    <div style="margin-top: 12px;">
+        <?php foreach ($cash_alternative_requests as $caRequest): ?>
+        <div style="background: white; padding: 12px; border-radius: 8px; margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Claim #<?= 'CLM-' . date('Y') . '-' . str_pad($caRequest['id'], 4, '0', STR_PAD_LEFT) ?></strong>
+                    <span style="color: #6B7280; margin: 0 8px;">•</span>
+                    <span><?= htmlspecialchars($caRequest['first_name'] . ' ' . $caRequest['last_name']) ?></span>
+                    <span style="color: #6B7280; margin: 0 8px;">•</span>
+                    <span>Member #<?= htmlspecialchars($caRequest['member_number']) ?></span>
+                </div>
+                <a href="/admin/claims/view/<?= $caRequest['id'] ?>" class="btn btn-sm btn-primary">Review Request</a>
+            </div>
+            <?php if (!empty($caRequest['cash_alternative_reason'])): ?>
+            <div style="margin-top: 8px; padding:8px; background: #F9FAFB; border-radius: 4px; font-size: 13px; color: #374151;">
+                <strong>Reason:</strong> <?= htmlspecialchars($caRequest['cash_alternative_reason']) ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Statistics Cards -->
 <div class="stats-row">

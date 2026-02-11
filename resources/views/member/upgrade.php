@@ -6,6 +6,12 @@ $memberData = $member ?? [];
 $calculation = $calculation ?? [];
 $pendingUpgrades = $pendingUpgrades ?? [];
 $upgradeHistory = $upgradeHistory ?? [];
+$defaultTargetPackage = $defaultTargetPackage ?? 'couple';
+$packageOrder = ['individual', 'couple', 'family', 'executive'];
+$currentPackage = strtolower($memberData['package'] ?? 'individual');
+if (!in_array($currentPackage, $packageOrder, true)) {
+    $currentPackage = 'individual';
+}
 ?>
 
 <style>
@@ -49,6 +55,10 @@ main {
 
 @media (max-width: 968px) {
     .packages-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .upgrade-top-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -194,6 +204,242 @@ main {
 .upgrade-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.upgrade-top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.selected-plan-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4B5563;
+    margin: -8px 0 16px 0;
+}
+
+.selected-plan-line strong {
+    color: #111827;
+    font-weight: 700;
+}
+
+.upgrade-guide-card {
+    background: linear-gradient(145deg, #FFF7ED 0%, #FEF3C7 100%);
+    border: 1px solid #FDE68A;
+}
+
+.guide-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.guide-item:last-child {
+    margin-bottom: 0;
+}
+
+.guide-step {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #7F20B0;
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.guide-item p {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.plans-grid-new {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.plan-card-new {
+    background: white;
+    border-radius: 18px;
+    padding: 26px;
+    border: 1px solid #E5E7EB;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.plan-card-new:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+    border-color: #C4B5FD;
+}
+
+.plan-card-new.selected {
+    border-color: #7F20B0;
+    box-shadow: 0 16px 36px rgba(127, 32, 176, 0.18);
+}
+
+.highlight-plan {
+    border: 2px solid #F59E0B;
+    background: linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 100%);
+}
+
+.premium-plan {
+    border: 2px solid #7F20B0;
+    background: linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 100%);
+}
+
+.plan-icon-new {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 16px;
+    color: white;
+}
+
+.bronze-icon {
+    background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%);
+}
+
+.silver-icon {
+    background: linear-gradient(135deg, #64748B 0%, #94A3B8 100%);
+}
+
+.gold-icon {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+.premium-icon {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+}
+
+.plan-name-new {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: #111827;
+}
+
+.plan-price-new {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.price-currency {
+    font-size: 14px;
+    color: #6B7280;
+    font-weight: 600;
+}
+
+.price-amount {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1F2937;
+}
+
+.price-period {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: 600;
+}
+
+.plan-subtitle {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+
+.plan-features-new {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.feature-item-new {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.feature-item-new i {
+    color: #10B981;
+}
+
+.plan-select-btn-new {
+    width: 100%;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    background: #111827;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-select-btn-new:hover {
+    background: #7F20B0;
+    transform: translateY(-2px);
+}
+
+.plan-select-btn-new.disabled-plan {
+    background: #E5E7EB;
+    color: #6B7280;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.current-badge-new,
+.popular-badge-new,
+.premium-badge-new {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.current-badge-new {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+.popular-badge-new {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.premium-badge-new {
+    background: #7F20B0;
+    color: white;
 }
 
 .calculation-card {
@@ -467,70 +713,165 @@ main {
 
 <div class="upgrade-container">
     <div class="page-header">
-        <h1>Upgrade Your Plan</h1>
-        <p>Unlock premium benefits and enhanced coverage for your family</p>
+        <h1>Choose Your Plan</h1>
+        <p>Select the coverage level that best protects your family and see your exact upgrade cost instantly</p>
     </div>
+    <?php $currentIndex = array_search($currentPackage, $packageOrder, true); ?>
+    <div class="plans-comparison-section">
+        <div class="plans-grid-new">
+            <?php
+                $planKey = 'individual';
+                $planIndex = array_search($planKey, $packageOrder, true);
+                $isCurrent = $currentPackage === $planKey;
+                $canSelect = empty($pendingUpgrades) && $planIndex > $currentIndex;
+            ?>
+            <div class="plan-card-new" data-plan="individual" data-monthly="500">
+                <?php if ($isCurrent): ?>
+                    <div class="current-badge-new">YOUR PLAN</div>
+                <?php endif; ?>
+                <div class="plan-icon-new bronze-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 class="plan-name-new">Individual</h3>
+                <div class="plan-price-new">
+                    <span class="price-currency">KES</span>
+                    <span class="price-amount">500</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="plan-subtitle">Essential Coverage</p>
+                <div class="plan-features-new">
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Principal member cover</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Standard claim processing</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Business hours support</span></div>
+                </div>
+                <?php if ($isCurrent): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Current Plan</button>
+                <?php elseif (!$canSelect): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Not Available</button>
+                <?php else: ?>
+                    <button class="plan-select-btn-new" onclick="selectPlan('individual', true)">
+                        <i class="fas fa-arrow-up"></i> Select Individual
+                    </button>
+                <?php endif; ?>
+            </div>
 
-    <div class="packages-grid">
-        <!-- Current Package -->
-        <div class="package-card current">
-            <span class="package-badge current-badge">CURRENT</span>
-            <div class="package-icon basic">
-                <i class="fas fa-user"></i>
+            <?php
+                $planKey = 'couple';
+                $planIndex = array_search($planKey, $packageOrder, true);
+                $isCurrent = $currentPackage === $planKey;
+                $canSelect = empty($pendingUpgrades) && $planIndex > $currentIndex;
+            ?>
+            <div class="plan-card-new" data-plan="couple" data-monthly="750">
+                <?php if ($isCurrent): ?>
+                    <div class="current-badge-new">YOUR PLAN</div>
+                <?php else: ?>
+                    <div class="popular-badge-new">POPULAR</div>
+                <?php endif; ?>
+                <div class="plan-icon-new silver-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <h3 class="plan-name-new">Couple</h3>
+                <div class="plan-price-new">
+                    <span class="price-currency">KES</span>
+                    <span class="price-amount">750</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="plan-subtitle">Couple Coverage</p>
+                <div class="plan-features-new">
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Principal + spouse coverage</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Priority claim handling</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Extended support hours</span></div>
+                </div>
+                <?php if ($isCurrent): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Current Plan</button>
+                <?php elseif (!$canSelect): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Not Available</button>
+                <?php else: ?>
+                    <button class="plan-select-btn-new" onclick="selectPlan('couple', true)">
+                        <i class="fas fa-arrow-up"></i> Upgrade to Couple
+                    </button>
+                <?php endif; ?>
             </div>
-            <div class="package-name"><?php echo strtoupper($memberData['package'] ?? 'Basic'); ?></div>
-            <div class="package-price">
-                KES <?php echo number_format($calculation['current_monthly_fee'] ?? 500, 2); ?>
-                <span>/month</span>
-            </div>
-            <p class="package-description">Your current membership plan with essential coverage</p>
-            
-            <ul class="benefits-list">
-                <li><i class="fas fa-check-circle"></i>Funeral Service Coverage</li>
-                <li><i class="fas fa-check-circle"></i>Basic Burial Expenses</li>
-                <li><i class="fas fa-check-circle"></i>Up to 3 Dependents</li>
-                <li><i class="fas fa-check-circle"></i>Standard Support</li>
-            </ul>
-        </div>
 
-        <!-- Premium Package -->
-        <div class="package-card premium">
-            <span class="package-badge recommended">RECOMMENDED</span>
-            <div class="package-icon premium">
-                <i class="fas fa-crown"></i>
+            <?php
+                $planKey = 'family';
+                $planIndex = array_search($planKey, $packageOrder, true);
+                $isCurrent = $currentPackage === $planKey;
+                $canSelect = empty($pendingUpgrades) && $planIndex > $currentIndex;
+            ?>
+            <div class="plan-card-new highlight-plan" data-plan="family" data-monthly="1000">
+                <?php if ($isCurrent): ?>
+                    <div class="current-badge-new">YOUR PLAN</div>
+                <?php else: ?>
+                    <div class="popular-badge-new">BEST VALUE</div>
+                <?php endif; ?>
+                <div class="plan-icon-new gold-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h3 class="plan-name-new">Family</h3>
+                <div class="plan-price-new">
+                    <span class="price-currency">KES</span>
+                    <span class="price-amount">1,000</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="plan-subtitle">Family Protection</p>
+                <div class="plan-features-new">
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Couple + children coverage</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Cash alternative option</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Priority processing</span></div>
+                </div>
+                <?php if ($isCurrent): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Current Plan</button>
+                <?php elseif (!$canSelect): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Not Available</button>
+                <?php else: ?>
+                    <button class="plan-select-btn-new" onclick="selectPlan('family', true)">
+                        <i class="fas fa-arrow-up"></i> Upgrade to Family
+                    </button>
+                <?php endif; ?>
             </div>
-            <div class="package-name">Premium</div>
-            <div class="package-price">
-                KES <?php echo number_format($calculation['new_monthly_fee'] ?? 1000, 2); ?>
-                <span>/month</span>
+
+            <?php
+                $planKey = 'executive';
+                $planIndex = array_search($planKey, $packageOrder, true);
+                $isCurrent = $currentPackage === $planKey;
+                $canSelect = empty($pendingUpgrades) && $planIndex > $currentIndex;
+            ?>
+            <div class="plan-card-new premium-plan" data-plan="executive" data-monthly="1500">
+                <?php if ($isCurrent): ?>
+                    <div class="current-badge-new">YOUR PLAN</div>
+                <?php else: ?>
+                    <div class="premium-badge-new"><i class="fas fa-crown"></i> PREMIUM</div>
+                <?php endif; ?>
+                <div class="plan-icon-new premium-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="plan-name-new">Executive</h3>
+                <div class="plan-price-new">
+                    <span class="price-currency">KES</span>
+                    <span class="price-amount">1,500</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="plan-subtitle">Premium Protection</p>
+                <div class="plan-features-new">
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Extended family coverage</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Express claims & support</span></div>
+                    <div class="feature-item-new"><i class="fas fa-check-circle"></i><span>Dedicated assistance</span></div>
+                </div>
+                <?php if ($isCurrent): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Current Plan</button>
+                <?php elseif (!$canSelect): ?>
+                    <button class="plan-select-btn-new disabled-plan" disabled>Not Available</button>
+                <?php else: ?>
+                    <button class="plan-select-btn-new" onclick="selectPlan('executive', true)">
+                        <i class="fas fa-arrow-up"></i> Upgrade to Executive
+                    </button>
+                <?php endif; ?>
             </div>
-            <p class="package-description">Enhanced protection with comprehensive benefits</p>
-            
-            <ul class="benefits-list">
-                <li><i class="fas fa-check-circle"></i>All Basic Benefits</li>
-                <li><i class="fas fa-check-circle"></i>Extended Burial Coverage</li>
-                <li><i class="fas fa-check-circle"></i>Up to 5 Dependents</li>
-                <li><i class="fas fa-check-circle"></i>Priority Processing</li>
-                <li><i class="fas fa-check-circle"></i>24/7 Support Hotline</li>
-                <li><i class="fas fa-check-circle"></i>Enhanced Claim Benefits</li>
-            </ul>
-            
-            <?php if (empty($pendingUpgrades)): ?>
-                <button class="upgrade-btn" onclick="document.getElementById('upgradeForm').scrollIntoView({behavior: 'smooth'})">
-                    <i class="fas fa-arrow-up"></i>
-                    Upgrade Now
-                </button>
-            <?php else: ?>
-                <button class="upgrade-btn" disabled>
-                    <i class="fas fa-clock"></i>
-                    Upgrade Pending
-                </button>
-            <?php endif; ?>
         </div>
     </div>
 
     <?php if (!empty($pendingUpgrades)): ?>
-        <!-- Pending Upgrade Alert -->
         <div class="pending-alert">
             <h5><i class="fas fa-clock"></i>Pending Upgrade Request</h5>
             <?php foreach ($pendingUpgrades as $pending): ?>
@@ -545,63 +886,93 @@ main {
             <?php endforeach; ?>
         </div>
     <?php else: ?>
-        <!-- Upgrade Cost Breakdown -->
-        <div class="calculation-card" id="upgradeForm">
-            <h3><i class="fas fa-calculator"></i>Upgrade Cost Breakdown</h3>
-            
-            <div class="cost-breakdown">
-                <div class="cost-row">
-                    <span class="cost-label">Current Monthly Fee</span>
-                    <span class="cost-value">KES <?php echo number_format($calculation['current_monthly_fee'] ?? 500, 2); ?></span>
+        <div class="upgrade-top-grid">
+            <div class="calculation-card calculation-card-primary" id="upgradeForm">
+                <h3><i class="fas fa-calculator"></i>Upgrade Cost Breakdown</h3>
+                <div class="selected-plan-line">
+                    <span>Selected plan:</span>
+                    <strong id="selectedPlanName"><?php echo ucfirst($defaultTargetPackage); ?></strong>
                 </div>
-                <div class="cost-row">
-                    <span class="cost-label">Premium Monthly Fee</span>
-                    <span class="cost-value">KES <?php echo number_format($calculation['new_monthly_fee'] ?? 1000, 2); ?></span>
+
+                <div class="cost-breakdown">
+                    <div class="cost-row">
+                        <span class="cost-label">Current Plan (<?php echo ucfirst($currentPackage); ?>)</span>
+                        <span class="cost-value" id="currentMonthlyFee">KES <?php echo number_format($calculation['current_monthly_fee'] ?? 500, 2); ?></span>
+                    </div>
+                    <div class="cost-row">
+                        <span class="cost-label">Selected Plan Monthly Fee</span>
+                        <span class="cost-value" id="selectedMonthlyFee">KES <?php echo number_format($calculation['new_monthly_fee'] ?? 750, 2); ?></span>
+                    </div>
+                    <div class="cost-row">
+                        <span class="cost-label">Monthly Difference</span>
+                        <span class="cost-value" id="monthlyDifference">+KES <?php echo number_format(($calculation['new_monthly_fee'] ?? 750) - ($calculation['current_monthly_fee'] ?? 500), 2); ?></span>
+                    </div>
+                    <div class="cost-row">
+                        <span class="cost-label">Days Remaining in <?php echo date('F'); ?></span>
+                        <span class="cost-value"><?php echo $calculation['days_remaining'] ?? 15; ?> / <?php echo $calculation['total_days_in_month'] ?? 30; ?> days</span>
+                    </div>
+                    <div class="cost-row total">
+                        <span class="cost-label">Pay Today (Prorated)</span>
+                        <span class="cost-value" id="proratedAmount">KES <?php echo number_format($calculation['prorated_amount'] ?? 0, 2); ?></span>
+                    </div>
                 </div>
-                <div class="cost-row">
-                    <span class="cost-label">Monthly Difference</span>
-                    <span class="cost-value">+KES <?php echo number_format(($calculation['new_monthly_fee'] ?? 1000) - ($calculation['current_monthly_fee'] ?? 500), 2); ?></span>
+
+                <div class="info-alert" id="planNotice">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="info-alert-content">
+                        <h6>How It Works</h6>
+                        <p>You only pay for the remaining days of <?php echo date('F'); ?>. Starting <?php echo date('F 1, Y', strtotime('first day of next month')); ?>, your monthly contribution will be <span id="nextMonthFee">KES <?php echo number_format($calculation['new_monthly_fee'] ?? 750, 2); ?></span>.</p>
+                    </div>
                 </div>
-                <div class="cost-row">
-                    <span class="cost-label">Days Remaining in <?php echo date('F'); ?></span>
-                    <span class="cost-value"><?php echo $calculation['days_remaining'] ?? 15; ?> / <?php echo $calculation['total_days_in_month'] ?? 30; ?> days</span>
+
+                <form class="upgrade-form" id="upgradeFormSubmit">
+                    <input type="hidden" name="to_package" id="to_package" value="<?php echo htmlspecialchars($defaultTargetPackage); ?>">
+                    <div class="form-group">
+                        <label class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                               value="<?php echo htmlspecialchars($memberData['phone'] ?? ''); ?>" 
+                               placeholder="0712345678 or 254712345678" required>
+                        <small class="form-text">You will receive an M-Pesa prompt to complete the payment</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="agree_terms" required>
+                        <label class="form-check-label" for="agree_terms">
+                            I understand that by upgrading, my monthly contribution will increase to 
+                            <span id="agreementNewFee">KES <?php echo number_format($calculation['new_monthly_fee'] ?? 750, 2); ?></span> starting next month.
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="upgrade-btn" id="upgradeBtn">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="upgradeBtnLabel">Upgrade to <?php echo ucfirst($defaultTargetPackage); ?> (KES <?php echo number_format($calculation['prorated_amount'] ?? 0, 2); ?>)</span>
+                    </button>
+                </form>
+            </div>
+            <div class="calculation-card upgrade-guide-card">
+                <h3><i class="fas fa-compass"></i>Upgrade Guide</h3>
+                <div class="guide-item">
+                    <span class="guide-step">1</span>
+                    <div>
+                        <strong>Pick your next plan</strong>
+                        <p>Compare the packages below and select the coverage level that fits your family.</p>
+                    </div>
                 </div>
-                <div class="cost-row total">
-                    <span class="cost-label">Pay Today (Prorated)</span>
-                    <span class="cost-value">KES <?php echo number_format($calculation['prorated_amount'] ?? 250, 2); ?></span>
+                <div class="guide-item">
+                    <span class="guide-step">2</span>
+                    <div>
+                        <strong>Pay only the difference</strong>
+                        <p>You only pay the prorated difference for the remaining days in <?php echo date('F'); ?>.</p>
+                    </div>
+                </div>
+                <div class="guide-item">
+                    <span class="guide-step">3</span>
+                    <div>
+                        <strong>Enjoy instant upgrade</strong>
+                        <p>Your benefits activate immediately once payment is confirmed.</p>
+                    </div>
                 </div>
             </div>
-            
-            <div class="info-alert">
-                <i class="fas fa-info-circle"></i>
-                <div class="info-alert-content">
-                    <h6>How It Works</h6>
-                    <p>You only pay for the remaining days of <?php echo date('F'); ?>. Starting <?php echo date('F 1, Y', strtotime('first day of next month')); ?>, your regular monthly contribution will be KES <?php echo number_format($calculation['new_monthly_fee'] ?? 1000, 2); ?>.</p>
-                </div>
-            </div>
-            
-            <form class="upgrade-form" id="upgradeFormSubmit">
-                <div class="form-group">
-                    <label class="form-label">M-Pesa Phone Number</label>
-                    <input type="tel" class="form-control" id="phone_number" name="phone_number" 
-                           value="<?php echo htmlspecialchars($memberData['phone'] ?? ''); ?>" 
-                           placeholder="0712345678 or 254712345678" required>
-                    <small class="form-text">You will receive an M-Pesa prompt to complete the payment</small>
-                </div>
-                
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="agree_terms" required>
-                    <label class="form-check-label" for="agree_terms">
-                        I understand that by upgrading, my monthly contribution will increase to 
-                        KES <?php echo number_format($calculation['new_monthly_fee'] ?? 1000, 2); ?> starting next month.
-                    </label>
-                </div>
-                
-                <button type="submit" class="upgrade-btn" id="upgradeBtn">
-                    <i class="fas fa-arrow-up"></i>
-                    Upgrade to Premium (KES <?php echo number_format($calculation['prorated_amount'] ?? 250, 2); ?>)
-                </button>
-            </form>
         </div>
     <?php endif; ?>
 
@@ -646,37 +1017,121 @@ main {
 </div>
 
 <script>
+const upgradeConfig = {
+    currentPackage: '<?php echo $currentPackage; ?>',
+    packageOrder: <?php echo json_encode($packageOrder); ?>,
+    fees: {
+        individual: 500,
+        couple: 750,
+        family: 1000,
+        executive: 1500
+    },
+    labels: {
+        individual: 'Individual',
+        couple: 'Couple',
+        family: 'Family',
+        executive: 'Executive'
+    },
+    daysRemaining: <?php echo (int)($calculation['days_remaining'] ?? 15); ?>,
+    totalDays: <?php echo (int)($calculation['total_days_in_month'] ?? 30); ?>
+};
+
+function formatCurrency(amount) {
+    return 'KES ' + Number(amount).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function selectPlan(planKey, shouldScroll = false) {
+    const form = document.getElementById('upgradeFormSubmit');
+    if (!form) return;
+
+    const currentIndex = upgradeConfig.packageOrder.indexOf(upgradeConfig.currentPackage);
+    const targetIndex = upgradeConfig.packageOrder.indexOf(planKey);
+    const selectedPlanName = upgradeConfig.labels[planKey] || planKey;
+
+    document.querySelectorAll('.plan-card-new').forEach(card => {
+        card.classList.toggle('selected', card.dataset.plan === planKey);
+    });
+
+    const notice = document.getElementById('planNotice');
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    const upgradeBtnLabel = document.getElementById('upgradeBtnLabel');
+
+    if (targetIndex <= currentIndex) {
+        if (notice) {
+            notice.querySelector('h6').textContent = 'Selection not available';
+            notice.querySelector('p').textContent = 'You can only upgrade to a higher package.';
+        }
+        if (upgradeBtn) {
+            upgradeBtn.disabled = true;
+        }
+        return;
+    }
+
+    const currentFee = upgradeConfig.fees[upgradeConfig.currentPackage] || 0;
+    const newFee = upgradeConfig.fees[planKey] || 0;
+    const difference = newFee - currentFee;
+    const prorated = difference * (upgradeConfig.daysRemaining / upgradeConfig.totalDays);
+
+    document.getElementById('selectedPlanName').textContent = selectedPlanName;
+    document.getElementById('selectedMonthlyFee').textContent = formatCurrency(newFee);
+    document.getElementById('monthlyDifference').textContent = '+'.concat(formatCurrency(difference));
+    document.getElementById('proratedAmount').textContent = formatCurrency(prorated);
+    document.getElementById('agreementNewFee').textContent = formatCurrency(newFee);
+    document.getElementById('nextMonthFee').textContent = formatCurrency(newFee);
+    document.getElementById('to_package').value = planKey;
+
+    if (notice) {
+        notice.querySelector('h6').textContent = 'How It Works';
+        notice.querySelector('p').textContent = 'You only pay for the remaining days of <?php echo date('F'); ?>. Starting <?php echo date('F 1, Y', strtotime('first day of next month')); ?>, your monthly contribution will be ' + formatCurrency(newFee) + '.';
+    }
+
+    if (upgradeBtn && upgradeBtnLabel) {
+        upgradeBtn.disabled = false;
+        upgradeBtnLabel.textContent = 'Upgrade to ' + selectedPlanName + ' (' + formatCurrency(prorated) + ')';
+    }
+
+    if (shouldScroll) {
+        document.getElementById('upgradeForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    selectPlan('<?php echo $defaultTargetPackage; ?>');
+});
+
 document.getElementById('upgradeFormSubmit')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     if (!document.getElementById('agree_terms').checked) {
         alert('Please agree to the terms before proceeding');
         return;
     }
-    
+
     const phone = document.getElementById('phone_number').value;
+    const toPackage = document.getElementById('to_package').value;
     const upgradeBtn = document.getElementById('upgradeBtn');
-    
+    const upgradeBtnLabel = document.getElementById('upgradeBtnLabel');
+
     upgradeBtn.disabled = true;
     upgradeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    
+
     try {
         const response = await fetch('/member/upgrade/request', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ phone_number: phone })
+            body: JSON.stringify({ phone_number: phone, to_package: toPackage })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             document.getElementById('processingModal').classList.add('show');
             document.getElementById('processingStatus').textContent = 'Request ID: ' + data.upgrade_request_id;
-            
+
             const checkInterval = setInterval(() => {
                 checkUpgradeStatus(data.upgrade_request_id, checkInterval);
             }, 5000);
-            
+
             setTimeout(() => {
                 clearInterval(checkInterval);
                 document.getElementById('processingModal').classList.remove('show');
@@ -684,14 +1139,14 @@ document.getElementById('upgradeFormSubmit')?.addEventListener('submit', async f
                 location.reload();
             }, 120000);
         } else {
-            alert(data.message || 'Failed to initiate upgrade');
+            alert(data.message || data.error || 'Failed to initiate upgrade');
             upgradeBtn.disabled = false;
-            upgradeBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Upgrade to Premium';
+            upgradeBtn.innerHTML = '<i class="fas fa-arrow-up"></i> <span id="upgradeBtnLabel">Upgrade to ' + (upgradeConfig.labels[toPackage] || toPackage) + '</span>';
         }
     } catch (error) {
         alert('Failed to process upgrade request');
         upgradeBtn.disabled = false;
-        upgradeBtn.innerHTML = '<i class="fas fa-arrow-up"></i> Upgrade to Premium';
+        upgradeBtn.innerHTML = '<i class="fas fa-arrow-up"></i> <span id="upgradeBtnLabel">Upgrade to ' + (upgradeConfig.labels[toPackage] || toPackage) + '</span>';
     }
 });
 

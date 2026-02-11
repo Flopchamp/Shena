@@ -59,6 +59,7 @@ class Router
         $this->addRoute('POST', '/beneficiaries/delete', 'MemberController@deleteBeneficiary');
         $this->addRoute('POST', '/beneficiaries/update', 'MemberController@updateBeneficiary');
         $this->addRoute('GET', '/claims', 'MemberController@claims');
+        $this->addRoute('GET', '/claims/view/{id}', 'MemberController@viewClaim');
         $this->addRoute('POST', '/claims', 'MemberController@submitClaim');
         
         // Member Plan Upgrade Routes

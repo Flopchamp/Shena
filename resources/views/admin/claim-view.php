@@ -366,6 +366,29 @@ $claimId = (int)($claim['id'] ?? 0);
     </div>
 </div>
 
+<!-- Cash Alternative Request Alert -->
+<?php if (!empty($claim['cash_alternative_reason']) && $status === 'submitted'): ?>
+<div class="alert alert-warning" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: #FEF3C7; border-left: 4px solid #F59E0B;">
+    <div style="display: flex; align-items: start; gap: 12px;">
+        <i class="fas fa-exclamation-circle" style="color: #F59E0B; font-size: 20px; margin-top: 2px;"></i>
+        <div style="flex: 1;">
+            <h4 style="margin: 0 0 8px 0; color: #92400E; font-size: 16px; font-weight: 600;">
+                <i class="fas fa-coins"></i> Cash Alternative Requested (KSH 20,000)
+            </h4>
+            <p style="margin: 0 0 12px 0; color: #78350F; font-size: 14px;">
+                The member has requested a cash alternative payment instead of standard service delivery. Per Policy Section 12, this requires mutual agreement and exceptional circumstances.
+            </p>
+            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #FDE68A;">
+                <strong style="color: #78350F; font-size: 13px;">Member's Reason:</strong>
+                <p style="margin: 8px 0 0 0; color: #1F2937; font-size: 14px; line-height: 1.6;">
+                    <?= nl2br(htmlspecialchars($claim['cash_alternative_reason'])) ?>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="stats-row">
     <div class="stat-card">
         <div class="stat-header">

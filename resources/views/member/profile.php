@@ -403,7 +403,8 @@ $memberData = $member ?? [];
             </div>
             <?php endif; ?>
 
-            <button type="button" class="btn-upgrade" onclick="location.href='/packages'">
+            <button type="button" class="btn-upgrade" onclick="location.href='/member/upgrade'">
+                 <i class="fas fa-arrow-up"></i>
                 <i class="fas fa-arrow-up"></i>
                 UPGRADE PACKAGE
             </button>

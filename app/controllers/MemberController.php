@@ -832,17 +832,88 @@ class MemberController extends BaseController
         $this->view('member.claims', $data);
     }
     
+    public function viewClaim($id)
+    {
+        $member = $this->memberModel->findByUserId($_SESSION['user_id']);
+        if (!$member) {
+            $_SESSION['error'] = 'Member profile not found.';
+            $this->redirect('/dashboard');
+            return;
+        }
+        
+        // Get claim details
+        $claim = $this->claimModel->find($id);
+        
+        if (!$claim) {
+            $_SESSION['error'] = 'Claim not found.';
+            $this->redirect('/claims');
+            return;
+        }
+        
+        // Verify this claim belongs to the logged-in member
+        if ($claim['member_id'] != $member['id']) {
+            $_SESSION['error'] = 'Unauthorized access to claim.';
+            $this->redirect('/claims');
+            return;
+        }
+        
+        // Get claim documents
+        $documentModel = new ClaimDocument();
+        $documents = $documentModel->getClaimDocuments($id);
+        
+        // Get beneficiary details
+        $beneficiary = null;
+        if (!empty($claim['beneficiary_id'])) {
+            $beneficiary = $this->beneficiaryModel->find($claim['beneficiary_id']);
+        }
+        
+        // Get service checklist if exists
+        $serviceChecklist = null;
+        if (class_exists('ClaimServiceChecklist')) {
+            try {
+                $checklistModel = new ClaimServiceChecklist();
+                if (method_exists($checklistModel, 'getByClaimId')) {
+                    $serviceChecklist = $checklistModel->getByClaimId($id);
+                } else {
+                    error_log('ClaimServiceChecklist::getByClaimId() method not found');
+                }
+            } catch (Exception $e) {
+                error_log('Could not load service checklist: ' . $e->getMessage());
+            }
+        }
+        
+        $data = [
+            'title' => 'Claim Details - Shena Companion Welfare Association',
+            'member' => $member,
+            'claim' => $claim,
+            'beneficiary' => $beneficiary,
+            'documents' => $documents,
+            'serviceChecklist' => $serviceChecklist
+        ];
+        
+        $this->view('member.claim-view', $data);
+    }
+    
     public function submitClaim()
     {
         try {
             $this->validateCsrf();
             
+            error_log('=== Claim Submission Started ===');
+            
             $member = $this->memberModel->findByUserId($_SESSION['user_id']);
             if (!$member) {
+                error_log('Claim submission failed: Member not found for user_id=' . $_SESSION['user_id']);
                 $_SESSION['error'] = 'Member profile not found.';
                 $this->redirect('/claims');
                 return;
             }
+            
+            error_log('Member found: ID=' . $member['id'] . ', Status=' . $member['status']);
+            
+            // Check if member is requesting cash alternative
+            $requestCashAlternative = isset($_POST['request_cash_alternative']) && $_POST['request_cash_alternative'] === '1';
+            $cashAlternativeReason = $requestCashAlternative ? $this->sanitizeInput($_POST['cash_alternative_reason'] ?? '') : '';
             
             // Service-based claim data per SHENA Policy 2026
             $claimData = [
@@ -858,8 +929,11 @@ class MemberController extends BaseController
                 'mortuary_bill_amount' => (float)($_POST['mortuary_bill_amount'] ?? 0),
                 'mortuary_days_count' => (int)($_POST['mortuary_days_count'] ?? 0),
                 'service_delivery_type' => 'standard_services', // Default to service delivery
+                'cash_alternative_reason' => $cashAlternativeReason,
                 'notes' => $this->sanitizeInput($_POST['notes'] ?? '')
             ];
+            
+            error_log('Claim data prepared: ' . json_encode($claimData));
             
             // Validate required fields (no claim_amount required for service-based)
             $required = ['beneficiary_id', 'deceased_name', 'deceased_id_number', 'date_of_death', 'place_of_death'];
@@ -879,45 +953,72 @@ class MemberController extends BaseController
             }
             
             // Validate beneficiary belongs to member
+            error_log('Validating beneficiary ID: ' . $claimData['beneficiary_id']);
             $beneficiary = $this->beneficiaryModel->find($claimData['beneficiary_id']);
-            if (!$beneficiary || $beneficiary['member_id'] != $member['id']) {
-                $_SESSION['error'] = 'Invalid beneficiary selected.';
+            if (!$beneficiary) {
+                error_log('Beneficiary not found: ID=' . $claimData['beneficiary_id']);
+                $_SESSION['error'] = 'Beneficiary not found. Please add a beneficiary first.';
                 $this->redirect('/claims');
                 return;
             }
+            if ($beneficiary['member_id'] != $member['id']) {
+                error_log('Beneficiary belongs to different member: beneficiary.member_id=' . $beneficiary['member_id'] . ', current member.id=' . $member['id']);
+                $_SESSION['error'] = 'The selected beneficiary does not belong to your account.';
+                $this->redirect('/claims');
+                return;
+            }
+            error_log('Beneficiary validated successfully');
             
             // Check member eligibility per policy Section 9
             // Must be active, maturity period completed, not in default
+            error_log('Checking member eligibility - Status: ' . $member['status']);
             if ($member['status'] === 'defaulted') {
+                error_log('CLAIM REJECTED: Member status is defaulted');
                 $_SESSION['error'] = 'Cannot submit claim. Membership is in default status. Please clear outstanding contributions.';
                 $this->redirect('/claims');
                 return;
             }
             
             if ($member['status'] !== 'active') {
+                error_log('CLAIM REJECTED: Member status is not active: ' . $member['status']);
                 $_SESSION['error'] = 'Cannot submit claim. Membership must be active.';
                 $this->redirect('/claims');
                 return;
             }
+            error_log('Member status check passed');
             
             // Check maturity period
+            error_log('Checking maturity period - maturity_ends: ' . ($member['maturity_ends'] ?? 'NULL'));
             if (!empty($member['maturity_ends'])) {
                 $maturityDate = new DateTime($member['maturity_ends']);
                 $today = new DateTime();
                 
                 if ($today < $maturityDate) {
                     $daysRemaining = $today->diff($maturityDate)->days;
-                    $_SESSION['error'] = "Cannot submit claim. Maturity period not completed. {$daysRemaining} days remaining.";
+                    $maturityDateFormatted = $maturityDate->format('F j, Y');
+                    error_log('CLAIM REJECTED: Maturity period not complete. Days remaining: ' . $daysRemaining);
+                    
+                    $_SESSION['error'] = "Your membership is still in the maturity period. Claims can be submitted after <strong>{$maturityDateFormatted}</strong> ({$daysRemaining} days remaining). "
+                        . "The maturity period ensures your membership contributions are up to date before benefit claims can be processed. "
+                        . "If you have an urgent situation, please contact SHENA administration for assistance.";
+                    $_SESSION['error_type'] = 'maturity_pending';
+                    
                     $this->redirect('/claims');
                     return;
                 }
+                error_log('Maturity period check passed');
+            } else {
+                error_log('No maturity period set - eligibility check passed');
             }
             
             // Submit claim
+            error_log('All eligibility checks passed. Submitting claim to database...');
             $claimId = $this->claimModel->submitClaim($claimData);
+            error_log('Claim submitted successfully with ID: ' . $claimId);
 
             // Handle required claim documents per policy Section 8
             // Required: ID copy, Chief letter, Mortuary invoice
+            error_log('Processing file uploads for claim ID: ' . $claimId);
             $claimDocumentModel = new ClaimDocument();
 
             $documentFields = [
@@ -927,24 +1028,32 @@ class MemberController extends BaseController
                 'death_certificate' => ['required' => false, 'label' => 'Death Certificate']
             ];
 
+            error_log('Checking uploaded files: ' . json_encode(array_keys($_FILES)));
             foreach ($documentFields as $inputName => $config) {
                 if (!isset($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
                     if ($config['required']) {
                         // Delete the claim if required document missing
+                        error_log('REQUIRED FILE MISSING: ' . $config['label'] . ' (field: ' . $inputName . ')');
+                        error_log('Rolling back claim ID: ' . $claimId);
                         $this->claimModel->delete($claimId);
                         $_SESSION['error'] = "Required document missing: {$config['label']}. Please upload all required documents.";
                         $this->redirect('/claims');
                         return;
                     }
+                    error_log('Optional file not uploaded: ' . $inputName);
                     continue;
                 }
+                
+                error_log('Processing file upload: ' . $inputName . ' (size: ' . $_FILES[$inputName]['size'] . ' bytes)');
 
                 // Include the helper functions
                 require_once 'app/helpers/functions.php';
 
                 $uploadResult = uploadFile($_FILES[$inputName], 'claims/' . $claimId);
                 if ($uploadResult === false) {
+                    error_log('FILE UPLOAD FAILED: ' . $inputName . ' - uploadFile() returned false');
                     if ($config['required']) {
+                        error_log('Rolling back claim ID: ' . $claimId);
                         $this->claimModel->delete($claimId);
                         $_SESSION['error'] = "Failed to upload required document: {$config['label']}. Please try again.";
                         $this->redirect('/claims');
@@ -952,7 +1061,8 @@ class MemberController extends BaseController
                     }
                     continue;
                 }
-
+                
+                error_log('File uploaded successfully: ' . $uploadResult['file_path']);
                 $claimDocumentModel->addDocument([
                     'claim_id' => $claimId,
                     'document_type' => $inputName,
@@ -962,7 +1072,10 @@ class MemberController extends BaseController
                     'mime_type' => $uploadResult['mime_type'],
                     'uploaded_by' => $_SESSION['user_id'] ?? null
                 ]);
+                error_log('Document record saved: claim_id=' . $claimId . ', type=' . $inputName);
             }
+            
+            error_log('All file uploads completed successfully for claim ID: ' . $claimId);
             
             // Send notification email to admin
             if (class_exists('EmailService')) {
@@ -974,11 +1087,40 @@ class MemberController extends BaseController
                 }
             }
             
-            $_SESSION['success'] = 'Claim submitted successfully. SHENA Companion will review your claim and contact you within 1-3 business days.';
+            // If cash alternative requested, notify admin
+            if ($requestCashAlternative && !empty($cashAlternativeReason)) {
+                error_log('Cash alternative requested for claim ID: ' . $claimId);
+                // Store in session for admin alert
+                $notificationModel = new Notification();
+                try {
+                    $notificationModel->createAdminNotification(
+                        'cash_alternative_request',
+                        "Member {$member['member_number']} has requested cash alternative for Claim #{$claimId}",
+                        "/admin/claims/view/{$claimId}",
+                        ['claim_id' => $claimId, 'reason' => $cashAlternativeReason]
+                    );
+                } catch (Exception $ne) {
+                    error_log('Failed to create admin notification: ' . $ne->getMessage());
+                }
+            }
+            
+            $successMessage = 'Claim submitted successfully. SHENA Companion will review your claim and contact you within 1-3 business days.';
+            if ($requestCashAlternative) {
+                $successMessage .= ' Your cash alternative request has been noted and will be reviewed by administration.';
+            }
+            $_SESSION['success'] = $successMessage;
+            error_log('=== Claim Submission Completed Successfully ===');
             
         } catch (Exception $e) {
-            error_log('Submit claim error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Failed to submit claim: ' . $e->getMessage();
+            error_log('=== Submit claim error ===');
+            error_log('Error message: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            if (DEBUG_MODE) {
+                $_SESSION['error'] = 'Failed to submit claim: ' . $e->getMessage();
+            } else {
+                $_SESSION['error'] = 'An error occurred while submitting your claim. Please try again or contact support if the problem persists.';
+            }
         }
         
         $this->redirect('/claims');
@@ -1102,8 +1244,8 @@ class MemberController extends BaseController
         }
         
         // Check if upgrade is possible
-        if ($member['package'] === 'premium') {
-            $_SESSION['info'] = 'You are already on the Premium package.';
+        if ($member['package'] === 'executive') {
+            $_SESSION['info'] = 'You are already on the highest package.';
             $this->redirect('/member/dashboard');
             return;
         }
@@ -1114,9 +1256,14 @@ class MemberController extends BaseController
         // Check for pending upgrades
         $pendingUpgrades = $upgradeService->getMemberPendingUpgrades($member['id']);
         
+        $packageOrder = ['individual', 'couple', 'family', 'executive'];
+        $currentPackage = strtolower($member['package'] ?? 'individual');
+        $currentIndex = array_search($currentPackage, $packageOrder, true);
+        $defaultTargetPackage = $packageOrder[min(($currentIndex !== false ? $currentIndex + 1 : 1), count($packageOrder) - 1)];
+
         // Calculate upgrade cost
         try {
-            $calculation = $upgradeService->calculateUpgradeCost($member['id']);
+            $calculation = $upgradeService->calculateUpgradeCost($member['id'], $defaultTargetPackage);
         } catch (Exception $e) {
             $_SESSION['error'] = $e->getMessage();
             $this->redirect('/member/dashboard');
@@ -1130,7 +1277,8 @@ class MemberController extends BaseController
             'member' => $member,
             'calculation' => $calculation,
             'pendingUpgrades' => $pendingUpgrades,
-            'upgradeHistory' => $upgradeHistory
+            'upgradeHistory' => $upgradeHistory,
+            'defaultTargetPackage' => $defaultTargetPackage
         ]);
     }
     
@@ -1155,6 +1303,19 @@ class MemberController extends BaseController
         $upgradeService = new PlanUpgradeService();
         
         try {
+            $rawInput = file_get_contents('php://input');
+            $jsonInput = json_decode($rawInput, true);
+            if (!is_array($jsonInput)) {
+                $jsonInput = [];
+            }
+
+            $toPackage = $jsonInput['to_package'] ?? $_POST['to_package'] ?? 'couple';
+            $allowedPackages = ['individual', 'couple', 'family', 'executive'];
+            if (!in_array($toPackage, $allowedPackages, true)) {
+                $this->json(['error' => 'Invalid package selected'], 400);
+                return;
+            }
+
             // Check for existing pending upgrades
             $pendingUpgrades = $upgradeService->getMemberPendingUpgrades($member['id']);
             if (!empty($pendingUpgrades)) {
@@ -1163,10 +1324,10 @@ class MemberController extends BaseController
             }
             
             // Create upgrade request
-            $upgradeRequestId = $upgradeService->createUpgradeRequest($member['id'], 'premium');
+            $upgradeRequestId = $upgradeService->createUpgradeRequest($member['id'], $toPackage);
             
             // Initiate M-Pesa payment
-            $phoneNumber = $_POST['phone_number'] ?? $member['phone'];
+            $phoneNumber = $jsonInput['phone_number'] ?? $_POST['phone_number'] ?? $member['phone'];
             $paymentResponse = $upgradeService->initiateUpgradePayment($upgradeRequestId, $phoneNumber);
             
             $this->json([

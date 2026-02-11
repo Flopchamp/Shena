@@ -585,6 +585,14 @@ class AdminController extends BaseController
         // Get all claims
         $allClaims = $this->claimModel->getAllClaimsWithDetails($conditions);
         
+        // Check for cash alternative requests
+        $cashAlternativeRequests = [];
+        foreach ($allClaims as $claim) {
+            if (!empty($claim['cash_alternative_reason']) && $claim['status'] === 'submitted') {
+                $cashAlternativeRequests[] = $claim;
+            }
+        }
+        
         // Calculate statistics and format data
         $pendingClaims = 0;
         $approvedClaims = 0;
@@ -633,6 +641,7 @@ class AdminController extends BaseController
             'all_claims' => $allClaims,
             'pending_claims' => $pending_claims,
             'completed_claims' => $completed_claims,
+            'cash_alternative_requests' => $cashAlternativeRequests,
             'pendingClaims' => $pendingClaims,
             'approvedClaims' => $approvedClaims,
             'rejectedClaims' => $rejectedClaims,
