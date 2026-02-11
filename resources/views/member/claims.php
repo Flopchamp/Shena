@@ -825,48 +825,23 @@ main {
         <div>
             <h1 class="page-title">Claims Center</h1>
             
-            <?php 
-            // Display success message
-            if (isset($_SESSION['success'])): 
-            ?>
-            <div class="alert-banner success-banner" id="successAlert">
-                <div style="display: flex; align-items: start; gap: 15px;">
-                    <i class="fas fa-check-circle" style="color: #059669; font-size: 24px; margin-top: 2px;"></i>
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 8px 0; color: #065F46; font-size: 1.1rem; font-weight: 600;">
-                            Success!
-                        </h4>
-                        <p style="margin: 0; color: #047857; line-height: 1.6;">
-                            <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-                        </p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #059669; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <?php 
-            // Display error message
-            if (isset($_SESSION['error'])): 
-            ?>
-            <div class="alert-banner error-banner" id="errorAlert">
-                <div style="display: flex; align-items: start; gap: 15px;">
-                    <i class="fas fa-exclamation-circle" style="color: #DC2626; font-size: 24px; margin-top: 2px;"></i>
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 8px 0; color: #991B1B; font-size: 1.1rem; font-weight: 600;">
-                            Error
-                        </h4>
-                        <p style="margin: 0; color: #B91C1C; line-height: 1.6;">
-                            <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-                        </p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #DC2626; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
+            <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const flashMessages = [
+                            <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                            <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                        ];
+
+                        flashMessages.forEach(function(flash) {
+                            if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                                ShenaApp.showNotification(flash.message, flash.type, 5000);
+                                return;
+                            }
+                            alert(flash.message);
+                        });
+                    });
+                </script>
             <?php endif; ?>
             
             <?php 

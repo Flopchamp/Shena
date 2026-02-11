@@ -89,6 +89,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- App JS (Shena modal system) -->
+    <script src="/public/js/app.js"></script>
     
     <!-- Custom JavaScript -->
     <script>
@@ -105,12 +108,45 @@
 
         // Confirmation for delete actions
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('confirm-delete') || 
-                e.target.closest('.confirm-delete')) {
-                if (!confirm('Are you sure you want to delete this item?')) {
-                    e.preventDefault();
-                    return false;
-                }
+            const trigger = e.target.classList.contains('confirm-delete') || 
+                e.target.closest('.confirm-delete');
+
+            if (!trigger) {
+                return;
+            }
+
+            e.preventDefault();
+
+            if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+                ShenaApp.confirmAction(
+                    'Are you sure you want to delete this item?',
+                    function() {
+                        const target = e.target.closest('a, button, form');
+                        if (target && target.tagName === 'FORM') {
+                            target.submit();
+                            return;
+                        }
+                        if (target && target.tagName === 'A' && target.href) {
+                            window.location.href = target.href;
+                        }
+                    },
+                    null,
+                    { type: 'danger', title: 'Confirm Delete', confirmText: 'Delete' }
+                );
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this item?')) {
+                return false;
+            }
+
+            const target = e.target.closest('a, button, form');
+            if (target && target.tagName === 'FORM') {
+                target.submit();
+                return;
+            }
+            if (target && target.tagName === 'A' && target.href) {
+                window.location.href = target.href;
             }
         });
 

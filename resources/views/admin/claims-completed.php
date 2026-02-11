@@ -432,10 +432,16 @@
 </div>
 
 <?php if (isset($_SESSION['success'])): ?>
-    <div class="alert-success">
-        <i class="fas fa-check-circle"></i>
-        <span><?= htmlspecialchars($_SESSION['success']) ?></span>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const message = <?php echo json_encode($_SESSION['success']); ?>;
+            if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                ShenaApp.showNotification(message, 'success', 5000);
+            } else {
+                alert(message);
+            }
+        });
+    </script>
     <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
 

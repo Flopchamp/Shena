@@ -558,9 +558,7 @@ function markAsRead(id) {
 
 // Mark All as Read
 function markAllAsRead() {
-    if (!confirm('Mark all notifications as read?')) return;
-    
-    postNotificationAction('/member/notifications/mark-all-read')
+    const proceed = () => postNotificationAction('/member/notifications/mark-all-read')
         .then(data => {
             if (!data.success) {
                 alert(data.message || 'Failed to mark notifications as read.');
@@ -576,13 +574,24 @@ function markAllAsRead() {
             });
         })
         .catch(() => alert('Failed to mark notifications as read.'));
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Mark all notifications as read?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Mark All as Read', confirmText: 'Mark All' }
+        );
+        return;
+    }
+
+    if (!confirm('Mark all notifications as read?')) return;
+    proceed();
 }
 
 // Delete Notification
 function deleteNotification(id) {
-    if (!confirm('Delete this notification?')) return;
-    
-    postNotificationAction('/member/notifications/delete', { id: id })
+    const proceed = () => postNotificationAction('/member/notifications/delete', { id: id })
         .then(data => {
             if (!data.success) {
                 alert(data.message || 'Failed to delete notification.');
@@ -596,13 +605,24 @@ function deleteNotification(id) {
             }
         })
         .catch(() => alert('Failed to delete notification.'));
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Delete this notification?',
+            proceed,
+            null,
+            { type: 'danger', title: 'Delete Notification', confirmText: 'Delete' }
+        );
+        return;
+    }
+
+    if (!confirm('Delete this notification?')) return;
+    proceed();
 }
 
 // Clear All Notifications
 function clearAllNotifications() {
-    if (!confirm('This will delete all notifications. Continue?')) return;
-    
-    postNotificationAction('/member/notifications/clear-all')
+    const proceed = () => postNotificationAction('/member/notifications/clear-all')
         .then(data => {
             if (!data.success) {
                 alert(data.message || 'Failed to clear notifications.');
@@ -626,6 +646,19 @@ function clearAllNotifications() {
             }, 300);
         })
         .catch(() => alert('Failed to clear notifications.'));
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'This will delete all notifications. Continue?',
+            proceed,
+            null,
+            { type: 'danger', title: 'Clear Notifications', confirmText: 'Clear All' }
+        );
+        return;
+    }
+
+    if (!confirm('This will delete all notifications. Continue?')) return;
+    proceed();
 }
 </script>
 

@@ -1174,23 +1174,36 @@ async function checkUpgradeStatus(upgradeRequestId, interval) {
 }
 
 function cancelUpgrade(upgradeRequestId) {
+    const proceed = () => {
+        fetch('/member/upgrade/cancel', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ upgrade_request_id: upgradeRequestId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Upgrade request cancelled');
+                location.reload();
+            } else {
+                alert(data.error || 'Failed to cancel upgrade');
+            }
+        })
+        .catch(() => alert('Failed to cancel upgrade'));
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Are you sure you want to cancel this upgrade request?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Cancel Upgrade', confirmText: 'Cancel Request' }
+        );
+        return;
+    }
+
     if (!confirm('Are you sure you want to cancel this upgrade request?')) return;
-    
-    fetch('/member/upgrade/cancel', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ upgrade_request_id: upgradeRequestId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Upgrade request cancelled');
-            location.reload();
-        } else {
-            alert(data.error || 'Failed to cancel upgrade');
-        }
-    })
-    .catch(() => alert('Failed to cancel upgrade'));
+    proceed();
 }
 </script>
 

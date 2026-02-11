@@ -292,6 +292,15 @@
 
         // Logout Confirmation
         function confirmLogout() {
+            if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+                ShenaApp.confirmAction(
+                    'Are you sure you want to logout?',
+                    function() { window.location.href = '/logout'; },
+                    null,
+                    { type: 'warning', title: 'Confirm Logout', confirmText: 'Logout' }
+                );
+                return;
+            }
             if (confirm('Are you sure you want to logout?')) {
                 window.location.href = '/logout';
             }

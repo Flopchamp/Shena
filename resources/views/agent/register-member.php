@@ -390,18 +390,23 @@
         </a>
     </div>
 
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
-        </div>
-    <?php endif; ?>
+    <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const flashMessages = [
+                    <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                    <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                ];
 
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="success-message">
-            <i class="fas fa-check-circle"></i>
-            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
-        </div>
+                flashMessages.forEach(function(flash) {
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(flash.message, flash.type, 5000);
+                        return;
+                    }
+                    alert(flash.message);
+                });
+            });
+        </script>
     <?php endif; ?>
 
     <div class="registration-form-card">

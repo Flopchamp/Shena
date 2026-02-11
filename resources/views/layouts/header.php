@@ -82,32 +82,25 @@
     $warning = getFlashMessage('warning');
     ?>
     
-    <?php if ($success): ?>
-        <div class="alert alert-success alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-check-circle"></i> <?php echo e($success); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($error): ?>
-        <div class="alert alert-danger alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-exclamation-circle"></i> <?php echo e($error); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($info): ?>
-        <div class="alert alert-info alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-info-circle"></i> <?php echo e($info); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($warning): ?>
-        <div class="alert alert-warning alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-exclamation-triangle"></i> <?php echo e($warning); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <?php if ($success || $error || $info || $warning): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const flashMessages = [
+                    <?php if ($success): ?>{ type: 'success', message: <?php echo json_encode($success); ?> },<?php endif; ?>
+                    <?php if ($error): ?>{ type: 'error', message: <?php echo json_encode($error); ?> },<?php endif; ?>
+                    <?php if ($info): ?>{ type: 'info', message: <?php echo json_encode($info); ?> },<?php endif; ?>
+                    <?php if ($warning): ?>{ type: 'warning', message: <?php echo json_encode($warning); ?> },<?php endif; ?>
+                ];
+
+                flashMessages.forEach(function(flash) {
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(flash.message, flash.type, 5000);
+                        return;
+                    }
+                    alert(flash.message);
+                });
+            });
+        </script>
     <?php endif; ?>
 
     <main>

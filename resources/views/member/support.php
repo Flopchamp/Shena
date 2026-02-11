@@ -318,18 +318,23 @@ textarea.form-control {
         <p>We're here to help! Send us a message or reach out through our contact channels</p>
     </div>
 
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            <span><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></span>
-        </div>
-    <?php endif; ?>
+    <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const flashMessages = [
+                    <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                    <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                ];
 
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></span>
-        </div>
+                flashMessages.forEach(function(flash) {
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(flash.message, flash.type, 5000);
+                        return;
+                    }
+                    alert(flash.message);
+                });
+            });
+        </script>
     <?php endif; ?>
 
     <div class="support-grid">

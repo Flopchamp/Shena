@@ -152,14 +152,14 @@
                                         <?php if ($campaign['status'] === 'draft'): ?>
                                             <form method="POST" action="/admin/bulk-sms/send/<?= $campaign['id'] ?>" 
                                                   style="display: inline;" 
-                                                  onsubmit="return confirm('Send this campaign now?')">
+                                                  onsubmit="return handleConfirmSubmit(event, 'Send this campaign now?', 'primary', 'Send Campaign', 'Send Now')">
                                                 <button type="submit" class="btn btn-sm btn-success" title="Send Now">
                                                     <i class="fas fa-paper-plane"></i>
                                                 </button>
                                             </form>
                                             <form method="POST" action="/admin/bulk-sms/delete/<?= $campaign['id'] ?>" 
                                                   style="display: inline;" 
-                                                  onsubmit="return confirm('Delete this campaign?')">
+                                                  onsubmit="return handleConfirmSubmit(event, 'Delete this campaign?', 'danger', 'Delete Campaign', 'Delete')">
                                                 <button type="submit" class="btn btn-sm btn-danger" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -175,5 +175,28 @@
         </div>
     </div>
 </div>
+
+<script>
+function handleConfirmSubmit(event, message, type = 'warning', title = 'Confirm Action', confirmText = 'Confirm') {
+    event.preventDefault();
+
+    const form = event.target;
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            message,
+            function() { form.submit(); },
+            null,
+            { type: type, title: title, confirmText: confirmText }
+        );
+        return false;
+    }
+
+    if (confirm(message)) {
+        form.submit();
+    }
+
+    return false;
+}
+</script>
 
 <?php include __DIR__ . '/../../layouts/admin-footer.php'; ?>
