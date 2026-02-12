@@ -1,4 +1,69 @@
 	</main>
+	</div>
+</div>
+
+<!-- Footer -->
+<footer class="member-footer">
+	<div class="footer-container">
+		<div class="footer-main">
+			<div class="footer-brand">
+				<div class="footer-logo">
+					<div class="footer-logo-icon">
+						<i class="fas fa-hands-helping"></i>
+					</div>
+					<div>
+						<h5>Shena Companion</h5>
+						<p>Welfare Association</p>
+					</div>
+				</div>
+				<p class="footer-description">Providing affordable funeral services and burial expense coverage to our members across Kenya.</p>
+			</div>
+			
+			<div class="footer-links">
+				<div class="footer-section">
+					<h6>Quick Links</h6>
+					<ul>
+						<li><a href="/dashboard">Dashboard</a></li>
+						<li><a href="/payments">Contributions</a></li>
+						<li><a href="/beneficiaries">Beneficiaries</a></li>
+						<li><a href="/member/upgrade">Upgrade Plan</a></li>
+					</ul>
+				</div>
+				
+				<div class="footer-section">
+					<h6>Support</h6>
+					<ul>
+						<li><a href="/member/support">Help Center</a></li>
+						<li><a href="/profile">Profile Settings</a></li>
+						<li><a href="/member/notification-settings">Notifications</a></li>
+						<li><a href="#">FAQs</a></li>
+					</ul>
+				</div>
+				
+				<div class="footer-section">
+					<h6>Contact Us</h6>
+					<p class="footer-portal-text">For assistance or inquiries, please contact our support team.</p>
+					<div class="footer-contact">
+						<i class="fas fa-phone"></i>
+						<span>+254 700 000 000</span>
+					</div>
+					<div class="footer-contact">
+						<i class="fas fa-envelope"></i>
+						<span>support@shena.co.ke</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="footer-bottom">
+			<p>© <?php echo date('Y'); ?> Shena Companion Welfare Association. All rights reserved.</p>
+			<div class="footer-bottom-links">
+				<a href="#">Privacy Policy</a>
+				<span>•</span>
+				<a href="#">Terms of Service</a>
+				<span>•</span>
+				<a href="#">Member Agreement</a>
+			</div>
 		</div>
 	</div>
 </footer>
