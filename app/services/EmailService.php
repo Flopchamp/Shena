@@ -398,8 +398,77 @@ class EmailService
     }
     
     /**
+     * Send claim approval email to member
+     *
+     * @param array $member Member details
+     * @param array $claim Claim details
+     * @return bool Success status
+     */
+    public function sendClaimApprovalEmail($member, $claim)
+    {
+        $subject = 'Claim Approved - Shena Companion Welfare Association';
+
+        $body = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #28a745; color: white; padding: 20px; text-align: center; }
+                .content { padding: 20px; background: #f8f9fa; }
+                .claim-details { background: white; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }
+                .footer { text-align: center; padding: 20px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Claim Approved</h1>
+                </div>
+                <div class='content'>
+                    <h2>Dear {$member['first_name']} {$member['last_name']},</h2>
+                    <p>Your claim has been <strong>approved</strong> and is now being processed.</p>
+
+                    <div class='claim-details'>
+                        <strong>Claim Details:</strong><br>
+                        Claim ID: <strong>{$claim['id']}</strong><br>
+                        Member Number: <strong>{$member['member_number']}</strong><br>
+                        Deceased: {$claim['deceased_name']}<br>
+                        Date of Death: {$claim['date_of_death']}<br>
+                        Settlement Type: " . ucfirst($claim['settlement_type'] ?? 'services') . "<br>";
+
+        if (($claim['settlement_type'] ?? 'services') === 'cash') {
+            $body .= "Cash Amount: KES " . number_format($claim['cash_settlement_amount'] ?? 20000) . "<br>";
+        }
+
+        $body .= "
+                    </div>
+
+                    <p><strong>Next Steps:</strong></p>
+                    <ul>
+                        <li>Our team will contact you shortly to arrange service delivery</li>
+                        <li>Please ensure all required documents are available</li>
+                        <li>Keep your phone accessible for coordination</li>
+                    </ul>
+
+                    <p>If you have any questions, please contact us at " . ADMIN_EMAIL . " or call " . ADMIN_PHONE . ".</p>
+
+                    <p>Best regards,<br>Shena Companion Welfare Association</p>
+                </div>
+                <div class='footer'>
+                    <p>Shena Companion Welfare Association<br>
+                    Phone: " . ADMIN_PHONE . "</p>
+                </div>
+            </div>
+        </body>
+        </html>";
+
+        return $this->sendEmail($member['email'], $subject, $body);
+    }
+
+    /**
      * Send welcome email to new agent
-     * 
+     *
      * @param array $agent Agent details
      * @param string $password Temporary password
      * @return bool Success status
@@ -407,7 +476,7 @@ class EmailService
     public function sendAgentWelcomeEmail($agent, $password)
     {
         $subject = 'Welcome to Shena Welfare - Agent Account Created';
-        
+
         $body = "<!DOCTYPE html>
         <html>
         <head>
@@ -428,19 +497,19 @@ class EmailService
                 <div class='content'>
                     <h2>Your Agent Account is Ready</h2>
                     <p>Your agent account has been successfully created for Shena Companion Welfare Association.</p>
-                    
+
                     <div class='credentials'>
                         <strong>Your Agent Details:</strong><br>
                         Agent Number: <strong>{$agent['agent_number']}</strong><br>
                         Name: {$agent['first_name']} {$agent['last_name']}<br>
                         Commission Rate: {$agent['commission_rate']}%<br><br>
-                        
+
                         <strong>Login Credentials:</strong><br>
                         Email: <strong>{$agent['email']}</strong><br>
                         Password: <strong>{$password}</strong><br>
                         <em style='color: #dc3545;'>Please change your password after first login</em>
                     </div>
-                    
+
                     <h3>Getting Started:</h3>
                     <ol>
                         <li>Log in to your agent portal</li>
@@ -448,11 +517,11 @@ class EmailService
                         <li>Start registering members</li>
                         <li>Track your commissions</li>
                     </ol>
-                    
+
                     <p><strong>Commission Structure:</strong><br>
-                    You will earn {$agent['commission_rate']}% commission on all member registrations you facilitate. 
+                    You will earn {$agent['commission_rate']}% commission on all member registrations you facilitate.
                     Commissions are calculated on the first payment and approved monthly.</p>
-                    
+
                     <p>If you have any questions, please contact us at " . ADMIN_EMAIL . "</p>
                 </div>
                 <div class='footer'>
@@ -462,7 +531,7 @@ class EmailService
             </div>
         </body>
         </html>";
-        
+
         return $this->sendEmail($agent['email'], $subject, $body);
     }
 }
