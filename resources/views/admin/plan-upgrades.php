@@ -462,18 +462,23 @@
     }
 </style>
 
-<?php if (isset($_SESSION['success'])): ?>
-    <div class="alert alert-success">
-        <span><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></span>
-        <button onclick="this.parentElement.remove()">&times;</button>
-    </div>
-<?php endif; ?>
+<?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = [
+                <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+            ];
 
-<?php if (isset($_SESSION['error'])): ?>
-    <div class="alert alert-danger">
-        <span><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></span>
-        <button onclick="this.parentElement.remove()">&times;</button>
-    </div>
+            flashMessages.forEach(function(flash) {
+                if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                    ShenaApp.showNotification(flash.message, flash.type, 5000);
+                    return;
+                }
+                alert(flash.message);
+            });
+        });
+    </script>
 <?php endif; ?>
 
 <!-- Statistics Cards -->
@@ -658,8 +663,8 @@
 function processUpgrade(id, action) {
     const actionText = action === 'complete' ? 'complete' : 'cancel and refund';
     const confirmMsg = `Are you sure you want to ${actionText} this upgrade request?`;
-    
-    if (confirm(confirmMsg)) {
+
+    const proceed = () => {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/admin/plan-upgrades/${action}/${id}`;
@@ -672,6 +677,20 @@ function processUpgrade(id, action) {
         form.appendChild(csrfInput);
         document.body.appendChild(form);
         form.submit();
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            confirmMsg,
+            proceed,
+            null,
+            { type: 'warning', title: 'Confirm Action', confirmText: 'Proceed' }
+        );
+        return;
+    }
+
+    if (confirm(confirmMsg)) {
+        proceed();
     }
 }
 

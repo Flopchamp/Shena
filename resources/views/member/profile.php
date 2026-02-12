@@ -306,13 +306,13 @@ $memberData = $member ?? [];
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Full Name</label>
-                    <input type="text" name="full_name" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['full_name'] ?? ''); ?>" required>
+                          <input type="text" name="full_name" class="form-control" 
+                              value="<?php echo htmlspecialchars(trim(($memberData['full_name'] ?? '') ?: (($memberData['first_name'] ?? '') . ' ' . ($memberData['last_name'] ?? '')))); ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">National ID / Passport</label>
                     <input type="text" name="national_id" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['national_id'] ?? ''); ?>" required>
+                              value="<?php echo htmlspecialchars($memberData['id_number'] ?? ''); ?>" required>
                 </div>
             </div>
 
@@ -355,8 +355,8 @@ $memberData = $member ?? [];
                 
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
-                    <input type="text" name="next_of_kin_name" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['next_of_kin_name'] ?? ''); ?>" required>
+                          <input type="text" name="next_of_kin_name" class="form-control" 
+                              value="<?php echo htmlspecialchars($memberData['next_of_kin'] ?? ''); ?>" required>
                 </div>
 
                 <div class="mb-3">
@@ -376,6 +376,8 @@ $memberData = $member ?? [];
                     <input type="tel" name="next_of_kin_phone" class="form-control" 
                            value="<?php echo htmlspecialchars($memberData['next_of_kin_phone'] ?? ''); ?>" required>
                 </div>
+
+                <button type="submit" class="btn-save-changes" style="width: 100%;">Save Next of Kin</button>
             </form>
         </div>
 
@@ -401,7 +403,8 @@ $memberData = $member ?? [];
             </div>
             <?php endif; ?>
 
-            <button type="button" class="btn-upgrade" onclick="location.href='/packages'">
+            <button type="button" class="btn-upgrade" onclick="location.href='/member/upgrade'">
+                 <i class="fas fa-arrow-up"></i>
                 <i class="fas fa-arrow-up"></i>
                 UPGRADE PACKAGE
             </button>

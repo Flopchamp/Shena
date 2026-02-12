@@ -851,58 +851,97 @@ function markAsRead(id) {
 
 // Mark All as Read
 function markAllAsRead() {
+    const proceed = () => {
+        // AJAX call to mark all as read
+        console.log('Marking all notifications as read');
+
+        // Update UI
+        document.querySelectorAll('.notification-item.unread').forEach(item => {
+            item.classList.remove('unread');
+        });
+
+        // Update unread count
+        document.querySelectorAll('.tab-badge').forEach(badge => badge.remove());
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Mark all notifications as read?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Mark All as Read', confirmText: 'Mark All' }
+        );
+        return;
+    }
+
     if (!confirm('Mark all notifications as read?')) return;
-    
-    // AJAX call to mark all as read
-    console.log('Marking all notifications as read');
-    
-    // Update UI
-    document.querySelectorAll('.notification-item.unread').forEach(item => {
-        item.classList.remove('unread');
-    });
-    
-    // Update unread count
-    document.querySelectorAll('.tab-badge').forEach(badge => badge.remove());
+    proceed();
 }
 
 // Delete Notification
 function deleteNotification(id) {
-    if (!confirm('Delete this notification?')) return;
-    
-    // AJAX call to delete
-    console.log('Deleting notification ' + id);
-    
-    // Update UI
-    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-    if (item) {
-        item.style.opacity = '0';
-        setTimeout(() => item.remove(), 300);
+    const proceed = () => {
+        // AJAX call to delete
+        console.log('Deleting notification ' + id);
+
+        // Update UI
+        const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+        if (item) {
+            item.style.opacity = '0';
+            setTimeout(() => item.remove(), 300);
+        }
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Delete this notification?',
+            proceed,
+            null,
+            { type: 'danger', title: 'Delete Notification', confirmText: 'Delete' }
+        );
+        return;
     }
+
+    if (!confirm('Delete this notification?')) return;
+    proceed();
 }
 
 // Clear All Notifications
 function clearAllNotifications() {
-    if (!confirm('This will permanently delete all notifications. Continue?')) return;
-    
-    // AJAX call to clear all
-    console.log('Clearing all notifications');
-    
-    // Update UI
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.style.opacity = '0';
-    });
-    
-    setTimeout(() => {
-        document.querySelector('.notifications-list').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-bell-slash"></i>
+    const proceed = () => {
+        // AJAX call to clear all
+        console.log('Clearing all notifications');
+
+        // Update UI
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.style.opacity = '0';
+        });
+
+        setTimeout(() => {
+            document.querySelector('.notifications-list').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3>No Notifications</h3>
+                    <p>You're all caught up! Check back later for updates.</p>
                 </div>
-                <h3>No Notifications</h3>
-                <p>You're all caught up! Check back later for updates.</p>
-            </div>
-        `;
-    }, 300);
+            `;
+        }, 300);
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'This will permanently delete all notifications. Continue?',
+            proceed,
+            null,
+            { type: 'danger', title: 'Clear Notifications', confirmText: 'Clear All' }
+        );
+        return;
+    }
+
+    if (!confirm('This will permanently delete all notifications. Continue?')) return;
+    proceed();
 }
 </script>
 

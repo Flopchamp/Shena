@@ -318,18 +318,23 @@ textarea.form-control {
         <p>We're here to help! Send us a message or reach out through our contact channels</p>
     </div>
 
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            <span><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></span>
-        </div>
-    <?php endif; ?>
+    <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const flashMessages = [
+                    <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                    <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                ];
 
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></span>
-        </div>
+                flashMessages.forEach(function(flash) {
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(flash.message, flash.type, 5000);
+                        return;
+                    }
+                    alert(flash.message);
+                });
+            });
+        </script>
     <?php endif; ?>
 
     <div class="support-grid">
@@ -394,7 +399,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Phone</h6>
-                        <p><a href="tel:+254712345678">+254 712 345 678</a></p>
+                        <p><a href="tel:+254748585067">+254 748 585 067</a></p>
                     </div>
                 </li>
                 
@@ -404,7 +409,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Email</h6>
-                        <p><a href="mailto:support@shena.com">support@shena.com</a></p>
+                        <p><a href="mailto:info@shenacompanion.org">info@shenacompanion.org</a></p>
                     </div>
                 </li>
                 
@@ -414,7 +419,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>WhatsApp</h6>
-                        <p><a href="https://wa.me/254712345678" target="_blank">+254 712 345 678</a></p>
+                        <p><a href="https://wa.me/+254748585067" target="_blank">+254 748 585 067</a></p>
                     </div>
                 </li>
                 
@@ -424,7 +429,7 @@ textarea.form-control {
                     </div>
                     <div class="contact-details">
                         <h6>Office Location</h6>
-                        <p>Nairobi, Kenya<br>P.O. Box 12345</p>
+                        <p>Kisumu, Kenya<br>P.O. Box 40148</p>
                     </div>
                 </li>
             </ul>

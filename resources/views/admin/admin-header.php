@@ -262,34 +262,23 @@
                 </nav>
 
                 <!-- Flash Messages -->
-                <?php if (isset($_SESSION['success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
+                <?php if (isset($_SESSION['success']) || isset($_SESSION['error']) || isset($_SESSION['warning']) || isset($_SESSION['info'])): ?>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const flashMessages = [
+                                <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                                <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                                <?php if (isset($_SESSION['warning'])): ?>{ type: 'warning', message: <?php echo json_encode($_SESSION['warning']); ?> },<?php unset($_SESSION['warning']); endif; ?>
+                                <?php if (isset($_SESSION['info'])): ?>{ type: 'info', message: <?php echo json_encode($_SESSION['info']); ?> },<?php unset($_SESSION['info']); endif; ?>
+                            ];
 
-                <?php if (isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['warning'])): ?>
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <?php echo htmlspecialchars($_SESSION['warning']); unset($_SESSION['warning']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (isset($_SESSION['info'])): ?>
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <?php echo htmlspecialchars($_SESSION['info']); unset($_SESSION['info']); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                            flashMessages.forEach(function(flash) {
+                                if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                                    ShenaApp.showNotification(flash.message, flash.type, 5000);
+                                    return;
+                                }
+                                alert(flash.message);
+                            });
+                        });
+                    </script>
                 <?php endif; ?>

@@ -46,21 +46,27 @@
                     <?php if (isLoggedIn()): ?>
                         <?php if (isAdmin()): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="/admin"><i class="fas fa-cog"></i> Admin</a>
+                                <a class="btn" href="/admin" style="background-color: #F6F1FA; color: #5A1F73; padding: 8px 18px; border-radius: 999px; font-weight: 600; border: 1px solid #E3D3EE; display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-cog"></i> Admin
+                                </a>
                             </li>
                         <?php endif; ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                            <a class="btn" href="/dashboard" style="background-color: #7F3D9E; color: white; padding: 8px 18px; border-radius: 999px; font-weight: 600; border: 1px solid #7F3D9E; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                            <a class="btn" href="/logout" style="background-color: transparent; color: #7F3D9E; padding: 8px 18px; border-radius: 999px; font-weight: 600; border: 1px solid #7F3D9E; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
                         </li>
                     <?php else: ?>
                         <li class="nav-item" style="margin-right: 12px;">
                             <a href="/login" class="btn" style="background-color: transparent; color: #7F3D9E; padding: 10px 28px; border-radius: 25px; font-weight: 500; border: 2px solid #7F3D9E; white-space: nowrap;">Login</a>
                         </li>
                         <li class="nav-item">
-                            <a href="/register" class="btn" style="background-color: #7F3D9E; color: white; padding: 10px 28px; border-radius: 25px; font-weight: 500; border: none; white-space: nowrap;">Member Portal</a>
+                            <a href="/register" class="btn" style="background-color: #7F3D9E; color: white; padding: 10px 28px; border-radius: 25px; font-weight: 500; border: none; white-space: nowrap;">Register</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -76,32 +82,25 @@
     $warning = getFlashMessage('warning');
     ?>
     
-    <?php if ($success): ?>
-        <div class="alert alert-success alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-check-circle"></i> <?php echo e($success); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($error): ?>
-        <div class="alert alert-danger alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-exclamation-circle"></i> <?php echo e($error); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($info): ?>
-        <div class="alert alert-info alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-info-circle"></i> <?php echo e($info); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    
-    <?php if ($warning): ?>
-        <div class="alert alert-warning alert-dismissible fade show m-0" role="alert">
-            <i class="fas fa-exclamation-triangle"></i> <?php echo e($warning); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+    <?php if ($success || $error || $info || $warning): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const flashMessages = [
+                    <?php if ($success): ?>{ type: 'success', message: <?php echo json_encode($success); ?> },<?php endif; ?>
+                    <?php if ($error): ?>{ type: 'error', message: <?php echo json_encode($error); ?> },<?php endif; ?>
+                    <?php if ($info): ?>{ type: 'info', message: <?php echo json_encode($info); ?> },<?php endif; ?>
+                    <?php if ($warning): ?>{ type: 'warning', message: <?php echo json_encode($warning); ?> },<?php endif; ?>
+                ];
+
+                flashMessages.forEach(function(flash) {
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(flash.message, flash.type, 5000);
+                        return;
+                    }
+                    alert(flash.message);
+                });
+            });
+        </script>
     <?php endif; ?>
 
     <main>

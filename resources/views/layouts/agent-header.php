@@ -376,11 +376,15 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
-                <a href="/agent/claims" class="sidebar-nav-link<?php echo (isset($page) && $page === 'claims') ? ' active' : ''; ?>">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>Claims</span>
+                <a href="/agent/register-member" class="sidebar-nav-link<?php echo (isset($page) && $page === 'register-member') ? ' active' : ''; ?>">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register Member</span>
                 </a>
             </li>
+        </ul>
+
+        <div class="sidebar-menu-label">FINANCIALS</div>
+        <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="/agent/payouts" class="sidebar-nav-link<?php echo (isset($page) && $page === 'payouts') ? ' active' : ''; ?>">
                     <i class="fas fa-money-check-alt"></i>
@@ -437,11 +441,18 @@
     <!-- Main Content -->
     <div class="main-content">
         <?php if (isset($_SESSION['flash_message'])): ?>
-            <div class="alert alert-<?php echo $_SESSION['flash_type'] ?? 'info'; ?> alert-dismissible fade show" style="margin: 20px 30px 0 25px;">
-                <i class="fas fa-<?php echo ($_SESSION['flash_type'] ?? 'info') === 'success' ? 'check-circle' : 'info-circle'; ?>"></i>
-                <?php echo htmlspecialchars($_SESSION['flash_message']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const message = <?php echo json_encode($_SESSION['flash_message']); ?>;
+                    const type = <?php echo json_encode($_SESSION['flash_type'] ?? 'info'); ?>;
+
+                    if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                        ShenaApp.showNotification(message, type, 5000);
+                    } else {
+                        alert(message);
+                    }
+                });
+            </script>
             <?php 
                 unset($_SESSION['flash_message']); 
                 unset($_SESSION['flash_type']); 

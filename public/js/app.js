@@ -556,6 +556,19 @@ const ShenaApp = {
     }
 };
 
+// Override native alerts to use ShenaApp modal when available
+(function() {
+    const nativeAlert = window.alert;
+
+    window.alert = function(message) {
+        if (window.ShenaApp && typeof ShenaApp.alert === 'function') {
+            ShenaApp.alert(String(message), 'info');
+            return;
+        }
+        nativeAlert(message);
+    };
+})();
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     ShenaApp.init();

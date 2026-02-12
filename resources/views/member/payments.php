@@ -941,6 +941,43 @@ main {
 .manual-payment-note strong {
     color: #92400E;
 }
+
+/* Transaction Details Modal Styles */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #1F2937;
+}
+
+.transaction-details {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.member-info-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 </style>
 
 <div class="payments-container">
@@ -953,7 +990,7 @@ main {
         <div>
             <!-- Total Contributions Card -->
             <div class="total-contributions-card">
-                <h4>TOTAL CONTRIBUTIONS 2023</h4>
+                <h4>TOTAL CONTRIBUTIONS <?php echo !empty($selected_year) ? htmlspecialchars($selected_year) : date('Y'); ?></h4>
                 <h2>KES <?php echo number_format($total_paid, 2); ?></h2>
                 <p><i class="fas fa-arrow-up"></i> 12% increase from 2022</p>
             </div>
@@ -961,14 +998,28 @@ main {
             <!-- Contribution Logs -->
             <div class="section-header">
                 <h3>Contribution Logs</h3>
-                <div class="section-controls">
-                    <button class="filter-btn">
-                        <i class="fas fa-filter"></i> Filter
+                <form class="section-controls" method="GET" action="/payments">
+                    <label class="visually-hidden" for="statusFilter">Status</label>
+                    <select class="filter-btn" name="status" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="completed" <?php echo ($selected_status ?? '') === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                        <option value="pending" <?php echo ($selected_status ?? '') === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                        <option value="failed" <?php echo ($selected_status ?? '') === 'failed' ? 'selected' : ''; ?>>Failed</option>
+                        <option value="cancelled" <?php echo ($selected_status ?? '') === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                    </select>
+                    <label class="visually-hidden" for="yearFilter">Year</label>
+                    <select class="year-selector" name="year" id="yearFilter">
+                        <option value="">All Years</option>
+                        <?php foreach (($available_years ?? []) as $year): ?>
+                            <option value="<?php echo htmlspecialchars($year); ?>" <?php echo ($selected_year ?? '') == $year ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($year); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button class="filter-btn" type="submit">
+                        <i class="fas fa-filter"></i> Apply
                     </button>
-                    <button class="year-selector">
-                        <i class="fas fa-calendar"></i> 2023
-                    </button>
-                </div>
+                </form>
             </div>
 
             <!-- Payments Table -->
@@ -986,7 +1037,7 @@ main {
                         </thead>
                     <tbody>
                         <?php foreach ($payments as $payment): ?>
-                        <tr>
+                        <tr class="payment-row" data-payment='<?php echo json_encode($payment); ?>' style="cursor: pointer;">
                             <td><?php echo date('M d, Y', strtotime($payment['payment_date'])); ?></td>
                             <td><?php echo htmlspecialchars($payment['transaction_id'] ?? 'N/A'); ?></td>
                             <td>KES <?php echo number_format($payment['amount'], 2); ?></td>
@@ -1044,8 +1095,21 @@ main {
             <div class="statements-card">
                 <h3><i class="fas fa-file-invoice"></i> Statements</h3>
                 <p>Download a comprehensive record of all your contributions and transactions for your records or official documentation.</p>
-                <button class="download-btn" onclick="window.location.href='/member/generate-statement'">
-                    <i class="fas fa-file-download"></i> Generate Statement
+                <?php
+                    $statementParams = array_filter([
+                        'status' => $selected_status ?? '',
+                        'year' => $selected_year ?? ''
+                    ]);
+                    $statementUrl = '/member/payments/export';
+                    if (!empty($statementParams)) {
+                        $statementUrl .= '?' . http_build_query($statementParams);
+                    }
+                ?>
+                <button class="download-btn" onclick="window.location.href='<?php echo $statementUrl; ?>'">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="download-btn" onclick="window.location.href='<?php echo str_replace('/export', '/export-pdf', $statementUrl); ?>'">
+                    <i class="fas fa-file-pdf"></i> Export PDF
                 </button>
             </div>
         </div>
@@ -1182,6 +1246,80 @@ main {
     </div>
 </div>
 
+<!-- Transaction Details Modal -->
+<div class="modal fade" id="transactionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%); color: white; padding: 24px 30px; border-bottom: none; border-radius: 16px 16px 0 0;">
+                <h5 class="modal-title" style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: white; margin: 0; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-receipt" style="font-size: 20px;"></i> Transaction Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="transaction-details" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div class="detail-row mb-3" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Transaction Date:</label>
+                                <span id="detail-date" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row mb-3" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Reference Number:</label>
+                                <span id="detail-ref" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row mb-3" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Amount:</label>
+                                <span id="detail-amount" class="detail-value fw-bold text-success" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row mb-3" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Period:</label>
+                                <span id="detail-period" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row mb-3" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Status:</label>
+                                <span id="detail-status" class="detail-value" style="font-size: 14px; color: #1F2937;">
+                                    <span id="status-badge" class="payment-status"></span>
+                                </span>
+                            </div>
+                            <div class="detail-row mb-3" id="payment-method-row" style="display: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Payment Method:</label>
+                                <span id="detail-method" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row mb-3" id="transaction-id-row" style="display: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">M-Pesa Receipt:</label>
+                                <span id="detail-transaction-id" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                            <div class="detail-row" id="notes-row" style="display: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                                <label class="detail-label" style="font-weight: 600; color: #6B7280; font-size: 14px;">Notes:</label>
+                                <span id="detail-notes" class="detail-value" style="font-size: 14px; color: #1F2937;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="member-info-card p-3 border rounded" style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <h6 class="text-muted mb-2" style="font-size: 14px; font-weight: 600;">Member Information</h6>
+                                <p class="mb-1" style="font-weight: 600; color: #1F2937;"><?php echo htmlspecialchars($member['first_name'] . ' ' . $member['last_name']); ?></p>
+                                <p class="mb-1 text-muted" style="font-size: 13px;">ID: <?php echo htmlspecialchars($member['member_id'] ?? 'N/A'); ?></p>
+                                <p class="mb-0 text-muted" style="font-size: 13px;">Phone: <?php echo htmlspecialchars($member['phone'] ?? 'N/A'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 20px 30px; border-top: 1px solid #E5E7EB; border-radius: 0 0 16px 16px; background: #F9FAFB;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button type="button" class="btn btn-primary" id="downloadReceiptBtn" style="background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-download"></i> Download Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Verify Transaction Modal -->
 <div class="modal fade" id="verifyTransactionModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1194,32 +1332,32 @@ main {
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> If you completed a payment but it shows as pending or failed, verify it here using your M-Pesa transaction code.
                 </div>
-                
+
                 <form id="verifyTransactionForm">
                     <div class="mb-3">
                         <label class="form-label">M-Pesa Transaction Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control text-uppercase" id="transactionCode" 
+                        <input type="text" class="form-control text-uppercase" id="transactionCode"
                                placeholder="e.g., RCH12ABC34" required maxlength="15">
                         <small class="text-muted">Check your M-Pesa message for the transaction code</small>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Phone Number Used <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" id="verifyPhoneNumber" 
+                        <input type="tel" class="form-control" id="verifyPhoneNumber"
                                placeholder="07XXXXXXXX or 2547XXXXXXXX" required
                                value="<?php echo $member['phone'] ?? ''; ?>">
                         <small class="text-muted">Enter the phone number you paid from</small>
                     </div>
-                    
+
                     <div class="alert alert-warning small">
                         <strong>Note:</strong> This will search for your pending or failed payments within the last 7 days that match your transaction code and phone number.
                     </div>
-                    
+
                     <button type="submit" class="btn btn-warning w-100" id="verifyBtn">
                         <i class="fas fa-search"></i> Verify Transaction
                     </button>
                 </form>
-                
+
                 <div id="verifyStatus" class="mt-3" style="display: none;">
                     <div class="alert">
                         <span id="verifyMessage"></span>
@@ -1387,51 +1525,118 @@ function pollPaymentStatus(checkoutRequestId) {
     }, 1000);
 }
 
+// Transaction Details Modal
+document.addEventListener('DOMContentLoaded', function() {
+    const transactionModal = new bootstrap.Modal(document.getElementById('transactionDetailsModal'));
+
+    // Handle payment row clicks
+    document.querySelectorAll('.payment-row').forEach(row => {
+        row.addEventListener('click', function() {
+            const paymentData = JSON.parse(this.getAttribute('data-payment'));
+
+            // Populate modal with payment data
+            document.getElementById('detail-date').textContent = new Date(paymentData.payment_date || paymentData.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('detail-ref').textContent = paymentData.transaction_id || paymentData.mpesa_receipt_number || paymentData.transaction_reference || 'N/A';
+            document.getElementById('detail-amount').textContent = 'KES ' + parseFloat(paymentData.amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2 });
+            document.getElementById('detail-period').textContent = paymentData.period || 'N/A';
+
+            // Status badge
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.textContent = (paymentData.status || 'pending').toUpperCase();
+            statusBadge.className = 'payment-status ' + (paymentData.status === 'completed' ? 'success' : (paymentData.status === 'failed' ? 'failed' : 'pending'));
+
+            // Optional fields
+            const paymentMethodRow = document.getElementById('payment-method-row');
+            const transactionIdRow = document.getElementById('transaction-id-row');
+            const notesRow = document.getElementById('notes-row');
+
+            if (paymentData.payment_method) {
+                document.getElementById('detail-method').textContent = paymentData.payment_method;
+                paymentMethodRow.style.display = 'flex';
+            } else {
+                paymentMethodRow.style.display = 'none';
+            }
+
+            if (paymentData.mpesa_receipt_number && paymentData.mpesa_receipt_number !== paymentData.transaction_id) {
+                document.getElementById('detail-transaction-id').textContent = paymentData.mpesa_receipt_number;
+                transactionIdRow.style.display = 'flex';
+            } else {
+                transactionIdRow.style.display = 'none';
+            }
+
+            if (paymentData.notes) {
+                document.getElementById('detail-notes').textContent = paymentData.notes;
+                notesRow.style.display = 'flex';
+            } else {
+                notesRow.style.display = 'none';
+            }
+
+            // Store payment ID for receipt download
+            document.getElementById('downloadReceiptBtn').setAttribute('data-payment-id', paymentData.id);
+
+            // Show modal
+            transactionModal.show();
+        });
+    });
+
+    // Handle receipt download
+    document.getElementById('downloadReceiptBtn').addEventListener('click', function() {
+        const paymentId = this.getAttribute('data-payment-id');
+        if (paymentId) {
+            window.open('/member/payments/export-receipt?payment_id=' + paymentId, '_blank');
+        }
+    });
+});
+
 // Transaction Verification Form
 document.getElementById('verifyTransactionForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const btn = document.getElementById('verifyBtn');
     const statusDiv = document.getElementById('verifyStatus');
     const statusMsg = document.getElementById('verifyMessage');
-    
+
     const transactionCode = document.getElementById('transactionCode').value.trim();
     const phoneNumber = document.getElementById('verifyPhoneNumber').value.trim();
-    
+
     // Validate inputs
     if (!transactionCode || transactionCode.length < 8) {
         alert('Please enter a valid M-Pesa transaction code');
         return;
     }
-    
+
     if (!phoneNumber || phoneNumber.length < 9) {
         alert('Please enter a valid phone number');
         return;
     }
-    
+
     // Disable button and show loading
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
     statusDiv.style.display = 'none';
-    
+
     try {
         const formData = new FormData();
         formData.append('transaction_code', transactionCode);
         formData.append('phone_number', phoneNumber);
-        
+
         const response = await fetch('/payments/verify-transaction', {
             method: 'POST',
             body: formData
         });
-        
+
         const data = await response.json();
-        
+
         statusDiv.style.display = 'block';
-        
+
         if (data.success) {
             statusDiv.querySelector('.alert').className = 'alert alert-success';
             statusMsg.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-            
+
             // Reload page after 2 seconds
             setTimeout(() => {
                 location.reload();
@@ -1439,7 +1644,7 @@ document.getElementById('verifyTransactionForm')?.addEventListener('submit', asy
         } else {
             statusDiv.querySelector('.alert').className = 'alert alert-danger';
             statusMsg.innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.message || 'Verification failed');
-            
+
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-search"></i> Verify Transaction';
         }
@@ -1448,7 +1653,7 @@ document.getElementById('verifyTransactionForm')?.addEventListener('submit', asy
         statusDiv.style.display = 'block';
         statusDiv.querySelector('.alert').className = 'alert alert-danger';
         statusMsg.innerHTML = '<i class="fas fa-times-circle"></i> Network error. Please try again.';
-        
+
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-search"></i> Verify Transaction';
     }

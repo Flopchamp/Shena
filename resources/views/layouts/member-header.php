@@ -133,6 +133,224 @@
 			color: #1F2937;
 			margin: 0;
 		}
+
+		.top-bar-right {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+		}
+
+		.search-container {
+			position: relative;
+		}
+
+		.search-input-wrapper {
+			position: relative;
+			width: 300px;
+		}
+
+		.search-input {
+			width: 100%;
+			padding: 10px 16px 10px 40px;
+			border: 1px solid #E5E7EB;
+			border-radius: 8px;
+			font-size: 14px;
+			transition: all 0.2s;
+			background: #F9FAFB;
+		}
+
+		.search-input:focus {
+			outline: none;
+			border-color: #7F3D9E;
+			background: white;
+			box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
+		}
+
+		.search-icon {
+			position: absolute;
+			left: 12px;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #9CA3AF;
+			font-size: 14px;
+		}
+
+		.search-results {
+			position: absolute;
+			top: calc(100% + 8px);
+			left: 0;
+			right: 0;
+			background: white;
+			border: 1px solid #E5E7EB;
+			border-radius: 12px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+			max-height: 400px;
+			overflow-y: auto;
+			z-index: 1002;
+		}
+
+		.search-result-item {
+			padding: 12px 16px;
+			border-bottom: 1px solid #F3F4F6;
+			cursor: pointer;
+			transition: background 0.2s;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.search-result-item:last-child {
+			border-bottom: none;
+		}
+
+		.search-result-item:hover {
+			background: #F9FAFB;
+		}
+
+		.search-result-icon {
+			width: 36px;
+			height: 36px;
+			background: linear-gradient(135deg, #7F3D9E 0%, #A855F7 100%);
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+			font-size: 14px;
+		}
+
+		.search-result-content h6 {
+			font-size: 14px;
+			font-weight: 600;
+			color: #1F2937;
+			margin: 0 0 2px 0;
+		}
+
+		.search-result-content p {
+			font-size: 12px;
+			color: #6B7280;
+			margin: 0;
+		}
+
+		.icon-btn {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+			border: none;
+			background: #F9FAFB;
+			color: #6B7280;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: all 0.2s;
+			position: relative;
+		}
+
+		.icon-btn:hover {
+			background: #F3F4F6;
+			color: #7F20B0;
+		}
+
+		.logout-btn {
+			background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+			color: white;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 8px;
+			font-weight: 600;
+			font-size: 14px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		.logout-btn:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+		}
+
+		.profile-menu {
+			position: relative;
+			display: flex;
+			align-items: center;
+		}
+
+		.profile-button {
+			background: transparent;
+			border: none;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			cursor: pointer;
+		}
+
+		.profile-button:focus {
+			outline: none;
+		}
+
+		.profile-caret {
+			font-size: 12px;
+			color: #9CA3AF;
+		}
+
+		.profile-dropdown {
+			position: absolute;
+			top: calc(100% + 10px);
+			right: 0;
+			min-width: 200px;
+			background: white;
+			border: 1px solid #E5E7EB;
+			border-radius: 12px;
+			box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+			padding: 8px;
+			opacity: 0;
+			visibility: hidden;
+			transform: translateY(-6px);
+			transition: all 0.2s ease;
+			z-index: 1003;
+		}
+
+		.profile-menu:focus-within .profile-dropdown,
+		.profile-menu:hover .profile-dropdown {
+			opacity: 1;
+			visibility: visible;
+			transform: translateY(0);
+		}
+
+		.profile-dropdown-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 12px;
+			border-radius: 8px;
+			color: #374151;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: 600;
+			background: transparent;
+			border: none;
+			width: 100%;
+			cursor: pointer;
+			text-align: left;
+		}
+
+		.profile-dropdown-item:hover {
+			background: #F9FAFB;
+			color: #7F20B0;
+		}
+
+		.profile-dropdown-item.logout {
+			color: #DC2626;
+		}
+
+		.profile-dropdown-item.logout:hover {
+			background: #FEF2F2;
+			color: #B91C1C;
+		}
 		
 		.user-profile {
 			display: flex;
@@ -218,14 +436,46 @@
 		<!-- Main Content -->
 		<div class="main-content">
 			<div class="top-bar">
-				<h1>Member Dashboard</h1>
-				<div class="user-profile">
-					<div class="user-profile-text">
-						<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
-						<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
-					</div>
-					<div class="user-avatar">
-						<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
+				<div class="top-bar-left">
+					<h1>Member Dashboard</h1>
+				</div>
+				<div class="top-bar-right">
+					<div class="search-container">
+						<div class="search-input-wrapper">
+							<i class="fas fa-search search-icon"></i>
+							<input type="text" class="search-input" id="globalSearch" placeholder="Search features...">
+						</div>
+						<div class="search-results" id="searchResults" style="display: none;"></div>
+					</div>				<button class="icon-btn" onclick="location.href='/member/notifications'" title="Notifications">
+					<i class="fas fa-bell"></i>
+					</button>
+					<div class="profile-menu">
+						<button class="profile-button" type="button" aria-haspopup="true" aria-expanded="false">
+							<div class="user-profile">
+								<div class="user-profile-text">
+									<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
+									<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
+								</div>
+								<div class="user-avatar">
+									<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
+								</div>
+							</div>
+							<i class="fas fa-chevron-down profile-caret"></i>
+						</button>
+						<div class="profile-dropdown" role="menu">
+							<a class="profile-dropdown-item" href="/profile">
+								<i class="fas fa-user-cog"></i>
+								Profile Settings
+							</a>
+							<a class="profile-dropdown-item" href="/member/notification-settings">
+								<i class="fas fa-bell"></i>
+								Notifications
+							</a>
+							<button class="profile-dropdown-item logout" type="button" onclick="handleLogout()">
+								<i class="fas fa-sign-out-alt"></i>
+								Logout
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

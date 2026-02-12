@@ -628,7 +628,7 @@ function viewCampaign(id) {
 }
 
 function sendCampaign(id) {
-    if (confirm('Are you sure you want to send this campaign now?')) {
+    const proceed = () => {
         fetch('/admin/email-campaigns/send', {
             method: 'POST',
             headers: {
@@ -649,11 +649,25 @@ function sendCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Are you sure you want to send this campaign now?',
+            proceed,
+            null,
+            { type: 'primary', title: 'Send Campaign', confirmText: 'Send Now' }
+        );
+        return;
+    }
+
+    if (confirm('Are you sure you want to send this campaign now?')) {
+        proceed();
     }
 }
 
 function cancelCampaign(id) {
-    if (confirm('Are you sure you want to cancel this campaign?')) {
+    const proceed = () => {
         fetch('/admin/email-campaigns/cancel', {
             method: 'POST',
             headers: {
@@ -674,11 +688,25 @@ function cancelCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Are you sure you want to cancel this campaign?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Cancel Campaign', confirmText: 'Cancel Campaign' }
+        );
+        return;
+    }
+
+    if (confirm('Are you sure you want to cancel this campaign?')) {
+        proceed();
     }
 }
 
 function retryFailed(id) {
-    if (confirm('Retry sending to all failed recipients?')) {
+    const proceed = () => {
         fetch('/admin/email-campaigns/retry-failed', {
             method: 'POST',
             headers: {
@@ -699,6 +727,20 @@ function retryFailed(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Retry sending to all failed recipients?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Retry Failed', confirmText: 'Retry' }
+        );
+        return;
+    }
+
+    if (confirm('Retry sending to all failed recipients?')) {
+        proceed();
     }
 }
 

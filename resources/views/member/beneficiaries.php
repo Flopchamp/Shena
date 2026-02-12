@@ -349,6 +349,13 @@ main {
     margin: 0 0 4px 0;
 }
 
+.benefit-limit .currency-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #7F3D9E;
+    margin-right: 4px;
+}
+
 .benefit-limit p {
     font-size: 0.8rem;
     color: #9333EA;
@@ -449,54 +456,16 @@ main {
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="active-badge-card">ACTIVE</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar">J</div>
+                    <div class="beneficiary-card" style="text-align: center;">
+                        <div class="beneficiary-header" style="justify-content: center;">
+                            <div class="beneficiary-avatar">?</div>
                             <div class="beneficiary-info">
-                                <h3>Jane Doe</h3>
-                                <p>Spouse</p>
-                                <p class="age-bracket">Age Bracket: 35-40 years</p>
+                                <h3>No beneficiaries yet</h3>
+                                <p>Add a dependent to start managing your covered family members.</p>
                             </div>
                         </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
-                        </button>
-                    </div>
-                    
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="active-badge-card">ACTIVE</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar male">L</div>
-                            <div class="beneficiary-info">
-                                <h3>Leo Doe</h3>
-                                <p>Son</p>
-                                <p class="age-bracket">Age Bracket: 5-10 years</p>
-                            </div>
-                        </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
-                        </button>
-                    </div>
-                    
-                    <div class="beneficiary-card">
-                        <div class="status-badge-card">
-                            <span class="waiting-badge-card">WAITING</span>
-                        </div>
-                        <div class="beneficiary-header">
-                            <div class="beneficiary-avatar">M</div>
-                            <div class="beneficiary-info">
-                                <h3>Mary Smith</h3>
-                                <p>Mother-in-law</p>
-                                <p class="age-bracket">Age Bracket: 65-70 years</p>
-                            </div>
-                        </div>
-                        <button class="edit-details-btn">
-                            <i class="fas fa-edit"></i> Edit Details
+                        <button class="edit-details-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                            <i class="fas fa-user-plus"></i> Add Beneficiary
                         </button>
                     </div>
                 <?php endif; ?>
@@ -505,7 +474,7 @@ main {
                     <div class="add-icon">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <h4>Add Member</h4>
+                    <h4>Add Beneficiary</h4>
                     <p>Available slots: <?php echo $availableSlots; ?></p>
                 </div>
             </div>
@@ -533,7 +502,7 @@ main {
                 
                 <div class="benefit-limit">
                     <h4>BENEFIT LIMIT</h4>
-                    <h2>$15,000</h2>
+                    <h2>KES 15,000</h2>
                     <p>per member</p>
                 </div>
             </div>
@@ -541,11 +510,346 @@ main {
             <div class="need-help-card">
                 <h3>Need Help?</h3>
                 <p>Unsure about relationship proof documents? Chat with our support team.</p>
-                <button class="chat-btn">START CHAT</button>
+                <button class="chat-btn" onclick="window.location.href='/member/support'">START CHAT</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Upgrade CTA Card -->
+<div class="upgrade-cta-section">
+    <div class="upgrade-cta-card">
+        <div class="upgrade-icon">
+            <i class="fas fa-crown"></i>
+        </div>
+        <div class="upgrade-content">
+            <h2>Unlock More Coverage for Your Loved Ones</h2>
+            <p class="upgrade-subtitle">Upgrade your plan and protect more family members with enhanced benefits</p>
+            
+            <div class="tier-comparison">
+                <div class="tier-item">
+                    <div class="tier-badge bronze">Individual</div>
+                    <div class="tier-value">Self</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge silver">Couple</div>
+                    <div class="tier-value">2 Adults</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge gold">Family</div>
+                    <div class="tier-value">Children</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge platinum">Executive</div>
+                    <div class="tier-value">Extended</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+            </div>
+            
+            <div class="upgrade-benefits">
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Cover more family members</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Priority claim processing</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Enhanced funeral services</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Dedicated support team</span>
+                </div>
+            </div>
+            
+            <button class="upgrade-btn" onclick="window.location.href='/member/upgrade'">
+                <span>Upgrade Now</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.upgrade-cta-section {
+    margin: 3rem 0;
+    padding: 0 1rem;
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upgrade-cta-card {
+    background: linear-gradient(135deg, #7F20B0 0%, #a855f7 50%, #F59E0B 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(127, 32, 176, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upgrade-cta-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 50px rgba(127, 32, 176, 0.4);
+}
+
+.upgrade-cta-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(-10%, -10%) scale(1.1);
+    }
+}
+
+.upgrade-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.upgrade-icon i {
+    font-size: 4rem;
+    color: #FFD700;
+    text-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.upgrade-content {
+    position: relative;
+    z-index: 1;
+}
+
+.upgrade-content h2 {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-subtitle {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.tier-comparison {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tier-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.tier-item.highlight {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.tier-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    margin-bottom: 0.8rem;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tier-badge.bronze {
+    background: #CD7F32;
+    color: white;
+}
+
+.tier-badge.silver {
+    background: #C0C0C0;
+    color: #333;
+}
+
+.tier-badge.gold {
+    background: #FFD700;
+    color: #333;
+}
+
+.tier-badge.platinum {
+    background: #E5E7EB;
+    color: #111827;
+}
+
+.tier-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+}
+
+.tier-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.tier-arrow {
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.upgrade-benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: white;
+    font-size: 1rem;
+    padding: 0.5rem;
+}
+
+.benefit-item i {
+    color: #10B981;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.upgrade-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    background: white;
+    color: #7F20B0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: #FFD700;
+    color: #333;
+}
+
+.upgrade-btn i {
+    transition: transform 0.3s ease;
+}
+
+.upgrade-btn:hover i {
+    transform: translateX(5px);
+}
+
+@media (max-width: 768px) {
+    .upgrade-cta-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .upgrade-content h2 {
+        font-size: 1.6rem;
+    }
+    
+    .upgrade-subtitle {
+        font-size: 1rem;
+    }
+    
+    .tier-comparison {
+        gap: 0.8rem;
+    }
+    
+    .tier-item {
+        min-width: 90px;
+        padding: 1rem;
+    }
+    
+    .tier-value {
+        font-size: 2rem;
+    }
+    
+    .tier-arrow {
+        font-size: 1.2rem;
+    }
+    
+    .upgrade-benefits {
+        grid-template-columns: 1fr;
+    }
+    
+    .upgrade-btn {
+        font-size: 1rem;
+        padding: 0.8rem 2rem;
+    }
+}
+</style>
 
 <!-- Edit Beneficiary Modal -->
 <div class="modal fade" id="editBeneficiaryModal" tabindex="-1">

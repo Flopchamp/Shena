@@ -5,16 +5,58 @@
 class Claim extends BaseModel 
 {
     protected $table = 'claims';
+    protected $columnCache = null;
+
+    private function getTableColumns()
+    {
+        if ($this->columnCache !== null) {
+            return $this->columnCache;
+        }
+
+        $columns = $this->db->fetchAll("DESCRIBE {$this->table}");
+        $this->columnCache = array_map(static function ($column) {
+            return $column['Field'];
+        }, $columns);
+
+        return $this->columnCache;
+    }
+
+    private function mapLegacyColumns(array $data)
+    {
+        $columns = $this->getTableColumns();
+
+        if (!in_array('service_delivery_type', $columns, true) && in_array('settlement_type', $columns, true)) {
+            $data['settlement_type'] = ($data['service_delivery_type'] ?? 'standard_services') === 'cash_alternative'
+                ? 'cash'
+                : 'services';
+        }
+
+        if (!in_array('cash_alternative_amount', $columns, true) && in_array('cash_settlement_amount', $columns, true)) {
+            if (isset($data['cash_alternative_amount'])) {
+                $data['cash_settlement_amount'] = $data['cash_alternative_amount'];
+            }
+        }
+
+        return $data;
+    }
+
+    private function filterDataToColumns(array $data)
+    {
+        $columns = $this->getTableColumns();
+        return array_intersect_key($data, array_flip($columns));
+    }
     
     public function getMemberClaims($memberId)
     {
-        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name 
-                FROM {$this->table} c 
-                JOIN members m ON c.member_id = m.id 
-                JOIN users u ON m.user_id = u.id 
-                WHERE c.member_id = :member_id 
+        $sql = "SELECT c.*, m.member_number, u.first_name, u.last_name,
+                       b.relationship, b.full_name as beneficiary_name
+                FROM {$this->table} c
+                JOIN members m ON c.member_id = m.id
+                JOIN users u ON m.user_id = u.id
+                LEFT JOIN beneficiaries b ON c.beneficiary_id = b.id
+                WHERE c.member_id = :member_id
                 ORDER BY c.created_at DESC";
-        
+
         return $this->db->fetchAll($sql, ['member_id' => $memberId]);
     }
     
@@ -76,21 +118,34 @@ class Claim extends BaseModel
         // Set service delivery defaults
         $data['service_delivery_type'] = $data['service_delivery_type'] ?? 'standard_services';
         $data['mortuary_days_count'] = $data['mortuary_days_count'] ?? 0;
-        
+
+        // For service-based claims, set claim_amount to 0 (services provided instead of cash)
+        $data['claim_amount'] = 0.00;
+
         // Validate mortuary days (max 14 per policy)
         if (isset($data['mortuary_days_count']) && $data['mortuary_days_count'] > 14) {
             throw new Exception("Mortuary preservation coverage limited to 14 days per policy");
         }
-        
+
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['status'] = 'submitted';
-        
+
+        $data = $this->mapLegacyColumns($data);
+        $data = $this->filterDataToColumns($data);
+
         $claimId = $this->create($data);
         
-        // Initialize service checklist for standard services
-        if ($data['service_delivery_type'] === 'standard_services') {
-            $checklistModel = new ClaimServiceChecklist();
-            $checklistModel->initializeChecklist($claimId);
+        // Initialize service checklist for standard services (if table exists)
+        if (($data['service_delivery_type'] ?? 'standard_services') === 'standard_services') {
+            try {
+                if (class_exists('ClaimServiceChecklist')) {
+                    $checklistModel = new ClaimServiceChecklist();
+                    $checklistModel->initializeChecklist($claimId);
+                }
+            } catch (Exception $e) {
+                // Log but don't fail the claim submission if checklist fails
+                error_log('Failed to initialize service checklist: ' . $e->getMessage());
+            }
         }
         
         return $claimId;

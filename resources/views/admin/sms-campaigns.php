@@ -762,7 +762,7 @@ function viewCampaign(id) {
 }
 
 function sendCampaign(id) {
-    if (confirm('Are you sure you want to send this campaign now?')) {
+    const proceed = () => {
         fetch('/admin/communications/send-campaign', {
             method: 'POST',
             headers: {
@@ -783,11 +783,25 @@ function sendCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Are you sure you want to send this campaign now?',
+            proceed,
+            null,
+            { type: 'primary', title: 'Send Campaign', confirmText: 'Send Now' }
+        );
+        return;
+    }
+
+    if (confirm('Are you sure you want to send this campaign now?')) {
+        proceed();
     }
 }
 
 function cancelCampaign(id) {
-    if (confirm('Are you sure you want to cancel this campaign?')) {
+    const proceed = () => {
         fetch('/admin/communications/cancel-campaign', {
             method: 'POST',
             headers: {
@@ -808,11 +822,25 @@ function cancelCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Are you sure you want to cancel this campaign?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Cancel Campaign', confirmText: 'Cancel Campaign' }
+        );
+        return;
+    }
+
+    if (confirm('Are you sure you want to cancel this campaign?')) {
+        proceed();
     }
 }
 
 function pauseCampaign(id) {
-    if (confirm('Pause this campaign?')) {
+    const proceed = () => {
         fetch('/admin/communications/pause-campaign', {
             method: 'POST',
             headers: {
@@ -833,11 +861,25 @@ function pauseCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Pause this campaign?',
+            proceed,
+            null,
+            { type: 'warning', title: 'Pause Campaign', confirmText: 'Pause' }
+        );
+        return;
+    }
+
+    if (confirm('Pause this campaign?')) {
+        proceed();
     }
 }
 
 function resumeCampaign(id) {
-    if (confirm('Resume this campaign?')) {
+    const proceed = () => {
         fetch('/admin/communications/send-campaign', {
             method: 'POST',
             headers: {
@@ -858,6 +900,20 @@ function resumeCampaign(id) {
             console.error('Error:', error);
             alert('Network error occurred');
         });
+    };
+
+    if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        ShenaApp.confirmAction(
+            'Resume this campaign?',
+            proceed,
+            null,
+            { type: 'primary', title: 'Resume Campaign', confirmText: 'Resume' }
+        );
+        return;
+    }
+
+    if (confirm('Resume this campaign?')) {
+        proceed();
     }
 }
 

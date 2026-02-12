@@ -6,73 +6,195 @@
 require_once __DIR__ . '/../layouts/admin-header.php';
 ?>
 
-<div class="container-fluid py-4">
+<style>
+    .track-services-page {
+        background: #F9FAFB;
+        border-radius: 18px;
+        padding: 24px;
+    }
+
+    .track-services-page .page-header {
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        margin-bottom: 24px;
+    }
+
+    .track-services-page .card {
+        border: 1px solid #E5E7EB;
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .track-services-page .section-header {
+        background: #FFFFFF;
+        color: #111827;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .track-services-page .section-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .track-services-page .section-header small {
+        color: #6B7280;
+        font-weight: 600;
+    }
+
+    .track-services-page .table th {
+        width: 35%;
+        color: #6B7280;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .track-services-page .table td {
+        color: #111827;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .track-services-page .progress-card {
+        background: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+    }
+
+    .track-services-page .service-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .track-services-page .service-item {
+        border: 1px solid #E5E7EB;
+        border-radius: 14px;
+        padding: 16px;
+        background: #FFFFFF;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .track-services-page .service-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .track-services-page .service-item.completed {
+        border-color: #BBF7D0;
+        background: #F0FDF4;
+    }
+
+    .track-services-page .service-item h6 {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .track-services-page .btn-modern {
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-weight: 600;
+    }
+
+    .track-services-page .badge {
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 600;
+    }
+
+    .track-services-page .alert-modern {
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .track-services-page {
+            padding: 16px;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4 track-services-page">
     <div class="row">
         <div class="col-12">
             <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="page-header d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="mb-1">Service Delivery Tracking</h2>
-                    <p class="text-muted mb-0">Claim #<?= e($claim->id) ?> - <?= e($claim->deceased_name) ?></p>
+                    <p class="text-muted mb-0">Claim #<?= e($claim['id'] ?? '') ?> - <?= e($claim['deceased_name'] ?? '') ?></p>
                 </div>
                 <a href="/admin/claims" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Claims
                 </a>
             </div>
 
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> <?= e($_SESSION['success']) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['success']); ?>
-            <?php endif; ?>
+            <?php if (isset($_SESSION['success']) || isset($_SESSION['error'])): ?>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const flashMessages = [
+                            <?php if (isset($_SESSION['success'])): ?>{ type: 'success', message: <?php echo json_encode($_SESSION['success']); ?> },<?php unset($_SESSION['success']); endif; ?>
+                            <?php if (isset($_SESSION['error'])): ?>{ type: 'error', message: <?php echo json_encode($_SESSION['error']); ?> },<?php unset($_SESSION['error']); endif; ?>
+                        ];
 
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle"></i> <?= e($_SESSION['error']) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['error']); ?>
+                        flashMessages.forEach(function(flash) {
+                            if (window.ShenaApp && typeof ShenaApp.showNotification === 'function') {
+                                ShenaApp.showNotification(flash.message, flash.type, 5000);
+                                return;
+                            }
+                            alert(flash.message);
+                        });
+                    });
+                </script>
             <?php endif; ?>
 
             <div class="row">
                 <!-- Claim Information Card -->
                 <div class="col-md-4">
                     <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header section-header">
                             <h5 class="mb-0"><i class="fas fa-info-circle"></i> Claim Information</h5>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless">
                                 <tr>
                                     <th>Claim ID:</th>
-                                    <td><?= e($claim->id) ?></td>
+                                    <td><?= e($claim['id'] ?? '') ?></td>
                                 </tr>
                                 <tr>
                                     <th>Member:</th>
-                                    <td><?= e($claim->first_name . ' ' . $claim->last_name) ?></td>
+                                    <td><?= e(($claim['first_name'] ?? '') . ' ' . ($claim['last_name'] ?? '')) ?></td>
                                 </tr>
                                 <tr>
                                     <th>Deceased:</th>
-                                    <td><?= e($claim->deceased_name) ?></td>
+                                    <td><?= e($claim['deceased_name'] ?? '') ?></td>
                                 </tr>
                                 <tr> 
                                     <th>Date of Death:</th>
-                                    <td><?= formatDate($claim->date_of_death) ?></td>
+                                    <td><?= !empty($claim['date_of_death']) ? formatDate($claim['date_of_death']) : 'N/A' ?></td>
                                 </tr>
                                 <tr>
                                     <th>Status:</th>
                                     <td>
-                                        <span class="badge bg-<?= $claim->status === 'approved' ? 'success' : 'info' ?>">
-                                            <?= ucfirst(str_replace('_', ' ', e($claim->status))) ?>
+                                        <span class="badge bg-<?= ($claim['status'] ?? '') === 'approved' ? 'success' : 'info' ?>">
+                                            <?= ucfirst(str_replace('_', ' ', e($claim['status'] ?? ''))) ?>
                                         </span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Service Type:</th>
                                     <td>
-                                        <?php if ($claim->service_delivery_type === 'cash_alternative'): ?>
+                                        <?php if (($claim['service_delivery_type'] ?? '') === 'cash_alternative'): ?>
                                             <span class="badge bg-warning text-dark">
                                                 <i class="fas fa-money-bill"></i> Cash Alternative
                                             </span>
@@ -85,19 +207,19 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                 </tr>
                                 <tr>
                                     <th>Delivery Date:</th>
-                                    <td><?= $claim->services_delivery_date ? formatDate($claim->services_delivery_date) : 'Not set' ?></td>
+                                    <td><?= !empty($claim['services_delivery_date']) ? formatDate($claim['services_delivery_date']) : 'Not set' ?></td>
                                 </tr>
                                 <tr>
                                     <th>Mortuary Days:</th>
-                                    <td><?= e($claim->mortuary_days_count) ?> days (max 14)</td>
+                                    <td><?= e($claim['mortuary_days_count'] ?? 0) ?> days (max 14)</td>
                                 </tr>
                             </table>
                         </div>
                     </div>
 
                     <!-- Completion Progress Card -->
-                    <div class="card">
-                        <div class="card-header bg-info text-white">
+                    <div class="card progress-card">
+                        <div class="card-header section-header">
                             <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Overall Progress</h5>
                         </div>
                         <div class="card-body text-center">
@@ -115,12 +237,12 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                             </div>
                             
                             <?php if ($completion_percentage == 100): ?>
-                                <div class="alert alert-success mt-3">
+                                <div class="alert-modern" style="background: #ECFDF3; color: #065F46;">
                                     <i class="fas fa-check-circle"></i> All services completed!
                                 </div>
                                 <form method="POST" action="/admin/claims/complete" id="complete-claim-form">
                                     <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
-                                    <button type="button" onclick="confirmCompleteClaim()" class="btn btn-success btn-lg w-100">
+                                    <button type="button" onclick="confirmCompleteClaim()" class="btn btn-success btn-lg w-100 btn-modern">
                                         <i class="fas fa-check-double"></i> Complete Claim
                                     </button>
                                 </form>
@@ -136,17 +258,19 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                 <!-- Service Checklist Card -->
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="fas fa-tasks"></i> Service Delivery Checklist</h5>
-                            <small>Per SHENA Companion Policy - Section 3</small>
+                        <div class="card-header section-header">
+                            <div>
+                                <h5 class="mb-0"><i class="fas fa-tasks"></i> Service Delivery Checklist</h5>
+                                <small>Per SHENA Companion Policy - Section 3</small>
+                            </div>
                         </div>
                         <div class="card-body">
                             <?php if (empty($checklist)): ?>
-                                <div class="alert alert-warning">
+                                <div class="alert-modern" style="background: #FFFBEB; color: #92400E;">
                                     <i class="fas fa-exclamation-triangle"></i> No service checklist found. This may be a cash alternative claim.
                                 </div>
                             <?php else: ?>
-                                <div class="list-group">
+                                <div class="service-list">
                                     <?php 
                                     $serviceIcons = [
                                         'mortuary_bill' => 'fas fa-hospital',
@@ -165,7 +289,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                     
                                     foreach ($checklist as $item): 
                                     ?>
-                                        <div class="list-group-item <?= $item['completed'] ? 'list-group-item-success' : '' ?>">
+                                        <div class="service-item <?= $item['completed'] ? 'completed' : '' ?>">
                                             <div class="row align-items-center">
                                                 <div class="col-md-6">
                                                     <div class="d-flex align-items-center">
@@ -194,7 +318,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                                 </div>
                                                 <div class="col-md-6 text-end">
                                                     <?php if (!$item['completed']): ?>
-                                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                        <button type="button" class="btn btn-sm btn-primary btn-modern" 
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="#completeServiceModal"
                                                                 data-service-type="<?= e($item['service_type']) ?>"
@@ -204,7 +328,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
                                                     <?php else: ?>
                                                         <span class="badge bg-success">Completed</span>
                                                         <?php if ($item['service_notes']): ?>
-                                                            <button type="button" class="btn btn-sm btn-info" 
+                                                            <button type="button" class="btn btn-sm btn-info btn-modern" 
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#viewNotesModal"
                                                                     data-notes="<?= e($item['service_notes']) ?>"
@@ -231,7 +355,7 @@ require_once __DIR__ . '/../layouts/admin-header.php';
 <div class="modal fade" id="completeServiceModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="/admin/claims/track/<?= $claim->id ?>">
+            <form method="POST" action="/admin/claims/track/<?= e($claim['id'] ?? '') ?>">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="fas fa-check-circle"></i> Complete Service</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

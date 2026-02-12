@@ -19,6 +19,10 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
+ 
+<!-- Tab Content -->
+<div class="tab-content" id="claimsTabContent">
+
 <style>
     /* Page Header */
     .page-header {
@@ -534,11 +538,13 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 
     .tab-content {
         padding: 24px;
+        overflow-x: auto;
     }
 
     .claims-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 900px;
     }
 
     .claims-table thead th {
@@ -577,9 +583,16 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
         color: #6B7280;
     }
 
+    .claims-table .actions-cell {
+        text-align: right;
+        white-space: nowrap;
+    }
+
     .action-buttons {
         display: flex;
         gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     .btn-view {
@@ -634,6 +647,40 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
     <h1 class="page-title">Claims & Logistics Hub</h1>
     <p class="page-subtitle">Verification and funeral coordination management</p>
 </div>
+
+<!-- Cash Alternative Requests Alert -->
+<?php if (!empty($cash_alternative_requests)): ?>
+<div class="alert alert-warning" style="margin-bottom: 24px; border-left: 4px solid #F59E0B;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #F59E0B;"></i>
+        <div style="flex: 1;">
+            <h5 style="margin: 0 0 8px 0; font-weight: 600;">Cash Alternative Requests Pending</h5>
+            <p style="margin: 0; font-size: 14px;"><?= count($cash_alternative_requests) ?> member(s) have requested cash alternative (KSH 20,000) instead of service delivery.</p>
+        </div>
+    </div>
+    <div style="margin-top: 12px;">
+        <?php foreach ($cash_alternative_requests as $caRequest): ?>
+        <div style="background: white; padding: 12px; border-radius: 8px; margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Claim #<?= 'CLM-' . date('Y') . '-' . str_pad($caRequest['id'], 4, '0', STR_PAD_LEFT) ?></strong>
+                    <span style="color: #6B7280; margin: 0 8px;">•</span>
+                    <span><?= htmlspecialchars($caRequest['first_name'] . ' ' . $caRequest['last_name']) ?></span>
+                    <span style="color: #6B7280; margin: 0 8px;">•</span>
+                    <span>Member #<?= htmlspecialchars($caRequest['member_number']) ?></span>
+                </div>
+                <a href="/admin/claims/view/<?= $caRequest['id'] ?>" class="btn btn-sm btn-primary">Review Request</a>
+            </div>
+            <?php if (!empty($caRequest['cash_alternative_reason'])): ?>
+            <div style="margin-top: 8px; padding:8px; background: #F9FAFB; border-radius: 4px; font-size: 13px; color: #374151;">
+                <strong>Reason:</strong> <?= htmlspecialchars($caRequest['cash_alternative_reason']) ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Statistics Cards -->
 <div class="stats-row">
@@ -729,14 +776,14 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
                         <th>Date of Death</th>
                         <th>Service Type</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th class="actions-cell">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($all_claims as $claim): ?>
                         <tr>
                             <td><?= 'CLM-' . date('Y') . '-' . str_pad($claim['id'], 4, '0', STR_PAD_LEFT) ?></td>
-                            <td>
+                            <td class="actions-cell">
                                 <div class="claim-member-info">
                                     <span class="claim-member-name"><?= htmlspecialchars($claim['first_name'] . ' ' . $claim['last_name']) ?></span>
                                     <span class="claim-deceased-name">Member #<?= htmlspecialchars($claim['member_number'] ?? 'N/A') ?></span>
@@ -863,7 +910,7 @@ function renderClaimsTable(claims, status) {
         `;
     }
 
-    let html = '<table class="claims-table"><thead><tr><th>Claim #</th><th>Member</th><th>Deceased</th><th>Date of Death</th><th>Service Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="claims-table"><thead><tr><th>Claim #</th><th>Member</th><th>Deceased</th><th>Date of Death</th><th>Service Type</th><th>Status</th><th class="actions-cell">Actions</th></tr></thead><tbody>';
 
     claims.forEach(claim => {
         const claimNumber = 'CLM-' + new Date().getFullYear() + '-' + String(claim.id).padStart(4, '0');
@@ -875,7 +922,7 @@ function renderClaimsTable(claims, status) {
         html += `
             <tr>
                 <td>${claimNumber}</td>
-                <td>
+                <td class="actions-cell">
                     <div class="claim-member-info">
                         <span class="claim-member-name">${memberName}</span>
                         <span class="claim-deceased-name">Member #${claim.member_number || 'N/A'}</span>

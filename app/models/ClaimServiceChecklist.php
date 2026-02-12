@@ -25,7 +25,7 @@ class ClaimServiceChecklist extends BaseModel
             $this->create([
                 'claim_id' => $claimId,
                 'service_type' => $service,
-                'completed' => false
+                'completed' => 0
             ]);
         }
         

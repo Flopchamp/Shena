@@ -31,6 +31,7 @@ CREATE TABLE members (
     gender ENUM('male', 'female') NOT NULL,
     address TEXT,
     next_of_kin VARCHAR(200),
+    next_of_kin_relationship VARCHAR(50),
     next_of_kin_phone VARCHAR(20),
     -- High-level category used for reporting (matches policy booklet groupings)
     package ENUM('individual', 'couple', 'family', 'executive') DEFAULT 'individual',
@@ -175,6 +176,8 @@ CREATE TABLE communications (
     recipient_criteria JSON, -- Store filtering criteria for broadcasts
     subject VARCHAR(255),
     message TEXT NOT NULL,
+    action_url VARCHAR(255),
+    action_text VARCHAR(100),
     type ENUM('email', 'sms', 'both') DEFAULT 'both',
     status ENUM('draft', 'sent', 'failed') DEFAULT 'draft',
     sent_at TIMESTAMP NULL,
