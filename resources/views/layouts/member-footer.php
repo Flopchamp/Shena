@@ -244,6 +244,13 @@
 	}
 }
 
+@media (max-width: 991px) {
+	.member-footer {
+		margin-left: 0;
+		padding: 32px 0 20px;
+	}
+}
+
 @media (max-width: 768px) {
 	.footer-container {
 		padding: 0 20px;
@@ -262,6 +269,39 @@
 	
 	.member-footer {
 		margin-left: 0;
+		margin-top: 40px;
+	}
+}
+
+@media (max-width: 575px) {
+	.member-footer {
+		padding: 24px 0 16px;
+		margin-top: 30px;
+	}
+
+	.footer-container {
+		padding: 0 15px;
+	}
+
+	.footer-main {
+		gap: 30px;
+		margin-bottom: 30px;
+		padding-bottom: 24px;
+	}
+
+	.footer-section h6 {
+		font-size: 12px;
+	}
+
+	.footer-section p,
+	.footer-section a,
+	.footer-contact span {
+		font-size: 13px;
+	}
+
+	.footer-bottom p,
+	.footer-bottom-links a {
+		font-size: 12px;
 	}
 }
 </style>

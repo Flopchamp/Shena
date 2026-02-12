@@ -13,6 +13,8 @@
     <link href="/public/css/modals.css" rel="stylesheet">
     <!-- SHENA Design System CSS -->
     <link href="/css/shena-main.css" rel="stylesheet">
+    <!-- Responsive Utilities -->
+    <link href="/css/responsive-utilities.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
