@@ -223,6 +223,13 @@ footer .social-links a:hover {
    RESPONSIVE
    ======================================== */
 
+/* Tablet (768px - 991px) */
+@media (max-width: 991px) {
+  .container {
+    padding: 0 var(--space-md);
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0 var(--space-sm);
@@ -236,6 +243,10 @@ footer .social-links a:hover {
     font-size: var(--text-3xl);
   }
   
+  h3, .h3 {
+    font-size: var(--text-2xl);
+  }
+  
   .hero-section {
     min-height: 400px;
     padding: var(--space-md) 0;
@@ -244,16 +255,114 @@ footer .social-links a:hover {
   .section {
     padding: var(--space-md) 0;
   }
+
+  /* Navbar adjustments */
+  .navbar-nav {
+    padding: var(--space-sm) 0;
+  }
+
+  .navbar-nav .nav-link {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  /* Stack feature boxes */
+  .row {
+    margin: 0 -10px;
+  }
+
+  .row > [class*="col-"] {
+    padding: 0 10px;
+    margin-bottom: 20px;
+  }
+
+  /* Footer stacking */
+  footer .row > div {
+    margin-bottom: var(--space-md);
+    text-align: center;
+  }
 }
 
+/* Mobile (max-width: 575px) */
 @media (max-width: 576px) {
+  .container {
+    padding: 0 15px;
+  }
+
   h1, .h1 {
     font-size: var(--text-3xl);
+  }
+
+  h2, .h2 {
+    font-size: var(--text-2xl);
+  }
+
+  h3, .h3 {
+    font-size: var(--text-xl);
   }
   
   .btn-lg {
     padding: 12px 24px;
     font-size: var(--text-base);
+  }
+
+  /* Hero section mobile */
+  .hero-section {
+    min-height: 350px;
+    padding: 40px 0;
+  }
+
+  .hero-section h1 {
+    font-size: 2rem !important;
+  }
+
+  .hero-section .lead {
+    font-size: 1rem !important;
+  }
+
+  /* Button group stacking */
+  .d-flex.gap-3 {
+    flex-direction: column;
+    gap: 10px !important;
+  }
+
+  .d-flex.gap-3 .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Service cards */
+  .col-lg, .col-md-4, .col-sm-6 {
+    max-width: 100% !important;
+  }
+
+  /* Form inputs - touch friendly */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  button,
+  .btn {
+    min-height: 44px;
+  }
+
+  /* Tables scroll horizontally */
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
   }
 }
 
