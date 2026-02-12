@@ -735,31 +735,42 @@ if (!empty($commissions)) {
                 <div class="balance-amount">KES <?php echo number_format($current_balance ?? 0, 2); ?></div>
             </div>
 
-            <div class="transfer-method-section">
-                <div class="transfer-label">Transfer Method</div>
-                <div class="transfer-method-box">
-                    <div class="transfer-method-info">
-                        <div class="mpesa-icon">M</div>
-                        <div class="transfer-method-details">
-                            <h6>M-Pesa Transfer</h6>
-                            <p><?php echo htmlspecialchars($mpesa_number); ?></p>
+            <form action="/agent/payouts/request" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+
+                <div class="transfer-method-section">
+                    <div class="transfer-label">Transfer Method</div>
+                    <div class="transfer-method-box">
+                        <div class="transfer-method-info">
+                            <div class="mpesa-icon">M</div>
+                            <div class="transfer-method-details">
+                                <h6>M-Pesa Transfer</h6>
+                                <p><?php echo htmlspecialchars($mpesa_number); ?></p>
+                            </div>
                         </div>
+                        <button class="change-btn" type="button">Change</button>
                     </div>
-                    <button class="change-btn">Change</button>
                 </div>
-            </div>
 
-            <div class="amount-input-section">
-                <div class="amount-label">Enter Amount (KES)</div>
-                <div class="amount-input-wrapper">
-                    <span class="currency-symbol">KES</span>
-                    <input type="number" class="amount-input" value="5000" min="1" step="0.01">
+                <div class="amount-input-section">
+                    <div class="amount-label">Enter Amount (KES)</div>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-symbol">KES</span>
+                        <input type="number" class="amount-input" name="amount" value="5000" min="1" step="0.01" required>
+                    </div>
                 </div>
-            </div>
 
-            <button class="btn-request-payout">
-                Request Payout <i class="fas fa-arrow-right"></i>
-            </button>
+                <div class="amount-input-section">
+                    <div class="amount-label">Payout Phone</div>
+                    <div class="amount-input-wrapper">
+                        <input type="text" class="amount-input" name="phone_number" value="<?php echo htmlspecialchars($mpesa_number); ?>" required>
+                    </div>
+                </div>
+
+                <button class="btn-request-payout" type="submit">
+                    Request Payout <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
 
             <div class="recent-requests-section">
                 <div class="recent-requests-header">Recent Payouts</div>

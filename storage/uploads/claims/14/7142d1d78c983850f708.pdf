@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #8B5CF6; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #8B5CF6; color: white; }
+                .header { margin-bottom: 30px; }
+                .stat { display: inline-block; margin: 10px; padding: 10px; background: #f0f0f0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Shena Companion Welfare - Overview Report</h1>
+                <p><strong>Period:</strong> 2026-02-01 to 2026-02-05</p>
+                <p><strong>Generated:</strong> 2026-02-05 18:57:43</p>
+            </div>
+            
+            <h2>Summary Statistics</h2>
+            <div class="stat"><strong>Total Members:</strong> 5</div>
+            <div class="stat"><strong>Active Members:</strong> 5</div>
+            <div class="stat"><strong>Total Revenue:</strong> KES 0.00</div>
+            <div class="stat"><strong>Total Claims Paid:</strong> KES 0.00</div></body></html><script>window.print();</script>

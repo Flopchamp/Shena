@@ -1,3 +1,21 @@
+<?php
+$notificationCount = $notificationCount ?? null;
+if ($notificationCount === null) {
+    $notificationCount = 0;
+    if (isset($_SESSION['user_id'])) {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->getConnection()->prepare(
+                'SELECT COUNT(*) FROM communication_recipients WHERE user_id = :user_id AND status <> "read"'
+            );
+            $stmt->execute([':user_id' => (int)$_SESSION['user_id']]);
+            $notificationCount = (int)$stmt->fetchColumn();
+        } catch (Throwable $e) {
+            $notificationCount = 0;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -411,13 +429,21 @@
 
         .notification-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 8px;
-            height: 8px;
+            top: 6px;
+            right: 6px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
             background: #EF4444;
-            border-radius: 50%;
+            color: white;
+            border-radius: 999px;
             border: 2px solid white;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .btn-new-registration {
@@ -839,7 +865,9 @@
         <div class="header-actions">
             <a href="/admin/notifications" class="notification-btn">
                 <i class="fas fa-bell"></i>
-                <span class="notification-badge"></span>
+                <?php if (!empty($notificationCount)): ?>
+                    <span class="notification-badge"><?php echo (int)$notificationCount; ?></span>
+                <?php endif; ?>
             </a> 
 
             <!-- Admin Profile in Top Nav -->

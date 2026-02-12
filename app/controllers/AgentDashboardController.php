@@ -357,7 +357,8 @@ class AgentDashboardController extends BaseController
             'commissions' => $commissions,
             'total_earned' => $totalEarned,
             'pending_amount' => $pendingAmount,
-            'current_balance' => $currentBalance
+            'current_balance' => $currentBalance,
+            'csrf_token' => $this->generateCsrfToken()
         ];
 
         $this->view('agent/payouts', $data);
@@ -492,9 +493,7 @@ class AgentDashboardController extends BaseController
             return;
         }
         
-        // TODO: Get notifications from database
-        // For now, we'll pass empty array and let the view handle sample data
-        $notifications = [];
+        $notifications = $this->getAgentNotifications($_SESSION['user_id']);
         
         $data = [
             'title' => 'Notifications - Shena Companion Welfare Association',
@@ -511,9 +510,28 @@ class AgentDashboardController extends BaseController
      */
     public function markNotificationAsRead()
     {
-        $this->validateCsrf();
-        // TODO: Implement notification mark as read logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notification as read.'], 500);
+        }
     }
     
     /**
@@ -521,9 +539,20 @@ class AgentDashboardController extends BaseController
      */
     public function markAllNotificationsAsRead()
     {
-        $this->validateCsrf();
-        // TODO: Implement mark all as read logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE user_id = :user_id AND status <> "read"
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notifications as read.'], 500);
+        }
     }
     
     /**
@@ -531,9 +560,27 @@ class AgentDashboardController extends BaseController
      */
     public function deleteNotification()
     {
-        $this->validateCsrf();
-        // TODO: Implement notification delete logic
-        echo json_encode(['success' => true]);
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                DELETE FROM communication_recipients
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to delete notification.'], 500);
+        }
     }
     
     /**
@@ -541,8 +588,226 @@ class AgentDashboardController extends BaseController
      */
     public function clearAllNotifications()
     {
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                DELETE FROM communication_recipients
+                WHERE user_id = :user_id
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to clear notifications.'], 500);
+        }
+    }
+
+    public function requestPayout()
+    {
         $this->validateCsrf();
-        // TODO: Implement clear all notifications logic
-        echo json_encode(['success' => true]);
+
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/payouts');
+            return;
+        }
+
+        $amount = (float)($_POST['amount'] ?? 0);
+        $phoneNumber = trim($_POST['phone_number'] ?? ($agent['phone'] ?? ''));
+
+        if ($amount <= 0) {
+            $_SESSION['error'] = 'Please enter a valid payout amount.';
+            $this->redirect('/agent/payouts');
+            return;
+        }
+
+        // Calculate available balance from paid commissions
+        $commissions = $this->agentModel->getAgentCommissions($agent['id']);
+        $availableBalance = 0;
+        foreach ($commissions as $commission) {
+            if ($commission['status'] === 'paid') {
+                $availableBalance += $commission['commission_amount'];
+            }
+        }
+
+        if ($amount > $availableBalance) {
+            $_SESSION['error'] = 'Requested amount exceeds your available balance.';
+            $this->redirect('/agent/payouts');
+            return;
+        }
+
+        try {
+            // Log activity
+            $this->db->execute(
+                'INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent, created_at) VALUES (:user_id, :action, :details, :ip_address, :user_agent, NOW())',
+                [
+                    'user_id' => $_SESSION['user_id'],
+                    'action' => 'agent_payout_request',
+                    'details' => json_encode([
+                        'agent_id' => $agent['id'],
+                        'amount' => $amount,
+                        'phone_number' => $phoneNumber
+                    ]),
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+                ]
+            );
+
+            require_once 'app/services/InAppNotificationService.php';
+            $inAppNotificationService = new InAppNotificationService();
+            $inAppNotificationService->notifyAdmins([
+                'subject' => 'Agent payout request',
+                'message' => "Agent {$agent['first_name']} {$agent['last_name']} requested a payout of KES " . number_format($amount, 2) . ".",
+                'action_url' => '/admin/commissions',
+                'action_text' => 'Review Payout'
+            ], $_SESSION['user_id'] ?? null);
+
+            $inAppNotificationService->notifyUsers([
+                $_SESSION['user_id']
+            ], [
+                'subject' => 'Payout request submitted',
+                'message' => 'Your payout request has been received and is awaiting processing.',
+                'action_url' => '/agent/payouts',
+                'action_text' => 'View Payouts'
+            ], $_SESSION['user_id'] ?? null);
+
+            $_SESSION['success'] = 'Payout request submitted successfully.';
+        } catch (Exception $e) {
+            error_log('Payout request error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to submit payout request. Please try again.';
+        }
+
+        $this->redirect('/agent/payouts');
+    }
+
+    private function getAgentNotifications($userId)
+    {
+        $stmt = $this->db->getConnection()->prepare('
+            SELECT cr.id AS notification_id,
+                   cr.status,
+                   cr.read_at,
+                   cr.sent_at,
+                   c.subject,
+                   c.message,
+                   c.action_url,
+                   c.action_text,
+                   c.type,
+                   c.created_at
+            FROM communication_recipients cr
+            INNER JOIN communications c ON c.id = cr.communication_id
+            WHERE cr.user_id = :user_id
+            ORDER BY COALESCE(cr.sent_at, c.sent_at, c.created_at) DESC
+            LIMIT 100
+        ');
+        $stmt->execute([':user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $notifications = [];
+        foreach ($rows as $row) {
+            $title = $row['subject'] ?: 'Notification';
+            $message = $row['message'] ?: '';
+            $category = $this->inferNotificationCategory($title, $message);
+            $actionUrl = !empty($row['action_url']) ? $row['action_url'] : $category['action_url'];
+            $actionText = !empty($row['action_text']) ? $row['action_text'] : $category['action_text'];
+
+            $notifications[] = [
+                'id' => (int)$row['notification_id'],
+                'type' => $category['type'],
+                'icon' => $category['icon'],
+                'color' => $category['color'],
+                'title' => $title,
+                'message' => $message,
+                'time' => $this->formatTimeAgo($row['sent_at'] ?? $row['created_at'] ?? 'now'),
+                'read' => !empty($row['read_at']) || ($row['status'] ?? '') === 'read',
+                'action_url' => $actionUrl,
+                'action_text' => $actionText
+            ];
+        }
+
+        return $notifications;
+    }
+
+    private function inferNotificationCategory($title, $message)
+    {
+        $haystack = strtolower($title . ' ' . $message);
+
+        if (preg_match('/payout|commission|cashout/', $haystack)) {
+            return [
+                'type' => 'commission',
+                'icon' => 'fa-money-bill-wave',
+                'color' => '#10B981',
+                'action_url' => '/agent/payouts',
+                'action_text' => 'View Payouts'
+            ];
+        }
+
+        if (preg_match('/payment|mpesa|contribution|invoice|receipt/', $haystack)) {
+            return [
+                'type' => 'payment',
+                'icon' => 'fa-credit-card',
+                'color' => '#8B5CF6',
+                'action_url' => '/agent/members',
+                'action_text' => 'View Members'
+            ];
+        }
+
+        if (preg_match('/claim|burial|mortuary/', $haystack)) {
+            return [
+                'type' => 'claims',
+                'icon' => 'fa-file-medical',
+                'color' => '#3B82F6',
+                'action_url' => '/agent/claims',
+                'action_text' => 'View Claims'
+            ];
+        }
+
+        if (preg_match('/member|registration/', $haystack)) {
+            return [
+                'type' => 'registration',
+                'icon' => 'fa-user-plus',
+                'color' => '#6366F1',
+                'action_url' => '/agent/members',
+                'action_text' => 'View Members'
+            ];
+        }
+
+        return [
+            'type' => 'alert',
+            'icon' => 'fa-bell',
+            'color' => '#F59E0B',
+            'action_url' => '/agent/notifications',
+            'action_text' => 'View Notifications'
+        ];
+    }
+
+    private function formatTimeAgo($datetime)
+    {
+        try {
+            $date = new DateTime($datetime);
+            $now = new DateTime();
+            $diff = $now->diff($date);
+
+            if ($diff->y > 0) {
+                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->m > 0) {
+                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->d > 0) {
+                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->h > 0) {
+                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->i > 0) {
+                return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+            }
+
+            return 'Just now';
+        } catch (Exception $e) {
+            return 'Just now';
+        }
     }
 }

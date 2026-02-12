@@ -213,6 +213,7 @@ class Router
         $this->addRoute('POST', '/agent/password/update', 'AgentDashboardController@updatePassword');
         $this->addRoute('GET', '/agent/members', 'AgentDashboardController@members');
         $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
+        $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
         $this->addRoute('GET', '/agent/support', 'AgentDashboardController@support');
@@ -237,6 +238,8 @@ class Router
         
         // Settings Routes (Admin & Manager)
         $this->addRoute('GET', '/admin/notifications', 'AdminController@notifications');
+        $this->addRoute('POST', '/admin/notifications/mark-read', 'AdminController@markNotificationAsRead');
+        $this->addRoute('POST', '/admin/notifications/mark-all-read', 'AdminController@markAllNotificationsAsRead');
         $this->addRoute('GET', '/admin/notification-settings', 'SettingsController@index');
         $this->addRoute('POST', '/admin/settings/update', 'SettingsController@update');
         $this->addRoute('POST', '/admin/settings/test-fallback', 'SettingsController@testFallback');

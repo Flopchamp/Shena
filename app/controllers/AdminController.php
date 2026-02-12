@@ -1144,74 +1144,284 @@ class AdminController extends BaseController
     public function notifications()
     {
         $this->requireAdminAccess();
-        
-        // Get notification logs from database
-        // This could be extended to show SMS logs, email logs, system alerts, etc.
-        
-        // Sample notification data (replace with actual database queries)
-        $notifications = [
-            [
-                'title' => 'New Member Registration',
-                'message' => 'Member John Doe (ID: MB123456) successfully registered for Platinum Plan',
-                'type' => 'success',
-                'icon' => 'user-plus',
-                'time' => '2 hours ago',
-                'recipient' => 'System Admin',
-                'category' => 'Membership'
-            ],
-            [
-                'title' => 'M-Pesa Payment Received',
-                'message' => 'Payment of KES 5,000 received from phone 0712345678. Transaction: ABC123XYZ',
-                'type' => 'success',
-                'icon' => 'money-bill-wave',
-                'time' => '3 hours ago',
-                'recipient' => 'Finance Team',
-                'category' => 'Payment'
-            ],
-            [
-                'title' => 'Claim Submitted',
-                'message' => 'New death claim submitted by member Sarah Jane (MB987654). Policy: POL-2024-001',
-                'type' => 'warning',
-                'icon' => 'file-medical',
-                'time' => '5 hours ago',
-                'recipient' => 'Claims Officer',
-                'category' => 'Claims'
-            ],
-            [
-                'title' => 'Email Notification Sent',
-                'message' => 'Welcome email sent to newmember@example.com - Status: Delivered',
-                'type' => 'info',
-                'icon' => 'envelope',
-                'time' => '1 day ago',
-                'recipient' => '5 Members',
-                'category' => 'Email'
-            ],
-            [
-                'title' => 'SMS Campaign Delivered',
-                'message' => 'Monthly reminder SMS sent to 150 members - 145 delivered, 5 failed',
-                'type' => 'info',
-                'icon' => 'sms',
-                'time' => '2 days ago',
-                'recipient' => '150 Members',
-                'category' => 'SMS'
-            ],
-            [
-                'title' => 'System Backup Completed',
-                'message' => 'Daily database backup completed successfully. Size: 245 MB',
-                'type' => 'success',
-                'icon' => 'database',
-                'time' => '3 days ago',
-                'recipient' => 'System',
-                'category' => 'System'
-            ]
-        ];
+
+        $notifications = $this->getAdminNotifications($_SESSION['user_id'], [
+            'category' => $_GET['category'] ?? 'all',
+            'type' => $_GET['type'] ?? 'all',
+            'date' => $_GET['date'] ?? 'all'
+        ]);
         
         $data = [
             'title' => 'System Notifications - Admin',
-            'notifications' => $notifications
+            'notifications' => $notifications,
+            'csrf_token' => $this->generateCsrfToken()
         ];
         
         $this->view('admin.notifications', $data);
+    }
+
+    private function getAdminNotifications($userId, array $filters = [])
+    {
+        $stmt = $this->db->getConnection()->prepare('
+            SELECT cr.id AS notification_id,
+                   cr.status,
+                   cr.read_at,
+                   cr.sent_at,
+                   c.subject,
+                   c.message,
+                   c.type,
+                   c.created_at,
+                   u.first_name,
+                   u.last_name
+            FROM communication_recipients cr
+            INNER JOIN communications c ON c.id = cr.communication_id
+            LEFT JOIN users u ON c.sender_id = u.id
+            WHERE cr.user_id = :user_id
+            ORDER BY COALESCE(cr.sent_at, c.sent_at, c.created_at) DESC
+            LIMIT 100
+        ');
+        $stmt->execute([':user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $notifications = [];
+        foreach ($rows as $row) {
+            $title = $row['subject'] ?: 'Notification';
+            $message = $row['message'] ?: '';
+            $meta = $this->inferAdminNotificationCategory($title, $message);
+            $timestamp = $row['sent_at'] ?? $row['created_at'] ?? 'now';
+            $senderName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+            $isRead = !empty($row['read_at']) || ($row['status'] ?? '') === 'read';
+
+            $notifications[] = [
+                'id' => (int)$row['notification_id'],
+                'title' => $title,
+                'message' => $message,
+                'type' => $meta['type'],
+                'icon' => $meta['icon'],
+                'time' => $this->formatTimeAgo($timestamp),
+                'recipient' => $senderName !== '' ? $senderName : 'System',
+                'category' => $meta['category_label'],
+                'category_key' => $meta['category_key'],
+                'created_at' => $timestamp,
+                'read' => $isRead,
+                'action_url' => $meta['action_url'],
+                'action_text' => $meta['action_text']
+            ];
+        }
+
+        return $this->filterAdminNotifications($notifications, $filters);
+    }
+
+    private function filterAdminNotifications(array $notifications, array $filters)
+    {
+        $category = strtolower($filters['category'] ?? 'all');
+        $type = strtolower($filters['type'] ?? 'all');
+        $date = strtolower($filters['date'] ?? 'all');
+
+        return array_values(array_filter($notifications, function ($notification) use ($category, $type, $date) {
+            if ($category !== 'all' && strtolower($notification['category_key'] ?? '') !== $category) {
+                return false;
+            }
+
+            if ($type !== 'all' && strtolower($notification['type'] ?? '') !== $type) {
+                return false;
+            }
+
+            if ($date === 'all') {
+                return true;
+            }
+
+            $timestamp = strtotime($notification['created_at'] ?? 'now');
+            $now = time();
+
+            if ($date === 'today') {
+                return date('Y-m-d', $timestamp) === date('Y-m-d', $now);
+            }
+
+            if ($date === 'week') {
+                return $timestamp >= strtotime('-7 days', $now);
+            }
+
+            if ($date === 'month') {
+                return $timestamp >= strtotime('-30 days', $now);
+            }
+
+            return true;
+        }));
+    }
+
+    private function inferAdminNotificationCategory($title, $message)
+    {
+        $haystack = strtolower($title . ' ' . $message);
+
+        if (preg_match('/claim|burial|mortuary/', $haystack)) {
+            return [
+                'category_key' => 'claims',
+                'category_label' => 'Claims',
+                'type' => 'warning',
+                'icon' => 'file-medical',
+                'action_url' => '/admin/claims',
+                'action_text' => 'Review claims'
+            ];
+        }
+
+        if (preg_match('/upgrade|plan change/', $haystack)) {
+            return [
+                'category_key' => 'upgrades',
+                'category_label' => 'Upgrades',
+                'type' => 'info',
+                'icon' => 'level-up-alt',
+                'action_url' => '/admin/plan-upgrades',
+                'action_text' => 'Review upgrades'
+            ];
+        }
+
+        if (preg_match('/commission|payout|cashout/', $haystack)) {
+            return [
+                'category_key' => 'commissions',
+                'category_label' => 'Commissions',
+                'type' => 'warning',
+                'icon' => 'money-bill-wave',
+                'action_url' => '/admin/commissions',
+                'action_text' => 'Review commissions'
+            ];
+        }
+
+        if (preg_match('/payment|mpesa|contribution|invoice|receipt/', $haystack)) {
+            return [
+                'category_key' => 'payment',
+                'category_label' => 'Payment',
+                'type' => 'success',
+                'icon' => 'money-bill-wave',
+                'action_url' => '/admin/payments',
+                'action_text' => 'Review payments'
+            ];
+        }
+
+        if (preg_match('/member|registration|activation/', $haystack)) {
+            return [
+                'category_key' => 'membership',
+                'category_label' => 'Membership',
+                'type' => 'success',
+                'icon' => 'user-plus',
+                'action_url' => '/admin/members',
+                'action_text' => 'View members'
+            ];
+        }
+
+        if (preg_match('/sms/', $haystack)) {
+            return [
+                'category_key' => 'sms',
+                'category_label' => 'SMS',
+                'type' => 'info',
+                'icon' => 'sms',
+                'action_url' => '/admin/communications',
+                'action_text' => 'Open communications'
+            ];
+        }
+
+        if (preg_match('/email/', $haystack)) {
+            return [
+                'category_key' => 'email',
+                'category_label' => 'Email',
+                'type' => 'info',
+                'icon' => 'envelope',
+                'action_url' => '/admin/communications',
+                'action_text' => 'Open communications'
+            ];
+        }
+
+        return [
+            'category_key' => 'system',
+            'category_label' => 'System',
+            'type' => 'info',
+            'icon' => 'bell',
+            'action_url' => '/admin/notifications',
+            'action_text' => 'View details'
+        ];
+    }
+
+    /**
+     * Mark notification as read (admin)
+     */
+    public function markNotificationAsRead()
+    {
+        $this->requireAdminAccess();
+
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notification as read.'], 500);
+        }
+    }
+
+    /**
+     * Mark all notifications as read (admin)
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $this->requireAdminAccess();
+
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE user_id = :user_id AND status <> "read"
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notifications as read.'], 500);
+        }
+    }
+
+    private function formatTimeAgo($datetime)
+    {
+        try {
+            $date = new DateTime($datetime);
+            $now = new DateTime();
+            $diff = $now->diff($date);
+
+            if ($diff->y > 0) {
+                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->m > 0) {
+                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->d > 0) {
+                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->h > 0) {
+                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->i > 0) {
+                return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+            }
+
+            return 'Just now';
+        } catch (Exception $e) {
+            return 'Just now';
+        }
     }
 
     /**
@@ -1929,6 +2139,44 @@ class AdminController extends BaseController
                     'action_url' => '/admin/agents',
                     'action_text' => 'View Agents',
                     'priority' => 'low'
+                ];
+            }
+
+            // Check for pending plan upgrade requests
+            $pendingUpgrades = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM plan_upgrade_requests
+                WHERE status IN ('pending', 'payment_initiated')
+            ");
+
+            if ($pendingUpgrades && $pendingUpgrades['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => 'fas fa-level-up-alt',
+                    'title' => 'Plan Upgrade Requests',
+                    'message' => $pendingUpgrades['count'] . ' plan upgrade request(s) awaiting review.',
+                    'action_url' => '/admin/plan-upgrades',
+                    'action_text' => 'Review Upgrades',
+                    'priority' => 'medium'
+                ];
+            }
+
+            // Check for commission payouts pending processing
+            $pendingPayouts = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM agent_commissions
+                WHERE status IN ('pending', 'approved')
+            ");
+
+            if ($pendingPayouts && $pendingPayouts['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => 'fas fa-money-bill-wave',
+                    'title' => 'Commission Payout Requests',
+                    'message' => $pendingPayouts['count'] . ' commission payout(s) awaiting processing.',
+                    'action_url' => '/admin/commissions',
+                    'action_text' => 'Review Payouts',
+                    'priority' => 'high'
                 ];
             }
 

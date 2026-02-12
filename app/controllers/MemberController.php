@@ -1086,19 +1086,40 @@ class MemberController extends BaseController
                     error_log('Email notification failed: ' . $e->getMessage());
                 }
             }
+
+            // Create in-app notifications
+            require_once 'app/services/InAppNotificationService.php';
+            $inAppNotificationService = new InAppNotificationService();
+            try {
+                $inAppNotificationService->notifyAdmins([
+                    'subject' => 'New claim submitted',
+                    'message' => "Member {$member['member_number']} submitted Claim #{$claimId} for {$claimData['deceased_name']}.",
+                    'action_url' => "/admin/claims/view/{$claimId}",
+                    'action_text' => 'Review Claim'
+                ], $_SESSION['user_id'] ?? null);
+
+                $inAppNotificationService->notifyUsers([
+                    $_SESSION['user_id'] ?? null
+                ], [
+                    'subject' => 'Claim submitted successfully',
+                    'message' => "Your claim #{$claimId} has been received and is under review.",
+                    'action_url' => '/claims',
+                    'action_text' => 'View Claims'
+                ], $_SESSION['user_id'] ?? null);
+            } catch (Exception $ne) {
+                error_log('In-app notification failed: ' . $ne->getMessage());
+            }
             
             // If cash alternative requested, notify admin
             if ($requestCashAlternative && !empty($cashAlternativeReason)) {
                 error_log('Cash alternative requested for claim ID: ' . $claimId);
-                // Store in session for admin alert
-                $notificationModel = new Notification();
                 try {
-                    $notificationModel->createAdminNotification(
-                        'cash_alternative_request',
-                        "Member {$member['member_number']} has requested cash alternative for Claim #{$claimId}",
-                        "/admin/claims/view/{$claimId}",
-                        ['claim_id' => $claimId, 'reason' => $cashAlternativeReason]
-                    );
+                    $inAppNotificationService->notifyAdmins([
+                        'subject' => 'Cash alternative requested',
+                        'message' => "Member {$member['member_number']} requested cash alternative for Claim #{$claimId}.",
+                        'action_url' => "/admin/claims/view/{$claimId}",
+                        'action_text' => 'Review Request'
+                    ], $_SESSION['user_id'] ?? null);
                 } catch (Exception $ne) {
                     error_log('Failed to create admin notification: ' . $ne->getMessage());
                 }
@@ -1325,6 +1346,30 @@ class MemberController extends BaseController
             
             // Create upgrade request
             $upgradeRequestId = $upgradeService->createUpgradeRequest($member['id'], $toPackage);
+
+            // Create in-app notifications
+            require_once 'app/services/InAppNotificationService.php';
+            $inAppNotificationService = new InAppNotificationService();
+            try {
+                $toPackageLabel = ucfirst(str_replace('_', ' ', $toPackage));
+                $inAppNotificationService->notifyAdmins([
+                    'subject' => 'Plan upgrade requested',
+                    'message' => "Member {$member['member_number']} requested an upgrade to {$toPackageLabel}.",
+                    'action_url' => '/admin/plan-upgrades',
+                    'action_text' => 'Review Upgrade'
+                ], $_SESSION['user_id'] ?? null);
+
+                $inAppNotificationService->notifyUsers([
+                    $_SESSION['user_id'] ?? null
+                ], [
+                    'subject' => 'Plan upgrade initiated',
+                    'message' => "Your upgrade request to {$toPackageLabel} has been submitted. Complete the payment to finish.",
+                    'action_url' => '/member/upgrade',
+                    'action_text' => 'View Upgrade'
+                ], $_SESSION['user_id'] ?? null);
+            } catch (Exception $ne) {
+                error_log('In-app notification failed: ' . $ne->getMessage());
+            }
             
             // Initiate M-Pesa payment
             $phoneNumber = $jsonInput['phone_number'] ?? $_POST['phone_number'] ?? $member['phone'];
@@ -1728,8 +1773,6 @@ class MemberController extends BaseController
                    cr.sent_at,
                    c.subject,
                    c.message,
-                   c.action_url,
-                   c.action_text,
                    c.type,
                    c.created_at
             FROM communication_recipients cr
@@ -1746,8 +1789,8 @@ class MemberController extends BaseController
             $title = $row['subject'] ?: 'Notification';
             $message = $row['message'] ?: '';
             $category = $this->inferNotificationCategory($title, $message);
-            $actionUrl = !empty($row['action_url']) ? $row['action_url'] : $category['action_url'];
-            $actionText = !empty($row['action_text']) ? $row['action_text'] : $category['action_text'];
+            $actionUrl = $category['action_url'];
+            $actionText = $category['action_text'];
 
             $notifications[] = [
                 'id' => (int)$row['notification_id'],

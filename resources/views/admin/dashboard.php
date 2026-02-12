@@ -258,6 +258,91 @@
         font-weight: 600;
     }
 
+    /* Alerts Section */
+    .alerts-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-link {
+        color: #7F3D9E;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alerts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+    }
+
+    .alert-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid #E5E7EB;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .alert-card.info .alert-icon {
+        background: #DBEAFE;
+        color: #3B82F6;
+    }
+
+    .alert-card.warning .alert-icon {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .alert-card.danger .alert-icon {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .alert-card.success .alert-icon {
+        background: #D1FAE5;
+        color: #059669;
+    }
+
+    .alert-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 0.35rem;
+    }
+
+    .alert-message {
+        font-size: 0.8125rem;
+        color: #6B7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-action {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #7F3D9E;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
     /* Activity Feed */
     .activity-feed {
         background: white;
@@ -508,6 +593,37 @@
     <h1 class="page-title">Dashboard Overview</h1>
     <p class="page-subtitle">Welcome back! Here's what's happening with your organization today.</p>
 </div>
+
+<?php if (!empty($alerts)): ?>
+    <div class="alerts-section">
+        <div class="section-header">
+            <h2 class="section-title">Action Alerts</h2>
+            <a class="section-link" href="/admin/notifications">
+                View notifications
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="alerts-grid">
+            <?php foreach ($alerts as $alert): ?>
+                <div class="alert-card <?php echo htmlspecialchars($alert['type']); ?>">
+                    <div class="alert-icon">
+                        <i class="<?php echo htmlspecialchars($alert['icon']); ?>"></i>
+                    </div>
+                    <div>
+                        <div class="alert-title"><?php echo htmlspecialchars($alert['title']); ?></div>
+                        <div class="alert-message"><?php echo htmlspecialchars($alert['message']); ?></div>
+                        <?php if (!empty($alert['action_url'])): ?>
+                            <a class="alert-action" href="<?php echo htmlspecialchars($alert['action_url']); ?>">
+                                <?php echo htmlspecialchars($alert['action_text'] ?? 'Review'); ?>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- Stats Grid -->
 <div class="stats-grid">
