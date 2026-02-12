@@ -15,6 +15,59 @@
     <link href="/css/shena-main.css" rel="stylesheet">
     <!-- Responsive Utilities -->
     <link href="/css/responsive-utilities.css" rel="stylesheet">
+    <style>
+        /* Mobile Menu Toggle Styling */
+        .navbar-toggler {
+            border: 2px solid #7F3D9E !important;
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            background-color: transparent !important;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(127, 61, 158, 0.25) !important;
+            outline: none !important;
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%237F3D9E' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+            width: 24px !important;
+            height: 24px !important;
+        }
+        
+        /* Mobile Navigation Styles */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                margin-top: 16px;
+                padding: 20px 0;
+                border-top: 1px solid #E5E7EB;
+            }
+            
+            .navbar-nav {
+                gap: 8px !important;
+            }
+            
+            .navbar-nav .nav-item {
+                text-align: center;
+                padding: 4px 0;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 12px 16px !important;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            
+            .navbar-nav .nav-link:hover {
+                background-color: #F3F4F6;
+            }
+            
+            .navbar-nav .btn {
+                width: 100%;
+                margin: 8px 0 !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -23,7 +76,7 @@
             <a class="navbar-brand" href="/" style="display: flex; align-items: center; gap: 12px; margin: 0; padding: 0;">
                 <img src="/public/images/shena-logo.png" alt="SHENA Companion" style="height: 80px; width: auto;">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
