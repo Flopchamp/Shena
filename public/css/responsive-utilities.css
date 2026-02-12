@@ -1,0 +1,359 @@
+/**
+ * Responsive Utilities CSS
+ * Common responsive classes and utilities for SHENA Companion
+ * Version 1.0.0 - February 2026
+ */
+
+/* ========================================
+   RESPONSIVE TABLE WRAPPER
+   ======================================== */
+
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.table-responsive-wrapper table {
+    min-width: 600px;
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .table-responsive-wrapper table {
+        font-size: 14px;
+    }
+
+    .table-responsive-wrapper th,
+    .table-responsive-wrapper td {
+        padding: 8px;
+    }
+}
+
+/* ========================================
+   RESPONSIVE GRID HELPERS
+   ======================================== */
+
+.grid-responsive {
+    display: grid;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .grid-responsive-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-responsive-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-responsive-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .grid-responsive,
+    .grid-responsive-2,
+    .grid-responsive-3,
+    .grid-responsive-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   MOBILE VISIBILITY UTILITIES
+   ======================================== */
+
+@media (max-width: 575px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 576px) {
+    .show-mobile-only {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .hide-tablet {
+        display: none !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .show-tablet-only {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   RESPONSIVE SPACING
+   ======================================== */
+
+@media (max-width: 767px) {
+    .mobile-stack > * {
+        margin-bottom: 15px;
+    }
+
+    .mobile-stack > *:last-child {
+        margin-bottom: 0;
+    }
+
+    .mobile-center {
+        text-align: center !important;
+    }
+
+    .mobile-full-width {
+        width: 100% !important;
+    }
+}
+
+/* ========================================
+   RESPONSIVE CARD LAYOUTS
+   ======================================== */
+
+.card-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 575px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   TOUCH-FRIENDLY ELEMENTS
+   ======================================== */
+
+@media (max-width: 767px) {
+    .touch-friendly input[type="text"],
+    .touch-friendly input[type="email"],
+    .touch-friendly input[type="tel"],
+    .touch-friendly input[type="password"],
+    .touch-friendly input[type="number"],
+    .touch-friendly input[type="date"],
+    .touch-friendly select,
+    .touch-friendly textarea {
+        min-height: 44px;
+        font-size: 16px;
+        padding: 10px 15px;
+    }
+
+    .touch-friendly button,
+    .touch-friendly .btn {
+        min-height: 44px;
+        padding: 10px 20px;
+    }
+}
+
+/* ========================================
+   RESPONSIVE FORM LAYOUTS
+   ======================================== */
+
+.form-row-responsive {
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 767px) {
+    .form-row-responsive {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-row-responsive-3 {
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 991px) {
+    .form-row-responsive-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .form-row-responsive-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   RESPONSIVE BUTTON GROUPS
+   ======================================== */
+
+.btn-group-responsive {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 575px) {
+    .btn-group-responsive {
+        flex-direction: column;
+    }
+
+    .btn-group-responsive .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   RESPONSIVE STAT CARDS
+   ======================================== */
+
+.stat-card-container {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 575px) {
+    .stat-card-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   RESPONSIVE MODALS
+   ======================================== */
+
+@media (max-width: 575px) {
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 15px;
+    }
+
+    .modal-body {
+        padding: 20px 15px;
+    }
+}
+
+/* ========================================
+   RESPONSIVE DASHBOARD LAYOUTS
+   ======================================== */
+
+.dashboard-grid {
+    display: grid;
+    gap: 24px;
+}
+
+@media (min-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+/* ========================================
+   CONTAINER PADDING ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 575px) {
+    .container,
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+/* ========================================
+   RESPONSIVE TEXT SIZES
+   ======================================== */
+
+@media (max-width: 767px) {
+    .responsive-heading-1 {
+        font-size: 1.75rem;
+    }
+
+    .responsive-heading-2 {
+        font-size: 1.5rem;
+    }
+
+    .responsive-heading-3 {
+        font-size: 1.25rem;
+    }
+
+    .responsive-text {
+        font-size: 14px;
+    }
+}
+
+/* ========================================
+   RESPONSIVE IMAGES
+   ======================================== */
+
+.img-responsive {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+    .no-print,
+    .sidebar,
+    .mobile-menu-toggle,
+    .mobile-menu-btn,
+    .top-bar,
+    .btn,
+    button,
+    .navbar,
+    footer {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    table {
+        page-break-inside: avoid;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+}

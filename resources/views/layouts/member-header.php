@@ -8,6 +8,8 @@
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 	<link href="/public/css/modals.css" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<!-- Responsive Utilities -->
+	<link href="/css/responsive-utilities.css" rel="stylesheet">
 	<style>
 		* {
 			margin: 0;
@@ -295,6 +297,200 @@
 
 		.sidebar.collapsed + .sidebar-toggle-btn i {
 			transform: rotate(180deg);
+		}
+		
+		/* ========================================
+		   MOBILE RESPONSIVE STYLES
+		   ======================================== */
+		
+		/* Mobile Overlay */
+		.mobile-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 999;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+		}
+
+		.mobile-overlay.show {
+			display: block;
+			opacity: 1;
+		}
+
+		/* Mobile Menu Button */
+		.mobile-menu-btn {
+			display: none;
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			width: 44px;
+			height: 44px;
+			background: white;
+			border: none;
+			border-radius: 10px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+			z-index: 1001;
+			cursor: pointer;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.mobile-menu-btn i {
+			color: #7F3D9E;
+			font-size: 20px;
+		}
+
+		/* Tablet and Below (991px) */
+		@media (max-width: 991px) {
+			.sidebar {
+				transform: translateX(-100%);
+				transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			}
+
+			.sidebar.mobile-open {
+				transform: translateX(0);
+			}
+
+			.sidebar-toggle-btn {
+				display: none;
+			}
+
+			.mobile-menu-btn {
+				display: flex;
+			}
+
+			.main-content {
+				margin-left: 0;
+				width: 100%;
+			}
+
+			.top-bar {
+				padding-left: 70px;
+			}
+		}
+
+		/* Mobile Landscape and Below (768px) */
+		@media (max-width: 768px) {
+			.top-bar {
+				flex-direction: column;
+				align-items: flex-start;
+				padding: 15px 20px 15px 70px;
+				gap: 15px;
+			}
+
+			.top-bar-left h1 {
+				font-size: 1.5rem;
+			}
+
+			.top-bar-right {
+				width: 100%;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+
+			.search-container {
+				width: 100%;
+				order: -1;
+			}
+
+			.user-profile {
+				order: 1;
+			}
+
+			.logout-btn {
+				order: 2;
+			}
+
+			.icon-btn {
+				order: 3;
+			}
+
+			/* Stack dashboard cards */
+			.dashboard-container {
+				padding: 20px 15px;
+			}
+
+			/* Make tables scroll horizontally */
+			table {
+				display: block;
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+		}
+
+		/* Mobile Portrait (575px) */
+		@media (max-width: 575px) {
+			.mobile-menu-btn {
+				top: 15px;
+				left: 15px;
+				width: 40px;
+				height: 40px;
+			}
+
+			.top-bar {
+				padding: 15px 15px 15px 65px;
+			}
+
+			.top-bar-left h1 {
+				font-size: 1.25rem;
+			}
+
+			.dashboard-container {
+				padding: 15px 10px;
+			}
+
+			.user-profile-text {
+				display: none;
+			}
+
+			.logout-btn span {
+				display: none;
+			}
+
+			.logout-btn {
+				padding: 10px 15px;
+			}
+
+			/* Touch-friendly form elements */
+			input[type="text"],
+			input[type="email"],
+			input[type="tel"],
+			input[type="number"],
+			input[type="password"],
+			input[type="date"],
+			select,
+			textarea {
+				min-height: 44px;
+				font-size: 16px; /* Prevents zoom on iOS */
+			}
+
+			button,
+			.btn {
+				min-height: 44px;
+				padding: 10px 20px;
+			}
+
+			/* Smaller card padding */
+			.card {
+				padding: 15px;
+			}
+
+			h1, .h1 {
+				font-size: 1.5rem;
+			}
+
+			h2, .h2 {
+				font-size: 1.25rem;
+			}
+
+			h3, .h3 {
+				font-size: 1.1rem;
+			}
 		}
 		
 		.main-content {
@@ -599,6 +795,14 @@
 	</style>
 </head>
 <body>
+	<!-- Mobile Menu Button -->
+	<button class="mobile-menu-btn" onclick="toggleMemberSidebar()">
+		<i class="fas fa-bars"></i>
+	</button>
+
+	<!-- Mobile Overlay -->
+	<div class="mobile-overlay" onclick="closeMemberSidebar()"></div>
+
 	<div class="dashboard-wrapper">
 		<!-- Sidebar -->
 		<aside class="sidebar" id="memberSidebar">
@@ -720,3 +924,47 @@
 				</div>
 			</div>
 	<main>
+	<!-- Mobile Menu Scripts -->
+	<script>
+		// Mobile sidebar functions
+		function toggleMemberSidebar() {
+			const sidebar = document.getElementById('memberSidebar');
+			const overlay = document.querySelector('.mobile-overlay');
+			sidebar.classList.toggle('mobile-open');
+			overlay.classList.toggle('show');
+			document.body.style.overflow = sidebar.classList.contains('mobile-open') ? 'hidden' : '';
+		}
+
+		function closeMemberSidebar() {
+			const sidebar = document.getElementById('memberSidebar');
+			const overlay = document.querySelector('.mobile-overlay');
+			sidebar.classList.remove('mobile-open');
+			overlay.classList.remove('show');
+			document.body.style.overflow = '';
+		}
+
+		// Close sidebar when clicking a link on mobile
+		document.addEventListener('DOMContentLoaded', function() {
+			const navLinks = document.querySelectorAll('.sidebar-nav-link');
+			navLinks.forEach(link => {
+				link.addEventListener('click', function() {
+					if (window.innerWidth <= 991) {
+						setTimeout(closeMemberSidebar, 200);
+					}
+				});
+			});
+
+			// Handle window resize
+			let resizeTimer;
+			window.addEventListener('resize', function() {
+				clearTimeout(resizeTimer);
+				resizeTimer = setTimeout(function() {
+					if (window.innerWidth > 991) {
+						closeMemberSidebar();
+					}
+				}, 250);
+			});
+		});
+
+		// Toggle sidebar collapse (for desktop)
+		function toggleSidebar() {

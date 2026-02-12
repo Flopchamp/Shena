@@ -1,7 +1,7 @@
     </main>
 
     <!-- Footer -->
-    <footer style="background: linear-gradient(135deg, #2D1A4A 0%, #1A0F2E 100%); color: white; padding: 70px 0 30px;">
+    <footer class="public-footer" style="background: linear-gradient(135deg, #2D1A4A 0%, #1A0F2E 100%); color: white; padding: 70px 0 30px;">
         <div class="container">
             <div class="row g-5">
                 <!-- Brand Section -->
@@ -86,6 +86,69 @@
             </div>
         </div>
     </footer>
+
+    <!-- Responsive Footer Styles -->
+    <style>
+        /* Public Footer Responsive */
+        @media (max-width: 991px) {
+            .public-footer {
+                padding: 50px 0 20px !important;
+            }
+            
+            .public-footer .row.g-5 {
+                row-gap: 30px !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .public-footer {
+                padding: 40px 0 20px !important;
+            }
+            
+            .public-footer .col-lg-3,
+            .public-footer .col-lg-2,
+            .public-footer .col-lg-4 {
+                text-align: center;
+            }
+            
+            .public-footer .d-flex.gap-3 {
+                justify-content: center;
+            }
+            
+            .public-footer ul {
+                padding-left: 0;
+            }
+            
+            .public-footer .d-flex.align-items-start,
+            .public-footer .d-flex.align-items-center {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 575px) {
+            .public-footer {
+                padding: 30px 0 15px !important;
+            }
+            
+            .public-footer h6 {
+                font-size: 0.7rem !important;
+            }
+            
+            .public-footer p,
+            .public-footer a,
+            .public-footer span {
+                font-size: 0.85rem !important;
+            }
+            
+            .public-footer .text-center.p-4 {
+                padding: 20px !important;
+            }
+            
+            .public-footer .text-center.p-4 > div:first-child {
+                font-size: 2.5rem !important;
+            }
+        }
+    </style>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

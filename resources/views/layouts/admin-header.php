@@ -20,6 +20,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Responsive Utilities -->
+    <link href="/css/responsive-utilities.css" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -545,6 +548,212 @@
             }
         }
 
+        /* ========================================
+           MOBILE RESPONSIVE STYLES
+           ======================================== */
+        
+        /* Mobile Menu Toggle Button */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 44px;
+            height: 44px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            z-index: 1002;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-menu-toggle i {
+            color: #6B7280;
+            font-size: 20px;
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Tablet Styles (768px - 991px) */
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-top: 70px;
+                padding: 20px 15px;
+            }
+
+            .top-header {
+                left: 0;
+                padding: 15px 60px 15px 60px;
+            }
+
+            .search-bar {
+                max-width: 300px;
+            }
+
+            footer {
+                margin-left: 0;
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            footer > div:last-child {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .admin-profile {
+                width: 220px;
+            }
+        }
+
+        /* Mobile Styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            .top-header {
+                flex-direction: column;
+                padding: 10px 15px;
+                gap: 10px;
+                height: auto;
+            }
+
+            .search-bar {
+                width: 100%;
+                max-width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn-new-registration {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 15px 10px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .row > [class*="col-"] {
+                margin-bottom: 15px;
+            }
+
+            .admin-profile {
+                bottom: 10px;
+                left: 5px;
+                width: calc(100% - 10px);
+                max-width: 260px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-group .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* Small Mobile (max-width: 575px) */
+        @media (max-width: 575px) {
+            .mobile-menu-toggle {
+                top: 10px;
+                left: 10px;
+            }
+
+            .main-content {
+                padding: 10px 8px;
+            }
+
+            .top-header {
+                padding: 10px;
+            }
+
+            .btn-new-registration span {
+                display: none;
+            }
+
+            .btn-new-registration {
+                padding: 10px 15px;
+            }
+
+            h1, .h1 {
+                font-size: 1.5rem;
+            }
+
+            h2, .h2 {
+                font-size: 1.3rem;
+            }
+
+            .card {
+                margin-bottom: 10px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="number"],
+            input[type="password"],
+            select,
+            textarea {
+                min-height: 44px;
+                font-size: 16px;
+            }
+
+            button,
+            .btn {
+                min-height: 44px;
+                padding: 10px 20px;
+            }
+        }
+
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -866,10 +1075,58 @@
         </div>
     </div>
 
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" onclick="closeMobileSidebar()"></div>
+
     <!-- Main Content -->
     <div class="main-content">
 
     <script>
+        // Mobile sidebar functions
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+            document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Close sidebar when clicking a link on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 991) {
+                        setTimeout(closeMobileSidebar, 300);
+                    }
+                });
+            });
+
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth > 991) {
+                        closeMobileSidebar();
+                    }
+                }, 250);
+            });
+        });
+
         // Toggle sidebar collapse
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
