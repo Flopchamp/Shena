@@ -1,34 +1,5 @@
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header with Navigation Tabs -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
-</div>
-
-<!-- Reports & Analytics Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/reports">
-            <i class="fas fa-file-alt"></i> All Reports
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active" href="/admin/financial-dashboard">
-            <i class="fas fa-chart-line"></i> Financial Analytics
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/reports/members">
-            <i class="fas fa-users"></i> Member Analytics
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/reports/claims">
-            <i class="fas fa-file-medical"></i> Claims Analytics
-        </a>
-    </li>
-</ul>
-
 <style>
     .page-header {
         background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
@@ -53,32 +24,58 @@
     }
 
     .stat-card {
-            <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Financial Operations</h1>
-        </div>
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #f3f4f6;
+        height: 100%;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
 
-        <!-- Financial Operations Navigation Tabs -->
-        <ul class="nav nav-tabs mb-4" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/admin/payments">
-                    <i class="fas fa-money-bill-wave"></i> Payments
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/admin/payments/reconciliation">
-                    <i class="fas fa-balance-scale"></i> Reconciliation
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/admin/plan-upgrades">
-                    <i class="fas fa-level-up-alt"></i> Plan Upgrades
-                </a>
-            </li>
-        </ul>
+    .stat-card:hover {
+        box-shadow: 0 4px 8px rgba(139, 92, 246, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .stat-card .icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card .icon-wrapper i {
+        font-size: 28px;
+    }
+
+    .stat-card.primary .icon-wrapper {
+        background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%);
+        color: white;
+    }
+
+    .stat-card.success .icon-wrapper {
+        background: linear-gradient(135deg, #7F3D9E 0%, #059669 100%);
+        color: white;
+    }
+
+    .stat-card.warning .icon-wrapper {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        color: white;
+    }
+
+    .stat-card.info .icon-wrapper {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        color: white;
+    }
+
+    .stat-value {
+        font-size: 2rem;
         font-weight: 700;
         color: #1f2937;
         margin: 0.5rem 0;

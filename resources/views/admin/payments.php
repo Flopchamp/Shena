@@ -6,62 +6,6 @@ $successRate = $successRate ?? 0;
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payments Management</h1>
-    <div class="header-actions">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
-            <i class="fas fa-plus me-2"></i>Record Payment
-        </button>
-        <button class="btn btn-success btn-sm" onclick="exportPayments()">
-            <i class="fas fa-file-excel me-2"></i>Export Data
-        </button>
-    </div>
-</div>
-
-<!-- Payment Management Tabs -->
-<ul class="nav nav-tabs mb-4" id="paymentTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="all-payments-tab" data-bs-toggle="tab" data-bs-target="#allPayments" type="button" role="tab">
-            <i class="fas fa-list"></i> All Payments
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pending-payments-tab" data-bs-toggle="tab" data-bs-target="#pendingPayments" type="button" role="tab">
-            <i class="fas fa-clock"></i> Pending Payments
-            <?php if (($stats['pending_payments'] ?? 0) > 0): ?>
-                <span class="badge bg-warning ms-1"><?php echo $stats['pending_payments']; ?></span>
-            <?php endif; ?>
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="successful-tab" data-bs-toggle="tab" data-bs-target="#successfulPayments" type="button" role="tab">
-            <i class="fas fa-check-circle"></i> Successful
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="failed-tab" data-bs-toggle="tab" data-bs-target="#failedPayments" type="button" role="tab">
-            <i class="fas fa-times-circle"></i> Failed
-            <?php if (($stats['failed_payments'] ?? 0) > 0): ?>
-                <span class="badge bg-danger ms-1"><?php echo $stats['failed_payments']; ?></span>
-            <?php endif; ?>
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="reconciliation-tab" data-bs-toggle="tab" data-bs-target="#reconciliation" type="button" role="tab">
-            <i class="fas fa-balance-scale"></i> Reconciliation
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="mpesa-tab" data-bs-toggle="tab" data-bs-target="#mpesa" type="button" role="tab">
-            <i class="fas fa-mobile-alt"></i> M-Pesa Transactions
-        </button>
-    </li>
-</ul>
-
-<!-- Tab Content -->
-<div class="tab-content" id="paymentTabContent">
-
 <style>
     /* Page Header */
     .page-header {

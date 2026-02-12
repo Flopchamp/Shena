@@ -31,436 +31,107 @@
 			color: white;
 			position: fixed;
 			height: 100vh;
-			overflow: hidden;
+			overflow-y: auto;
 			z-index: 1000;
-			transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-			display: flex;
-			flex-direction: column;
-		}
-		
-		.sidebar.collapsed {
-			width: 80px;
 		}
 		
 		.sidebar-logo {
-			padding: 24px 20px;
+			padding: 30px 25px;
 			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-			display: flex;
-			align-items: center;
-			gap: 16px;
-			transition: all 0.3s ease;
-			flex-shrink: 0;
 		}
-
-		.sidebar.collapsed .sidebar-logo {
-			justify-content: center;
-			padding: 0 14px 24px 14px;
-		}
-
-		.sidebar-logo-icon {
-			width: 52px;
-			height: 52px;
-			background: rgba(255, 255, 255, 0.95);
-			border-radius: 14px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 8px;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-			transition: transform 0.2s;
-			flex-shrink: 0;
-		}
-
-		.sidebar.collapsed .sidebar-logo-icon {
-			margin: 0;
-		}
-
-		.sidebar-logo-icon img {
-			width: 100%;
-			height: 100%;
-			object-fit: contain;
-		}
-
-		.sidebar-logo-icon:hover {
-			transform: scale(1.05);
-		}
-
-		.sidebar-logo-text {
-			transition: opacity 0.2s ease;
-			flex: 1;
-			min-width: 0;
-		}
-
-		.sidebar.collapsed .sidebar-logo-text {
-			display: none;
-		}
-
-		.sidebar-logo-text h1 {
-			font-family: 'Playfair Display', serif;
-			font-size: 24px;
+		
+		.sidebar-logo h2 {
+			font-size: 1.1rem;
 			font-weight: 700;
-			color: white;
-			margin: 0 0 2px 0;
 			letter-spacing: 0.5px;
-			line-height: 1;
-		}
-
-		.sidebar-logo-text p {
-			font-size: 11px;
-			color: rgba(255, 255, 255, 0.7);
 			margin: 0;
-			letter-spacing: 2px;
-			font-weight: 600;
-		}
-
-		.sidebar-menu-container {
-			flex: 1;
-			overflow-y: auto;
-			padding-bottom: 20px;
-		}
-
-		.sidebar-menu-container::-webkit-scrollbar {
-			width: 4px;
-		}
-
-		.sidebar-menu-container::-webkit-scrollbar-thumb {
-			background: rgba(255, 255, 255, 0.3);
-			border-radius: 2px;
-		}
-
-		.sidebar-menu-label {
-			padding: 24px 20px 12px;
-			font-size: 11px;
-			font-weight: 700;
-			color: rgba(255, 255, 255, 0.5);
-			letter-spacing: 1px;
-			text-transform: uppercase;
-			transition: opacity 0.2s ease;
-		}
-
-		.sidebar.collapsed .sidebar-menu-label {
-			display: none;
+			display: flex;
+			align-items: center;
+			gap: 10px;
 		}
 		
 		.sidebar-nav {
-			padding: 0;
-			list-style: none;
-			margin: 0;
-		}
-
-		.sidebar-nav-item {
-			margin: 0;
+			padding: 20px 0;
 		}
 		
-		.sidebar-nav-link {
+		.sidebar-nav a {
 			display: flex;
 			align-items: center;
-			gap: 16px;
-			padding: 14px 20px;
+			gap: 12px;
+			padding: 14px 25px;
 			color: rgba(255, 255, 255, 0.8);
 			text-decoration: none;
-			transition: all 0.2s ease;
-			font-size: 15px;
+			transition: all 0.3s ease;
+			font-size: 0.95rem;
 			font-weight: 500;
-			border-left: 3px solid transparent;
-		}
-
-		.sidebar.collapsed .sidebar-nav-link {
-			justify-content: center;
-			padding: 14px 0;
 		}
 		
-		.sidebar-nav-link i {
+		.sidebar-nav a i {
 			width: 20px;
-			font-size: 18px;
-			text-align: center;
-			flex-shrink: 0;
-		}
-
-		.sidebar-nav-link span {
-			transition: opacity 0.2s ease;
-		}
-
-		.sidebar.collapsed .sidebar-nav-link span {
-			display: none;
+			font-size: 1.1rem;
 		}
 		
-		.sidebar-nav-link:hover {
+		.sidebar-nav a:hover {
 			background: rgba(255, 255, 255, 0.1);
 			color: white;
-			border-left-color: rgba(255, 255, 255, 0.3);
 		}
 		
-		.sidebar-nav-link.active {
+		.sidebar-nav a.active {
 			background: rgba(255, 255, 255, 0.15);
 			color: white;
-			border-left-color: #FFD700;
+			border-left: 4px solid #FFD700;
+			padding-left: 21px;
 		}
-
-		/* Member Support Section */
-		.member-support {
-			position: relative;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			background: rgba(0, 0, 0, 0.25);
-			padding: 20px 20px 24px 20px;
-			backdrop-filter: blur(10px);
-			transition: all 0.3s ease;
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
-			flex-shrink: 0;
+		
+		.sidebar-coverage {
+			position: absolute;
+			bottom: 20px;
+			left: 20px;
+			right: 20px;
+			background: rgba(0, 0, 0, 0.2);
+			padding: 20px;
+			border-radius: 12px;
 		}
-
-		.member-support-label {
-			font-size: 10px;
-			font-weight: 700;
+		
+		.sidebar-coverage h5 {
+			font-size: 0.75rem;
+			letter-spacing: 1px;
 			color: rgba(255, 255, 255, 0.6);
-			letter-spacing: 1.2px;
-			text-transform: uppercase;
 			margin-bottom: 8px;
 		}
-
-		.member-support-text {
-			font-size: 13px;
-			color: rgba(255, 255, 255, 0.9);
-			margin-bottom: 12px;
-			line-height: 1.5;
-		}
-
-		.btn-contact-support {
-			background: rgba(255, 255, 255, 0.95);
-			color: #7F20B0;
-			border: none;
-			padding: 10px 18px;
-			border-radius: 8px;
+		
+		.sidebar-coverage h3 {
+			font-size: 1.8rem;
 			font-weight: 700;
-			font-size: 13px;
-			width: 100%;
-			cursor: pointer;
-			transition: all 0.2s ease;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 8px;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			margin-bottom: 5px;
 		}
-
-		.btn-contact-support:hover {
-			background: white;
-			transform: translateY(-2px);
-			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-		}
-
-		.btn-contact-support i {
-			font-size: 14px;
-		}
-
-		.sidebar.collapsed .member-support {
-			opacity: 0;
-			pointer-events: none;
-		}
-
-		.sidebar-toggle-btn {
-			position: fixed;
-			top: 24px;
-			left: 256px;
-			width: 40px;
-			height: 40px;
-			background: white;
-			border: 1px solid #E5E7EB;
-			border-radius: 10px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			z-index: 1001;
-			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		}
-
-		.sidebar.collapsed + .sidebar-toggle-btn {
-			left: 56px;
-		}
-
-		.sidebar-toggle-btn:hover {
-			background: #F9FAFB;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		}
-
-		.sidebar-toggle-btn i {
-			color: #6B7280;
-			font-size: 16px;
-			transition: transform 0.3s ease;
-		}
-
-		.sidebar.collapsed + .sidebar-toggle-btn i {
-			transform: rotate(180deg);
+		
+		.sidebar-coverage p {
+			font-size: 0.75rem;
+			color: rgba(255, 255, 255, 0.7);
+			margin: 0;
 		}
 		
 		.main-content {
 			margin-left: 280px;
 			flex: 1;
 			padding: 0;
-			transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		}
-
-		.sidebar.collapsed ~ .main-content {
-			margin-left: 80px;
 		}
 		
 		.top-bar {
 			background: white;
-			padding: 20px 40px;
+			padding: 20px 40px 20px 25px;
 			border-bottom: 1px solid #E5E7EB;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			gap: 24px;
 		}
 		
-		.top-bar-left h1 {
+		.top-bar h1 {
 			font-size: 1.5rem;
 			font-weight: 600;
 			color: #1F2937;
 			margin: 0;
-		}
-
-		.top-bar-right {
-			display: flex;
-			align-items: center;
-			gap: 20px;
-		}
-
-		.search-container {
-			position: relative;
-		}
-
-		.search-input-wrapper {
-			position: relative;
-			width: 300px;
-		}
-
-		.search-input {
-			width: 100%;
-			padding: 10px 16px 10px 40px;
-			border: 1px solid #E5E7EB;
-			border-radius: 8px;
-			font-size: 14px;
-			transition: all 0.2s;
-			background: #F9FAFB;
-		}
-
-		.search-input:focus {
-			outline: none;
-			border-color: #7F3D9E;
-			background: white;
-			box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
-		}
-
-		.search-icon {
-			position: absolute;
-			left: 12px;
-			top: 50%;
-			transform: translateY(-50%);
-			color: #9CA3AF;
-			font-size: 14px;
-		}
-
-		.search-results {
-			position: absolute;
-			top: calc(100% + 8px);
-			left: 0;
-			right: 0;
-			background: white;
-			border: 1px solid #E5E7EB;
-			border-radius: 12px;
-			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-			max-height: 400px;
-			overflow-y: auto;
-			z-index: 1002;
-		}
-
-		.search-result-item {
-			padding: 12px 16px;
-			border-bottom: 1px solid #F3F4F6;
-			cursor: pointer;
-			transition: background 0.2s;
-			display: flex;
-			align-items: center;
-			gap: 12px;
-		}
-
-		.search-result-item:last-child {
-			border-bottom: none;
-		}
-
-		.search-result-item:hover {
-			background: #F9FAFB;
-		}
-
-		.search-result-icon {
-			width: 36px;
-			height: 36px;
-			background: linear-gradient(135deg, #7F3D9E 0%, #A855F7 100%);
-			border-radius: 8px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: white;
-			font-size: 14px;
-		}
-
-		.search-result-content h6 {
-			font-size: 14px;
-			font-weight: 600;
-			color: #1F2937;
-			margin: 0 0 2px 0;
-		}
-
-		.search-result-content p {
-			font-size: 12px;
-			color: #6B7280;
-			margin: 0;
-		}
-
-		.icon-btn {
-			width: 40px;
-			height: 40px;
-			border-radius: 10px;
-			border: none;
-			background: #F9FAFB;
-			color: #6B7280;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			transition: all 0.2s;
-			position: relative;
-		}
-
-		.icon-btn:hover {
-			background: #F3F4F6;
-			color: #7F20B0;
-		}
-
-		.logout-btn {
-			background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-			color: white;
-			border: none;
-			padding: 10px 20px;
-			border-radius: 8px;
-			font-weight: 600;
-			font-size: 14px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			cursor: pointer;
-			transition: all 0.2s;
-		}
-
-		.logout-btn:hover {
-			transform: translateY(-1px);
-			box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 		}
 		
 		.user-profile {
@@ -507,119 +178,54 @@
 			.main-content {
 				margin-left: 0;
 			}
-
-			.sidebar-toggle-btn {
-				left: 16px;
-			}
-
-			.search-input-wrapper {
-				width: 200px;
-			}
 		}
 	</style>
 </head>
 <body>
 	<div class="dashboard-wrapper">
 		<!-- Sidebar -->
-		<aside class="sidebar" id="memberSidebar">
+		<aside class="sidebar">
 			<div class="sidebar-logo">
-				<div class="sidebar-logo-icon">
-					<img src="/public/images/shena-logo.png" alt="Shena Logo" onerror="this.parentElement.innerHTML='<div style=\\'font-family: Playfair Display, serif; font-size: 20px; font-weight: 700; color: #7F3D9E; text-align: center;\\'>SC</div>'">
-				</div>
-				<div class="sidebar-logo-text">
-					<h1>SHENA</h1>
-					<p>COMPANION</p>
-				</div>
+				<h2>
+					<i class="fas fa-shield-alt"></i>
+					SHENA COMPANION
+				</h2>
 			</div>
-
-			<div class="sidebar-menu-container">
-			<div class="sidebar-menu-label">MAIN MENU</div>
-			<ul class="sidebar-nav">
-				<li class="sidebar-nav-item">
-					<a href="/dashboard" class="sidebar-nav-link <?php echo ($page ?? '') === 'dashboard' ? 'active' : ''; ?>">
-						<i class="fas fa-th-large"></i>
-						<span>Dashboard</span>
-					</a>
-				</li>
-				<li class="sidebar-nav-item">
-					<a href="/payments" class="sidebar-nav-link <?php echo ($page ?? '') === 'payments' ? 'active' : ''; ?>">
-						<i class="fas fa-credit-card"></i>
-						<span>Contributions</span>
-					</a>
-				</li>
-				<li class="sidebar-nav-item">
-					<a href="/claims" class="sidebar-nav-link <?php echo ($page ?? '') === 'claims' ? 'active' : ''; ?>">
-						<i class="fas fa-file-medical"></i>
-						<span>Claims</span>
-					</a>
-				</li>
-				<li class="sidebar-nav-item">
-					<a href="/beneficiaries" class="sidebar-nav-link <?php echo ($page ?? '') === 'beneficiaries' ? 'active' : ''; ?>">
-						<i class="fas fa-users"></i>
-						<span>Beneficiaries</span>
-					</a>
-				</li>
-			</ul>
-
-			<div class="sidebar-menu-label">SERVICES</div>
-			<ul class="sidebar-nav">
-				<li class="sidebar-nav-item">
-					<a href="/member/upgrade" class="sidebar-nav-link <?php echo ($page ?? '') === 'upgrade' ? 'active' : ''; ?>">
-						<i class="fas fa-arrow-up"></i>
-						<span>Upgrade Plan</span>
-					</a>
-				</li>
-				<li class="sidebar-nav-item">
-					<a href="/profile" class="sidebar-nav-link <?php echo ($page ?? '') === 'settings' ? 'active' : ''; ?>">
-						<i class="fas fa-cog"></i>
-						<span>Settings</span>
-					</a>
-				</li>
-			</ul>
-			</div>
-			
-			<div class="member-support">
-				<div class="member-support-label">MEMBER SUPPORT</div>
-				<div class="member-support-text">Need help or have questions?</div>
-				<button class="btn-contact-support" onclick="location.href='/member/support'">
-					<i class="fas fa-headset"></i>
-					Contact Support
-				</button>
+			<nav class="sidebar-nav">
+				<a href="/dashboard" class="<?php echo ($page ?? '') === 'dashboard' ? 'active' : ''; ?>">
+					<i class="fas fa-th-large"></i> Dashboard
+				</a>
+				<a href="/payments" class="<?php echo ($page ?? '') === 'payments' ? 'active' : ''; ?>">
+					<i class="fas fa-credit-card"></i> Contributions
+				</a>
+				<a href="/beneficiaries" class="<?php echo ($page ?? '') === 'beneficiaries' ? 'active' : ''; ?>">
+					<i class="fas fa-users"></i> Beneficiaries
+				</a>
+				<a href="/claims" class="<?php echo ($page ?? '') === 'claims' ? 'active' : ''; ?>">
+					<i class="fas fa-file-medical"></i> Claims
+				</a>
+				<a href="/profile" class="<?php echo ($page ?? '') === 'settings' ? 'active' : ''; ?>">
+					<i class="fas fa-cog"></i> Settings
+				</a>
+			</nav>
+			<div class="sidebar-coverage">
+				<h5>BENEFIT COVERAGE</h5>
+				<h3>$15,000</h3>
+				<p style="width: 100%; height: 3px; background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%); margin: 8px 0;"></p>
 			</div>
 		</aside>
-
-		<!-- Sidebar Toggle Button -->
-		<button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleSidebar()">
-			<i class="fas fa-chevron-left"></i>
-		</button>
 		
 		<!-- Main Content -->
 		<div class="main-content">
 			<div class="top-bar">
-				<div class="top-bar-left">
-					<h1>Member Dashboard</h1>
-				</div>
-				<div class="top-bar-right">
-					<div class="search-container">
-						<div class="search-input-wrapper">
-							<i class="fas fa-search search-icon"></i>
-							<input type="text" class="search-input" id="globalSearch" placeholder="Search features...">
-						</div>
-						<div class="search-results" id="searchResults" style="display: none;"></div>
-					</div>				<button class="icon-btn" onclick="location.href='/member/notifications'" title="Notifications">
-					<i class="fas fa-bell"></i>
-				</button>					<button class="logout-btn" onclick="handleLogout()">
-						<i class="fas fa-sign-out-alt"></i>
-						Logout
-					</button>
-					<div class="user-profile">
-						<div class="user-profile-text">
-							<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
-							<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
-						</div>
-						<div class="user-avatar">
-							<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
-						</div>
+				<h1>Member Dashboard</h1>
+				<div class="user-profile">
+					<div class="user-profile-text">
+						<h4><?php echo htmlspecialchars($member['first_name'] ?? 'John') . ' ' . htmlspecialchars($member['last_name'] ?? 'Doe'); ?></h4>
+						<p>ID: <?php echo htmlspecialchars($member['member_number'] ?? 'SH-98238'); ?></p>
+					</div>
+					<div class="user-avatar">
+						<?php echo strtoupper(substr($member['first_name'] ?? 'J', 0, 1)); ?>
 					</div>
 				</div>
 			</div>
