@@ -209,6 +209,11 @@ class Router
         $this->addRoute('GET', '/admin/agents/resources', 'AgentController@resources');
         $this->addRoute('POST', '/admin/agents/resources/upload', 'AgentController@uploadResource');
         $this->addRoute('GET', '/admin/agents/resources/export', 'AgentController@exportResources');
+        
+        // Payout Request Routes (Admin)
+        $this->addRoute('GET', '/admin/payouts', 'AdminController@payoutRequests');
+        $this->addRoute('POST', '/admin/payouts/{id}/process', 'AdminController@processPayoutRequest');
+
 
         // Agent Dashboard Routes (Agent Only)
         $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');

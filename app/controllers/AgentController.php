@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../models/Agent.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Claim.php';
+require_once __DIR__ . '/../models/PayoutRequest.php';
 require_once __DIR__ . '/../services/EmailService.php';
 
 class AgentController extends BaseController
@@ -146,10 +147,17 @@ class AgentController extends BaseController
         $stats = $this->agentModel->getAgentDashboardStats($agentId);
         $commissions = $this->agentModel->getAgentCommissions($agentId);
         
+        // Get payout requests and available balance for this agent
+        $payoutRequestModel = new PayoutRequest();
+        $payoutRequests = $payoutRequestModel->getAgentPayouts($agentId);
+        $availableBalance = $payoutRequestModel->getAvailableBalance($agentId);
+        
         $this->render('admin/agent-details', [
             'agent' => $agent,
             'stats' => $stats,
             'commissions' => $commissions,
+            'payout_requests' => $payoutRequests,
+            'available_balance' => $availableBalance,
             'pageTitle' => 'Agent Details - ' . $agent['agent_number']
         ]);
     }

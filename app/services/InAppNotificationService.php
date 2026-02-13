@@ -24,6 +24,19 @@ class InAppNotificationService
         return $this->notifyUsers($adminIds, $payload, $senderId);
     }
 
+    /**
+     * Notify a single user
+     * 
+     * @param int $userId The user ID to notify
+     * @param array $payload Notification data (subject, message, action_url, action_text)
+     * @param int|null $senderId The sender's user ID
+     * @return int|null The communication ID or null on failure
+     */
+    public function notifyUser($userId, array $payload, $senderId = null)
+    {
+        return $this->notifyUsers([$userId], $payload, $senderId);
+    }
+
     public function notifyUsers(array $userIds, array $payload, $senderId = null)
     {
         $cleanIds = array_values(array_unique(array_filter($userIds, function ($id) {

@@ -155,9 +155,9 @@ try {
     echo "=================\n";
     echo "Email: agent@test.com\n";
     echo "Password: Agent@123\n";
-    echo "URL: http://localhost:8000/login\n\n";
+    echo "URL: " . APP_URL . "/login\n\n";
 
-    echo "Payouts Page: http://localhost:8000/agent/payouts\n\n";
+    echo "Payouts Page: " . APP_URL . "/agent/payouts\n\n";
 
     echo "========================================\n";
     echo "Next Steps:\n";

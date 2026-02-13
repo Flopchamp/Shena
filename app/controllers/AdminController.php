@@ -9,6 +9,7 @@ class AdminController extends BaseController
     private $claimModel;
     private $userModel;
     private $agentModel;
+    private $payoutRequestModel;
 
     public function __construct()
     {
@@ -18,7 +19,9 @@ class AdminController extends BaseController
         $this->claimModel = new Claim();
         $this->userModel = new User();
         $this->agentModel = new Agent();
+        $this->payoutRequestModel = new PayoutRequest();
     }
+
 
     private function requireAdminAccess()
     {
@@ -2038,9 +2041,244 @@ class AdminController extends BaseController
     }
 
     /**
+     * View all payout requests (admin)
+     */
+    public function payoutRequests()
+    {
+        $this->requireAdminAccess();
+        
+        $status = $_GET['status'] ?? 'all';
+        $agentId = $_GET['agent_id'] ?? null;
+        
+        // Get payout requests based on filters
+        if ($status !== 'all') {
+            $payoutRequests = $this->payoutRequestModel->getAllPayouts($status);
+        } else {
+            $payoutRequests = $this->payoutRequestModel->getAllPayouts();
+        }
+        
+        // Filter by agent if specified
+        if ($agentId) {
+            $payoutRequests = array_filter($payoutRequests, function($request) use ($agentId) {
+                return $request['agent_id'] == $agentId;
+            });
+        }
+        
+        // Get statistics
+        $stats = [
+            'total' => 0,
+            'requested' => 0,
+            'processing' => 0,
+            'paid' => 0,
+            'rejected' => 0,
+            'total_amount' => 0
+        ];
+        
+        foreach ($payoutRequests as $request) {
+            $stats['total']++;
+            $stats[$request['status']]++;
+            if ($request['status'] === 'paid') {
+                $stats['total_amount'] += $request['amount'];
+            }
+        }
+        
+        $data = [
+            'title' => 'Payout Requests - Admin',
+            'payout_requests' => $payoutRequests,
+            'stats' => $stats,
+            'status_filter' => $status,
+            'agent_id' => $agentId
+        ];
+        
+        $this->view('admin.payout-requests', $data);
+    }
+    
+    /**
+     * Process (approve/reject) a payout request
+     */
+    public function processPayoutRequest($payoutId)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error'] = 'Invalid request method.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        $action = $_POST['action'] ?? '';
+        $paymentReference = $_POST['payment_reference'] ?? '';
+        $adminNotes = $_POST['admin_notes'] ?? '';
+        
+        $payout = $this->payoutRequestModel->getPayoutById($payoutId);
+        
+        if (!$payout) {
+            $_SESSION['error'] = 'Payout request not found.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        // Handle mark_paid action separately - requires status to be 'processing'
+        if ($action === 'mark_paid') {
+            // Verify payout is in 'processing' status for mark_paid action
+            if ($payout['status'] !== 'processing') {
+                $_SESSION['error'] = 'Payout request must be in processing status to mark as paid.';
+                $this->redirect('/admin/payouts');
+                return;
+            }
+            
+            try {
+                $result = $this->payoutRequestModel->markAsPaid($payoutId);
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['agent_id'],
+                        [
+                            'subject' => 'Payout Completed',
+                            'message' => "Your payout of KES " . number_format($payout['amount'], 2) . " has been marked as paid.",
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Payout marked as paid successfully.';
+                } else {
+                    $_SESSION['error'] = 'Failed to mark payout as paid. The payout may have already been processed.';
+                }
+            } catch (Exception $e) {
+                error_log('Mark as paid error: ' . $e->getMessage());
+                $_SESSION['error'] = 'Error marking payout as paid: ' . $e->getMessage();
+            }
+            
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        // For approve/reject actions, verify payout is in 'requested' status
+        if ($payout['status'] !== 'requested') {
+            $_SESSION['error'] = 'Payout request has already been processed.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        try {
+            if ($action === 'approve') {
+                // Process the payout (mark as processing)
+                $result = $this->payoutRequestModel->processPayout(
+                    $payoutId,
+                    $_SESSION['user_id'],
+                    $paymentReference,
+                    $adminNotes
+                );
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['agent_id'],
+                        [
+                            'subject' => 'Payout Request Approved',
+                            'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been approved and is being processed. Reference: " . ($paymentReference ?: 'N/A'),
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Payout request approved and marked as processing.';
+                } else {
+                    $_SESSION['error'] = 'Failed to process payout request.';
+                }
+            } elseif ($action === 'reject') {
+                // Reject the payout
+                $result = $this->payoutRequestModel->rejectPayout(
+                    $payoutId,
+                    $_SESSION['user_id'],
+                    $adminNotes
+                );
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['agent_id'],
+                        [
+                            'subject' => 'Payout Request Rejected',
+                            'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been rejected. Reason: " . $adminNotes,
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Payout request rejected.';
+                } else {
+                    $_SESSION['error'] = 'Failed to reject payout request.';
+                }
+            } else {
+                $_SESSION['error'] = 'Invalid action specified.';
+            }
+        } catch (Exception $e) {
+            error_log('Payout processing error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error processing payout: ' . $e->getMessage();
+        }
+        
+        // Redirect back to agent details if agent_id is provided, otherwise to payouts list
+        if (!empty($_POST['redirect_to_agent'])) {
+            $this->redirect('/admin/agents/view/' . $payout['agent_id']);
+        } else {
+            $this->redirect('/admin/payouts');
+        }
+    }
+    
+    /**
+     * View Agent Details with Payout Requests
+     */
+    public function viewAgent($id)
+    {
+        $this->requireAdminAccess();
+        
+        $agent = $this->agentModel->getAgentById($id);
+        
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent not found.';
+            $this->redirect('/admin/agents');
+            return;
+        }
+        
+        // Get agent statistics
+        $stats = $this->agentModel->getAgentDashboardStats($id);
+        
+        // Get commissions
+        $commissions = $this->agentModel->getAgentCommissions($id);
+        
+        // Get payout requests for this agent
+        $payoutRequests = $this->payoutRequestModel->getAgentPayouts($id);
+        
+        // Get available balance
+        $availableBalance = $this->payoutRequestModel->getAvailableBalance($id);
+        
+        // Get recent members
+        $recentMembers = $this->memberModel->getMembersByAgent($id);
+        
+        $data = [
+            'title' => 'Agent Details - ' . $agent['agent_number'],
+            'agent' => $agent,
+            'stats' => $stats,
+            'commissions' => $commissions,
+            'payout_requests' => $payoutRequests,
+            'available_balance' => $availableBalance,
+            'recent_members' => $recentMembers
+        ];
+        
+        $this->view('admin.agent-details', $data);
+    }
+
+    /**
      * Get dashboard alerts for urgent notifications
      */
     private function getDashboardAlerts()
+
     {
         $alerts = [];
 

@@ -7,7 +7,9 @@ require_once __DIR__ . '/../models/Agent.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Member.php';
 require_once __DIR__ . '/../models/Beneficiary.php';
+require_once __DIR__ . '/../models/PayoutRequest.php';
 require_once __DIR__ . '/../services/InAppNotificationService.php';
+
 
 class AgentDashboardController extends BaseController
 {
@@ -15,6 +17,7 @@ class AgentDashboardController extends BaseController
     private $userModel;
     private $memberModel;
     private $beneficiaryModel;
+    private $payoutRequestModel;
 
     public function __construct()
     {
@@ -26,7 +29,9 @@ class AgentDashboardController extends BaseController
         $this->userModel = new User();
         $this->memberModel = new Member();
         $this->beneficiaryModel = new Beneficiary();
+        $this->payoutRequestModel = new PayoutRequest();
     }
+
 
     public function dashboard()
     {
@@ -448,87 +453,37 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // Get commission statistics
-        $allCommissions = $this->agentModel->getAgentCommissions($agent['id']);
-        $statusFilter = strtolower($this->sanitizeInput($_GET['status'] ?? 'all'));
-        $monthFilter = $this->sanitizeInput($_GET['month'] ?? 'all');
-        $page = max(1, (int)($_GET['page'] ?? 1));
-        $perPage = 10;
-
-        $allowedStatuses = ['all', 'pending', 'approved', 'paid'];
-        if (!in_array($statusFilter, $allowedStatuses, true)) {
-            $statusFilter = 'all';
-        }
+        // Get payout requests for this agent
+        $payoutRequests = $this->payoutRequestModel->getAgentPayouts($agent['id']);
         
-        // Calculate totals
+        // Get payout statistics
+        $payoutStats = $this->payoutRequestModel->getAgentPayoutStats($agent['id']);
+        
+        // Get available balance (commissions earned minus payouts)
+        $availableBalance = $this->payoutRequestModel->getAvailableBalance($agent['id']);
+        
+        // Get total earned from commissions
+        $allCommissions = $this->agentModel->getAgentCommissions($agent['id']);
         $totalEarned = 0;
-        $pendingAmount = 0;
-        $currentBalance = 0;
-
         foreach ($allCommissions as $commission) {
             if ($commission['status'] === 'paid') {
                 $totalEarned += $commission['commission_amount'];
-                $currentBalance += $commission['commission_amount'];
-            } elseif ($commission['status'] === 'pending' || $commission['status'] === 'approved') {
-                $pendingAmount += $commission['commission_amount'];
             }
         }
-
-        $availableMonths = [];
-        foreach ($allCommissions as $commission) {
-            if (!empty($commission['created_at'])) {
-                $availableMonths[] = date('Y-m', strtotime($commission['created_at']));
-            }
-        }
-        $availableMonths = array_values(array_unique($availableMonths));
-        rsort($availableMonths);
-
-        $filteredCommissions = $allCommissions;
-        if ($statusFilter !== 'all') {
-            $filteredCommissions = array_filter($filteredCommissions, function ($commission) use ($statusFilter) {
-                return strtolower($commission['status'] ?? '') === $statusFilter;
-            });
-        }
-
-        if ($monthFilter !== 'all') {
-            $filteredCommissions = array_filter($filteredCommissions, function ($commission) use ($monthFilter) {
-                if (empty($commission['created_at'])) {
-                    return false;
-                }
-                return date('Y-m', strtotime($commission['created_at'])) === $monthFilter;
-            });
-        }
-
-        $filteredCommissions = array_values($filteredCommissions);
-        $totalItems = count($filteredCommissions);
-        $totalPages = max(1, (int)ceil($totalItems / $perPage));
-        $page = min($page, $totalPages);
-        $offset = ($page - 1) * $perPage;
-        $pagedCommissions = array_slice($filteredCommissions, $offset, $perPage);
 
         $data = [
             'title' => 'Payouts & Earnings - Shena Companion Welfare Association',
             'agent' => $agent,
-            'commissions' => $pagedCommissions,
+            'payout_requests' => $payoutRequests,
             'total_earned' => $totalEarned,
-            'pending_amount' => $pendingAmount,
-            'current_balance' => $currentBalance,
-            'csrf_token' => $this->generateCsrfToken(),
-            'filters' => [
-                'status' => $statusFilter,
-                'month' => $monthFilter
-            ],
-            'available_months' => $availableMonths,
-            'pagination' => [
-                'page' => $page,
-                'per_page' => $perPage,
-                'total' => $totalItems,
-                'total_pages' => $totalPages
-            ]
+            'available_balance' => $availableBalance,
+            'payout_stats' => $payoutStats,
+            'csrf_token' => $this->generateCsrfToken()
         ];
 
         $this->view('agent/payouts', $data);
     }
+
 
     /**
      * Display resources and training materials
@@ -941,7 +896,41 @@ class AgentDashboardController extends BaseController
         }
 
         $amount = (float)($_POST['amount'] ?? 0);
+        $paymentMethod = $this->sanitizeInput($_POST['payment_method'] ?? 'mpesa');
         $phoneNumber = trim($_POST['phone_number'] ?? ($agent['phone'] ?? ''));
+        $payoutNotes = $this->sanitizeInput($_POST['payout_notes'] ?? '');
+
+        // Validate payment method
+        $validMethods = ['mpesa', 'bank_transfer', 'cash'];
+        if (!in_array($paymentMethod, $validMethods)) {
+            $_SESSION['error'] = 'Invalid payment method selected.';
+            $this->redirect('/agent/payouts');
+            return;
+        }
+
+        // Get payment method details
+        $paymentDetails = '';
+        if ($paymentMethod === 'mpesa') {
+            if (empty($phoneNumber)) {
+                $_SESSION['error'] = 'Please provide a phone number for M-Pesa transfer.';
+                $this->redirect('/agent/payouts');
+                return;
+            }
+            $paymentDetails = 'M-Pesa to ' . $phoneNumber;
+        } elseif ($paymentMethod === 'bank_transfer') {
+            $bankName = $this->sanitizeInput($_POST['bank_name'] ?? '');
+            $accountNumber = $this->sanitizeInput($_POST['account_number'] ?? '');
+            $accountName = $this->sanitizeInput($_POST['account_name'] ?? '');
+            
+            if (empty($bankName) || empty($accountNumber) || empty($accountName)) {
+                $_SESSION['error'] = 'Please provide all bank transfer details.';
+                $this->redirect('/agent/payouts');
+                return;
+            }
+            $paymentDetails = "Bank: {$bankName}, Account: {$accountNumber}, Name: {$accountName}";
+        } elseif ($paymentMethod === 'cash') {
+            $paymentDetails = 'Cash pickup at office';
+        }
 
         if ($amount <= 0) {
             $_SESSION['error'] = 'Please enter a valid payout amount.';
@@ -949,14 +938,8 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // Calculate available balance from paid commissions
-        $commissions = $this->agentModel->getAgentCommissions($agent['id']);
-        $availableBalance = 0;
-        foreach ($commissions as $commission) {
-            if ($commission['status'] === 'paid') {
-                $availableBalance += $commission['commission_amount'];
-            }
-        }
+        // Get available balance
+        $availableBalance = $this->payoutRequestModel->getAvailableBalance($agent['id']);
 
         if ($amount > $availableBalance) {
             $_SESSION['error'] = 'Requested amount exceeds your available balance. Available: KES ' . number_format($availableBalance, 2);
@@ -964,10 +947,37 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // For now, just show success message - full implementation can be added later
-        $_SESSION['success'] = 'Payout request submitted successfully for KES ' . number_format($amount, 2) . ' to ' . htmlspecialchars($phoneNumber);
+        // Create payout request
+        $payoutData = [
+            'agent_id' => $agent['id'],
+            'amount' => $amount,
+            'payment_method' => $paymentMethod,
+            'payment_details' => $paymentDetails,
+            'notes' => $payoutNotes
+        ];
+        
+        $payoutRequestId = $this->payoutRequestModel->createPayoutRequest($payoutData);
+
+        if (!$payoutRequestId) {
+            $_SESSION['error'] = 'Failed to create payout request. Please try again.';
+            $this->redirect('/agent/payouts');
+            return;
+        }
+
+        // Send notification to admins
+        $notification = new InAppNotificationService();
+        $notification->notifyAdmins([
+            'subject' => 'New Payout Request from Agent',
+            'message' => "Agent {$agent['first_name']} {$agent['last_name']} (ID: {$agent['id']}) has requested a payout of KES " . number_format($amount, 2) . " via {$paymentMethod}. {$paymentDetails}. Notes: " . ($payoutNotes ?: 'None'),
+            'action_url' => '/admin/payouts',
+            'action_text' => 'Process Payout'
+        ], $_SESSION['user_id'] ?? null);
+
+        $_SESSION['success'] = 'Payout request of KES ' . number_format($amount, 2) . ' submitted successfully! Status: Requested. You will be notified once processed.';
         $this->redirect('/agent/payouts');
     }
+
+
 
     private function getAgentNotifications($userId)
     {
