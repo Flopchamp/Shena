@@ -433,6 +433,18 @@ class Agent extends BaseModel
     }
 
     /**
+     * Get a single commission by ID
+     *
+     * @param int $commissionId
+     * @return array|false
+     */
+    public function getCommissionById($commissionId)
+    {
+        $sql = "SELECT * FROM agent_commissions WHERE id = ?";
+        return $this->db->query($sql, [$commissionId])->fetch();
+    }
+
+    /**
      * Approve all pending commissions
      *
      * @param int $approvedBy
@@ -521,16 +533,18 @@ class Agent extends BaseModel
     
     /**
      * Get count of active agents
-     * 
+     *
      * @return int Count of active agents
      */
     public function getActiveAgentsCount()
     {
-        $sql = "SELECT COUNT(*) as count 
-                FROM agents 
+        $sql = "SELECT COUNT(*) as count
+                FROM agents
                 WHERE status = 'active'";
-        
+
         $result = $this->db->query($sql)->fetch();
         return $result ? (int)$result['count'] : 0;
     }
+
+
 }

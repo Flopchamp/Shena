@@ -146,6 +146,54 @@ if (!empty($members)) {
     gap: 16px;
 }
 
+.member-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #E5E7EB;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.search-input-wrapper input {
+    border: none;
+    padding: 8px 12px;
+    outline: none;
+    font-size: 14px;
+    min-width: 220px;
+}
+
+.search-input-wrapper .filter-btn {
+    border: none;
+    border-left: 1px solid #E5E7EB;
+    background: transparent;
+    width: 42px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #6B7280;
+}
+
+.pagination-controls .page-btn {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-controls .page-btn.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 .portfolio-tabs {
     display: flex;
     gap: 16px;
@@ -462,13 +510,19 @@ if (!empty($members)) {
             <h2>All Members</h2>
             <div class="portfolio-controls">
                 <div class="portfolio-tabs">
-                    <button class="portfolio-tab active">All Members</button>
-                    <button class="portfolio-tab">Pending</button>
-                    <button class="portfolio-tab">Claims</button>
+                    <?php $activeStatus = $filters['status'] ?? 'all'; ?>
+                    <a class="portfolio-tab <?php echo $activeStatus === 'all' ? 'active' : ''; ?>" href="/agent/members?status=all<?php echo !empty($filters['q']) ? '&q=' . urlencode($filters['q']) : ''; ?>">All Members</a>
+                    <a class="portfolio-tab <?php echo $activeStatus === 'pending' ? 'active' : ''; ?>" href="/agent/members?status=pending<?php echo !empty($filters['q']) ? '&q=' . urlencode($filters['q']) : ''; ?>">Pending</a>
                 </div>
-                <button class="filter-btn">
-                    <i class="fas fa-sliders-h"></i>
-                </button>
+                <form class="member-search" method="GET" action="/agent/members">
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($activeStatus); ?>">
+                    <div class="search-input-wrapper">
+                        <input type="text" name="q" placeholder="Search members" value="<?php echo htmlspecialchars($filters['q'] ?? ''); ?>">
+                        <button type="submit" class="filter-btn" title="Search">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -522,9 +576,6 @@ if (!empty($members)) {
                             <button class="action-btn" title="View Details" onclick="event.stopPropagation(); location.href='/agent/member-details/<?php echo $member['id']; ?>'">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn" title="More Actions" onclick="event.stopPropagation();">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
                         </div>
                     </td>
                 </tr>
@@ -533,17 +584,27 @@ if (!empty($members)) {
         </table>
 
         <div class="pagination-wrapper">
-            <div class="pagination-info">Showing <?php echo count($members); ?> of <?php echo count($members); ?> members</div>
+            <div class="pagination-info">
+                Showing <?php echo (int)($pagination['start_item'] ?? 0); ?>-<?php echo (int)($pagination['end_item'] ?? 0); ?> of <?php echo (int)($pagination['total'] ?? 0); ?> members
+            </div>
             <div class="pagination-controls">
-                <button class="page-btn">
+                <?php
+                $currentPage = (int)($pagination['page'] ?? 1);
+                $totalPages = (int)($pagination['total_pages'] ?? 1);
+                $queryBase = 'status=' . urlencode($activeStatus);
+                if (!empty($filters['q'])) {
+                    $queryBase .= '&q=' . urlencode($filters['q']);
+                }
+                ?>
+                <a class="page-btn<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="/agent/members?<?php echo $queryBase; ?>&page=<?php echo max(1, $currentPage - 1); ?>" title="Previous Page">
                     <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">
+                </a>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a class="page-btn <?php echo $i === $currentPage ? 'active' : ''; ?>" href="/agent/members?<?php echo $queryBase; ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                <?php endfor; ?>
+                <a class="page-btn<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="/agent/members?<?php echo $queryBase; ?>&page=<?php echo min($totalPages, $currentPage + 1); ?>" title="Next Page">
                     <i class="fas fa-chevron-right"></i>
-                </button>
+                </a>
             </div>
         </div>
         <?php endif; ?>

@@ -49,6 +49,11 @@ class Router
         $this->addRoute('GET', '/dashboard', 'MemberController@dashboard');
         $this->addRoute('GET', '/profile', 'MemberController@profile');
         $this->addRoute('POST', '/profile', 'MemberController@updateProfile');
+
+        // Agent Routes (Protected)
+        $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');
+        $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
+        $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('POST', '/profile/next-of-kin', 'MemberController@updateNextOfKin');
         $this->addRoute('GET', '/payments', 'MemberController@payments');
         $this->addRoute('GET', '/member/payments/export', 'MemberController@exportPaymentHistory');
@@ -216,6 +221,10 @@ class Router
         $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
+        $this->addRoute('POST', '/agent/member-details/{id}/claim-request', 'AgentDashboardController@requestClaimAssistance');
+        $this->addRoute('POST', '/agent/member-details/{id}/payment-assist', 'AgentDashboardController@requestPaymentAssistance');
+        $this->addRoute('POST', '/agent/member-details/{id}/dependents/add', 'AgentDashboardController@addDependent');
+        $this->addRoute('GET', '/agent/member-details/{id}/statement', 'AgentDashboardController@downloadStatement');
         $this->addRoute('GET', '/agent/support', 'AgentDashboardController@support');
         $this->addRoute('GET', '/agent/register-member', 'AgentDashboardController@registerMember');
         $this->addRoute('POST', '/agent/register-member/store', 'AgentDashboardController@storeRegisterMember');

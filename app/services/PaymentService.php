@@ -309,9 +309,14 @@ class PaymentService
                          }
                     }
                     
+                    // Record commission for agent if monthly payment
+                    if ($paymentType === 'monthly') {
+                        $this->recordCommissionForPayment($memberId, $paymentId, $amount);
+                    }
+
                     // Send confirmation SMS and email
                     $this->sendPaymentConfirmation($payment[0], $amount, $mpesaReceiptNumber);
-                    
+
                     return ['status' => 'success', 'message' => 'Payment processed successfully'];
                 }
             } else {
@@ -435,7 +440,7 @@ class PaymentService
     public function processManualPayment($memberId, $amount, $paymentMethod, $reference, $notes = null)
     {
         $paymentModel = new Payment();
-        
+
         return $paymentModel->recordPayment([
             'member_id' => $memberId,
             'amount' => $amount,
@@ -446,5 +451,51 @@ class PaymentService
             'notes' => $notes,
             'payment_date' => date('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * Record commission for agent when member makes a payment
+     */
+    private function recordCommissionForPayment($memberId, $paymentId, $amount)
+    {
+        try {
+            // Get member details to find agent
+            $memberModel = new Member();
+            $member = $memberModel->find($memberId);
+
+            if (!$member || empty($member['agent_id'])) {
+                return; // No agent assigned
+            }
+
+            $agentId = $member['agent_id'];
+
+            // Get agent details for commission rate
+            $agentModel = new Agent();
+            $agent = $agentModel->getAgentById($agentId);
+
+            if (!$agent || empty($agent['commission_rate'])) {
+                return; // No commission rate set
+            }
+
+            $commissionRate = $agent['commission_rate'];
+            $commissionAmount = ($amount * $commissionRate) / 100;
+
+            // Record the commission
+            $agentModel->recordCommission([
+                'agent_id' => $agentId,
+                'member_id' => $memberId,
+                'payment_id' => $paymentId,
+                'commission_type' => 'monthly_contribution',
+                'amount' => $amount,
+                'commission_rate' => $commissionRate,
+                'commission_amount' => $commissionAmount,
+                'status' => 'pending' // Commissions need admin approval
+            ]);
+
+            error_log("Commission recorded for agent {$agentId}: KES {$commissionAmount} on payment of KES {$amount}");
+
+        } catch (Exception $e) {
+            error_log('Commission recording error: ' . $e->getMessage());
+        }
     }
 }

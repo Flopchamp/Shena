@@ -321,6 +321,7 @@ if (!empty($commissions)) {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s;
+    text-decoration: none;
 }
 
 .page-btn-payout:hover:not(.active) {
@@ -332,6 +333,11 @@ if (!empty($commissions)) {
     background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
     color: white;
     border-color: transparent;
+}
+
+.page-btn-payout.disabled {
+    pointer-events: none;
+    opacity: 0.5;
 }
 
 /* Withdrawal Panel */
@@ -608,6 +614,25 @@ if (!empty($commissions)) {
         <p>Manage your earnings and request withdrawals</p>
     </div>
 
+    <!-- Message Display -->
+    <div class="payouts-messages" style="margin-bottom: 20px;">
+    <?php if (isset($_SESSION['success'])): ?>
+    <div style="background: #D1FAE5; color: #059669; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['success']); ?>
+    </div>
+    <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+    <div style="background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-exclamation-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['error']); ?>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+    </div>
+
     <!-- Stats Grid -->
     <div class="payouts-stats-grid">
         <!-- Current Balance -->
@@ -651,22 +676,26 @@ if (!empty($commissions)) {
     <div class="payouts-main-grid">
         <!-- Transactions Section -->
         <div class="transactions-section">
-            <div class="transactions-controls">
-                <select class="filter-select">
+            <form class="transactions-controls" method="GET" action="/agent/payouts">
+                <select class="filter-select" name="month">
                     <option value="all">Filter by Month (All Time)</option>
-                    <option value="jan">January 2024</option>
-                    <option value="feb">February 2024</option>
-                    <option value="mar">March 2024</option>
+                    <?php foreach (($available_months ?? []) as $month): ?>
+                        <option value="<?php echo htmlspecialchars($month); ?>" <?php echo (($filters['month'] ?? 'all') === $month) ? 'selected' : ''; ?>>
+                            <?php echo date('F Y', strtotime($month . '-01')); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
-                <select class="filter-select">
-                    <option value="all">Status: All</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
+                <select class="filter-select" name="status">
+                    <?php $activeStatus = $filters['status'] ?? 'all'; ?>
+                    <option value="all" <?php echo $activeStatus === 'all' ? 'selected' : ''; ?>>Status: All</option>
+                    <option value="paid" <?php echo $activeStatus === 'paid' ? 'selected' : ''; ?>>Paid</option>
+                    <option value="approved" <?php echo $activeStatus === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                    <option value="pending" <?php echo $activeStatus === 'pending' ? 'selected' : ''; ?>>Pending</option>
                 </select>
-                <button class="filter-btn-payout">
+                <button class="filter-btn-payout" type="submit" title="Apply Filters">
                     <i class="fas fa-sliders-h"></i>
                 </button>
-            </div>
+            </form>
 
             <?php if (empty($commissions)): ?>
                 <div style="text-align: center; padding: 60px 20px;">
@@ -689,7 +718,7 @@ if (!empty($commissions)) {
                     <?php foreach ($commissions as $commission): ?>
                     <tr>
                         <td class="transaction-date"><?php echo htmlspecialchars($commission['display_date']); ?></td>
-                        <td class="transaction-member"><?php echo htmlspecialchars($commission['member_id'] ?? 'N/A'); ?></td>
+                        <td class="transaction-member"><?php echo htmlspecialchars($commission['member_number'] ?? 'N/A'); ?></td>
                         <td class="transaction-action"><?php echo htmlspecialchars($commission['display_type']); ?></td>
                         <td class="transaction-amount">KES <?php echo number_format($commission['commission_amount'], 2); ?></td>
                         <td>
@@ -706,16 +735,30 @@ if (!empty($commissions)) {
 
             <?php if (!empty($commissions)): ?>
             <div class="transactions-footer">
-                <div class="pagination-info-payout">Showing <?php echo count($commissions); ?> commission<?php echo count($commissions) != 1 ? 's' : ''; ?></div>
+                <div class="pagination-info-payout">
+                    <?php
+                        $total = (int)($pagination['total'] ?? count($commissions));
+                        $page = (int)($pagination['page'] ?? 1);
+                        $perPage = (int)($pagination['per_page'] ?? count($commissions));
+                        $startItem = $total > 0 ? (($page - 1) * $perPage) + 1 : 0;
+                        $endItem = $total > 0 ? min($total, $page * $perPage) : 0;
+                    ?>
+                    Showing <?php echo $startItem; ?>-<?php echo $endItem; ?> of <?php echo $total; ?> commission<?php echo $total != 1 ? 's' : ''; ?>
+                </div>
                 <div class="pagination-controls-payout">
-                    <button class="page-btn-payout">
+                    <?php
+                        $totalPages = (int)($pagination['total_pages'] ?? 1);
+                        $baseQuery = 'status=' . urlencode($filters['status'] ?? 'all') . '&month=' . urlencode($filters['month'] ?? 'all');
+                    ?>
+                    <a class="page-btn-payout<?php echo $page <= 1 ? ' disabled' : ''; ?>" href="/agent/payouts?<?php echo $baseQuery; ?>&page=<?php echo max(1, $page - 1); ?>">
                         <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="page-btn-payout active">1</button>
-                    <button class="page-btn-payout">2</button>
-                    <button class="page-btn-payout">
+                    </a>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a class="page-btn-payout <?php echo $i === $page ? 'active' : ''; ?>" href="/agent/payouts?<?php echo $baseQuery; ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                    <?php endfor; ?>
+                    <a class="page-btn-payout<?php echo $page >= $totalPages ? ' disabled' : ''; ?>" href="/agent/payouts?<?php echo $baseQuery; ?>&page=<?php echo min($totalPages, $page + 1); ?>">
                         <i class="fas fa-chevron-right"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
             <?php endif; ?>
@@ -748,7 +791,7 @@ if (!empty($commissions)) {
                                 <p><?php echo htmlspecialchars($mpesa_number); ?></p>
                             </div>
                         </div>
-                        <button class="change-btn" type="button">Change</button>
+                        <a class="change-btn" href="/agent/profile">Change</a>
                     </div>
                 </div>
 

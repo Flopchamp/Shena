@@ -865,23 +865,23 @@ main {
                     <input type="hidden" name="beneficiary_id" id="editBeneficiaryId">
                     <div class="mb-3">
                         <label class="form-label">Full Name *</label>
-                        <input type="text" name="full_name" id="editFullName" class="form-control" required>
+                        <input type="text" name="full_name" id="editFullName" class="form-control" value="<?php echo getOldValue('full_name_edit') ?: ''; ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Relationship *</label>
-                        <input type="text" name="relationship" id="editRelationship" class="form-control" required>
+                        <input type="text" name="relationship" id="editRelationship" class="form-control" value="<?php echo getOldValue('relationship_edit') ?: ''; ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">ID Number *</label>
-                        <input type="text" name="id_number" id="editIdNumber" class="form-control" required>
+                        <input type="text" name="id_number" id="editIdNumber" class="form-control" value="<?php echo getOldValue('id_number_edit') ?: ''; ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Phone Number</label>
-                        <input type="tel" name="phone_number" id="editPhoneNumber" class="form-control">
+                        <input type="tel" name="phone_number" id="editPhoneNumber" class="form-control" value="<?php echo getOldValue('phone_number_edit') ?: ''; ?>">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Percentage (%) *</label>
-                        <input type="number" name="percentage" id="editPercentage" class="form-control" min="1" max="100" required>
+                        <input type="number" name="percentage" id="editPercentage" class="form-control" min="1" max="100" value="<?php echo getOldValue('percentage_edit') ?: '100'; ?>" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -906,23 +906,23 @@ main {
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     <div class="mb-3">
                         <label class="form-label">Full Name *</label>
-                        <input type="text" name="full_name" class="form-control" required>
+                        <input type="text" name="full_name" class="form-control" value="<?php echo getOldValue('full_name'); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Relationship *</label>
-                        <input type="text" name="relationship" class="form-control" placeholder="e.g., Spouse, Child, Parent" required>
+                        <input type="text" name="relationship" class="form-control" placeholder="e.g., Spouse, Child, Parent" value="<?php echo getOldValue('relationship'); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">ID Number *</label>
-                        <input type="text" name="id_number" class="form-control" required>
+                        <input type="text" name="id_number" class="form-control" value="<?php echo getOldValue('id_number'); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Phone Number</label>
-                        <input type="tel" name="phone_number" class="form-control">
+                        <input type="tel" name="phone_number" class="form-control" value="<?php echo getOldValue('phone_number'); ?>">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Percentage (%) *</label>
-                        <input type="number" name="percentage" class="form-control" min="1" max="100" value="100" required>
+                        <input type="number" name="percentage" class="form-control" min="1" max="100" value="<?php echo getOldValue('percentage') ?: '100'; ?>" required>
                     </div>
                 </div>
                 <div class="modal-footer">

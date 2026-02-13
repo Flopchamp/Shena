@@ -355,12 +355,15 @@ class AgentController extends BaseController
     public function commissions()
     {
         $this->requireRole(['admin', 'super_admin']);
-        
-        $pendingCommissions = $this->agentModel->getPendingCommissions();
-        
+
+        $status = $this->sanitizeInput($_GET['status'] ?? '');
+        $commissions = $this->agentModel->getCommissionsForExport($status);
+
         $this->render('admin/commissions', [
-            'commissions' => $pendingCommissions,
-            'pageTitle' => 'Commission Management'
+            'commissions' => $commissions,
+            'pageTitle' => 'Commission Management',
+            'status' => $status,
+            'csrf_token' => $this->generateCsrfToken()
         ]);
     }
     
@@ -370,14 +373,29 @@ class AgentController extends BaseController
     public function approveCommission($commissionId)
     {
         $this->requireRole(['admin', 'super_admin']);
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('/admin/commissions');
             return;
         }
+
+        $this->validateCsrf();
         
         $userId = $_SESSION['user_id'];
-        
+        $commission = $this->agentModel->getCommissionById($commissionId);
+
+        if (!$commission) {
+            $this->setFlashMessage('Commission not found', 'error');
+            redirect('/admin/commissions');
+            return;
+        }
+
+        if (($commission['status'] ?? '') !== 'pending') {
+            $this->setFlashMessage('Only pending commissions can be approved', 'error');
+            redirect('/admin/commissions');
+            return;
+        }
+
         if ($this->agentModel->approveCommission($commissionId, $userId)) {
             $this->setFlashMessage('Commission approved successfully', 'success');
         } else {
@@ -393,17 +411,32 @@ class AgentController extends BaseController
     public function markCommissionPaid($commissionId)
     {
         $this->requireRole(['admin', 'super_admin']);
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('/admin/commissions');
             return;
         }
+
+        $this->validateCsrf();
         
         $paymentMethod = $_POST['payment_method'] ?? '';
         $paymentReference = $_POST['payment_reference'] ?? '';
         
         if (empty($paymentMethod) || empty($paymentReference)) {
             $this->setFlashMessage('Payment method and reference are required', 'error');
+            redirect('/admin/commissions');
+            return;
+        }
+
+        $commission = $this->agentModel->getCommissionById($commissionId);
+        if (!$commission) {
+            $this->setFlashMessage('Commission not found', 'error');
+            redirect('/admin/commissions');
+            return;
+        }
+
+        if (($commission['status'] ?? '') !== 'approved') {
+            $this->setFlashMessage('Only approved commissions can be marked as paid', 'error');
             redirect('/admin/commissions');
             return;
         }
@@ -535,13 +568,27 @@ class AgentController extends BaseController
             return;
         }
 
+        $this->validateCsrf();
+
         $userId = $_SESSION['user_id'] ?? 0;
         $success = $this->agentModel->approveAllPendingCommissions($userId);
 
-        $this->json([
-            'success' => (bool)$success,
-            'message' => $success ? 'All pending commissions approved.' : 'Failed to approve commissions.'
-        ]);
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+            && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+        if ($isAjax) {
+            $this->json([
+                'success' => (bool)$success,
+                'message' => $success ? 'All pending commissions approved.' : 'Failed to approve commissions.'
+            ]);
+            return;
+        }
+
+        $this->setFlashMessage(
+            $success ? 'All pending commissions approved.' : 'Failed to approve commissions.',
+            $success ? 'success' : 'error'
+        );
+        redirect('/admin/commissions');
     }
 
     /**

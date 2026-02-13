@@ -1112,11 +1112,11 @@ main {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" name="deceased_name" class="form-control" placeholder="Enter full name" required>
+                            <input type="text" name="deceased_name" class="form-control" placeholder="Enter full name" value="<?php echo getOldValue('deceased_name'); ?>" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">ID/Birth Certificate Number <span class="text-danger">*</span></label>
-                            <input type="text" name="deceased_id_number" class="form-control" placeholder="Enter ID number" required>
+                            <input type="text" name="deceased_id_number" class="form-control" placeholder="Enter ID number" value="<?php echo getOldValue('deceased_id_number'); ?>" required>
                         </div>
                     </div>
                     <div class="row">
@@ -1136,16 +1136,16 @@ main {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Date of Death <span class="text-danger">*</span></label>
-                            <input type="date" name="date_of_death" class="form-control" required>
+                            <input type="date" name="date_of_death" class="form-control" value="<?php echo getOldValue('date_of_death'); ?>" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Place of Death <span class="text-danger">*</span></label>
-                        <input type="text" name="place_of_death" class="form-control" placeholder="City, Hospital, or Location" required>
+                        <input type="text" name="place_of_death" class="form-control" placeholder="City, Hospital, or Location" value="<?php echo getOldValue('place_of_death'); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Cause of Death <span class="text-danger">*</span></label>
-                        <textarea name="cause_of_death" class="form-control" rows="2" placeholder="Brief description of cause" required></textarea>
+                        <textarea name="cause_of_death" class="form-control" rows="2" placeholder="Brief description of cause" required><?php echo getOldValue('cause_of_death'); ?></textarea>
                         <small class="text-muted">Excluded: self-medication, drug abuse, criminal acts, riots/war, hazardous activities</small>
                     </div>
                     
@@ -1153,31 +1153,31 @@ main {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Mortuary Name <span class="text-danger">*</span></label>
-                            <input type="text" name="mortuary_name" class="form-control" placeholder="Name of mortuary" required>
+                            <input type="text" name="mortuary_name" class="form-control" placeholder="Name of mortuary" value="<?php echo getOldValue('mortuary_name'); ?>" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Days in Mortuary <span class="text-danger">*</span></label>
-                            <input type="number" name="mortuary_days_count" class="form-control" min="0" max="14" placeholder="Max 14 days" required>
+                            <input type="number" name="mortuary_days_count" class="form-control" min="0" max="14" placeholder="Max 14 days" value="<?php echo getOldValue('mortuary_days_count'); ?>" required>
                             <small class="text-muted">Maximum 14 days covered per policy</small>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mortuary Bill Amount (KES) <span class="text-danger">*</span></label>
-                        <input type="number" name="mortuary_bill_amount" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                        <input type="number" name="mortuary_bill_amount" class="form-control" min="0" step="0.01" placeholder="0.00" value="<?php echo getOldValue('mortuary_bill_amount'); ?>" required>
                     </div>
                     
                     <div class="alert alert-warning">
                         <h6 class="mb-2"><i class="fas fa-exchange-alt"></i> Cash Alternative Option</h6>
                         <p class="mb-2 small">Per Policy Section 12: In exceptional circumstances, you may request a cash alternative of <strong>KSH 20,000</strong> instead of service delivery. Both parties must agree.</p>
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="request_cash_alternative" id="requestCashAlternative" value="1">
+                            <input class="form-check-input" type="checkbox" name="request_cash_alternative" id="requestCashAlternative" value="1" <?php echo isOldValueChecked('request_cash_alternative', '1'); ?>>
                             <label class="form-check-label" for="requestCashAlternative">
                                 <strong>I request cash alternative (KSH 20,000)</strong>
                             </label>
                         </div>
                         <div id="cashAlternativeReasonField" style="display: none;">
                             <label class="form-label">Reason for Cash Alternative Request <span class="text-danger">*</span></label>
-                            <textarea name="cash_alternative_reason" id="cashAlternativeReason" class="form-control" rows="3" placeholder="Please provide a detailed reason (min 50 characters)"></textarea>
+                            <textarea name="cash_alternative_reason" id="cashAlternativeReason" class="form-control" rows="3" placeholder="Please provide a detailed reason (min 50 characters)"><?php echo getOldValue('cash_alternative_reason'); ?></textarea>
                             <small class="text-muted">Your request will be reviewed by administration. Valid reasons include security concerns, logistical challenges, or other exceptional circumstances.</small>
                         </div>
                     </div>

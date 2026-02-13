@@ -170,6 +170,15 @@ class MemberController extends BaseController
             $nationalId = $this->sanitizeInput($_POST['national_id'] ?? '');
             $address = $this->sanitizeInput($_POST['address'] ?? '');
 
+            // Store form data in session before validation
+            $_SESSION['form_data'] = [
+                'full_name' => $fullName,
+                'email' => $email,
+                'phone' => $phone,
+                'national_id' => $nationalId,
+                'address' => $address
+            ];
+
             if (!empty($email) && !$this->validateEmail($email)) {
                 $_SESSION['error'] = 'Please enter a valid email address.';
                 $this->redirect('/profile');
@@ -223,6 +232,7 @@ class MemberController extends BaseController
             }
             
             $_SESSION['success'] = 'Profile updated successfully.';
+            unset($_SESSION['form_data']); // Clear form data on success
             
         } catch (Exception $e) {
             error_log('Profile update error: ' . $e->getMessage());
@@ -248,6 +258,13 @@ class MemberController extends BaseController
             $nextOfKinRelationship = $this->sanitizeInput($_POST['next_of_kin_relationship'] ?? '');
             $nextOfKinPhone = $this->sanitizeInput($_POST['next_of_kin_phone'] ?? '');
 
+            // Store form data in session before validation
+            $_SESSION['form_data'] = [
+                'next_of_kin_name' => $nextOfKinName,
+                'next_of_kin_relationship' => $nextOfKinRelationship,
+                'next_of_kin_phone' => $nextOfKinPhone
+            ];
+
             if (empty($nextOfKinName) || empty($nextOfKinRelationship)) {
                 $_SESSION['error'] = 'Please provide next of kin name and relationship.';
                 $this->redirect('/profile');
@@ -267,6 +284,8 @@ class MemberController extends BaseController
             ]);
 
             $_SESSION['success'] = 'Next of kin updated successfully.';
+            unset($_SESSION['form_data']); // Clear form data on success
+            unset($_SESSION['form_data']); // Clear form data on success
         } catch (Exception $e) {
             error_log('Next of kin update error: ' . $e->getMessage());
             $_SESSION['error'] = 'Failed to update next of kin. Please try again.';

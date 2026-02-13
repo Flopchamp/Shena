@@ -25,6 +25,7 @@ CREATE TABLE users (
 CREATE TABLE members (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    agent_id INT NULL,
     member_number VARCHAR(20) UNIQUE NOT NULL,
     id_number VARCHAR(20) UNIQUE NOT NULL,
     date_of_birth DATE,
@@ -47,7 +48,8 @@ CREATE TABLE members (
     reactivated_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE SET NULL
 );
 
 -- Dependents table (covered family members under family packages)
@@ -89,6 +91,54 @@ CREATE TABLE beneficiaries (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+);
+
+-- Agents table
+CREATE TABLE agents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    agent_number VARCHAR(20) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    national_id VARCHAR(20) UNIQUE NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    address TEXT,
+    county VARCHAR(100),
+    commission_rate DECIMAL(5,2) DEFAULT 10.00,
+    total_commission DECIMAL(10,2) DEFAULT 0,
+    status ENUM('active', 'suspended', 'inactive') DEFAULT 'active',
+    registration_date DATE DEFAULT (CURDATE()),
+    suspended_at TIMESTAMP NULL,
+    activated_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Agent commissions table
+CREATE TABLE agent_commissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    agent_id INT NOT NULL,
+    member_id INT NOT NULL,
+    payment_id INT NULL,
+    commission_type ENUM('registration', 'monthly_contribution', 'plan_upgrade') DEFAULT 'monthly_contribution',
+    amount DECIMAL(10,2) NOT NULL,
+    commission_rate DECIMAL(5,2) NOT NULL,
+    commission_amount DECIMAL(10,2) NOT NULL,
+    status ENUM('pending', 'approved', 'paid', 'cancelled') DEFAULT 'pending',
+    approved_by INT NULL,
+    approved_at TIMESTAMP NULL,
+    paid_at TIMESTAMP NULL,
+    payment_method VARCHAR(50) NULL,
+    payment_reference VARCHAR(100) NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Payments table

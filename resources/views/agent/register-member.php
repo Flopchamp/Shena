@@ -1,4 +1,20 @@
-<?php $page = 'register'; include __DIR__ . '/../layouts/agent-header.php'; ?>
+<?php 
+$page = 'register'; 
+include __DIR__ . '/../layouts/agent-header.php';
+
+// Helper to get old form data or empty string
+$getOldValue = function($field) {
+    $old = $_SESSION['form_data'][$field] ?? '';
+    // Clear form data after first use so it doesn't persist
+    if (isset($_SESSION['form_data'])) {
+        unset($_SESSION['form_data'][$field]);
+        if (empty($_SESSION['form_data'])) {
+            unset($_SESSION['form_data']);
+        }
+    }
+    return htmlspecialchars($old);
+};
+?>
 
 <style>
 /* Register Member Page Styles */
@@ -428,26 +444,26 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="first_name" class="form-label">First Name <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="first_name" name="first_name" required placeholder="Enter first name">
+                        <input type="text" class="form-input" id="first_name" name="first_name" required placeholder="Enter first name" value="<?php echo $getOldValue('first_name'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="last_name" class="form-label">Last Name <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="last_name" name="last_name" required placeholder="Enter last name">
+                        <input type="text" class="form-input" id="last_name" name="last_name" required placeholder="Enter last name" value="<?php echo $getOldValue('last_name'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="id_number" class="form-label">National ID Number <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="id_number" name="id_number" required placeholder="e.g., 12345678">
+                        <input type="text" class="form-input" id="id_number" name="id_number" required placeholder="e.g., 12345678" value="<?php echo $getOldValue('id_number'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="date_of_birth" class="form-label">Date of Birth <span class="required">*</span></label>
-                        <input type="date" class="form-input" id="date_of_birth" name="date_of_birth" required>
+                        <input type="date" class="form-input" id="date_of_birth" name="date_of_birth" required value="<?php echo $getOldValue('date_of_birth'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="gender" class="form-label">Gender <span class="required">*</span></label>
                         <select class="form-select" id="gender" name="gender" required>
                             <option value="">Select Gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
+                            <option value="male" <?php echo $getOldValue('gender') === 'male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="female" <?php echo $getOldValue('gender') === 'female' ? 'selected' : ''; ?>>Female</option>
                         </select>
                     </div>
                 </div>
@@ -468,16 +484,16 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
-                        <input type="tel" class="form-input" id="phone" name="phone" required placeholder="+254712345678">
+                        <input type="tel" class="form-input" id="phone" name="phone" required placeholder="+254712345678" value="<?php echo $getOldValue('phone'); ?>">
                         <small class="form-hint">Format: +254712345678</small>
                     </div>
                     <div class="form-group">
                         <label for="email" class="form-label">Email Address <span class="required">*</span></label>
-                        <input type="email" class="form-input" id="email" name="email" required placeholder="member@example.com">
+                        <input type="email" class="form-input" id="email" name="email" required placeholder="member@example.com" value="<?php echo $getOldValue('email'); ?>">
                     </div>
                     <div class="form-group full-width">
                         <label for="address" class="form-label">Physical Address</label>
-                        <textarea class="form-textarea" id="address" name="address" rows="3" placeholder="Enter physical address"></textarea>
+                        <textarea class="form-textarea" id="address" name="address" rows="3" placeholder="Enter physical address"><?php echo $getOldValue('address'); ?></textarea>
                     </div>
                 </div>
             </div>
@@ -497,11 +513,11 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="next_of_kin" class="form-label">Next of Kin Name <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="next_of_kin" name="next_of_kin" required placeholder="Full name">
+                        <input type="text" class="form-input" id="next_of_kin" name="next_of_kin" required placeholder="Full name" value="<?php echo $getOldValue('next_of_kin'); ?>">
                     </div>
                     <div class="form-group">
                         <label for="next_of_kin_phone" class="form-label">Next of Kin Phone <span class="required">*</span></label>
-                        <input type="tel" class="form-input" id="next_of_kin_phone" name="next_of_kin_phone" required placeholder="+254712345678">
+                        <input type="tel" class="form-input" id="next_of_kin_phone" name="next_of_kin_phone" required placeholder="+254712345678" value="<?php echo $getOldValue('next_of_kin_phone'); ?>">
                     </div>
                 </div>
             </div>
@@ -520,7 +536,7 @@
                 
                 <div class="package-options">
                     <div class="package-option">
-                        <input type="radio" class="package-radio" id="package_individual" name="package" value="individual" required>
+                        <input type="radio" class="package-radio" id="package_individual" name="package" value="individual" required <?php echo $getOldValue('package') === 'individual' ? 'checked' : ''; ?>>
                         <label for="package_individual" class="package-label">
                             <div class="package-name">Individual Plan</div>
                             <div class="package-price">KES 500/month</div>
@@ -532,7 +548,7 @@
                         </label>
                     </div>
                     <div class="package-option">
-                        <input type="radio" class="package-radio" id="package_couple" name="package" value="couple">
+                        <input type="radio" class="package-radio" id="package_couple" name="package" value="couple" <?php echo $getOldValue('package') === 'couple' ? 'checked' : ''; ?>>
                         <label for="package_couple" class="package-label">
                             <div class="package-name">Couple Plan</div>
                             <div class="package-price">KES 800/month</div>
@@ -544,7 +560,7 @@
                         </label>
                     </div>
                     <div class="package-option">
-                        <input type="radio" class="package-radio" id="package_family" name="package" value="family">
+                        <input type="radio" class="package-radio" id="package_family" name="package" value="family" <?php echo $getOldValue('package') === 'family' ? 'checked' : ''; ?>>
                         <label for="package_family" class="package-label">
                             <div class="package-name">Family Plan</div>
                             <div class="package-price">KES 1,200/month</div>
@@ -556,7 +572,7 @@
                         </label>
                     </div>
                     <div class="package-option">
-                        <input type="radio" class="package-radio" id="package_executive" name="package" value="executive">
+                        <input type="radio" class="package-radio" id="package_executive" name="package" value="executive" <?php echo $getOldValue('package') === 'executive' ? 'checked' : ''; ?>>
                         <label for="package_executive" class="package-label">
                             <div class="package-name">Executive Plan</div>
                             <div class="package-price">KES 2,000/month</div>

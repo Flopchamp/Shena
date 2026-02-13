@@ -1,4 +1,7 @@
 <?php
+// Include form data helper for form persistence on validation errors
+require_once __DIR__ . '/../../../app/helpers/FormDataHelper.php';
+
 $notificationCount = $notificationCount ?? null;
 if ($notificationCount === null) {
     $notificationCount = 0;

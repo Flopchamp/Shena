@@ -359,7 +359,7 @@ textarea.form-control {
                     <label class="form-label">
                         Subject <span class="required">*</span>
                     </label>
-                    <input type="text" class="form-control" name="subject" placeholder="Brief description of your issue" required>
+                    <input type="text" class="form-control" name="subject" placeholder="Brief description of your issue" value="<?php echo getOldValue('subject'); ?>" required>
                 </div>
                 
                 <div class="form-group">
@@ -367,10 +367,10 @@ textarea.form-control {
                         Priority Level <span class="required">*</span>
                     </label>
                     <select class="form-select" name="priority" required>
-                        <option value="low">Low - General inquiry</option>
-                        <option value="normal" selected>Normal - Standard support</option>
-                        <option value="high">High - Urgent matter</option>
-                        <option value="critical">Critical - Immediate attention needed</option>
+                        <option value="low" <?php echo isOldValueSelected('priority', 'low'); ?>>Low - General inquiry</option>
+                        <option value="normal" <?php echo isOldValueSelected('priority', 'normal') ?: (empty(getOldValue('priority')) ? 'selected' : ''); ?>>Normal - Standard support</option>
+                        <option value="high" <?php echo isOldValueSelected('priority', 'high'); ?>>High - Urgent matter</option>
+                        <option value="critical" <?php echo isOldValueSelected('priority', 'critical'); ?>>Critical - Immediate attention needed</option>
                     </select>
                 </div>
                 
@@ -378,7 +378,7 @@ textarea.form-control {
                     <label class="form-label">
                         Message <span class="required">*</span>
                     </label>
-                    <textarea class="form-control" name="message" placeholder="Please describe your issue or question in detail..." required></textarea>
+                    <textarea class="form-control" name="message" placeholder="Please describe your issue or question in detail..." required><?php echo getOldValue('message'); ?></textarea>
                 </div>
                 
                 <button type="submit" class="btn-submit">
