@@ -2134,7 +2134,7 @@ class AdminController extends BaseController
                     // Send notification to agent
                     $notification = new InAppNotificationService();
                     $notification->notifyUser(
-                        $payout['agent_id'],
+                        $payout['user_id'],
                         [
                             'subject' => 'Payout Completed',
                             'message' => "Your payout of KES " . number_format($payout['amount'], 2) . " has been marked as paid.",
@@ -2177,7 +2177,7 @@ class AdminController extends BaseController
                     // Send notification to agent
                     $notification = new InAppNotificationService();
                     $notification->notifyUser(
-                        $payout['agent_id'],
+                        $payout['user_id'],
                         [
                             'subject' => 'Payout Request Approved',
                             'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been approved and is being processed. Reference: " . ($paymentReference ?: 'N/A'),
@@ -2185,7 +2185,7 @@ class AdminController extends BaseController
                             'action_text' => 'View Payouts'
                         ]
                     );
-                    
+
                     $_SESSION['success'] = 'Payout request approved and marked as processing.';
                 } else {
                     $_SESSION['error'] = 'Failed to process payout request.';
@@ -2202,7 +2202,7 @@ class AdminController extends BaseController
                     // Send notification to agent
                     $notification = new InAppNotificationService();
                     $notification->notifyUser(
-                        $payout['agent_id'],
+                        $payout['user_id'],
                         [
                             'subject' => 'Payout Request Rejected',
                             'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been rejected. Reason: " . $adminNotes,

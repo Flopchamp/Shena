@@ -8,7 +8,9 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Member.php';
 require_once __DIR__ . '/../models/Beneficiary.php';
 require_once __DIR__ . '/../models/PayoutRequest.php';
+require_once __DIR__ . '/../models/Resource.php';
 require_once __DIR__ . '/../services/InAppNotificationService.php';
+
 
 
 class AgentDashboardController extends BaseController
@@ -497,19 +499,64 @@ class AgentDashboardController extends BaseController
             return;
         }
 
-        // TODO: Implement actual resource management system
-        // For now, return empty arrays - resources can be managed by admin
+        // Fetch resources from database
+        $resourceModel = new Resource();
+        $groupedResources = $resourceModel->getGroupedByCategory(true);
+
         $data = [
             'title' => 'Resources - Shena Companion Welfare Association',
             'agent' => $agent,
-            'flyers_brochures' => [],
-            'social_media' => [],
-            'member_forms' => [],
-            'latest_updates' => []
+            'resources' => $groupedResources,
+            'csrf_token' => $this->generateCsrfToken()
         ];
 
         $this->view('agent/resources', $data);
     }
+    
+    /**
+     * Download Resource (Agent)
+     */
+    public function downloadResource($resourceId)
+    {
+        $agent = $this->agentModel->getAgentByUserId($_SESSION['user_id']);
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent profile not found.';
+            $this->redirect('/agent/dashboard');
+            return;
+        }
+
+        $resourceModel = new Resource();
+        $resource = $resourceModel->getById($resourceId);
+        
+        if (!$resource || !$resource['is_active']) {
+            $_SESSION['error'] = 'Resource not found or inactive.';
+            $this->redirect('/agent/resources');
+            return;
+        }
+        
+        if (!file_exists($resource['file_path'])) {
+            $_SESSION['error'] = 'File not found on server.';
+            $this->redirect('/agent/resources');
+            return;
+        }
+        
+        // Record download
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $resourceModel->recordDownload($resourceId, $_SESSION['user_id'], $ipAddress, $userAgent);
+        $resourceModel->incrementDownloadCount($resourceId);
+        
+        // Set headers for download
+        header('Content-Type: ' . $resource['mime_type']);
+        header('Content-Disposition: attachment; filename="' . $resource['original_name'] . '"');
+        header('Content-Length: ' . filesize($resource['file_path']));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        readfile($resource['file_path']);
+        exit;
+    }
+
 
     /**
      * Claims access denied for agents

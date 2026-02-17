@@ -494,8 +494,36 @@ class PaymentService
 
             error_log("Commission recorded for agent {$agentId}: KES {$commissionAmount} on payment of KES {$amount}");
 
+            // Send notification to agent
+            $this->sendAgentNotification(
+                $agent['user_id'],
+                'Commission Earned',
+                "You've earned a commission of KES " . number_format($commissionAmount, 2) . " from a member payment of KES " . number_format($amount, 2) . ". The commission is pending approval.",
+                '/agent/commissions',
+                'View Commissions'
+            );
+
         } catch (Exception $e) {
             error_log('Commission recording error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send in-app notification to an agent
+     */
+    private function sendAgentNotification($userId, $subject, $message, $actionUrl = null, $actionText = null)
+    {
+        try {
+            require_once __DIR__ . '/InAppNotificationService.php';
+            $notificationService = new InAppNotificationService();
+            $notificationService->notifyUser($userId, [
+                'subject' => $subject,
+                'message' => $message,
+                'action_url' => $actionUrl,
+                'action_text' => $actionText
+            ]);
+        } catch (Exception $e) {
+            error_log('Agent notification error: ' . $e->getMessage());
         }
     }
 }

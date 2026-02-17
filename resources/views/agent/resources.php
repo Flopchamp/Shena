@@ -1,17 +1,29 @@
-<?php 
+<?php
+/**
+ * Agent Resources View - Modern UI
+ * 
+ * @package Shena\Views\Agent
+ */
 $page = 'resources'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Get dynamic data from controller
-// Expected variables: $flyers_brochures, $social_media, $member_forms, $latest_updates
-$flyers_brochures = $flyers_brochures ?? [];
-$social_media = $social_media ?? [];
-$member_forms = $member_forms ?? [];
-$latest_updates = $latest_updates ?? [];
+// Calculate totals
+$totalResources = 0;
+foreach ($resources as $category => $items) {
+    $totalResources += count($items);
+}
+
+$categoryLabels = [
+    'marketing_materials' => ['label' => 'Marketing Materials', 'icon' => 'fa-bullhorn', 'color' => '#7F20B0'],
+    'training_documents' => ['label' => 'Training Documents', 'icon' => 'fa-graduation-cap', 'color' => '#059669'],
+    'policy_documents' => ['label' => 'Policy Documents', 'icon' => 'fa-file-contract', 'color' => '#2563eb'],
+    'forms' => ['label' => 'Forms', 'icon' => 'fa-file-alt', 'color' => '#d97706'],
+    'other' => ['label' => 'Other Resources', 'icon' => 'fa-file', 'color' => '#6b7280']
+];
 ?>
 
 <style>
-/* Resources Page Styles */
+/* Resources Page Styles - Modern UI */
 .resources-container {
     padding: 30px 30px 40px 25px;
     background: #F8F9FA;
@@ -19,10 +31,13 @@ $latest_updates = $latest_updates ?? [];
 }
 
 .resources-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 32px;
 }
 
-.resources-header h1 {
+.resources-title-section h1 {
     font-family: 'Playfair Display', serif;
     font-size: 32px;
     font-weight: 700;
@@ -30,504 +45,485 @@ $latest_updates = $latest_updates ?? [];
     margin: 0 0 4px 0;
 }
 
-.resources-header p {
+.resources-title-section p {
     font-size: 14px;
     color: #6B7280;
     margin: 0;
 }
 
-/* Main Grid */
-.resources-grid {
+/* Stats Cards */
+.stats-section {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 24px;
-}
-
-/* Resource Section */
-.resource-section {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
     margin-bottom: 32px;
 }
 
-.section-header-resources {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-}
-
-.section-title-resources {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #9CA3AF;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.section-title-resources i {
-    font-size: 14px;
-}
-
-.view-all-link {
-    font-size: 13px;
-    font-weight: 600;
-    color: #7F20B0;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.view-all-link:hover {
-    color: #5E2B7A;
-}
-
-/* Resource Cards Grid */
-.resource-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-}
-
-.resource-card {
+.stat-card {
     background: white;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 24px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 16px;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.resource-card:hover {
+.stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.resource-icon {
-    width: 100%;
-    height: 120px;
-    background: #F3F4F6;
-    border-radius: 8px;
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
-    position: relative;
-    overflow: hidden;
+    font-size: 24px;
+    flex-shrink: 0;
 }
 
-.resource-icon i {
-    font-size: 48px;
-    color: #D1D5DB;
+.stat-icon.purple {
+    background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+    color: #7F20B0;
 }
 
-.resource-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 9px;
+.stat-icon.green {
+    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+    color: #059669;
+}
+
+.stat-icon.blue {
+    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+    color: #2563eb;
+}
+
+.stat-icon.orange {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #d97706;
+}
+
+.stat-content h3 {
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    color: #1F2937;
+    margin: 0 0 4px 0;
+}
+
+.stat-content p {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Category Section */
+.category-section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.category-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.category-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0;
+    flex: 1;
+}
+
+.category-count {
+    background: #F3F4F6;
+    color: #6B7280;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.category-desc {
+    font-size: 14px;
+    color: #6B7280;
+    margin: -12px 0 24px 0;
+}
+
+/* Resources Table */
+.resources-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.resources-table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9CA3AF;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #E5E7EB;
+    text-align: left;
 }
 
-.resource-badge.premium {
-    background: #7F20B0;
-    color: white;
+.resources-table tbody tr {
+    transition: background-color 0.2s;
 }
 
-.resource-badge.banner {
-    background: #7F20B0;
-    color: white;
+.resources-table tbody tr:hover {
+    background: #F9FAFB;
 }
 
-.resource-badge.instagram {
-    background: #059669;
-    color: white;
+.resources-table tbody td {
+    padding: 16px;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: middle;
 }
 
-.resource-badge.facebook {
-    background: #2563EB;
-    color: white;
+.resource-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.resource-info h6 {
+.resource-icon-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #F3F4F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.resource-details h6 {
     font-size: 14px;
     font-weight: 600;
     color: #1F2937;
-    margin: 0 0 4px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin: 0 0 2px 0;
 }
 
-.resource-info p {
+.resource-details p {
     font-size: 12px;
     color: #9CA3AF;
-    margin: 0 0 12px 0;
+    margin: 0;
 }
 
-.btn-download-resource {
+.file-size {
+    font-size: 13px;
+    color: #4B5563;
+    font-weight: 500;
+}
+
+.download-count {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.upload-date {
+    font-size: 13px;
+    color: #6B7280;
+}
+
+.new-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+.btn-download {
     background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 12px;
-    width: 100%;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
+    font-size: 13px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
 }
 
-.btn-download-resource:hover {
+.btn-download:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+    color: white;
 }
 
-/* Sidebar */
-.resources-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
 }
 
-/* Latest Updates Card */
-.latest-updates-card {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.updates-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #E5E7EB;
-}
-
-.updates-header h3 {
-    font-size: 13px;
-    font-weight: 700;
-    color: #9CA3AF;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-}
-
-.notification-dot {
-    width: 8px;
-    height: 8px;
-    background: #EF4444;
+.empty-state-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: #F3F4F6;
     border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.update-item {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
-}
-
-.update-item:last-child {
-    border-bottom: none;
-}
-
-.update-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: #F3E8FF;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #7F20B0;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.update-content h6 {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1F2937;
-    margin: 0 0 4px 0;
-    line-height: 1.4;
-}
-
-.update-content p {
-    font-size: 11px;
     color: #9CA3AF;
+    font-size: 32px;
+}
+
+.empty-state h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: #6B7280;
     margin: 0;
 }
 
-.clear-notifications {
-    text-align: center;
-    padding-top: 12px;
-    margin-top: 12px;
-    border-top: 1px solid #E5E7EB;
+/* Alert Messages */
+.alert {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
 }
 
-.btn-clear-notifications {
-    color: #7F20B0;
-    font-size: 12px;
-    font-weight: 600;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
+.alert-success {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
 }
 
-/* Resource Tip Card */
-.resource-tip-card {
-    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
-    border-radius: 16px;
-    padding: 24px;
-    color: white;
-    box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
+.alert-error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
 }
 
-.tip-header {
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-}
-
-.tip-content {
-    font-size: 13px;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.95);
-    margin-bottom: 16px;
-}
-
-.btn-read-guidelines {
-    background: white;
-    color: #7F20B0;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 13px;
-    width: 100%;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-read-guidelines:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+.alert i {
+    font-size: 18px;
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .resources-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .resource-cards-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
 @media (max-width: 768px) {
     .resources-container {
         padding: 20px 15px;
     }
 
-    .resource-cards-grid {
-        grid-template-columns: 1fr;
+    .resources-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .stat-content h3 {
+        font-size: 20px;
+    }
+
+    .category-section {
+        padding: 20px;
+    }
+
+    .resources-table {
+        display: block;
+        overflow-x: auto;
     }
 }
 </style>
 
 <div class="resources-container">
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+        </div>
+    <?php endif; ?>
+    
     <div class="resources-header">
-        <h1>Marketing Resources & Toolkit</h1>
-        <p>Access sales tools to help grow your member base</p>
+        <div class="resources-title-section">
+            <h1>Resources & Materials</h1>
+            <p>Download marketing materials, training documents, forms, and other resources</p>
+        </div>
     </div>
 
-    <!-- Main Grid -->
-    <div class="resources-grid">
-        <!-- Left Column -->
-        <div>
-            <!-- Flyers & Brochures Section -->
-            <div class="resource-section">
-                <div class="section-header-resources">
-                    <div class="section-title-resources">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Flyers & Brochures</span>
-                    </div>
-                    <a href="#" class="view-all-link">View All</a>
-                </div>
-
-                <div class="resource-cards-grid">
-                    <?php if (empty($flyers_brochures)): ?>
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
-                            <i class="fas fa-file-alt" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
-                            <p style="color: #9CA3AF; font-size: 14px;">No flyers or brochures available yet</p>
-                        </div>
-                    <?php else: ?>
-                    <?php foreach ($flyers_brochures as $resource): ?>
-                    <div class="resource-card">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-pdf"></i>
-                            <span class="resource-badge <?php echo $resource['badge_class']; ?>">
-                                <?php echo $resource['badge']; ?>
-                            </span>
-                        </div>
-                        <div class="resource-info">
-                            <h6><?php echo htmlspecialchars($resource['title']); ?></h6>
-                            <p>PDF • <?php echo $resource['size']; ?></p>
-                            <button class="btn-download-resource">
-                                <i class="fas fa-download"></i>
-                                Download
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="fas fa-folder-open"></i>
             </div>
-
-            <!-- Social Media Graphics Section -->
-            <div class="resource-section">
-                <div class="section-header-resources">
-                    <div class="section-title-resources">
-                        <i class="fas fa-images"></i>
-                        <span>Social Media Graphics</span>
-                    </div>
-                    <a href="#" class="view-all-link">View All</a>
-                </div>
-
-                <div class="resource-cards-grid">
-                    <?php if (empty($social_media)): ?>
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
-                            <i class="fas fa-images" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
-                            <p style="color: #9CA3AF; font-size: 14px;">No social media graphics available yet</p>
-                        </div>
-                    <?php else: ?>
-                    <?php foreach ($social_media as $resource): ?>
-                    <div class="resource-card">
-                        <div class="resource-icon">
-                            <i class="fas fa-image"></i>
-                            <span class="resource-badge <?php echo $resource['badge_class']; ?>">
-                                <?php echo $resource['badge']; ?>
-                            </span>
-                        </div>
-                        <div class="resource-info">
-                            <h6><?php echo htmlspecialchars($resource['title']); ?></h6>
-                            <p>PNG • <?php echo $resource['size']; ?></p>
-                            <button class="btn-download-resource">
-                                <i class="fas fa-download"></i>
-                                Download
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Member Application Forms Section -->
-            <div class="resource-section">
-                <div class="section-header-resources">
-                    <div class="section-title-resources">
-                        <i class="fas fa-file-contract"></i>
-                        <span>Member Application Forms</span>
-                    </div>
-                    <a href="#" class="view-all-link">View All</a>
-                </div>
-
-                <div class="resource-cards-grid">
-                    <?php if (empty($member_forms)): ?>
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: white; border-radius: 12px;">
-                            <i class="fas fa-file-contract" style="font-size: 48px; color: #D1D5DB; margin-bottom: 12px;"></i>
-                            <p style="color: #9CA3AF; font-size: 14px;">No member forms available yet</p>
-                        </div>
-                    <?php else: ?>
-                    <?php foreach ($member_forms as $resource): ?>
-                    <div class="resource-card">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="resource-info">
-                            <h6><?php echo htmlspecialchars($resource['title']); ?></h6>
-                            <p>PDF • <?php echo $resource['size']; ?></p>
-                            <button class="btn-download-resource">
-                                <i class="fas fa-download"></i>
-                                Download
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+            <div class="stat-content">
+                <h3><?php echo $totalResources; ?></h3>
+                <p>Total Resources</p>
             </div>
         </div>
-
-        <!-- Right Sidebar -->
-        <div class="resources-sidebar">
-            <!-- Latest Updates -->
-            <div class="latest-updates-card">
-                <div class="updates-header">
-                    <h3>Latest Updates</h3>
-                    <span class="notification-dot"></span>
-                </div>
-
-                <?php if (empty($latest_updates)): ?>
-                    <div style="text-align: center; padding: 24px;">
-                        <i class="fas fa-bell" style="font-size: 32px; color: #D1D5DB; margin-bottom: 8px;"></i>
-                        <p style="color: #9CA3AF; font-size: 13px; margin: 0;">No updates available</p>
-                    </div>
-                <?php else: ?>
-                <?php foreach ($latest_updates as $update): ?>
-                <div class="update-item">
-                    <div class="update-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <div class="update-content">
-                        <h6><?php echo htmlspecialchars($update['title']); ?></h6>
-                        <p><?php echo $update['time']; ?></p>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-                <?php endif; ?>
-
-                <div class="clear-notifications">
-                    <button class="btn-clear-notifications">Clear Notifications</button>
-                </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-bullhorn"></i>
             </div>
-
-            <!-- Resource Tip -->
-            <div class="resource-tip-card">
-                <div class="tip-header">Resource Tip</div>
-                <p class="tip-content">
-                    Always use the latest 2025 versions for compliance with current policies before associating with registrants.
-                </p>
-                <button class="btn-read-guidelines">Read Guidelines</button>
+            <div class="stat-content">
+                <h3><?php echo count($resources['marketing_materials'] ?? []); ?></h3>
+                <p>Marketing Materials</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="stat-content">
+                <h3><?php echo count($resources['training_documents'] ?? []); ?></h3>
+                <p>Training Documents</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-content">
+                <h3><?php echo count($resources['forms'] ?? []); ?></h3>
+                <p>Forms</p>
             </div>
         </div>
     </div>
+    
+    <?php foreach ($categoryLabels as $categoryKey => $categoryInfo): 
+        $categoryResources = $resources[$categoryKey] ?? [];
+        if (empty($categoryResources)) continue;
+    ?>
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon" style="background: <?php echo $categoryInfo['color']; ?>15; color: <?php echo $categoryInfo['color']; ?>">
+                    <i class="fas <?php echo $categoryInfo['icon']; ?>"></i>
+                </div>
+                <h2><?php echo $categoryInfo['label']; ?></h2>
+                <span class="category-count"><?php echo count($categoryResources); ?> files</span>
+            </div>
+            
+            <table class="resources-table">
+                <thead>
+                    <tr>
+                        <th>RESOURCE</th>
+                        <th>FILE SIZE</th>
+                        <th>DOWNLOADS</th>
+                        <th>UPLOADED</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($categoryResources as $resource): 
+                        $isNew = strtotime($resource['created_at']) > strtotime('-7 days');
+                        $fileExt = pathinfo($resource['original_name'], PATHINFO_EXTENSION);
+                    ?>
+                        <tr>
+                            <td>
+                                <div class="resource-info">
+                                    <div class="resource-icon-small">
+                                        <i class="fas fa-file<?php echo in_array(strtolower($fileExt), ['pdf']) ? '-pdf' : ''; ?>"></i>
+                                    </div>
+                                    <div class="resource-details">
+                                        <h6>
+                                            <?php echo htmlspecialchars($resource['title']); ?>
+                                            <?php if ($isNew): ?>
+                                                <span class="new-badge"><i class="fas fa-sparkles"></i> NEW</span>
+                                            <?php endif; ?>
+                                        </h6>
+                                        <p><?php echo htmlspecialchars($resource['description'] ?: $resource['original_name']); ?></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="file-size"><?php echo Resource::formatFileSize($resource['file_size']); ?></td>
+                            <td class="download-count">
+                                <i class="fas fa-download" style="margin-right: 4px; color: #9CA3AF;"></i>
+                                <?php echo $resource['download_count']; ?>
+                            </td>
+                            <td class="upload-date"><?php echo date('M d, Y', strtotime($resource['created_at'])); ?></td>
+                            <td>
+                                <a href="/agent/resources/download/<?php echo $resource['id']; ?>" class="btn-download">
+                                    <i class="fas fa-download"></i>
+                                    Download
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endforeach; ?>
+    
+    <?php if ($totalResources === 0): ?>
+        <div class="category-section">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3>No Resources Available</h3>
+                <p>Check back later for new marketing materials, training documents, and forms.</p>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php include __DIR__ . '/../layouts/agent-footer.php'; ?>

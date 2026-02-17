@@ -47,7 +47,7 @@ class PayoutRequest extends BaseModel
      */
     public function getPayoutById($payoutId)
     {
-        $sql = "SELECT pr.*, a.first_name, a.last_name, a.agent_number, a.phone as agent_phone
+        $sql = "SELECT pr.*, a.first_name, a.last_name, a.agent_number, a.phone as agent_phone, a.user_id
                 FROM payout_requests pr
                 JOIN agents a ON pr.agent_id = a.id
                 WHERE pr.id = ?";

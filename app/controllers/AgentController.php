@@ -10,7 +10,10 @@ require_once __DIR__ . '/../models/Agent.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Claim.php';
 require_once __DIR__ . '/../models/PayoutRequest.php';
+require_once __DIR__ . '/../models/Resource.php';
 require_once __DIR__ . '/../services/EmailService.php';
+require_once __DIR__ . '/../services/InAppNotificationService.php';
+
 
 class AgentController extends BaseController
 {
@@ -677,20 +680,42 @@ class AgentController extends BaseController
     {
         $this->requireRole(['admin', 'super_admin']);
         
-        // TODO: Fetch resources from database
-        // For now, using empty arrays
-        $resources = [
+        $resourceModel = new Resource();
+        $categoryFilter = $_GET['category'] ?? 'all';
+        
+        $filters = [];
+        if ($categoryFilter !== 'all') {
+            $filters['category'] = $categoryFilter;
+        }
+        $filters['is_active'] = true;
+        
+        $resources = $resourceModel->getAll($filters);
+        
+        // Group resources by category
+        $groupedResources = [
             'marketing_materials' => [],
             'training_documents' => [],
             'policy_documents' => [],
-            'forms' => []
+            'forms' => [],
+            'other' => []
         ];
         
+        foreach ($resources as $resource) {
+            $category = $resource['category'] ?? 'other';
+            if (!isset($groupedResources[$category])) {
+                $category = 'other';
+            }
+            $groupedResources[$category][] = $resource;
+        }
+        
         $this->render('admin/resources', [
-            'resources' => $resources,
-            'pageTitle' => 'Agent Resources'
+            'resources' => $groupedResources,
+            'categoryFilter' => $categoryFilter,
+            'pageTitle' => 'Agent Resources',
+            'csrf_token' => $this->generateCsrfToken()
         ]);
     }
+
     
     /**
      * Upload Resource
@@ -704,15 +729,190 @@ class AgentController extends BaseController
             return;
         }
         
-        // TODO: Implement file upload logic
-        // 1. Validate file
-        // 2. Save to storage/uploads/resources/
-        // 3. Save metadata to database
+        $this->validateCsrf();
         
-        $this->setFlashMessage('Resource uploaded successfully', 'success');
+        // Validate required fields
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $category = $_POST['category'] ?? 'other';
+        
+        if (empty($title)) {
+            $this->setFlashMessage('Resource title is required', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // Validate category
+        $allowedCategories = ['marketing_materials', 'training_documents', 'policy_documents', 'forms', 'other'];
+        if (!in_array($category, $allowedCategories)) {
+            $category = 'other';
+        }
+        
+        // Check if file was uploaded
+        if (!isset($_FILES['resource_file']) || $_FILES['resource_file']['error'] !== UPLOAD_ERR_OK) {
+            $this->setFlashMessage('Please select a file to upload', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        $file = $_FILES['resource_file'];
+        
+        // Validate file size (max 10MB)
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        if ($file['size'] > $maxSize) {
+            $this->setFlashMessage('File size exceeds maximum limit of 10MB', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // Validate file type
+        $allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'zip'];
+        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExt, $allowedTypes)) {
+            $this->setFlashMessage('Invalid file type. Allowed types: ' . implode(', ', $allowedTypes), 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // Create upload directory if it doesn't exist
+        $uploadDir = ROOT_PATH . '/storage/uploads/resources/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        // Generate unique filename
+        $uniqueName = uniqid() . '_' . time() . '.' . $fileExt;
+        $filePath = $uploadDir . $uniqueName;
+        
+        // Move uploaded file
+        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+            $this->setFlashMessage('Failed to upload file. Please try again.', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // Save to database
+        $resourceModel = new Resource();
+        $resourceId = $resourceModel->create([
+            'title' => $title,
+            'description' => $description,
+            'file_name' => $uniqueName,
+            'file_path' => $filePath,
+            'original_name' => $file['name'],
+            'file_size' => $file['size'],
+            'mime_type' => $file['type'],
+            'category' => $category,
+            'uploaded_by' => $_SESSION['user_id'],
+            'is_active' => true
+        ]);
+        
+        if ($resourceId) {
+            // Send notification to all agents
+            $notificationService = new InAppNotificationService();
+            
+            // Get all agent user IDs
+            $agentModel = new Agent();
+            $agents = $agentModel->getAllAgents();
+            $agentUserIds = array_map(function($agent) {
+                return $agent['user_id'];
+            }, $agents);
+            
+            if (!empty($agentUserIds)) {
+                $categoryLabel = Resource::getCategoryLabel($category);
+                $notificationService->notifyUsers(
+                    $agentUserIds,
+                    [
+                        'subject' => 'New Resource Available: ' . $title,
+                        'message' => "A new {$categoryLabel} has been uploaded: {$title}. " . ($description ? $description : ''),
+                        'action_url' => '/agent/resources',
+                        'action_text' => 'View Resources'
+                    ],
+                    $_SESSION['user_id']
+                );
+            }
+            
+            $this->setFlashMessage('Resource uploaded successfully and agents have been notified!', 'success');
+        } else {
+            // Delete the uploaded file if database insert failed
+            unlink($filePath);
+            $this->setFlashMessage('Failed to save resource. Please try again.', 'error');
+        }
+        
         redirect('/admin/agents/resources');
     }
 
+
+    /**
+     * Delete Resource
+     */
+    public function deleteResource($resourceId)
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        $this->validateCsrf();
+        
+        $resourceModel = new Resource();
+        $resource = $resourceModel->getById($resourceId);
+        
+        if (!$resource) {
+            $this->setFlashMessage('Resource not found', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        if ($resourceModel->delete($resourceId)) {
+            $this->setFlashMessage('Resource deleted successfully', 'success');
+        } else {
+            $this->setFlashMessage('Failed to delete resource', 'error');
+        }
+        
+        redirect('/admin/agents/resources');
+    }
+    
+    /**
+     * Download Resource (Admin)
+     */
+    public function downloadResource($resourceId)
+    {
+        $this->requireRole(['admin', 'super_admin']);
+        
+        $resourceModel = new Resource();
+        $resource = $resourceModel->getById($resourceId);
+        
+        if (!$resource || !$resource['is_active']) {
+            $this->setFlashMessage('Resource not found or inactive', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        if (!file_exists($resource['file_path'])) {
+            $this->setFlashMessage('File not found on server', 'error');
+            redirect('/admin/agents/resources');
+            return;
+        }
+        
+        // Record download
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $resourceModel->recordDownload($resourceId, $_SESSION['user_id'], $ipAddress, $userAgent);
+        $resourceModel->incrementDownloadCount($resourceId);
+        
+        // Set headers for download
+        header('Content-Type: ' . $resource['mime_type']);
+        header('Content-Disposition: attachment; filename="' . $resource['original_name'] . '"');
+        header('Content-Length: ' . filesize($resource['file_path']));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        readfile($resource['file_path']);
+        exit;
+    }
+    
     /**
      * Export resource catalog to CSV
      */
@@ -720,13 +920,8 @@ class AgentController extends BaseController
     {
         $this->requireRole(['admin', 'super_admin']);
 
-        // TODO: Replace with actual resource query once implemented
-        $resources = [
-            'marketing_materials' => [],
-            'training_documents' => [],
-            'policy_documents' => [],
-            'forms' => []
-        ];
+        $resourceModel = new Resource();
+        $resources = $resourceModel->getAll(['is_active' => true]);
 
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="agent_resources_' . date('Y-m-d_His') . '.csv"');
@@ -734,24 +929,24 @@ class AgentController extends BaseController
         header('Expires: 0');
 
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['ID', 'Name', 'Category', 'Size', 'Date', 'Description'], ',', '"', '\\', '');
+        fputcsv($output, ['ID', 'Title', 'Category', 'File Size', 'Upload Date', 'Description', 'Download Count'], ',', '"', '\\', '');
 
-        foreach ($resources as $category => $items) {
-            foreach ($items as $resource) {
-                fputcsv($output, [
-                    $resource['id'] ?? '',
-                    $resource['name'] ?? '',
-                    $category,
-                    $resource['size'] ?? '',
-                    $resource['date'] ?? '',
-                    $resource['description'] ?? ''
-                ], ',', '"', '\\', '');
-            }
+        foreach ($resources as $resource) {
+            fputcsv($output, [
+                $resource['id'],
+                $resource['title'],
+                Resource::getCategoryLabel($resource['category']),
+                Resource::formatFileSize($resource['file_size']),
+                $resource['created_at'],
+                $resource['description'],
+                $resource['download_count']
+            ], ',', '"', '\\', '');
         }
 
         fclose($output);
         exit;
     }
+
     
     /**
      * Validate agent registration data

@@ -209,6 +209,9 @@ class Router
         $this->addRoute('GET', '/admin/agents/resources', 'AgentController@resources');
         $this->addRoute('POST', '/admin/agents/resources/upload', 'AgentController@uploadResource');
         $this->addRoute('GET', '/admin/agents/resources/export', 'AgentController@exportResources');
+        $this->addRoute('GET', '/admin/agents/resources/download/{id}', 'AgentController@downloadResource');
+        $this->addRoute('POST', '/admin/agents/resources/delete/{id}', 'AgentController@deleteResource');
+
         
         // Payout Request Routes (Admin)
         $this->addRoute('GET', '/admin/payouts', 'AdminController@payoutRequests');
@@ -225,7 +228,9 @@ class Router
         $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
         $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
+        $this->addRoute('GET', '/agent/resources/download/{id}', 'AgentDashboardController@downloadResource');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
+
         $this->addRoute('POST', '/agent/member-details/{id}/claim-request', 'AgentDashboardController@requestClaimAssistance');
         $this->addRoute('POST', '/agent/member-details/{id}/payment-assist', 'AgentDashboardController@requestPaymentAssistance');
         $this->addRoute('POST', '/agent/member-details/{id}/dependents/add', 'AgentDashboardController@addDependent');
