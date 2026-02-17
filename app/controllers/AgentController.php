@@ -807,7 +807,7 @@ class AgentController extends BaseController
         ]);
         
         if ($resourceId) {
-            // Send notification to all agents
+            // Send notification to all agents except the uploader
             $notificationService = new InAppNotificationService();
             
             // Get all agent user IDs
@@ -816,6 +816,19 @@ class AgentController extends BaseController
             $agentUserIds = array_map(function($agent) {
                 return $agent['user_id'];
             }, $agents);
+            
+            // Get current user ID (the uploader) to exclude from notifications
+            $currentUserId = $_SESSION['user_id'] ?? null;
+            
+            // Filter out the uploader from receiving notification (they already know they uploaded it)
+            if ($currentUserId) {
+                $agentUserIds = array_filter($agentUserIds, function($userId) use ($currentUserId) {
+                    return $userId != $currentUserId;
+                });
+                // Re-index the array after filtering
+                $agentUserIds = array_values($agentUserIds);
+            }
+
             
             if (!empty($agentUserIds)) {
                 $categoryLabel = Resource::getCategoryLabel($category);
