@@ -111,15 +111,14 @@ $csrf_token = $csrf_token ?? '';
 .alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
 .alert i { font-size: 18px; }
 
-/* Modal */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
 .modal-overlay.active { display: flex; }
-.modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-.modal-header { padding: 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
-.modal-header h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1F2937; margin: 0; }
-.modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #F3F4F6; color: #6B7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.modal-close:hover { background: #E5E7EB; color: #1F2937; }
-.modal-body { padding: 24px; }
+.upload-modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+.upload-modal .modal-header { padding: 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+.upload-modal .modal-header h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1F2937; margin: 0; }
+.upload-modal .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #F3F4F6; color: #6B7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.upload-modal .modal-close:hover { background: #E5E7EB; color: #1F2937; }
+.upload-modal .modal-body { padding: 24px; }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
 .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
@@ -131,7 +130,7 @@ $csrf_token = $csrf_token ?? '';
 .file-input-icon { font-size: 48px; color: #9CA3AF; margin-bottom: 16px; }
 .file-input-text { font-size: 14px; color: #6B7280; margin-bottom: 8px; }
 .file-input-hint { font-size: 12px; color: #9CA3AF; }
-.modal-footer { padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px; }
+.upload-modal .modal-footer { padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px; }
 .btn-cancel { padding: 10px 20px; border: 1px solid #E5E7EB; border-radius: 8px; background: white; color: #6B7280; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .btn-cancel:hover { background: #F9FAFB; border-color: #D1D5DB; }
 .btn-submit { padding: 10px 24px; border: none; border-radius: 8px; background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%); color: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
@@ -266,8 +265,10 @@ $csrf_token = $csrf_token ?? '';
                 </thead>
                 <tbody>
                     <?php foreach ($resources as $resource): 
-                        $isNew = strtotime($resource['created_at']) > strtotime('-7 days');
-                        $fileExt = strtolower(pathinfo($resource['original_name'], PATHINFO_EXTENSION));
+                        $createdAt = $resource['created_at'] ?? '';
+                        $isNew = $createdAt && strtotime($createdAt) > strtotime('-7 days');
+                        $originalName = $resource['original_name'] ?? '';
+                        $fileExt = $originalName ? strtolower(pathinfo($originalName, PATHINFO_EXTENSION)) : '';
                         
                         $iconClass = 'default';
                         if (in_array($fileExt, ['pdf'])) $iconClass = 'pdf';
@@ -276,7 +277,8 @@ $csrf_token = $csrf_token ?? '';
                         elseif (in_array($fileExt, ['jpg', 'jpeg', 'png', 'gif'])) $iconClass = 'img';
                         elseif (in_array($fileExt, ['zip', 'rar'])) $iconClass = 'zip';
                         
-                        $catClass = str_replace('_', '-', $resource['category']);
+                        $category = $resource['category'] ?? '';
+                        $catClass = str_replace('_', '-', $category);
                     ?>
                         <tr>
                             <td>
@@ -286,23 +288,23 @@ $csrf_token = $csrf_token ?? '';
                                     </div>
                                     <div class="resource-details">
                                         <div class="resource-name">
-                                            <?php echo htmlspecialchars($resource['title']); ?>
+                                            <?php echo htmlspecialchars($resource['title'] ?? ''); ?>
                                             <?php if ($isNew): ?>
                                                 <span class="new-badge"><i class="fas fa-sparkles"></i> NEW</span>
                                             <?php endif; ?>
                                         </div>
-                                        <div class="resource-meta"><?php echo htmlspecialchars($resource['original_name']); ?></div>
+                                        <div class="resource-meta"><?php echo htmlspecialchars($originalName); ?></div>
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="category-badge <?php echo $catClass; ?>"><?php echo ucwords(str_replace('_', ' ', $resource['category'])); ?></span></td>
-                            <td class="file-size"><?php echo Resource::formatFileSize($resource['file_size']); ?></td>
-                            <td class="download-count"><i class="fas fa-download" style="margin-right: 4px; color: #9CA3AF;"></i><?php echo number_format($resource['download_count']); ?></td>
-                            <td class="upload-date"><?php echo date('M d, Y', strtotime($resource['created_at'])); ?><br><small style="color: #9CA3AF;">by <?php echo htmlspecialchars($resource['uploader_name'] ?? 'Admin'); ?></small></td>
+                            <td><span class="category-badge <?php echo $catClass; ?>"><?php echo ucwords(str_replace('_', ' ', $category)); ?></span></td>
+                            <td class="file-size"><?php echo Resource::formatFileSize($resource['file_size'] ?? 0); ?></td>
+                            <td class="download-count"><i class="fas fa-download" style="margin-right: 4px; color: #9CA3AF;"></i><?php echo number_format($resource['download_count'] ?? 0); ?></td>
+                            <td class="upload-date"><?php echo $createdAt ? date('M d, Y', strtotime($createdAt)) : ''; ?><br><small style="color: #9CA3AF;">by <?php echo htmlspecialchars($resource['uploaded_by_name'] ?? $resource['uploader_name'] ?? 'Admin'); ?></small></td>
                             <td>
                                 <div class="action-btns">
-                                    <a href="/admin/agents/resources/download/<?php echo $resource['id']; ?>" class="action-btn" title="Download"><i class="fas fa-download"></i></a>
-                                    <button class="action-btn delete" onclick="confirmDelete(<?php echo $resource['id']; ?>, '<?php echo htmlspecialchars(addslashes($resource['title'])); ?>')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    <a href="/admin/agents/resources/download/<?php echo $resource['id'] ?? 0; ?>" class="action-btn" title="Download"><i class="fas fa-download"></i></a>
+                                    <button class="action-btn delete" onclick="confirmDelete(<?php echo $resource['id'] ?? 0; ?>, '<?php echo htmlspecialchars(addslashes($resource['title'] ?? '')); ?>')" title="Delete"><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -315,12 +317,13 @@ $csrf_token = $csrf_token ?? '';
 
 <!-- Upload Modal -->
 <div class="modal-overlay" id="uploadModal">
-    <div class="modal">
+    <div class="upload-modal">
         <div class="modal-header">
             <h3><i class="fas fa-cloud-upload-alt"></i> Upload New Resource</h3>
             <button class="modal-close" onclick="closeUploadModal()"><i class="fas fa-times"></i></button>
         </div>
         <form action="/admin/agents/resources/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
             <div class="modal-body">
                 <div class="form-group">
                     <label for="title">Resource Title *</label>
@@ -344,7 +347,7 @@ $csrf_token = $csrf_token ?? '';
                 <div class="form-group">
                     <label>File *</label>
                     <div class="file-input-wrapper">
-                        <input type="file" id="file" name="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip">
+                        <input type="file" id="file" name="resource_file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip">
                         <div class="file-input-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                         <div class="file-input-text">Click to select file or drag and drop</div>
                         <div class="file-input-hint">Max 10MB. Allowed: PDF, DOC, XLS, PPT, JPG, PNG, ZIP</div>
@@ -363,12 +366,31 @@ $csrf_token = $csrf_token ?? '';
 </div>
 
 <script>
+const CSRF_TOKEN = <?php echo json_encode($csrf_token); ?>;
 function openUploadModal() { document.getElementById('uploadModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
 function closeUploadModal() { document.getElementById('uploadModal').classList.remove('active'); document.body.style.overflow = ''; document.getElementById('uploadForm').reset(); document.getElementById('selectedFile').style.display = 'none'; }
-document.getElementById('file').addEventListener('change', function(e) { if (e.target.files.length > 0) { document.getElementById('fileName').textContent = e.target.files[0].name; document.getElementById('selectedFile').style.display = 'block'; } });
-document.getElementById('uploadModal').addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
-function confirmDelete(id, title) { if (confirm('Are you sure you want to delete "' + title + '"?\n\nThis action cannot be undone.')) { const form = document.createElement('form'); form.method = 'POST'; form.action = '/admin/agents/resources/delete/' + id; document.body.appendChild(form); form.submit(); } }
-function filterResources() { const searchValue = document.getElementById('search-resources').value.toLowerCase(); const rows = document.querySelectorAll('.resources-table tbody tr'); rows.forEach(row => { const name = row.querySelector('.resource-name')?.textContent.toLowerCase() || ''; row.style.display = name.includes(searchValue) ? '' : 'none'; }); }
+const fileInput = document.getElementById('file');
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) { if (e.target.files.length > 0) { document.getElementById('fileName').textContent = e.target.files[0].name; document.getElementById('selectedFile').style.display = 'block'; } });
+}
+const uploadModalEl = document.getElementById('uploadModal');
+if (uploadModalEl) {
+    uploadModalEl.addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
+}
+function confirmDelete(id, title) {
+    if (!confirm('Are you sure you want to delete "' + title + '"?\n\nThis action cannot be undone.')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/agents/resources/delete/' + id;
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'csrf_token';
+    tokenInput.value = CSRF_TOKEN || '';
+    form.appendChild(tokenInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+function filterResources() { const searchValue = (document.getElementById('search-resources')?.value || '').toLowerCase(); const rows = document.querySelectorAll('.resources-table tbody tr'); rows.forEach(row => { const name = row.querySelector('.resource-name')?.textContent.toLowerCase() || ''; row.style.display = name.includes(searchValue) ? '' : 'none'; }); }
 </script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

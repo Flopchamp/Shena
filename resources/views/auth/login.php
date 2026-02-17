@@ -21,13 +21,14 @@
         
         body {
             font-family: 'Manrope', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .login-container {
             display: flex;
-            height: 100vh;
+            min-height: 100vh;
         }
         
         .left-panel {
@@ -39,7 +40,8 @@
             flex-direction: column;
             justify-content: space-between;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            min-height: 100vh;
         }
         
         .left-panel::before {
@@ -149,6 +151,7 @@
             align-items: center;
             justify-content: center;
             padding: 40px;
+            min-height: 100vh;
         }
         
         .login-card {
@@ -158,6 +161,8 @@
             width: 100%;
             max-width: 500px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-height: calc(100vh - 80px);
+            overflow: auto;
         }
         
         .portal-icon {
@@ -404,17 +409,92 @@
                 <h2>Portal Access</h2>
                 <p class="subtitle">Manage your association membership</p>
                 
+                <?php
+                // Display session-based error/success (set by controllers on redirect)
+                if (!empty($_SESSION['error'])) :
+                ?>
+                    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
+                <?php
+                endif;
+
+                if (!empty($_SESSION['success'])) :
+                ?>
+                    <div class="alert alert-success" role="alert"><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></div>
+                <?php
+                endif;
+
+                // Display errors passed directly to the view
+                if (!empty($errors)) :
+                    if (is_array($errors)) :
+                ?>
+                    <div class="alert alert-danger" role="alert">
+                        <ul class="mb-0">
+                        <?php foreach ($errors as $err) : ?>
+                            <li><?php echo htmlspecialchars($err, ENT_QUOTES); ?></li>
+                        <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php
+                    else :
+                ?>
+                    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($errors, ENT_QUOTES); ?></div>
+                <?php
+                    endif;
+                endif;
+
+                if (!empty($success)) :
+                ?>
+                    <div class="alert alert-success" role="alert"><?php echo htmlspecialchars($success, ENT_QUOTES); ?></div>
+                <?php endif; ?>
+
+                <?php
+                // Inactive member: show special message and optional redirect to payment
+                if (!empty($inactive) || !empty($reactivate_url)) :
+                    $payUrl = htmlspecialchars($reactivate_url ?? $payment_url ?? '/payments', ENT_QUOTES);
+                    $inactiveMsg = htmlspecialchars($inactive_message ?? 'Your membership is inactive. Please complete payment to reactivate.', ENT_QUOTES);
+                ?>
+                    <div class="alert alert-warning" role="alert" id="inactiveAlert">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>Membership Inactive:</strong>
+                                <div><?php echo $inactiveMsg; ?></div>
+                            </div>
+                            <div class="text-end">
+                                <a href="<?php echo $payUrl; ?>" class="btn btn-sm btn-primary">Reactivate Now</a>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">You will be redirected to the payment page in <span id="redirectSeconds">5</span> seconds...</div>
+                    </div>
+                    <script>
+                        (function(){
+                            var secondsEl = document.getElementById('redirectSeconds');
+                            var sec = 5;
+                            var target = <?php echo json_encode($payUrl); ?>;
+                            var t = setInterval(function(){
+                                sec -= 1;
+                                if (secondsEl) secondsEl.textContent = sec;
+                                if (sec <= 0) {
+                                    clearInterval(t);
+                                    try { window.location.href = target; } catch(e){}
+                                }
+                            }, 1000);
+                        })();
+                    </script>
+                <?php endif; ?>
+
                 <div class="tabs">
                     <div class="tab active">Sign In</div>
                     <div class="tab" onclick="window.location.href='/register'">Register</div>
                 </div>
                 
-                <form method="POST" action="/login">
+                <form method="POST" action="/login" novalidate>
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
                     
                     <div class="form-group">
                         <label class="form-label">Member ID / Email</label>
-                        <input type="text" name="email" class="form-control" placeholder="Enter your ID or email" required>
+                           <input type="text" name="email" class="form-control" placeholder="Enter your ID or email" required
+                               value="<?php echo htmlspecialchars($email ?? $_POST['email'] ?? ($_SESSION['email'] ?? ''), ENT_QUOTES); ?>" aria-describedby="emailHelp">
+                           <?php if (!empty($_SESSION['email'])) { unset($_SESSION['email']); } ?>
                     </div>
                     
                     <div class="form-group">
@@ -455,6 +535,24 @@
     </div>
     
     <script>
+        // Auto-focus email input if present; focus password if email filled
+        (function(){
+            try {
+                var email = document.querySelector('input[name="email"]');
+                var password = document.getElementById('password');
+                var alertEl = document.querySelector('.alert');
+                if (alertEl) {
+                    // focus first input and make alert dismissible after 6s
+                    if (email) email.focus();
+                    setTimeout(function(){ alertEl.style.display = 'none'; }, 6000);
+                } else if (email && email.value) {
+                    if (password) password.focus(); else email.focus();
+                } else if (email) {
+                    email.focus();
+                }
+            } catch(e) {}
+        })();
+
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleIcon = document.querySelector('.password-toggle');

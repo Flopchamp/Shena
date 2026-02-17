@@ -981,6 +981,11 @@ main {
 </style>
 
 <div class="payments-container">
+    <?php if (!empty($_SESSION['error'])): ?>
+        <div class="alert alert-warning">
+            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+        </div>
+    <?php endif; ?>
     <div class="page-header">
         <h1>Member Portal</h1>
         <p>Contribution History Dashboard</p>

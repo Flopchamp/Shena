@@ -426,8 +426,8 @@ class AdminController extends BaseController
     {
         $this->requireAdminAccess();
         
-        // Get member details
-        $member = $this->memberModel->find($id);
+        // Get member details (include user email/phone)
+        $member = $this->memberModel->getMemberById($id);
         
         if (!$member) {
             $_SESSION['error'] = 'Member not found.';
@@ -454,6 +454,17 @@ class AdminController extends BaseController
         
         // Get beneficiaries
         $beneficiaries = $this->memberModel->getMemberDependents($id);
+
+        // Enrich member with agent contact details for display (agent number/phone/email)
+        if (!empty($member['agent_id'])) {
+            $agent = $this->agentModel->getAgentById($member['agent_id']);
+            if ($agent) {
+                $member['agent_number'] = $agent['agent_number'] ?? ($member['agent_number'] ?? null);
+                $member['agent_phone'] = $agent['phone'] ?? null;
+                // Agent email may be stored on agents.email or users.email (user_email alias)
+                $member['agent_email'] = $agent['email'] ?? $agent['user_email'] ?? null;
+            }
+        }
         
         $data = [
             'title' => 'Member Details - Admin',

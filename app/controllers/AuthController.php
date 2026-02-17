@@ -94,9 +94,48 @@ class AuthController extends BaseController
                 $this->redirect('/login');
                 return;
             }
+
+            // If this is a member, ensure the member record itself is active
+            if (($user['role'] ?? '') === 'member') {
+                try {
+                    $member = $this->memberModel->getMemberByUserId($user['id']);
+                } catch (Exception $e) {
+                    $member = null;
+                }
+
+                if ($member && (($member['status'] ?? '') !== 'active')) {
+                    $status = $member['status'] ?? 'inactive';
+                    $fee = ($status === 'inactive') ? (defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200) : (defined('REACTIVATION_FEE') ? REACTIVATION_FEE : 100);
+                    $reactivateUrl = '/payments?member_id=' . ($member['id'] ?? '') . '&intent=reactivate';
+                    $_SESSION['error'] = 'Your membership status is: ' . strtoupper($status) . ". Please pay KES " . $fee . " to activate/reactivate your membership.";
+                    // preserve email for convenience
+                    $_SESSION['email'] = $email;
+                    $this->redirect($reactivateUrl);
+                    return;
+                }
+            }
             
             // Check if user is active
             if ($user['status'] !== 'active') {
+                // If this is a member account, guide them to the payments page to register/reactivate
+                if (($user['role'] ?? '') === 'member') {
+                    try {
+                        $member = $this->memberModel->getMemberByUserId($user['id']);
+                    } catch (Exception $e) {
+                        $member = null;
+                    }
+
+                    if ($member && (($member['status'] ?? '') !== 'active')) {
+                        $status = $member['status'] ?? 'inactive';
+                        $fee = ($status === 'inactive') ? (defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200) : (defined('REACTIVATION_FEE') ? REACTIVATION_FEE : 100);
+                        $reactivateUrl = '/payments?member_id=' . ($member['id'] ?? '') . '&intent=reactivate';
+                        $_SESSION['error'] = 'Your membership status is: ' . strtoupper($status) . ". Please pay KES " . $fee . " to activate/reactivate your membership.";
+                        $_SESSION['email'] = $email;
+                        $this->redirect($reactivateUrl);
+                        return;
+                    }
+                }
+
                 $_SESSION['error'] = 'Your account is not active. Please contact support.';
                 $this->redirect('/login');
                 return;
@@ -253,6 +292,24 @@ class AuthController extends BaseController
                 $this->redirect('/register');
                 return;
             }
+
+            // Validate ID number not already registered to avoid duplicate key DB errors
+            $idNumberInput = $this->sanitizeInput($memberData['id_number'] ?? '');
+            if (!empty($idNumberInput)) {
+                try {
+                    if ($this->memberModel->findByIdNumber($idNumberInput)) {
+                        $_SESSION['error'] = 'National ID number already registered.';
+                        $_SESSION['old_input'] = array_merge($userData, $memberData);
+                        unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                        $_SESSION['error_field'] = 'id_number';
+                        $this->redirect('/register');
+                        return;
+                    }
+                } catch (Exception $e) {
+                    error_log('ID number lookup failed: ' . $e->getMessage());
+                    // proceed but warn in logs; we'll still rely on DB constraints as fallback
+                }
+            }
             
             // Validate age (18-100) and capture for later calculations
             $age = null;
@@ -385,7 +442,12 @@ class AuthController extends BaseController
         } catch (Exception $e) {
             error_log('Registration error: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
-            $_SESSION['error'] = 'Registration failed: ' . ($e->getMessage() ?: 'Please try again.');
+            $msg = 'Registration failed. Please try again.';
+            $errText = $e->getMessage();
+            if (stripos($errText, 'Duplicate entry') !== false || stripos($errText, 'SQLSTATE[23000]') !== false) {
+                $msg = 'National ID number already exists. Please verify the ID.';
+            }
+            $_SESSION['error'] = $msg;
             // Preserve form values even on unexpected errors
             if (isset($userData) && isset($memberData)) {
                 $_SESSION['old_input'] = array_merge($userData, $memberData);

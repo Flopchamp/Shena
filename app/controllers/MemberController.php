@@ -333,6 +333,15 @@ class MemberController extends BaseController
             'selected_year' => $yearFilter
         ];
 
+        // If redirected with intent to reactivate, set session error so the payments
+        // page (or any layout that shows session errors) can display the instruction.
+        if (!empty($_GET['intent']) && $_GET['intent'] === 'reactivate') {
+            $memberId = (int)($_GET['member_id'] ?? 0);
+            $status = 'inactive';
+            $fee = defined('REACTIVATION_FEE') ? REACTIVATION_FEE : (defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200);
+            $_SESSION['error'] = 'Your membership status is: ' . strtoupper($status) . ". Please pay KES " . $fee . " to activate/reactivate your membership.";
+        }
+
         $this->view('member.payments', $data);
     }
 

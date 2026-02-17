@@ -391,6 +391,17 @@ class AgentController extends BaseController
         }
 
         $this->validateCsrf();
+
+        // Debug logging for upload attempts
+        $logDir = ROOT_PATH . '/storage/logs/';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+        $debugLog = $logDir . 'resource_upload_debug.log';
+        $logEntry = "[" . date('Y-m-d H:i:s') . "] Upload attempt by user: " . ($_SESSION['user_id'] ?? 'unknown') . "\n";
+        $logEntry .= "POST: " . print_r($_POST, true) . "\n";
+        $logEntry .= "FILES: " . print_r($_FILES, true) . "\n";
+        @file_put_contents($debugLog, $logEntry, FILE_APPEND);
         
         $userId = $_SESSION['user_id'];
         $commission = $this->agentModel->getCommissionById($commissionId);
@@ -689,28 +700,38 @@ class AgentController extends BaseController
         }
         $filters['is_active'] = true;
         
+        // Get all resources (ungrouped) for the view
         $resources = $resourceModel->getAll($filters);
         
-        // Group resources by category
-        $groupedResources = [
-            'marketing_materials' => [],
-            'training_documents' => [],
-            'policy_documents' => [],
-            'forms' => [],
-            'other' => []
+        // Calculate statistics
+        $stats = [
+            'total' => count($resources),
+            'marketing' => 0,
+            'training' => 0,
+            'forms' => 0,
+            'policy' => 0,
+            'other' => 0
         ];
         
         foreach ($resources as $resource) {
             $category = $resource['category'] ?? 'other';
-            if (!isset($groupedResources[$category])) {
-                $category = 'other';
+            if ($category === 'marketing_materials') {
+                $stats['marketing']++;
+            } elseif ($category === 'training_documents') {
+                $stats['training']++;
+            } elseif ($category === 'forms') {
+                $stats['forms']++;
+            } elseif ($category === 'policy_documents') {
+                $stats['policy']++;
+            } else {
+                $stats['other']++;
             }
-            $groupedResources[$category][] = $resource;
         }
         
         $this->render('admin/resources', [
-            'resources' => $groupedResources,
-            'categoryFilter' => $categoryFilter,
+            'resources' => $resources,
+            'category' => $categoryFilter,
+            'stats' => $stats,
             'pageTitle' => 'Agent Resources',
             'csrf_token' => $this->generateCsrfToken()
         ]);

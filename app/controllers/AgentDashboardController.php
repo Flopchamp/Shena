@@ -337,6 +337,19 @@ class AgentDashboardController extends BaseController
                 return;
             }
 
+            // Validate ID number not already registered (prevent duplicate unique constraint errors)
+            $idNumberInput = $this->sanitizeInput($_POST['id_number'] ?? '');
+            if (!empty($idNumberInput)) {
+                $existingMember = $this->db->fetch('SELECT id FROM members WHERE id_number = :id_number', ['id_number' => $idNumberInput]);
+                if ($existingMember) {
+                    $_SESSION['error'] = 'National ID number is already registered.';
+                    // Keep form data for repopulation
+                    $_SESSION['form_data'] = $_SESSION['form_data'] ?? [];
+                    $this->redirect('/agent/register-member');
+                    return;
+                }
+            }
+
             // Create user record
             $firstName = $this->sanitizeInput($_POST['first_name']);
             $lastName = $this->sanitizeInput($_POST['last_name']);
@@ -381,17 +394,53 @@ class AgentDashboardController extends BaseController
                 ':next_of_kin' => $this->sanitizeInput($_POST['next_of_kin']),
                 ':next_of_kin_phone' => $this->sanitizeInput($_POST['next_of_kin_phone']),
                 ':package' => $_POST['package'],
-                ':status' => 'active'
+                // New members registered by agents should start in 'inactive' status
+                // so admins can review/activate them. User account remains 'pending'.
+                ':status' => 'inactive'
             ]);
-            
+            // Grab member id for linking and notifications
+            $memberId = (int)$this->db->getConnection()->lastInsertId();
+
+            // Send in-app notification to admins about the new member
+            try {
+                if (class_exists('InAppNotificationService')) {
+                    $notif = new InAppNotificationService();
+                    $payload = [
+                        'subject' => 'New member registered',
+                        'message' => trim(($firstName ?? '') . ' ' . ($lastName ?? '')) . " registered by agent {$agent['agent_number']}.",
+                        'action_url' => '/admin/members/view/' . $memberId,
+                        'action_text' => 'View member'
+                    ];
+                    $notif->notifyAdmins($payload, $_SESSION['user_id'] ?? null);
+                }
+            } catch (Exception $e) {
+                error_log('Failed to send in-app notification: ' . $e->getMessage());
+            }
+
             $_SESSION['success'] = 'Member registered successfully! Commission will be processed upon payment.';
             // Clear form data on success
             unset($_SESSION['form_data']);
-            $this->redirect('/agent/members');
+
+            // Show a brief confirmation page then redirect back to members list
+            $data = [
+                'title' => 'Member Registered',
+                'message' => $_SESSION['success'],
+                'redirect_url' => '/agent/members',
+                'redirect_delay' => 3
+            ];
+
+            $this->view('agent.registration-success', $data);
+            return;
 
         } catch (Exception $e) {
             error_log('Member registration error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Failed to register member. Please try again.';
+            $msg = 'Failed to register member. Please try again.';
+            // If this was a duplicate key error, give a clearer message
+            $errText = $e->getMessage();
+            if (stripos($errText, 'Duplicate entry') !== false || stripos($errText, 'SQLSTATE[23000]') !== false) {
+                $msg = 'National ID number already exists. Please verify the ID.';
+            }
+            $_SESSION['error'] = $msg;
             // Keep form data for repopulation
             $_SESSION['form_data'] = $_SESSION['form_data'] ?? [];
             $this->redirect('/agent/register-member');
