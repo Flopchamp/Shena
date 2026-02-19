@@ -118,6 +118,8 @@ class Router
         $this->addRoute('GET', '/admin/claims/view/{id}', 'AdminController@viewClaim');
         $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
         $this->addRoute('GET', '/admin/claims/track-services', 'AdminController@viewTrackServices');
+        // Admin AJAX API
+        $this->addRoute('GET', '/admin/api/members', 'AdminApiController@members');
         $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/{id}/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/approve-cash', 'AdminController@approveClaimCashAlternative');

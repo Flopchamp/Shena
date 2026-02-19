@@ -33,7 +33,7 @@ A comprehensive web application for managing a welfare association that provides
 - **Database**: MySQL 8.0+
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
 - **Payment Integration**: M-Pesa STK Push API (Safaricom)
-- **SMS Service**: Twilio API
+- **SMS Service**: HostPinnacle API
 - **Email Service**: SMTP (configurable)
 
 ## Installation
@@ -66,7 +66,7 @@ A comprehensive web application for managing a welfare association that provides
      - Database credentials (DB_HOST, DB_NAME, DB_USER, DB_PASS)
      - M-Pesa API credentials
      - SMTP email settings
-     - Twilio SMS settings
+   - HostPinnacle SMS settings
      - APP_URL (your domain)
 
 4. **Directory Permissions**
@@ -118,11 +118,10 @@ define('MAIL_USERNAME', 'your_email@gmail.com');
 define('MAIL_PASSWORD', 'your_app_password');
 ```
 
-### Twilio SMS Configuration
+### HostPinnacle SMS Configuration
 ```php
-define('TWILIO_SID', 'your_twilio_sid');
-define('TWILIO_AUTH_TOKEN', 'your_twilio_auth_token');
-define('TWILIO_PHONE_NUMBER', '+1234567890');
+define('HOSTPINNACLE_API_KEY', 'your_hostpinnacle_api_key');
+define('HOSTPINNACLE_SENDER_ID', 'your_sender_id');
 ```
 
 ## File Structure

@@ -4,7 +4,9 @@ $monthlyPayments = $monthlyPayments ?? 0;
 $pendingReconciliation = $pendingReconciliation ?? 0;
 $successRate = $successRate ?? 0;
 ?>
+
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
+<?php include_once __DIR__ . '/modals/member-report-modal.php'; ?>
 
 <style>
     /* Page Header */
@@ -733,7 +735,132 @@ function showTab(tabName) {
 }
 
 function generateReport(type) {
-    ShenaApp.showNotification('Generating ' + type + ' report...', 'info', 2000);
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    if (type === 'member') {
+        // Show member selection modal
+        const modal = new bootstrap.Modal(document.getElementById('memberReportModal'));
+        document.getElementById('memberSearchInput').value = '';
+        loadMemberList('');
+        modal.show();
+        return;
+    }
+    let url = '/admin/reports/export';
+    let params = {};
+    let filename = '';
+    if (type === 'monthly') {
+        params = {
+            format: 'pdf',
+            type: 'payments',
+            date_from: yyyy + '-' + mm + '-01',
+            date_to: yyyy + '-' + mm + '-' + dd
+        };
+        filename = 'monthly-payments-report-' + yyyy + '-' + mm + '-' + dd + '.pdf';
+    } else if (type === 'financial') {
+        params = {
+            format: 'pdf',
+            type: 'financial',
+            date_from: yyyy + '-01-01',
+            date_to: yyyy + '-' + mm + '-' + dd
+        };
+        filename = 'financial-report-' + yyyy + '-' + mm + '-' + dd + '.pdf';
+    }
+    if (!url) return;
+    ShenaApp.showNotification('Generating report...', 'info', 2000);
+    fetch(url + '?' + new URLSearchParams(params), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/pdf'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to generate report');
+        return response.blob();
+    })
+    .then(blob => {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        ShenaApp.showNotification('Report downloaded!', 'success', 2000);
+    })
+    .catch(() => {
+        ShenaApp.showNotification('Failed to generate report', 'error', 3000);
+    });
+}
+
+// Member search and report logic
+function loadMemberList(query) {
+    const container = document.getElementById('memberListContainer');
+    container.innerHTML = '<div class="text-center py-3">Loading...</div>';
+    fetch('/admin/api/members?search=' + encodeURIComponent(query))
+        .then(res => res.json())
+        .then(members => {
+            if (!Array.isArray(members) || members.length === 0) {
+                container.innerHTML = '<div class="text-center py-3 text-muted">No members found.</div>';
+                return;
+            }
+            container.innerHTML = members.map(member => `
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="cursor:pointer;" onclick="generateMemberReport(${member.id}, '${member.first_name} ${member.last_name}')">
+                    <div>
+                        <strong>${member.member_number}</strong> - ${member.first_name} ${member.last_name}<br>
+                        <small>${member.email} | ${member.phone}</small>
+                    </div>
+                    <span class="badge bg-primary">Select</span>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            container.innerHTML = '<div class="text-center py-3 text-danger">Failed to load members.</div>';
+        });
+}
+
+document.getElementById('memberSearchInput').addEventListener('input', function() {
+    loadMemberList(this.value);
+});
+
+function generateMemberReport(memberId, memberName) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const url = '/admin/reports/export';
+    const params = {
+        format: 'pdf',
+        type: 'member_payments',
+        member_id: memberId,
+        date_from: yyyy + '-01-01',
+        date_to: yyyy + '-' + mm + '-' + dd
+    };
+    const filename = 'member-' + memberName.replace(/\s+/g, '-') + '-payments-report-' + yyyy + '-' + mm + '-' + dd + '.pdf';
+    ShenaApp.showNotification('Generating report for ' + memberName + '...', 'info', 2000);
+    fetch(url + '?' + new URLSearchParams(params), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/pdf'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to generate report');
+        return response.blob();
+    })
+    .then(blob => {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        ShenaApp.showNotification('Report downloaded!', 'success', 2000);
+        bootstrap.Modal.getInstance(document.getElementById('memberReportModal')).hide();
+    })
+    .catch(() => {
+        ShenaApp.showNotification('Failed to generate report', 'error', 3000);
+    });
 }
 
 // Payment Trends Chart

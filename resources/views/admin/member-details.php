@@ -523,10 +523,10 @@ $beneficiaries = $beneficiaries ?? [];
                             <?php else: ?>
                                 <?php foreach ($beneficiaries as $beneficiary): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
-                                    <td><?= htmlspecialchars($beneficiary['relationship']) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['full_name'] ?? ($beneficiary['name'] ?? 'N/A')) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['relationship'] ?? 'N/A') ?></td>
                                     <td><?= htmlspecialchars($beneficiary['id_number'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($beneficiary['phone'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['phone_number'] ?? ($beneficiary['phone'] ?? 'N/A')) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>

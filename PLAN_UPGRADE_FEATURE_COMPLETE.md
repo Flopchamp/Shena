@@ -215,7 +215,7 @@ php test_plan_upgrade.php
 
 ## Known Limitations
 
-1. **Email/SMS Notifications**: Require SMTP/Twilio configuration
+1. **Email/SMS Notifications**: Require SMTP/HostPinnacle configuration
    - Currently logs errors without failing upgrade
    - Notifications sent after upgrade completes
 
@@ -306,7 +306,7 @@ The Plan Upgrade Feature is **fully functional and production-ready** with:
 - ✅ Transaction safety and error handling
 
 **Status**: Ready for production deployment after:
-1. SMTP/Twilio configuration for notifications
+1. SMTP/HostPinnacle configuration for notifications
 2. M-Pesa production credentials and callback URL
 3. User acceptance testing (UAT)
 4. Admin training on upgrade management

@@ -269,7 +269,7 @@ Contact your SMS provider to top up
 ### SMS Provider
 Currently integrated with:
 - **HostPinnacle SMS** (Primary)
-- **Twilio** (Fallback)
+- **HostPinnacle** (Primary)
 
 ### Configuration
 Set in `.env`:

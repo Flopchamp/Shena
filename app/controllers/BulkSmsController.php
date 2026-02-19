@@ -583,38 +583,35 @@ class BulkSmsController extends BaseController
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
             }
-            
+
             $this->validateCsrf();
-            
+
             $phone = $this->sanitizeInput($_POST['phone'] ?? '');
             $message = $this->sanitizeInput($_POST['message'] ?? '');
             $priority = $_POST['priority'] ?? 'normal';
-            
-            // Validate phone number
-            $phone = preg_replace('/[^0-9]/', '', $phone);
-            if (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
-                $phone = '254' . substr($phone, 1);
+
+            require_once __DIR__ . '/../services/SmsService.php';
+            $smsService = new SmsService();
+
+            // Normalize and validate phone number using SmsService
+            $formattedPhone = $smsService->formatPhoneNumber($phone);
+            if (!$smsService->validatePhoneNumber($formattedPhone)) {
+                throw new Exception('Invalid phone number format. Use 254XXXXXXXXX');
             }
-            
-            if (!preg_match('/^254[17][0-9]{8}$/', $phone)) {
-                throw new Exception('Invalid phone number format');
-            }
-            
+
             if (empty($message) || strlen($message) > 160) {
                 throw new Exception('Message must be between 1 and 160 characters');
             }
-            
+
             // Send SMS
-            require_once __DIR__ . '/../services/SmsService.php';
-            $smsService = new SmsService();
-            $result = $smsService->sendSms($phone, $message);
-            
+            $result = $smsService->sendSms($formattedPhone, $message);
+
             if ($result['success']) {
-                $_SESSION['success'] = 'SMS sent successfully to ' . $phone;
+                $_SESSION['success'] = 'SMS sent successfully to ' . $formattedPhone;
             } else {
                 throw new Exception($result['error'] ?? 'Failed to send SMS');
             }
-            
+
         } catch (Exception $e) {
             error_log('Quick SMS error: ' . $e->getMessage());
             $_SESSION['error'] = $e->getMessage();

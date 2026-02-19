@@ -232,34 +232,47 @@ class PaymentService
                     $memberModel = new Member();
                     $member = $memberModel->find($memberId);
                     
-                    // -- Handle Registration Fee Payment --
+                    // -- Handle Registration Fee Payment & Agent Commission --
                     if ($member && $paymentType === 'registration') {
-                        // Verify total registration fee paid (KES 200)
                         $registrationFeeRequired = defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200;
-                        
                         $allRegistrationPayments = $paymentModel->findAll([
                             'member_id' => $memberId,
                             'payment_type' => 'registration',
                             'status' => 'completed'
                         ]);
-                        
                         $totalPaid = 0;
                         foreach ($allRegistrationPayments as $regPayment) {
                             $totalPaid += $regPayment['amount'];
                         }
-                        
                         // Auto-activate if full registration fee is paid
                         if ($totalPaid >= $registrationFeeRequired && $member['status'] === 'inactive') {
                             $memberModel->update($memberId, [
                                 'status' => 'active',
                                 'coverage_ends' => date('Y-m-d', strtotime('+1 year'))
                             ]);
-                            
                             // Also activate user account
                             $userModel = new User();
                             $userModel->update($member['user_id'], ['status' => 'active']);
-                            
                             error_log("Member #{$memberId} automatically activated after registration fee payment of KES {$totalPaid}.");
+                        }
+                        // Award agent commission for registration (KES 200, one-time, only if not already awarded)
+                        if (!empty($member['agent_id'])) {
+                            $agentModel = new Agent();
+                            // Check if commission already exists for this member registration
+                            $existing = $agentModel->getAgentCommissions($member['agent_id'], ['status' => '', 'member_id' => $memberId, 'commission_type' => 'registration']);
+                            if (empty($existing)) {
+                                $agentModel->recordCommission([
+                                    'agent_id' => $member['agent_id'],
+                                    'member_id' => $memberId,
+                                    'payment_id' => null,
+                                    'commission_type' => 'registration',
+                                    'amount' => 200,
+                                    'commission_rate' => 100,
+                                    'commission_amount' => 200,
+                                    'status' => 'pending'
+                                ]);
+                                error_log("Agent {$member['agent_id']} awarded KES 200 commission for member registration #{$memberId}.");
+                            }
                         }
                     }
                     
@@ -309,10 +322,10 @@ class PaymentService
                          }
                     }
                     
-                    // Record commission for agent if monthly payment
-                    if ($paymentType === 'monthly') {
-                        $this->recordCommissionForPayment($memberId, $paymentId, $amount);
-                    }
+                    // No commission for monthly payments anymore
+                    // if ($paymentType === 'monthly') {
+                    //     $this->recordCommissionForPayment($memberId, $paymentId, $amount);
+                    // }
 
                     // Send confirmation SMS and email
                     $this->sendPaymentConfirmation($payment[0], $amount, $mpesaReceiptNumber);

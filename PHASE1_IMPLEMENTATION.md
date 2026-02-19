@@ -325,7 +325,7 @@ $claim = $claimModel->getClaimWithDependent($claimId);
 
 ### Phase 3 - Medium Priority
 1. **Communication System**
-   - Complete SMS integration (Twilio)
+    - Complete SMS integration (HostPinnacle)
    - Automated email notifications
    - Bulk messaging capability
    - Notification preferences

@@ -1050,21 +1050,67 @@ class AdminController extends BaseController
         $this->requireAdminAccess();
 
         $type = $_GET['type'] ?? '';
-        if ($type !== 'members') {
-            http_response_code(400);
-            echo 'Unsupported report type.';
-            return;
-        }
-
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+        $dateTo = $_GET['date_to'] ?? date('Y-m-d');
         set_time_limit(120);
 
-        $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
-        $html = $this->renderPdfView('admin/reports-members-pdf', [
-            'members' => $members,
-            'generatedAt' => date('Y-m-d H:i')
-        ]);
-
-        $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
+        if ($type === 'payments') {
+            $payments = $this->paymentModel->getPaymentReport($dateFrom, $dateTo);
+            $html = $this->renderPdfView('admin/reports-payments-pdf', [
+                'payments' => $payments,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'monthly-payments-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'financial') {
+            $summary = $this->paymentModel->getPaymentStatistics();
+            $methods = $this->paymentModel->getPaymentsByMethod($dateFrom, $dateTo);
+            $types = $this->paymentModel->getPaymentsByType($dateFrom, $dateTo);
+            $html = $this->renderPdfView('admin/reports-financial-pdf', [
+                'summary' => $summary,
+                'methods' => $methods,
+                'types' => $types,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'financial-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'member_payments') {
+            $memberId = $_GET['member_id'] ?? null;
+            if (!$memberId) {
+                http_response_code(400);
+                echo 'Missing member_id.';
+                return;
+            }
+            $member = $this->memberModel->getMemberById($memberId);
+            $payments = $this->paymentModel->getMemberPayments($memberId);
+            $html = $this->renderPdfView('admin/reports-member-payments-pdf', [
+                'member' => $member,
+                'payments' => $payments,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'member-' . ($member['member_number'] ?? 'report') . '-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'members') {
+            $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
+            $html = $this->renderPdfView('admin/reports-members-pdf', [
+                'members' => $members,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        http_response_code(400);
+        echo 'Unsupported report type.';
+        return;
     }
 
     private function renderPdfView($template, $data = [])
@@ -2372,7 +2418,7 @@ class AdminController extends BaseController
                 LEFT JOIN (
                     SELECT agent_id, SUM(amount) as total_commission
                     FROM agent_commissions
-                    WHERE commission_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                     GROUP BY agent_id
                 ) ac ON a.id = ac.agent_id
                 WHERE a.status = 'active'

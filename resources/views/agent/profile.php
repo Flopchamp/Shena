@@ -593,6 +593,7 @@ $status_text = !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending';
                 <i class="fas fa-sign-out-alt"></i>
                 Logout
             </button>
+            </button>
         </div>
     </div>
 
@@ -745,11 +746,34 @@ $status_text = !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending';
                         <button type="button" class="btn-profile-cancel" onclick="window.location.href='/agent/dashboard'">
                             <i class="fas fa-times-circle"></i> Cancel
                         </button>
-                        <button type="submit" class="btn-profile-save">
+                        <button type="submit" class="btn-profile-save" id="profileSaveBtn">
+                            <span id="profileSaveSpinner" style="display:none"><i class="fas fa-spinner fa-spin"></i></span>
                             <i class="fas fa-check-circle"></i> Save Changes
                         </button>
                     </div>
                 </form>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var form = document.querySelector('form[action="/agent/profile/update"]');
+                    var saveBtn = document.getElementById('profileSaveBtn');
+                    var spinner = document.getElementById('profileSaveSpinner');
+                    if (form) {
+                        form.addEventListener('submit', function() {
+                            saveBtn.disabled = true;
+                            spinner.style.display = 'inline-block';
+                        });
+                    }
+                    // Show feedback using ShenaApp modals
+                    <?php if (!empty($_SESSION['success'])): ?>
+                        ShenaApp.showNotification('<?php echo addslashes($_SESSION['success']); ?>', 'success');
+                        <?php unset($_SESSION['success']); ?>
+                    <?php endif; ?>
+                    <?php if (!empty($_SESSION['error'])): ?>
+                        ShenaApp.showNotification('<?php echo addslashes($_SESSION['error']); ?>', 'error');
+                        <?php unset($_SESSION['error']); ?>
+                    <?php endif; ?>
+                });
+                </script>
             </div>
 
             <!-- Change Password Section -->
@@ -796,11 +820,34 @@ $status_text = !empty($agent['status']) ? ucfirst($agent['status']) : 'Pending';
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn-profile-password">
+                        <button type="submit" class="btn-profile-password" id="profilePasswordBtn">
+                            <span id="profilePasswordSpinner" style="display:none"><i class="fas fa-spinner fa-spin"></i></span>
                             <i class="fas fa-lock"></i> Update Password
                         </button>
                     </div>
                 </form>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var form = document.querySelector('form[action="/agent/password/update"]');
+                    var passwordBtn = document.getElementById('profilePasswordBtn');
+                    var spinner = document.getElementById('profilePasswordSpinner');
+                    if (form) {
+                        form.addEventListener('submit', function() {
+                            passwordBtn.disabled = true;
+                            spinner.style.display = 'inline-block';
+                        });
+                    }
+                    // Show feedback using ShenaApp modals
+                    <?php if (!empty($_SESSION['success'])): ?>
+                        ShenaApp.showNotification('<?php echo addslashes($_SESSION['success']); ?>', 'success');
+                        <?php unset($_SESSION['success']); ?>
+                    <?php endif; ?>
+                    <?php if (!empty($_SESSION['error'])): ?>
+                        ShenaApp.showNotification('<?php echo addslashes($_SESSION['error']); ?>', 'error');
+                        <?php unset($_SESSION['error']); ?>
+                    <?php endif; ?>
+                });
+                </script>
             </div>
         </div>
     </div>

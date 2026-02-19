@@ -134,18 +134,29 @@ class AgentDashboardController extends BaseController
 
             // Update records
             try {
-                $this->userModel->update($_SESSION['user_id'], $userData);
-                $this->agentModel->updateAgent($agent['id'], $agentData);
+                $userResult = $this->userModel->update($_SESSION['user_id'], $userData);
+                $agentResult = $this->agentModel->updateAgent($agent['id'], $agentData);
+
+                if (!$userResult) {
+                    $_SESSION['error'] = 'User profile update failed.';
+                    error_log('User profile update failed for user_id: ' . $_SESSION['user_id']);
+                }
+                if (!$agentResult) {
+                    $_SESSION['error'] = 'Agent profile update failed.';
+                    error_log('Agent profile update failed for agent_id: ' . $agent['id']);
+                }
+
+                if ($userResult && $agentResult) {
+                    $_SESSION['success'] = 'Profile updated successfully.';
+                }
             } catch (Exception $e) {
                 error_log('Database update error: ' . $e->getMessage());
-                throw new Exception('Failed to update profile in database.');
+                $_SESSION['error'] = 'Failed to update profile in database: ' . $e->getMessage();
             }
-
-            $_SESSION['success'] = 'Profile updated successfully.';
 
         } catch (Exception $e) {
             error_log('Profile update error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Failed to update profile. Please try again.';
+            $_SESSION['error'] = 'Failed to update profile. Please try again. Error: ' . $e->getMessage();
         }
 
         $this->redirect('/agent/profile');
@@ -478,15 +489,20 @@ class AgentDashboardController extends BaseController
             }
 
             // Update password
-            $this->userModel->update($_SESSION['user_id'], [
+            $result = $this->userModel->update($_SESSION['user_id'], [
                 'password' => password_hash($_POST['new_password'], PASSWORD_DEFAULT)
             ]);
 
-            $_SESSION['success'] = 'Password updated successfully.';
+            if ($result) {
+                $_SESSION['success'] = 'Password updated successfully.';
+            } else {
+                $_SESSION['error'] = 'Password update failed.';
+                error_log('Password update failed for user_id: ' . $_SESSION['user_id']);
+            }
 
         } catch (Exception $e) {
             error_log('Password update error: ' . $e->getMessage());
-            $_SESSION['error'] = 'Failed to update password. Please try again.';
+            $_SESSION['error'] = 'Failed to update password. Please try again. Error: ' . $e->getMessage();
         }
 
         $this->redirect('/agent/profile');

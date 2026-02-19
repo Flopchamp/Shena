@@ -48,7 +48,7 @@ This is a PHP web application for managing a welfare association that provides f
 ## Integration Notes
 - M-Pesa integration uses Safaricom's API (sandbox/production)
 - Email service supports SMTP configuration
-- SMS service uses Twilio API
+- SMS service uses HostPinnacle API
 - File uploads are stored in storage/uploads/
 - Session management with configurable timeout
 

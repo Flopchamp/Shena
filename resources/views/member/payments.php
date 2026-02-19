@@ -1113,7 +1113,7 @@ main {
                 <button class="download-btn" onclick="window.location.href='<?php echo $statementUrl; ?>'">
                     <i class="fas fa-file-csv"></i> Export CSV
                 </button>
-                <button class="download-btn" onclick="window.location.href='<?php echo str_replace('/export', '/export-pdf', $statementUrl); ?>'">
+                <button class="download-btn" id="exportPdfBtn" type="button">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </button>
             </div>
@@ -1662,6 +1662,28 @@ document.getElementById('verifyTransactionForm')?.addEventListener('submit', asy
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-search"></i> Verify Transaction';
     }
+});
+</script>
+
+
+<!-- html2pdf.js CDN for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+// Export payments table as PDF
+document.getElementById('exportPdfBtn')?.addEventListener('click', function() {
+    const table = document.querySelector('.payments-table-wrapper');
+    if (!table) {
+        alert('Payments table not found.');
+        return;
+    }
+    const opt = {
+        margin:       0.3,
+        filename:     'payments-statement.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(table).save();
 });
 </script>
 

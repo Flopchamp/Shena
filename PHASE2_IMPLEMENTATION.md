@@ -95,7 +95,7 @@ Please make payment to avoid deactivation. Member: [Number]
 ```
 
 **Technical Implementation:**
-- Twilio API integration with cURL
+- HostPinnacle API integration with cURL
 - Kenyan phone number formatting (+254 prefix)
 - Rate limiting (1 SMS per second)
 - Error logging for failed deliveries
@@ -557,7 +557,7 @@ cat storage/logs/payment_monitoring_2024-01-15.log
 
 **Verification:**
 - Check email inbox (use real email in development)
-- Check SMS logs (Twilio dashboard)
+- Check SMS logs (HostPinnacle dashboard)
 - Verify email template formatting
 - Confirm member-specific data populated
 
@@ -643,8 +643,8 @@ crontab -e
 # Edit .env file
 MAIL_USERNAME=your_smtp_username
 MAIL_PASSWORD=your_smtp_password
-TWILIO_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
+-HOSTPINNACLE_API_KEY=your_hostpinnacle_api_key
+-HOSTPINNACLE_SENDER_ID=your_sender_id
 ADMIN_EMAIL=info@shenacompanion.org
 ADMIN_PHONE=+254712345678
 ```
@@ -702,9 +702,9 @@ chown -R www-data:www-data storage/
 
 **Issue:** SMS not delivered
 **Solution:**
-- Verify Twilio credentials
+- Verify HostPinnacle credentials
 - Check phone number format (+254...)
-- Review Twilio dashboard for errors
+- Review HostPinnacle dashboard for errors
 - Verify account balance
 
 **Issue:** Registration form submission fails

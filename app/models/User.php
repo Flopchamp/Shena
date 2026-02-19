@@ -4,6 +4,15 @@
  */
 class User extends BaseModel 
 {
+    /**
+     * Get user by ID
+     * @param int $id
+     * @return array|null
+     */
+    public function getUserById($id)
+    {
+        return $this->find($id);
+    }
     protected $table = 'users';
     
     public function findByEmail($email)

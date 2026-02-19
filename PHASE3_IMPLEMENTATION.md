@@ -445,7 +445,7 @@ GET  /admin/bulk-sms/preview-recipients
 - Ensure user account creation succeeded before agent profile creation
 
 **For Bulk SMS Issues:**
-- Verify Twilio credentials in config.php
+- Verify HostPinnacle credentials in config.php
 - Check notification preferences (SMS must be enabled)
 - Review recipient count before sending
 - Monitor batch size to avoid rate limits
