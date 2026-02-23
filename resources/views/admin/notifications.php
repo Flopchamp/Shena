@@ -79,6 +79,7 @@
         gap: 16px;
         transition: all 0.2s;
         cursor: pointer;
+        position: relative;
     }
 
     .notification-item:hover {
@@ -87,6 +88,20 @@
 
     .notification-item:last-child {
         border-bottom: none;
+    }
+
+    .notification-item.unread {
+        background: #F0F9FF;
+    }
+
+    .notification-item.unread::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #3B82F6;
     }
 
     .notification-icon {
@@ -160,6 +175,70 @@
         margin-right: 4px;
     }
 
+    .notification-actions {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .notification-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #7F3D9E;
+        text-decoration: none;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #F3E8FF;
+    }
+
+    .notification-action:hover {
+        background: #EDE9FE;
+        color: #6D28D9;
+    }
+
+    .action-icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .action-icon-btn:hover {
+        border-color: #7F3D9E;
+        color: #7F3D9E;
+        background: #F9FAFB;
+    }
+
+    .mark-all-btn {
+        background: #F3E8FF;
+        color: #7F3D9E;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .mark-all-btn:hover {
+        background: #EDE9FE;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -191,6 +270,10 @@
 <div class="page-header">
     <h1 class="page-title">System Notifications</h1>
     <p class="page-subtitle">Track communication logs, system events, and administrative alerts</p>
+    <input type="hidden" id="csrfToken" value="<?php echo $csrf_token ?? ''; ?>">
+    <button class="mark-all-btn" onclick="markAllAsRead()">
+        <i class="fas fa-check-double"></i> Mark All Read
+    </button>
 </div>
 
     <!-- Filter Bar -->
@@ -201,6 +284,8 @@
                 <option value="all">All Categories</option>
                 <option value="membership">Membership</option>
                 <option value="payment">Payment</option>
+                <option value="upgrades">Upgrades</option>
+                <option value="commissions">Commissions</option>
                 <option value="claims">Claims</option>
                 <option value="email">Email</option>
                 <option value="sms">SMS</option>
@@ -232,7 +317,8 @@
     <div class="notification-list">
         <?php if (!empty($notifications)): ?>
             <?php foreach ($notifications as $notification): ?>
-                <div class="notification-item">
+                <div class="notification-item <?php echo !empty($notification['read']) ? '' : 'unread'; ?>"
+                     data-id="<?php echo (int)$notification['id']; ?>">
                     <div class="notification-icon <?= $notification['type'] ?? 'info' ?>">
                         <i class="fas fa-<?= $notification['icon'] ?? 'bell' ?>"></i>
                     </div>
@@ -245,6 +331,19 @@
                         <div class="notification-meta">
                             <span><i class="fas fa-user"></i><?= $notification['recipient'] ?? 'N/A' ?></span>
                             <span><i class="fas fa-tag"></i><?= $notification['category'] ?? 'General' ?></span>
+                        </div>
+                        <div class="notification-actions">
+                            <?php if (!empty($notification['action_url']) && !empty($notification['action_text'])): ?>
+                                <a href="<?php echo htmlspecialchars($notification['action_url']); ?>" class="notification-action">
+                                    <?php echo htmlspecialchars($notification['action_text']); ?>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (empty($notification['read'])): ?>
+                                <button class="action-icon-btn" onclick="markAsRead(<?php echo (int)$notification['id']; ?>)" title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -278,6 +377,72 @@ function filterNotifications() {
     const queryString = params.toString();
     window.location.href = '/admin/notifications' + (queryString ? '?' + queryString : '');
 }
+
+function postNotificationAction(url, payload = {}) {
+    const csrfToken = document.getElementById('csrfToken')?.value;
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken || '');
+    Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+    return fetch(url, {
+        method: 'POST',
+        body: formData
+    }).then(response => response.json());
+}
+
+function markAsRead(id) {
+    postNotificationAction('/admin/notifications/mark-read', { id: id })
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to mark notification as read.');
+                return;
+            }
+
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) {
+                item.classList.remove('unread');
+                const actionBtn = item.querySelector('.action-icon-btn');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+            }
+        })
+        .catch(() => alert('Failed to mark notification as read.'));
+}
+
+function markAllAsRead() {
+    postNotificationAction('/admin/notifications/mark-all-read')
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to mark notifications as read.');
+                return;
+            }
+
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+                const actionBtn = item.querySelector('.action-icon-btn');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+            });
+        })
+        .catch(() => alert('Failed to mark notifications as read.'));
+}
+
+document.querySelectorAll('.notification-action').forEach(link => {
+    link.addEventListener('click', function (event) {
+        const item = this.closest('.notification-item');
+        const id = item?.dataset.id;
+        if (!id || !item?.classList.contains('unread')) {
+            return;
+        }
+
+        event.preventDefault();
+        postNotificationAction('/admin/notifications/mark-read', { id: id })
+            .finally(() => {
+                window.location.href = this.getAttribute('href');
+            });
+    });
+});
 </script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

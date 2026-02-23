@@ -2,105 +2,7 @@
 $page = 'notifications';
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Sample notification data - will be passed from controller
-$notifications = $notifications ?? [
-    [
-        'id' => 1,
-        'type' => 'registration',
-        'icon' => 'fa-user-plus',
-        'color' => '#10B981',
-        'title' => 'New Member Registered',
-        'message' => 'John Kamau has been successfully registered. Member #SH-98456',
-        'time' => '1 hour ago',
-        'read' => false,
-        'action_url' => '/agent/members',
-        'action_text' => 'View Member'
-    ],
-    [
-        'id' => 2,
-        'type' => 'commission',
-        'icon' => 'fa-money-bill-wave',
-        'color' => '#059669',
-        'title' => 'Commission Earned',
-        'message' => 'You earned KES 300 commission from John Kamau\'s registration.',
-        'time' => '1 hour ago',
-        'read' => false,
-        'action_url' => '/agent/payouts',
-        'action_text' => 'View Commissions'
-    ],
-    [
-        'id' => 3,
-        'type' => 'payout',
-        'icon' => 'fa-check-circle',
-        'color' => '#3B82F6',
-        'title' => 'Payout Processed',
-        'message' => 'Your payout request of KES 12,500 has been approved and processed.',
-        'time' => '3 hours ago',
-        'read' => false,
-        'action_url' => '/agent/payouts',
-        'action_text' => 'View Details'
-    ],
-    [
-        'id' => 4,
-        'type' => 'payment',
-        'icon' => 'fa-credit-card',
-        'color' => '#8B5CF6',
-        'title' => 'Member Payment Confirmed',
-        'message' => 'Mary Akinyi (SH-98234) has paid their monthly contribution.',
-        'time' => '5 hours ago',
-        'read' => true,
-        'action_url' => '/agent/members',
-        'action_text' => 'View Member'
-    ],
-    [
-        'id' => 5,
-        'type' => 'alert',
-        'icon' => 'fa-exclamation-triangle',
-        'color' => '#F59E0B',
-        'title' => 'Member Defaulted',
-        'message' => 'Peter Ochieng (SH-97812) has missed 2 consecutive payments.',
-        'time' => '1 day ago',
-        'read' => true,
-        'action_url' => '/agent/members',
-        'action_text' => 'Follow Up'
-    ],
-    [
-        'id' => 6,
-        'type' => 'system',
-        'icon' => 'fa-megaphone',
-        'color' => '#06B6D4',
-        'title' => 'System Announcement',
-        'message' => 'New training resources available in the Resources section.',
-        'time' => '2 days ago',
-        'read' => true,
-        'action_url' => '/agent/resources',
-        'action_text' => 'View Resources'
-    ],
-    [
-        'id' => 7,
-        'type' => 'milestone',
-        'icon' => 'fa-trophy',
-        'color' => '#EF4444',
-        'title' => 'Milestone Achieved!',
-        'message' => 'Congratulations! You\'ve registered 50 members this month.',
-        'time' => '3 days ago',
-        'read' => true,
-        'action_url' => '/agent/dashboard',
-        'action_text' => 'View Stats'
-    ],
-    [
-        'id' => 8,
-        'type' => 'training',
-        'icon' => 'fa-graduation-cap',
-        'color' => '#6366F1',
-        'title' => 'New Training Available',
-        'message' => 'Complete the "Advanced Claims Processing" course to boost your skills.',
-        'time' => '1 week ago',
-        'read' => true,
-        'action_url' => '/agent/resources',
-        'action_text' => 'Start Training'
-    ]
-];
+$notifications = $notifications ?? [];
 
 $unread_count = count(array_filter($notifications, fn($n) => !$n['read']));
 $total_count = count($notifications);
@@ -627,6 +529,7 @@ $total_count = count($notifications);
             </div>
         </div>
         <p>Stay informed about your agent activities, commissions, and member updates</p>
+        <input type="hidden" id="csrfToken" value="<?php echo $csrf_token ?? ''; ?>">
     </div>
 
     <!-- Stats Grid -->
@@ -835,33 +738,42 @@ function filterNotifications(filter) {
 
 // Mark as Read
 function markAsRead(id) {
-    // AJAX call to mark as read
-    console.log('Marking notification ' + id + ' as read');
-    
-    // Update UI
-    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-    if (item) {
-        item.classList.remove('unread');
-        const actionBtn = item.querySelector('.action-icon-btn[onclick*="markAsRead"]');
-        if (actionBtn) {
-            actionBtn.remove();
-        }
-    }
+    postNotificationAction('/agent/notifications/mark-read', { id: id })
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to mark notification as read.');
+                return;
+            }
+
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) {
+                item.classList.remove('unread');
+                const actionBtn = item.querySelector('.action-icon-btn[onclick*="markAsRead"]');
+                if (actionBtn) {
+                    actionBtn.remove();
+                }
+            }
+        })
+        .catch(() => alert('Failed to mark notification as read.'));
 }
 
 // Mark All as Read
 function markAllAsRead() {
     const proceed = () => {
-        // AJAX call to mark all as read
-        console.log('Marking all notifications as read');
+        postNotificationAction('/agent/notifications/mark-all-read')
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message || 'Failed to mark notifications as read.');
+                    return;
+                }
 
-        // Update UI
-        document.querySelectorAll('.notification-item.unread').forEach(item => {
-            item.classList.remove('unread');
-        });
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                });
 
-        // Update unread count
-        document.querySelectorAll('.tab-badge').forEach(badge => badge.remove());
+                document.querySelectorAll('.tab-badge').forEach(badge => badge.remove());
+            })
+            .catch(() => alert('Failed to mark notifications as read.'));
     };
 
     if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
@@ -943,6 +855,33 @@ function clearAllNotifications() {
     if (!confirm('This will permanently delete all notifications. Continue?')) return;
     proceed();
 }
+
+function postNotificationAction(url, payload = {}) {
+    const csrfToken = document.getElementById('csrfToken')?.value;
+    const formData = new FormData();
+    formData.append('csrf_token', csrfToken || '');
+    Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+    return fetch(url, {
+        method: 'POST',
+        body: formData
+    }).then(response => response.json());
+}
+
+document.querySelectorAll('.notification-action').forEach(link => {
+    link.addEventListener('click', function (event) {
+        const item = this.closest('.notification-item');
+        const id = item?.dataset.id;
+        if (!id || !item?.classList.contains('unread')) {
+            return;
+        }
+
+        event.preventDefault();
+        postNotificationAction('/agent/notifications/mark-read', { id: id })
+            .finally(() => {
+                window.location.href = this.getAttribute('href');
+            });
+    });
+});
 </script>
 
 <?php include __DIR__ . '/../layouts/agent-footer.php'; ?>

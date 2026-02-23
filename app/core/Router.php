@@ -49,6 +49,11 @@ class Router
         $this->addRoute('GET', '/dashboard', 'MemberController@dashboard');
         $this->addRoute('GET', '/profile', 'MemberController@profile');
         $this->addRoute('POST', '/profile', 'MemberController@updateProfile');
+
+        // Agent Routes (Protected)
+        $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');
+        $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
+        $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('POST', '/profile/next-of-kin', 'MemberController@updateNextOfKin');
         $this->addRoute('GET', '/payments', 'MemberController@payments');
         $this->addRoute('GET', '/member/payments/export', 'MemberController@exportPaymentHistory');
@@ -113,6 +118,8 @@ class Router
         $this->addRoute('GET', '/admin/claims/view/{id}', 'AdminController@viewClaim');
         $this->addRoute('GET', '/admin/claims/completed', 'AdminController@viewCompletedClaims');
         $this->addRoute('GET', '/admin/claims/track-services', 'AdminController@viewTrackServices');
+        // Admin AJAX API
+        $this->addRoute('GET', '/admin/api/members', 'AdminApiController@members');
         $this->addRoute('POST', '/admin/claims/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/{id}/approve', 'AdminController@approveClaim');
         $this->addRoute('POST', '/admin/claims/approve-cash', 'AdminController@approveClaimCashAlternative');
@@ -172,6 +179,8 @@ class Router
         $this->addRoute('GET', '/admin/plan-upgrades/export', 'AdminController@exportPlanUpgrades');
         $this->addRoute('POST', '/admin/plan-upgrades/complete/{id}', 'AdminController@completePlanUpgrade');
         $this->addRoute('POST', '/admin/plan-upgrades/cancel/{id}', 'AdminController@cancelPlanUpgrade');
+        $this->addRoute('POST', '/admin/plan-upgrades/approve/{id}', 'AdminController@approvePlanUpgrade');
+        $this->addRoute('POST', '/admin/plan-upgrades/reject/{id}', 'AdminController@rejectPlanUpgrade');
         
         // Phase 4: Financial Dashboard Routes
         $this->addRoute('GET', '/admin/financial-dashboard', 'AdminController@viewFinancialDashboard');
@@ -204,6 +213,14 @@ class Router
         $this->addRoute('GET', '/admin/agents/resources', 'AgentController@resources');
         $this->addRoute('POST', '/admin/agents/resources/upload', 'AgentController@uploadResource');
         $this->addRoute('GET', '/admin/agents/resources/export', 'AgentController@exportResources');
+        $this->addRoute('GET', '/admin/agents/resources/download/{id}', 'AgentController@downloadResource');
+        $this->addRoute('POST', '/admin/agents/resources/delete/{id}', 'AgentController@deleteResource');
+
+        
+        // Payout Request Routes (Admin)
+        $this->addRoute('GET', '/admin/payouts', 'AdminController@payoutRequests');
+        $this->addRoute('POST', '/admin/payouts/{id}/process', 'AdminController@processPayoutRequest');
+
 
         // Agent Dashboard Routes (Agent Only)
         $this->addRoute('GET', '/agent/dashboard', 'AgentDashboardController@dashboard');
@@ -213,8 +230,15 @@ class Router
         $this->addRoute('POST', '/agent/password/update', 'AgentDashboardController@updatePassword');
         $this->addRoute('GET', '/agent/members', 'AgentDashboardController@members');
         $this->addRoute('GET', '/agent/payouts', 'AgentDashboardController@payouts');
+        $this->addRoute('POST', '/agent/payouts/request', 'AgentDashboardController@requestPayout');
         $this->addRoute('GET', '/agent/resources', 'AgentDashboardController@resources');
+        $this->addRoute('GET', '/agent/resources/download/{id}', 'AgentDashboardController@downloadResource');
         $this->addRoute('GET', '/agent/member-details/{id}', 'AgentDashboardController@memberDetails');
+
+        $this->addRoute('POST', '/agent/member-details/{id}/claim-request', 'AgentDashboardController@requestClaimAssistance');
+        $this->addRoute('POST', '/agent/member-details/{id}/payment-assist', 'AgentDashboardController@requestPaymentAssistance');
+        $this->addRoute('POST', '/agent/member-details/{id}/dependents/add', 'AgentDashboardController@addDependent');
+        $this->addRoute('GET', '/agent/member-details/{id}/statement', 'AgentDashboardController@downloadStatement');
         $this->addRoute('GET', '/agent/support', 'AgentDashboardController@support');
         $this->addRoute('GET', '/agent/register-member', 'AgentDashboardController@registerMember');
         $this->addRoute('POST', '/agent/register-member/store', 'AgentDashboardController@storeRegisterMember');
@@ -237,6 +261,8 @@ class Router
         
         // Settings Routes (Admin & Manager)
         $this->addRoute('GET', '/admin/notifications', 'AdminController@notifications');
+        $this->addRoute('POST', '/admin/notifications/mark-read', 'AdminController@markNotificationAsRead');
+        $this->addRoute('POST', '/admin/notifications/mark-all-read', 'AdminController@markAllNotificationsAsRead');
         $this->addRoute('GET', '/admin/notification-settings', 'SettingsController@index');
         $this->addRoute('POST', '/admin/settings/update', 'SettingsController@update');
         $this->addRoute('POST', '/admin/settings/test-fallback', 'SettingsController@testFallback');

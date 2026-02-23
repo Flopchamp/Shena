@@ -361,16 +361,24 @@ $beneficiaries = $beneficiaries ?? [];
                         </div>
                     </div>
                     
-                    <?php if (!empty($member['agent_id'])): ?>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-user-tie"></i> Recruited By</div>
                         <div class="info-value">
-                            <a href="/admin/agents/view/<?= $member['agent_id'] ?>" style="color: #7F3D9E;">
-                                Agent #<?= htmlspecialchars($member['agent_number'] ?? 'N/A') ?>
-                            </a>
+                            <?php $agentNumber = htmlspecialchars($member['agent_number'] ?? 'N/A'); ?>
+                            <?php $agentPhone = htmlspecialchars($member['agent_phone'] ?? 'N/A'); ?>
+                            <?php $agentEmail = htmlspecialchars($member['agent_email'] ?? 'N/A'); ?>
+                            <?php if (!empty($member['agent_id'])): ?>
+                                <a href="/admin/agents/view/<?= $member['agent_id'] ?>" style="color: #7F3D9E;">
+                                    Agent #<?= $agentNumber ?>
+                                </a>
+                            <?php else: ?>
+                                Agent #<?= $agentNumber ?>
+                            <?php endif; ?>
+                            <div style="font-size:13px; color:#6B7280; margin-top:6px;">
+                                Phone: <?= $agentPhone ?> &nbsp; | &nbsp; Email: <?= $agentEmail ?>
+                            </div>
                         </div>
                     </div>
-                    <?php endif; ?>
                     
                     <hr class="divider">
                     
@@ -515,10 +523,10 @@ $beneficiaries = $beneficiaries ?? [];
                             <?php else: ?>
                                 <?php foreach ($beneficiaries as $beneficiary): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($beneficiary['name']) ?></td>
-                                    <td><?= htmlspecialchars($beneficiary['relationship']) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['full_name'] ?? ($beneficiary['name'] ?? 'N/A')) ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['relationship'] ?? 'N/A') ?></td>
                                     <td><?= htmlspecialchars($beneficiary['id_number'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($beneficiary['phone'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($beneficiary['phone_number'] ?? ($beneficiary['phone'] ?? 'N/A')) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>

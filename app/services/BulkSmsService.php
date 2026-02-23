@@ -167,10 +167,12 @@ class BulkSmsService
         $stmt = $this->db->prepare($sql);
         
         foreach ($recipients as $recipient) {
+            // Always format phone number before queueing
+            $phone = $this->smsService->formatPhoneNumber($recipient['phone']);
             $stmt->execute([
                 $bulkMessageId,
                 $recipient['user_id'],
-                $recipient['phone']
+                $phone
             ]);
         }
         

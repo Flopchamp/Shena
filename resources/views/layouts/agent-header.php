@@ -1,3 +1,25 @@
+<?php
+// Include form data helper for form persistence on validation errors
+require_once __DIR__ . '/../../../app/helpers/FormDataHelper.php';
+
+
+$notificationCount = $notificationCount ?? null;
+if ($notificationCount === null) {
+    $notificationCount = 0;
+    if (isset($_SESSION['user_id'])) {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->getConnection()->prepare(
+                'SELECT COUNT(*) FROM communication_recipients WHERE user_id = :user_id AND status <> "read"'
+            );
+            $stmt->execute([':user_id' => (int)$_SESSION['user_id']]);
+            $notificationCount = (int)$stmt->fetchColumn();
+        } catch (Throwable $e) {
+            $notificationCount = 0;
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -527,6 +549,24 @@
             position: relative;
         }
 
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: #EF4444;
+            color: white;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
         .icon-btn:hover {
             background: #F3F4F6;
             color: #4B5563;
@@ -732,6 +772,9 @@
         <div class="top-bar-actions">
             <button class="icon-btn" onclick="location.href='/agent/notifications'" title="Notifications">
                 <i class="fas fa-bell"></i>
+                <?php if (!empty($notificationCount)): ?>
+                    <span class="notification-badge"><?php echo (int)$notificationCount; ?></span>
+                <?php endif; ?>
             </button>
             <button class="icon-btn" onclick="location.href='/agent/profile'" title="Settings">
                 <i class="fas fa-cog"></i>
@@ -775,4 +818,3 @@
                 unset($_SESSION['flash_type']); 
             ?>
         <?php endif; ?>
-

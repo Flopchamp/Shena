@@ -67,9 +67,9 @@ define('MAIL_FROM_EMAIL', 'noreply@shenacompanion.org');
 define('MAIL_FROM_NAME', APP_NAME);
 
 // HostPinnacle SMS Configuration
-define('HOSTPINNACLE_USER_ID', getenv('HOSTPINNACLE_USER_ID') ?: '');
-define('HOSTPINNACLE_API_KEY', getenv('HOSTPINNACLE_API_KEY') ?: '');
-define('HOSTPINNACLE_SENDER_ID', getenv('HOSTPINNACLE_SENDER_ID') ?: 'SHENA');
+define('HOSTPINNACLE_USER_ID', 'oscar');
+define('HOSTPINNACLE_API_KEY', '9cc40ecba14145bdcd11845c744f5f9a5c043ef0');
+define('HOSTPINNACLE_SENDER_ID', 'SHENA');
 
 // Security Settings - CRITICAL: Change these in production
 define('ENCRYPTION_KEY', getenv('ENCRYPTION_KEY') ?: bin2hex(random_bytes(16)));

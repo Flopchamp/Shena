@@ -379,10 +379,16 @@ $commissions = $commissions ?? [];
         <div class="table-header">
             <div class="table-title">Commission Requests</div>
             <div class="filter-buttons">
-                <button class="filter-btn active" onclick="window.location.href='/admin/commissions';">All</button>
-                <button class="filter-btn" onclick="filterCommissions('pending')">Pending</button>
-                <button class="filter-btn" onclick="filterCommissions('approved')">Approved</button>
-                <button class="filter-btn" onclick="filterCommissions('paid')">Paid</button>
+                <?php $activeStatus = $status ?? ''; ?>
+                <a class="filter-btn <?php echo $activeStatus === '' ? 'active' : ''; ?>" href="/admin/commissions">All</a>
+                <a class="filter-btn <?php echo $activeStatus === 'pending' ? 'active' : ''; ?>" href="/admin/commissions?status=pending">Pending</a>
+                <a class="filter-btn <?php echo $activeStatus === 'approved' ? 'active' : ''; ?>" href="/admin/commissions?status=approved">Approved</a>
+                <a class="filter-btn <?php echo $activeStatus === 'paid' ? 'active' : ''; ?>" href="/admin/commissions?status=paid">Paid</a>
+                <a class="filter-btn" href="/admin/commissions/export<?php echo $activeStatus !== '' ? '?status=' . urlencode($activeStatus) : ''; ?>">Export CSV</a>
+                <form method="POST" action="/admin/commissions/approve-all" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+                    <button class="filter-btn" type="submit" onclick="return confirm('Approve all pending commissions?');">Approve All</button>
+                </form>
             </div>
         </div>
 
@@ -391,9 +397,9 @@ $commissions = $commissions ?? [];
                 <thead>
                     <tr>
                         <th>Agent</th>
-                        <th>Members</th>
+                        <th>Member Number</th>
                         <th>Amount</th>
-                        <th>Period</th>
+                        <th>Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -416,9 +422,9 @@ $commissions = $commissions ?? [];
                                     </div>
                                 </div>
                             </td>
-                            <td><?php echo $commission['member_count'] ?? 0; ?></td>
+                            <td><?php echo htmlspecialchars($commission['member_number'] ?? 'N/A'); ?></td>
                             <td><span class="amount-value">KES <?php echo number_format($commission['commission_amount'] ?? 0, 2); ?></span></td>
-                            <td><?php echo date('M Y', strtotime($commission['created_at'])); ?></td>
+                            <td><?php echo date('M d, Y', strtotime($commission['created_at'])); ?></td>
                             <td>
                                 <span class="status-badge <?php echo $commission['status']; ?>">
                                     <?php echo ucfirst($commission['status']); ?>
@@ -427,11 +433,14 @@ $commissions = $commissions ?? [];
                             <td>
                                 <div class="action-buttons">
                                     <?php if ($commission['status'] === 'pending'): ?>
-                                        <button class="btn-action btn-approve" onclick="approveCommission(<?php echo $commission['id']; ?>)">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
+                                        <form method="POST" action="/admin/commissions/approve/<?php echo (int)$commission['id']; ?>" style="display: inline;" onsubmit="return confirm('Approve this commission?');">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+                                            <button class="btn-action btn-approve" type="submit">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
                                     <?php elseif ($commission['status'] === 'approved'): ?>
-                                        <button class="btn-action btn-pay" onclick="openPayModal(<?php echo $commission['id']; ?>)">
+                                        <button class="btn-action btn-pay" type="button" onclick="openPayModal(<?php echo (int)$commission['id']; ?>)">
                                             <i class="fas fa-money-bill"></i> Mark Paid
                                         </button>
                                     <?php endif; ?>
@@ -464,6 +473,7 @@ $commissions = $commissions ?? [];
     <div class="modal-content">
         <h2 class="modal-header">Mark Commission as Paid</h2>
         <form id="paymentForm" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
             <div class="form-group">
                 <label class="form-label">Payment Method</label>
                 <select name="payment_method" class="form-select" required>
@@ -486,28 +496,6 @@ $commissions = $commissions ?? [];
 </div>
 
 <script>
-function approveCommission(id) {
-    ShenaApp.confirmAction(
-        'Approve this commission payment?',
-        function() {
-            fetch(`/admin/commissions/approve/${id}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'}
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    ShenaApp.alert('Failed to approve commission', 'error');
-                }
-            });
-        },
-        null,
-        { type: 'success', title: 'Approve Commission' }
-    );
-}
-
 function openPayModal(id) {
     document.getElementById('paymentForm').action = `/admin/commissions/pay/${id}`;
     document.getElementById('paymentModal').classList.add('active');
@@ -515,17 +503,6 @@ function openPayModal(id) {
 
 function closePayModal() {
     document.getElementById('paymentModal').classList.remove('active');
-}
-
-function filterCommissions(status) {
-    const rows = document.querySelectorAll('.commissions-table tbody tr');
-    rows.forEach(row => {
-        if (status === 'all' || row.dataset.status === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
 }
 
 // Close modal on outside click

@@ -2,47 +2,14 @@
 $page = 'payouts'; 
 include __DIR__ . '/../layouts/agent-header.php';
 
-// Data passed from controller: $agent, $commissions, $total_earned, $pending_amount, $current_balance
-// Process commissions for display
-if (!empty($commissions)) {
-    foreach ($commissions as &$commission) {
-        // Format date
-        $commission['display_date'] = date('d M Y', strtotime($commission['created_at']));
-        
-        // Format status for display
-        $status = strtoupper($commission['status']);
-        $commission['display_status'] = $status;
-        
-        // Status badge class
-        switch($commission['status']) {
-            case 'paid':
-                $commission['status_class'] = 'paid';
-                break;
-            case 'pending':
-            case 'approved':
-                $commission['status_class'] = 'pending';
-                break;
-            default:
-                $commission['status_class'] = 'pending';
-        }
-        
-        // Format commission type
-        $commission['display_type'] = ucfirst(str_replace('_', ' ', $commission['commission_type']));
-    }
-    unset($commission);
-}
+// Data passed from controller: $agent, $payout_requests, $total_earned, $available_balance, $payout_stats
 
 // Get agent phone for M-Pesa
 $mpesa_number = $agent['phone'] ?? '+254 700 000 000';
 
-// Get recent payout requests (filter paid commissions from last 2 months)
-$recent_requests = [];
-if (!empty($commissions)) {
-    $paid_commissions = array_filter($commissions, function($c) {
-        return $c['status'] === 'paid' && $c['paid_at'];
-    });
-    $recent_requests = array_slice($paid_commissions, 0, 3);
-}
+// Calculate stats
+$pendingRequests = $payout_stats['pending_count'] ?? 0;
+$totalPaid = $payout_stats['total_paid'] ?? 0;
 ?>
 
 <style>
@@ -169,45 +136,18 @@ if (!empty($commissions)) {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.transactions-controls {
+.transactions-header {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 24px;
 }
 
-.filter-select {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1px solid #D1D5DB;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #4B5563;
-    background: white;
-    cursor: pointer;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: #7F20B0;
-}
-
-.filter-btn-payout {
-    width: 44px;
-    height: 44px;
-    border: 1px solid #D1D5DB;
-    border-radius: 8px;
-    background: white;
-    color: #6B7280;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.filter-btn-payout:hover {
-    background: #F9FAFB;
-    border-color: #9CA3AF;
+.transactions-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0;
 }
 
 /* Transactions Table */
@@ -246,21 +186,15 @@ if (!empty($commissions)) {
     color: #6B7280;
 }
 
-.transaction-member {
-    font-size: 14px;
-    font-weight: 600;
-    color: #7F20B0;
-}
-
-.transaction-action {
-    font-size: 13px;
-    color: #6B7280;
-}
-
 .transaction-amount {
     font-size: 14px;
     font-weight: 600;
     color: #1F2937;
+}
+
+.transaction-method {
+    font-size: 13px;
+    color: #6B7280;
 }
 
 .transaction-status {
@@ -274,64 +208,28 @@ if (!empty($commissions)) {
     letter-spacing: 0.3px;
 }
 
+.transaction-status.requested {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.transaction-status.processing {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
 .transaction-status.paid {
     background: #D1FAE5;
     color: #059669;
 }
 
-.transaction-status.pending {
-    background: #FEF3C7;
-    color: #D97706;
+.transaction-status.rejected {
+    background: #FEE2E2;
+    color: #DC2626;
 }
 
 .transaction-status i {
     font-size: 8px;
-}
-
-/* Pagination */
-.transactions-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #E5E7EB;
-}
-
-.pagination-info-payout {
-    font-size: 14px;
-    color: #6B7280;
-}
-
-.pagination-controls-payout {
-    display: flex;
-    gap: 8px;
-}
-
-.page-btn-payout {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid #D1D5DB;
-    background: white;
-    color: #4B5563;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.page-btn-payout:hover:not(.active) {
-    background: #F9FAFB;
-    border-color: #9CA3AF;
-}
-
-.page-btn-payout.active {
-    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
-    color: white;
-    border-color: transparent;
 }
 
 /* Withdrawal Panel */
@@ -404,6 +302,22 @@ if (!empty($commissions)) {
     margin-bottom: 12px;
 }
 
+.filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4B5563;
+    background: white;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #7F20B0;
+}
+
 .transfer-method-box {
     display: flex;
     align-items: center;
@@ -444,16 +358,6 @@ if (!empty($commissions)) {
     font-size: 11px;
     color: #9CA3AF;
     margin: 0;
-}
-
-.change-btn {
-    font-size: 12px;
-    color: #7F20B0;
-    font-weight: 600;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
 }
 
 .amount-input-section {
@@ -522,56 +426,33 @@ if (!empty($commissions)) {
     box-shadow: 0 4px 12px rgba(127, 32, 176, 0.3);
 }
 
-/* Recent Requests */
-.recent-requests-section {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #E5E7EB;
+/* Payment Fields */
+.payment-fields {
+    margin-top: 12px;
 }
 
-.recent-requests-header {
-    font-size: 11px;
-    font-weight: 700;
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #D1D5DB;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    color: #6B7280;
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
     color: #9CA3AF;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-}
-
-.request-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
-}
-
-.request-item:last-child {
-    border-bottom: none;
-}
-
-.request-amount {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1F2937;
-    margin-bottom: 2px;
-}
-
-.request-date {
-    font-size: 12px;
-    color: #9CA3AF;
-}
-
-.request-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    background: #D1FAE5;
-    color: #059669;
+    margin: 0;
 }
 
 /* Responsive */
@@ -604,120 +485,117 @@ if (!empty($commissions)) {
 
 <div class="payouts-container">
     <div class="payouts-header">
-        <h1>Agent Payouts & Commission Tracking</h1>
-        <p>Manage your earnings and request withdrawals</p>
+        <h1>My Payouts</h1>
+        <p>Request and track your commission payouts</p>
+    </div>
+
+    <!-- Message Display -->
+    <div class="payouts-messages" style="margin-bottom: 20px;">
+    <?php if (isset($_SESSION['success'])): ?>
+    <div style="background: #D1FAE5; color: #059669; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['success']); ?>
+    </div>
+    <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+    <div style="background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-exclamation-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['error']); ?>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
     </div>
 
     <!-- Stats Grid -->
     <div class="payouts-stats-grid">
-        <!-- Current Balance -->
+        <!-- Available Balance -->
         <div class="payout-stat-card balance-card">
             <div class="stat-header-payout">
                 <div class="stat-icon-payout">
                     <i class="fas fa-wallet"></i>
                 </div>
-                <span class="stat-label-payout">Current Balance</span>
+                <span class="stat-label-payout">Available Balance</span>
             </div>
-            <div class="stat-value-payout">KES <?php echo number_format($current_balance ?? 0, 2); ?></div>
+            <div class="stat-value-payout">KES <?php echo number_format($available_balance ?? 0, 2); ?></div>
             <div class="stat-description-payout">Available for withdrawal</div>
         </div>
 
-        <!-- Pending Commissions -->
+        <!-- Pending Requests -->
         <div class="payout-stat-card">
             <div class="stat-header-payout">
                 <div class="stat-icon-payout">
                     <i class="fas fa-clock"></i>
                 </div>
-                <span class="stat-label-payout">Pending Commissions</span>
+                <span class="stat-label-payout">Pending Requests</span>
             </div>
-            <div class="stat-value-payout">KES <?php echo number_format($pending_amount ?? 0, 2); ?></div>
-            <div class="stat-description-payout">Awaiting monthly settlement</div>
+            <div class="stat-value-payout"><?php echo $pendingRequests; ?></div>
+            <div class="stat-description-payout">Awaiting processing</div>
         </div>
 
-        <!-- Total Earned -->
+        <!-- Total Paid Out -->
         <div class="payout-stat-card">
             <div class="stat-header-payout">
                 <div class="stat-icon-payout">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <span class="stat-label-payout">Total Earned to Date</span>
+                <span class="stat-label-payout">Total Paid Out</span>
             </div>
-            <div class="stat-value-payout">KES <?php echo number_format($total_earned ?? 0, 2); ?></div>
-            <div class="stat-description-payout">Lifetime performance</div>
+            <div class="stat-value-payout">KES <?php echo number_format($totalPaid, 2); ?></div>
+            <div class="stat-description-payout">Lifetime payouts</div>
         </div>
     </div>
 
     <!-- Main Content Grid -->
     <div class="payouts-main-grid">
-        <!-- Transactions Section -->
+        <!-- Payout Requests Table -->
         <div class="transactions-section">
-            <div class="transactions-controls">
-                <select class="filter-select">
-                    <option value="all">Filter by Month (All Time)</option>
-                    <option value="jan">January 2024</option>
-                    <option value="feb">February 2024</option>
-                    <option value="mar">March 2024</option>
-                </select>
-                <select class="filter-select">
-                    <option value="all">Status: All</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                </select>
-                <button class="filter-btn-payout">
-                    <i class="fas fa-sliders-h"></i>
-                </button>
+            <div class="transactions-header">
+                <h2>Payout History</h2>
             </div>
 
-            <?php if (empty($commissions)): ?>
-                <div style="text-align: center; padding: 60px 20px;">
-                    <i class="fas fa-money-bill-wave" style="font-size: 64px; color: #D1D5DB; margin-bottom: 16px;"></i>
-                    <h3 style="font-size: 18px; color: #6B7280; margin: 0 0 8px 0;">No Commissions Yet</h3>
-                    <p style="font-size: 14px; color: #9CA3AF; margin: 0;">Commission records will appear here once members are registered</p>
+            <?php if (empty($payout_requests)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h3>No Payout Requests Yet</h3>
+                    <p>Your payout requests will appear here once submitted</p>
                 </div>
             <?php else: ?>
             <table class="transactions-table">
                 <thead>
                     <tr>
-                        <th>DATE</th>
-                        <th>MEMBER ID</th>
-                        <th>TYPE</th>
+                        <th>DATE REQUESTED</th>
                         <th>AMOUNT</th>
+                        <th>METHOD</th>
                         <th>STATUS</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($commissions as $commission): ?>
+                    <?php foreach ($payout_requests as $request): ?>
                     <tr>
-                        <td class="transaction-date"><?php echo htmlspecialchars($commission['display_date']); ?></td>
-                        <td class="transaction-member"><?php echo htmlspecialchars($commission['member_id'] ?? 'N/A'); ?></td>
-                        <td class="transaction-action"><?php echo htmlspecialchars($commission['display_type']); ?></td>
-                        <td class="transaction-amount">KES <?php echo number_format($commission['commission_amount'], 2); ?></td>
+                        <td class="transaction-date">
+                            <?php echo date('d M Y', strtotime($request['requested_at'])); ?>
+                        </td>
+                        <td class="transaction-amount">
+                            KES <?php echo number_format($request['amount'], 2); ?>
+                        </td>
+                        <td class="transaction-method">
+                            <?php 
+                            $method = ucfirst(str_replace('_', ' ', $request['payment_method']));
+                            echo htmlspecialchars($method);
+                            ?>
+                        </td>
                         <td>
-                            <span class="transaction-status <?php echo $commission['status_class']; ?>">
+                            <span class="transaction-status <?php echo strtolower($request['status']); ?>">
                                 <i class="fas fa-circle"></i>
-                                <?php echo $commission['display_status']; ?>
+                                <?php echo htmlspecialchars($request['display_status'] ?? $request['status']); ?>
                             </span>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <?php endif; ?>
-
-            <?php if (!empty($commissions)): ?>
-            <div class="transactions-footer">
-                <div class="pagination-info-payout">Showing <?php echo count($commissions); ?> commission<?php echo count($commissions) != 1 ? 's' : ''; ?></div>
-                <div class="pagination-controls-payout">
-                    <button class="page-btn-payout">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="page-btn-payout active">1</button>
-                    <button class="page-btn-payout">2</button>
-                    <button class="page-btn-payout">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
             <?php endif; ?>
         </div>
 
@@ -727,63 +605,122 @@ if (!empty($commissions)) {
                 <div class="withdrawal-icon">
                     <i class="fas fa-arrow-down"></i>
                 </div>
-                <h3>Withdrawal Request</h3>
+                <h3>Request Payout</h3>
             </div>
 
             <div class="withdrawal-balance">
                 <div class="balance-label">Available to Withdraw</div>
-                <div class="balance-amount">KES <?php echo number_format($current_balance ?? 0, 2); ?></div>
+                <div class="balance-amount">KES <?php echo number_format($available_balance ?? 0, 2); ?></div>
             </div>
 
-            <div class="transfer-method-section">
-                <div class="transfer-label">Transfer Method</div>
-                <div class="transfer-method-box">
-                    <div class="transfer-method-info">
-                        <div class="mpesa-icon">M</div>
-                        <div class="transfer-method-details">
-                            <h6>M-Pesa Transfer</h6>
-                            <p><?php echo htmlspecialchars($mpesa_number); ?></p>
+            <form action="/agent/payouts/request" method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+
+                <div class="transfer-method-section">
+                    <div class="transfer-label">Payment Method</div>
+                    <select class="filter-select" name="payment_method" id="payment_method" onchange="togglePaymentFields()">
+                        <option value="mpesa" selected>M-Pesa Mobile Money</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="cash">Cash Pickup</option>
+                    </select>
+                    
+                    <!-- M-Pesa Fields -->
+                    <div id="mpesa_fields" class="payment-fields">
+                        <div class="transfer-method-box">
+                            <div class="transfer-method-info">
+                                <div class="mpesa-icon">M</div>
+                                <div class="transfer-method-details">
+                                    <h6>M-Pesa Transfer</h6>
+                                    <p>Instant to mobile number</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button class="change-btn">Change</button>
-                </div>
-            </div>
-
-            <div class="amount-input-section">
-                <div class="amount-label">Enter Amount (KES)</div>
-                <div class="amount-input-wrapper">
-                    <span class="currency-symbol">KES</span>
-                    <input type="number" class="amount-input" value="5000" min="1" step="0.01">
-                </div>
-            </div>
-
-            <button class="btn-request-payout">
-                Request Payout <i class="fas fa-arrow-right"></i>
-            </button>
-
-            <div class="recent-requests-section">
-                <div class="recent-requests-header">Recent Payouts</div>
-                <?php if (empty($recent_requests)): ?>
-                    <div style="text-align: center; padding: 20px; color: #9CA3AF; font-size: 13px;">
-                        <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
-                        No recent payouts
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($recent_requests as $request): ?>
-                    <div class="request-item">
-                        <div>
-                            <div class="request-amount">KES <?php echo number_format($request['commission_amount'], 2); ?></div>
-                            <div class="request-date"><?php echo date('d M Y', strtotime($request['paid_at'])); ?></div>
+                    
+                    <!-- Bank Transfer Fields -->
+                    <div id="bank_fields" class="payment-fields" style="display: none;">
+                        <div class="amount-input-section" style="margin-top: 12px;">
+                            <div class="amount-label">Bank Name</div>
+                            <input type="text" class="amount-input" name="bank_name" placeholder="Enter bank name" style="padding-left: 14px;">
                         </div>
-                        <span class="request-status">
-                            PAID
-                        </span>
+                        <div class="amount-input-section">
+                            <div class="amount-label">Account Number</div>
+                            <input type="text" class="amount-input" name="account_number" placeholder="Enter account number" style="padding-left: 14px;">
+                        </div>
+                        <div class="amount-input-section">
+                            <div class="amount-label">Account Name</div>
+                            <input type="text" class="amount-input" name="account_name" placeholder="Enter account holder name" style="padding-left: 14px;">
+                        </div>
                     </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+                    
+                    <!-- Cash Pickup Fields -->
+                    <div id="cash_fields" class="payment-fields" style="display: none;">
+                        <div class="transfer-method-box">
+                            <div class="transfer-method-info">
+                                <div class="mpesa-icon" style="background: #F59E0B;">C</div>
+                                <div class="transfer-method-details">
+                                    <h6>Cash Pickup</h6>
+                                    <p>Collect from office</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="amount-input-section">
+                    <div class="amount-label">Amount (KES)</div>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-symbol">KES</span>
+                        <input type="number" class="amount-input" name="amount" value="1000" min="1" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="amount-input-section" id="phone_section">
+                    <div class="amount-label">Phone Number</div>
+                    <div class="amount-input-wrapper">
+                        <input type="text" class="amount-input" name="phone_number" id="phone_number" value="<?php echo htmlspecialchars($mpesa_number); ?>" required style="padding-left: 14px;">
+                    </div>
+                </div>
+                
+                <div class="amount-input-section">
+                    <div class="amount-label">Notes (Optional)</div>
+                    <div class="amount-input-wrapper">
+                        <textarea class="amount-input" name="payout_notes" rows="2" placeholder="Any special instructions..." style="padding: 12px; height: auto;"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-request-payout" type="submit">
+                    Request Payout <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+function togglePaymentFields() {
+    var method = document.getElementById('payment_method').value;
+    
+    // Hide all fields first
+    document.getElementById('mpesa_fields').style.display = 'none';
+    document.getElementById('bank_fields').style.display = 'none';
+    document.getElementById('cash_fields').style.display = 'none';
+    document.getElementById('phone_section').style.display = 'block';
+    
+    // Show relevant fields
+    if (method === 'mpesa') {
+        document.getElementById('mpesa_fields').style.display = 'block';
+        document.getElementById('phone_number').required = true;
+    } else if (method === 'bank_transfer') {
+        document.getElementById('bank_fields').style.display = 'block';
+        document.getElementById('phone_section').style.display = 'none';
+        document.getElementById('phone_number').required = false;
+    } else if (method === 'cash') {
+        document.getElementById('cash_fields').style.display = 'block';
+        document.getElementById('phone_section').style.display = 'none';
+        document.getElementById('phone_number').required = false;
+    }
+}
+</script>
 
 <?php include __DIR__ . '/../layouts/agent-footer.php'; ?>

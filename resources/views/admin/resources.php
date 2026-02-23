@@ -1,1211 +1,396 @@
-<?php 
-// Ensure all categories exist with default empty arrays
+<?php
+/**
+ * Admin Resources View. - Modern Admin UI
+ * 
+ * @package Shena\Views\Admin
+ */
 $resources = $resources ?? [];
-$resources['marketing_materials'] = $resources['marketing_materials'] ?? [];
-$resources['training_documents'] = $resources['training_documents'] ?? [];
-$resources['policy_documents'] = $resources['policy_documents'] ?? [];
-$resources['forms'] = $resources['forms'] ?? [];
-$resources['videos'] = $resources['videos'] ?? [];
-$resources['presentations'] = $resources['presentations'] ?? [];
-
-// Calculate statistics
-$totalResources = count($resources['marketing_materials']) + 
-                  count($resources['training_documents']) + 
-                  count($resources['policy_documents']) + 
-                  count($resources['forms']) +
-                  count($resources['videos']) +
-                  count($resources['presentations']);
+$stats = $stats ?? ['total' => 0, 'marketing' => 0, 'training' => 0, 'forms' => 0, 'policy' => 0, 'other' => 0];
+$category = $category ?? 'all';
+$csrf_token = $csrf_token ?? '';
 ?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
-    .resources-container {
-        padding: 20px;
-        max-width: 1600px;
-        margin: 0 auto;
-    }
-
-    .page-header {
-        margin-bottom: 32px;
-    }
-
-    .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 32px;
-        font-weight: 700;
-        color: #1F2937;
-        margin: 0 0 8px 0;
-    }
-
-    .page-subtitle {
-        font-size: 15px;
-        color: #6B7280;
-        line-height: 1.6;
-    }
-
-    /* Upload Zone - Prominent Feature */
-    .upload-showcase {
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        border-radius: 16px;
-        padding: 40px;
-        margin-bottom: 32px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .upload-showcase::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-    }
-
-    .upload-content {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 40px;
-        align-items: center;
-    }
-
-    .upload-info h2 {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 12px;
-    }
-
-    .upload-info p {
-        font-size: 16px;
-        opacity: 0.9;
-        margin-bottom: 24px;
-        line-height: 1.6;
-    }
-
-    .upload-stats {
-        display: flex;
-        gap: 32px;
-    }
-
-    .upload-stat {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .upload-stat-value {
-        font-size: 32px;
-        font-weight: 700;
-    }
-
-    .upload-stat-label {
-        font-size: 13px;
-        opacity: 0.8;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .upload-zone-container {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 2px dashed rgba(255, 255, 255, 0.4);
-        border-radius: 12px;
-        padding: 32px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .upload-zone-container:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.6);
-        transform: translateY(-2px);
-    }
-
-    .upload-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.9;
-    }
-
-    .upload-text {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-    .upload-hint {
-        font-size: 13px;
-        opacity: 0.8;
-    }
-
-    /* Quick Actions Bar */
-    .quick-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 32px;
-    }
-
-    .quick-action-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
-        background: white;
-        border: 1px solid #E5E7EB;
-        border-radius: 10px;
-        color: #374151;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .quick-action-btn:hover {
-        background: #F9FAFB;
-        border-color: #7F3D9E;
-        color: #7F3D9E;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(127, 61, 158, 0.15);
-    }
-
-    .quick-action-btn.primary {
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        color: white;
-        border: none;
-    }
-
-    .quick-action-btn.primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.4);
-    }
-
-    /* Search Bar */
-    .search-section {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 32px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 14px 20px 14px 48px;
-        border: 2px solid #E5E7EB;
-        border-radius: 10px;
-        font-size: 15px;
-        transition: all 0.2s;
-        background: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%239CA3AF\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.35-4.35\"></path></svg>') no-repeat 16px center;
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: #7F3D9E;
-        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
-    }
-
-    /* Resources Grid Layout */
-    .resources-layout {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 24px;
-        margin-bottom: 40px;
-    }
-
-    .resource-category {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
-        transition: all 0.3s;
-    }
-
-    .resource-category:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        transform: translateY(-4px);
-    }
-
-    .category-header {
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        color: white;
-        padding: 20px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .category-title {
-        font-size: 17px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .category-title i {
-        font-size: 20px;
-    }
-
-    .category-count {
-        background: rgba(255, 255, 255, 0.25);
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .category-body {
-        padding: 24px;
-        min-height: 200px;
-    }
-
-    .resource-item {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 16px;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: 1px solid transparent;
-    }
-
-    .resource-item:hover {
-        background: #F9FAFB;
-        border-color: #E5E7EB;
-    }
-
-    .resource-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-        flex-shrink: 0;
-    }
-
-    .resource-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .resource-name {
-        font-weight: 600;
-        color: #1F2937;
-        margin-bottom: 6px;
-        font-size: 15px;
-    }
-
-    .resource-meta {
-        font-size: 13px;
-        color: #6B7280;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .resource-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        border: none;
-        background: #F3F4F6;
-        color: #6B7280;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        font-size: 14px;
-    }
-
-    .icon-btn:hover {
-        background: #7F3D9E;
-        color: white;
-    }
-
-    .empty-category {
-        text-align: center;
-        padding: 60px 20px;
-        color: #9CA3AF;
-    }
-
-    .empty-category i {
-        font-size: 56px;
-        margin-bottom: 16px;
-        opacity: 0.3;
-    }
-
-    .empty-category p {
-        font-size: 15px;
-        margin-bottom: 12px;
-    }
-
-    .empty-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        color: white;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        margin-top: 12px;
-        transition: all 0.2s;
-    }
-
-    .empty-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.4);
-    }
-
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-    }
-
-    .modal.active {
-        display: flex;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 16px;
-        padding: 40px;
-        max-width: 650px;
-        width: 90%;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .modal-header {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 24px;
-        color: #1F2937;
-    }
-
-    .form-group {
-        margin-bottom: 24px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-    }
-
-    .form-input, .form-select, .form-textarea {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid #E5E7EB;
-        border-radius: 10px;
-        font-size: 15px;
-        transition: all 0.2s;
-    }
-
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-        outline: none;
-        border-color: #7F3D9E;
-        box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1);
-    }
-
-    .form-textarea {
-        min-height: 100px;
-        resize: vertical;
-        font-family: inherit;
-    }
-
-    .file-upload-area {
-        border: 2px dashed #D1D5DB;
-        border-radius: 12px;
-        padding: 48px 32px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s;
-        background: #F9FAFB;
-    }
-
-    .file-upload-area:hover {
-        border-color: #7F3D9E;
-        background: linear-gradient(135deg, rgba(127, 61, 158, 0.05) 0%, rgba(91, 33, 182, 0.05) 100%);
-    }
-
-    .file-upload-area.drag-over {
-        border-color: #7F3D9E;
-        background: linear-gradient(135deg, rgba(127, 61, 158, 0.1) 0%, rgba(91, 33, 182, 0.1) 100%);
-    }
-
-    .upload-icon-large {
-        font-size: 56px;
-        color: #7F3D9E;
-        margin-bottom: 16px;
-    }
-
-    .upload-text-large {
-        color: #374151;
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 8px;
-    }
-
-    .upload-hint-large {
-        color: #9CA3AF;
-        font-size: 14px;
-    }
-
-    .selected-file {
-        margin-top: 16px;
-        padding: 12px 16px;
-        background: white;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        border: 1px solid #E5E7EB;
-    }
-
-    .selected-file i {
-        color: #7F3D9E;
-        font-size: 20px;
-    }
-
-    .selected-file-name {
-        flex: 1;
-        font-weight: 600;
-        color: #1F2937;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
-        margin-top: 32px;
-    }
-
-    .btn-modal {
-        padding: 12px 28px;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-    }
-
-    .btn-cancel {
-        background: #F3F4F6;
-        color: #374151;
-    }
-
-    .btn-cancel:hover {
-        background: #E5E7EB;
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg, #7F3D9E 0%, #5B21B6 100%);
-        color: white;
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(127, 61, 158, 0.4);
-    }
-
-    @media (max-width: 1024px) {
-        .upload-content {
-            grid-template-columns: 1fr;
-        }
-
-        .upload-stats {
-            justify-content: space-around;
-        }
-
-        .resources-layout {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .resources-container {
-            padding: 16px;
-        }
-
-        .upload-showcase {
-            padding: 24px;
-        }
-
-        .upload-info h2 {
-            font-size: 22px;
-        }
-
-        .page-title {
-            font-size: 24px;
-        }
-    }
+/* Page Header */
+.page-header { margin-bottom: 24px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: #1F2937; margin: 0 0 4px 0; }
+.page-subtitle { font-size: 13px; color: #9CA3AF; margin: 0; }
+
+/* Stats Grid */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.stat-card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #E5E7EB; transition: all 0.2s; }
+.stat-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); transform: translateY(-2px); }
+.stat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.stat-icon.purple { background: #EDE9FE; color: #7F3D9E; }
+.stat-icon.green { background: #D1FAE5; color: #059669; }
+.stat-icon.blue { background: #DBEAFE; color: #2563EB; }
+.stat-icon.orange { background: #FEF3C7; color: #D97706; }
+.stat-icon.gray { background: #F3F4F6; color: #6B7280; }
+.stat-label { font-size: 11px; color: #9CA3AF; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 28px; font-weight: 700; color: #1F2937; }
+
+/* Tabs Container */
+.tabs-container { background: white; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden; }
+.tabs-nav { display: flex; border-bottom: 2px solid #F3F4F6; overflow-x: auto; }
+.tab-item { padding: 16px 24px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: #6B7280; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.tab-item:hover { color: #7F3D9E; background: #F9FAFB; }
+.tab-item.active { color: #7F3D9E; border-bottom-color: #7F3D9E; }
+.tab-badge { background: #F3F4F6; color: #6B7280; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.tab-item.active .tab-badge { background: #EDE9FE; color: #7F3D9E; }
+.tab-content { display: none; padding: 24px; }
+.tab-content.active { display: block; }
+
+/* Tab Actions */
+.tab-actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-action-btn { padding: 10px 18px; border: 1px solid #E5E7EB; border-radius: 8px; background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.tab-action-btn:hover { background: #F9FAFB; border-color: #7F3D9E; color: #7F3D9E; }
+.tab-action-btn.primary { background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%); border: none; color: white; }
+.tab-action-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3); }
+
+/* Filter Bar */
+.filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.search-box { flex: 1; min-width: 250px; position: relative; }
+.search-box input { width: 100%; padding: 10px 16px 10px 40px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; }
+.search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+
+/* Resources Table */
+.resources-table { width: 100%; border-collapse: collapse; }
+.resources-table thead { border-bottom: 1px solid #E5E7EB; }
+.resources-table th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
+.resources-table td { padding: 16px; font-size: 13px; color: #1F2937; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+.resources-table tbody tr { transition: all 0.2s; }
+.resources-table tbody tr:hover { background: #F9FAFB; }
+.resource-info { display: flex; align-items: center; gap: 12px; }
+.resource-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; flex-shrink: 0; }
+.resource-icon.pdf { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); }
+.resource-icon.doc { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); }
+.resource-icon.xls { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+.resource-icon.img { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
+.resource-icon.zip { background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%); }
+.resource-icon.default { background: linear-gradient(135deg, #A78BFA 0%, #7F3D9E 100%); }
+.resource-details { flex: 1; }
+.resource-name { font-weight: 600; color: #1F2937; margin-bottom: 2px; }
+.resource-meta { font-size: 11px; color: #9CA3AF; }
+.category-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.category-badge.marketing { background: #EDE9FE; color: #7F3D9E; }
+.category-badge.training { background: #D1FAE5; color: #059669; }
+.category-badge.policy { background: #DBEAFE; color: #2563EB; }
+.category-badge.forms { background: #FEF3C7; color: #D97706; }
+.category-badge.other { background: #F3F4F6; color: #6B7280; }
+.file-size { font-weight: 500; color: #4B5563; }
+.download-count { color: #6B7280; }
+.upload-date { color: #6B7280; font-size: 12px; }
+.new-badge { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%); color: white; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 12px; margin-left: 8px; }
+
+/* Action Buttons */
+.action-btns { display: flex; gap: 8px; }
+.action-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #E5E7EB; background: white; color: #6B7280; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.action-btn:hover { background: #F9FAFB; border-color: #7F3D9E; color: #7F3D9E; }
+.action-btn.delete:hover { background: #FEE2E2; border-color: #DC2626; color: #DC2626; }
+
+/* Pagination */
+.pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #E5E7EB; }
+.pagination-info { font-size: 14px; color: #6B7280; }
+.pagination-controls { display: flex; gap: 8px; }
+.page-btn { padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.page-btn:hover { background: #F9FAFB; border-color: #7F3D9E; }
+.page-btn.active { background: #7F3D9E; color: white; border-color: #7F3D9E; }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Empty State */
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state-icon { width: 80px; height: 80px; margin: 0 auto 24px; background: #F3F4F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 32px; }
+.empty-state h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1F2937; margin: 0 0 8px 0; }
+.empty-state p { font-size: 14px; color: #6B7280; margin: 0 0 24px 0; }
+
+/* Alert Messages */
+.alert { padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+.alert-error { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+.alert i { font-size: 18px; }
+
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.upload-modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+.upload-modal .modal-header { padding: 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+.upload-modal .modal-header h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1F2937; margin: 0; }
+.upload-modal .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #F3F4F6; color: #6B7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.upload-modal .modal-close:hover { background: #E5E7EB; color: #1F2937; }
+.upload-modal .modal-body { padding: 24px; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #7F3D9E; box-shadow: 0 0 0 3px rgba(127, 61, 158, 0.1); }
+.form-group textarea { min-height: 100px; resize: vertical; }
+.file-input-wrapper { position: relative; border: 2px dashed #D1D5DB; border-radius: 12px; padding: 40px; text-align: center; transition: all 0.2s; cursor: pointer; }
+.file-input-wrapper:hover { border-color: #7F3D9E; background: #F9FAFB; }
+.file-input-wrapper input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.file-input-icon { font-size: 48px; color: #9CA3AF; margin-bottom: 16px; }
+.file-input-text { font-size: 14px; color: #6B7280; margin-bottom: 8px; }
+.file-input-hint { font-size: 12px; color: #9CA3AF; }
+.upload-modal .modal-footer { padding: 20px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px; }
+.btn-cancel { padding: 10px 20px; border: 1px solid #E5E7EB; border-radius: 8px; background: white; color: #6B7280; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-cancel:hover { background: #F9FAFB; border-color: #D1D5DB; }
+.btn-submit { padding: 10px 24px; border: none; border-radius: 8px; background: linear-gradient(135deg, #7F3D9E 0%, #7C3AED 100%); color: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(127, 61, 158, 0.3); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .tab-item { font-size: 13px; padding: 12px 16px; }
+    .filter-bar { flex-direction: column; }
+    .search-box { width: 100%; }
+    .tab-actions { flex-direction: column; }
+    .tab-action-btn { width: 100%; justify-content: center; }
+    .resources-table { display: block; overflow-x: auto; }
+    .pagination { flex-direction: column; gap: 12px; }
+}
 </style>
 
-<div class="resources-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1 class="page-title">Resource Library</h1>
-        <p class="page-subtitle">
-            Centralized hub for all agent resources, training materials, marketing content, and essential documentation. 
-            Upload, organize, and share resources with your agent network.
-        </p>
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Resource Management</h1>
+    <p class="page-subtitle">Upload and manage resources for agents and members</p>
+</div>
+
+<!-- Alert Messages -->
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
     </div>
+<?php endif; ?>
 
-    <!-- Upload Showcase Zone -->
-    <div class="upload-showcase">
-        <div class="upload-content">
-            <div class="upload-info">
-                <h2>Quick Upload Resources</h2>
-                <p>
-                    Share important documents, training materials, marketing assets, and policy updates 
-                    with your agents instantly. Drag and drop files or click to browse.
-                </p>
-                <div class="upload-stats">
-                    <div class="upload-stat">
-                        <div class="upload-stat-value"><?= $totalResources ?></div>
-                        <div class="upload-stat-label">Total Resources</div>
-                    </div>
-                    <div class="upload-stat">
-                        <div class="upload-stat-value">6</div>
-                        <div class="upload-stat-label">Categories</div>
-                    </div>
-                    <div class="upload-stat">
-                        <div class="upload-stat-value">10MB</div>
-                        <div class="upload-stat-label">Max File Size</div>
-                    </div>
-                </div>
-            </div>
-            <div class="upload-zone-container" onclick="openUploadModal()">
-                <div class="upload-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <div class="upload-text">Click or Drag Files Here</div>
-                <div class="upload-hint">PDF, DOC, DOCX, XLS, PPT, Images & Videos</div>
-            </div>
-        </div>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
     </div>
+<?php endif; ?>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-        <button class="quick-action-btn primary" onclick="openUploadModal()">
-            <i class="fas fa-upload"></i>
-            Upload New Resource
-        </button>
-        <button class="quick-action-btn" onclick="window.print()">
-            <i class="fas fa-print"></i>
-            Print Catalog
-        </button>
-        <button class="quick-action-btn" onclick="exportResources()">
-            <i class="fas fa-download"></i>
-            Export List
-        </button>
-        <button class="quick-action-btn" onclick="bulkDelete()">
-            <i class="fas fa-trash-alt"></i>
-            Bulk Manage
-        </button>
+<!-- Statistics Cards -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon purple"><i class="fas fa-folder-open"></i></div></div>
+        <div class="stat-label">Total Resources</div>
+        <div class="stat-value"><?php echo number_format($stats['total'] ?? 0); ?></div>
     </div>
-
-    <!-- Search Bar -->
-    <div class="search-section">
-        <input type="text" class="search-input" placeholder="Search by filename, category, or description..." id="searchInput">
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon green"><i class="fas fa-bullhorn"></i></div></div>
+        <div class="stat-label">Marketing</div>
+        <div class="stat-value"><?php echo number_format($stats['marketing'] ?? 0); ?></div>
     </div>
-
-    <!-- Resources Grid -->
-    <div class="resources-layout">
-        <!-- Marketing Materials -->
-        <div class="resource-category" data-category="marketing">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-bullhorn"></i>
-                    Marketing Materials
-                </div>
-                <span class="category-count"><?= count($resources['marketing_materials']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['marketing_materials'])): ?>
-                    <?php foreach ($resources['marketing_materials'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-image"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Share" onclick="shareResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-image"></i>
-                        <p>No marketing materials yet</p>
-                        <button class="empty-action" onclick="openUploadModal('marketing_materials')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Training Documents -->
-        <div class="resource-category" data-category="training">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-graduation-cap"></i>
-                    Training Documents
-                </div>
-                <span class="category-count"><?= count($resources['training_documents']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['training_documents'])): ?>
-                    <?php foreach ($resources['training_documents'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-book"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Share" onclick="shareResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-book-open"></i>
-                        <p>No training documents yet</p>
-                        <button class="empty-action" onclick="openUploadModal('training_documents')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Policy Documents -->
-        <div class="resource-category" data-category="policy">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-file-contract"></i>
-                    Policy Documents
-                </div>
-                <span class="category-count"><?= count($resources['policy_documents']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['policy_documents'])): ?>
-                    <?php foreach ($resources['policy_documents'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-pdf"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Share" onclick="shareResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-file-contract"></i>
-                        <p>No policy documents yet</p>
-                        <button class="empty-action" onclick="openUploadModal('policy_documents')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Forms & Templates -->
-        <div class="resource-category" data-category="forms">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-wpforms"></i>
-                    Forms & Templates
-                </div>
-                <span class="category-count"><?= count($resources['forms']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['forms'])): ?>
-                    <?php foreach ($resources['forms'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-word"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Share" onclick="shareResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-file-alt"></i>
-                        <p>No forms or templates yet</p>
-                        <button class="empty-action" onclick="openUploadModal('forms')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Video Tutorials -->
-        <div class="resource-category" data-category="videos">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-video"></i>
-                    Video Tutorials
-                </div>
-                <span class="category-count"><?= count($resources['videos']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['videos'])): ?>
-                    <?php foreach ($resources['videos'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-play-circle"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Play" onclick="playVideo('<?= $resource['id'] ?>')">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-video"></i>
-                        <p>No video tutorials yet</p>
-                        <button class="empty-action" onclick="openUploadModal('videos')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Presentations -->
-        <div class="resource-category" data-category="presentations">
-            <div class="category-header">
-                <div class="category-title">
-                    <i class="fas fa-presentation"></i>
-                    Presentations
-                </div>
-                <span class="category-count"><?= count($resources['presentations']) ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['presentations'])): ?>
-                    <?php foreach ($resources['presentations'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-powerpoint"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?= htmlspecialchars($resource['name']) ?></div>
-                            <div class="resource-meta">
-                                <span><i class="fas fa-file"></i> <?= $resource['size'] ?></span>
-                                <span><i class="fas fa-calendar"></i> <?= $resource['date'] ?></span>
-                            </div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download" onclick="downloadResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Share" onclick="shareResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete" onclick="deleteResource('<?= $resource['id'] ?>')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-file-powerpoint"></i>
-                        <p>No presentations yet</p>
-                        <button class="empty-action" onclick="openUploadModal('presentations')">
-                            <i class="fas fa-plus"></i>
-                            Add First Resource
-                        </button>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon blue"><i class="fas fa-graduation-cap"></i></div></div>
+        <div class="stat-label">Training</div>
+        <div class="stat-value"><?php echo number_format($stats['training'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon orange"><i class="fas fa-file-alt"></i></div></div>
+        <div class="stat-label">Forms</div>
+        <div class="stat-value"><?php echo number_format($stats['forms'] ?? 0); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon gray"><i class="fas fa-file-contract"></i></div></div>
+        <div class="stat-label">Policy</div>
+        <div class="stat-value"><?php echo number_format($stats['policy'] ?? 0); ?></div>
     </div>
 </div>
-                </div>
-                <span class="category-count"><?php echo count($resources['forms']); ?></span>
-            </div>
-            <div class="category-body">
-                <?php if (!empty($resources['forms'])): ?>
-                    <?php foreach ($resources['forms'] as $resource): ?>
-                    <div class="resource-item">
-                        <div class="resource-icon">
-                            <i class="fas fa-file-word"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-name"><?php echo htmlspecialchars($resource['name']); ?></div>
-                            <div class="resource-meta"><?php echo $resource['size']; ?> • Uploaded <?php echo $resource['date']; ?></div>
-                        </div>
-                        <div class="resource-actions">
-                            <button class="icon-btn" title="Download">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="icon-btn" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-category">
-                        <i class="fas fa-folder-open"></i>
-                        <p>No forms or templates yet</p>
-                    </div>
-                <?php endif; ?>
+
+<!-- Tabs Container -->
+<div class="tabs-container">
+    <div class="tabs-nav">
+        <a href="/admin/agents/resources?category=all" class="tab-item <?php echo $category === 'all' ? 'active' : ''; ?>">
+            <i class="fas fa-folder-open"></i> All Resources <span class="tab-badge"><?php echo $stats['total'] ?? 0; ?></span>
+        </a>
+        <a href="/admin/agents/resources?category=marketing_materials" class="tab-item <?php echo $category === 'marketing_materials' ? 'active' : ''; ?>">
+            <i class="fas fa-bullhorn"></i> Marketing <span class="tab-badge"><?php echo $stats['marketing'] ?? 0; ?></span>
+        </a>
+        <a href="/admin/agents/resources?category=training_documents" class="tab-item <?php echo $category === 'training_documents' ? 'active' : ''; ?>">
+            <i class="fas fa-graduation-cap"></i> Training <span class="tab-badge"><?php echo $stats['training'] ?? 0; ?></span>
+        </a>
+        <a href="/admin/agents/resources?category=forms" class="tab-item <?php echo $category === 'forms' ? 'active' : ''; ?>">
+            <i class="fas fa-file-alt"></i> Forms <span class="tab-badge"><?php echo $stats['forms'] ?? 0; ?></span>
+        </a>
+        <a href="/admin/agents/resources?category=policy_documents" class="tab-item <?php echo $category === 'policy_documents' ? 'active' : ''; ?>">
+            <i class="fas fa-file-contract"></i> Policy <span class="tab-badge"><?php echo $stats['policy'] ?? 0; ?></span>
+        </a>
+        <a href="/admin/agents/resources?category=other" class="tab-item <?php echo $category === 'other' ? 'active' : ''; ?>">
+            <i class="fas fa-file"></i> Other <span class="tab-badge"><?php echo $stats['other'] ?? 0; ?></span>
+        </a>
+    </div>
+
+    <div class="tab-content active">
+        <!-- Tab Actions -->
+        <div class="tab-actions">
+            <button class="tab-action-btn primary" onclick="openUploadModal()">
+                <i class="fas fa-cloud-upload-alt"></i> Upload Resource
+            </button>
+            <a href="/admin/agents/resources/export" class="tab-action-btn">
+                <i class="fas fa-file-export"></i> Export CSV
+            </a>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-resources" placeholder="Search resources..." onkeyup="filterResources()">
             </div>
         </div>
+
+        <!-- Resources Table -->
+        <?php if (empty($resources)): ?>
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-folder-open"></i></div>
+                <h3>No Resources Found</h3>
+                <p>Upload your first resource to share with agents and members.</p>
+                <button class="tab-action-btn primary" onclick="openUploadModal()" style="display: inline-flex;">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload First Resource
+                </button>
+            </div>
+        <?php else: ?>
+            <table class="resources-table">
+                <thead>
+                    <tr>
+                        <th>RESOURCE</th>
+                        <th>CATEGORY</th>
+                        <th>FILE SIZE</th>
+                        <th>DOWNLOADS</th>
+                        <th>UPLOADED</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($resources as $resource): 
+                        $createdAt = $resource['created_at'] ?? '';
+                        $isNew = $createdAt && strtotime($createdAt) > strtotime('-7 days');
+                        $originalName = $resource['original_name'] ?? '';
+                        $fileExt = $originalName ? strtolower(pathinfo($originalName, PATHINFO_EXTENSION)) : '';
+                        
+                        $iconClass = 'default';
+                        if (in_array($fileExt, ['pdf'])) $iconClass = 'pdf';
+                        elseif (in_array($fileExt, ['doc', 'docx'])) $iconClass = 'doc';
+                        elseif (in_array($fileExt, ['xls', 'xlsx'])) $iconClass = 'xls';
+                        elseif (in_array($fileExt, ['jpg', 'jpeg', 'png', 'gif'])) $iconClass = 'img';
+                        elseif (in_array($fileExt, ['zip', 'rar'])) $iconClass = 'zip';
+                        
+                        $category = $resource['category'] ?? '';
+                        $catClass = str_replace('_', '-', $category);
+                    ?>
+                        <tr>
+                            <td>
+                                <div class="resource-info">
+                                    <div class="resource-icon <?php echo $iconClass; ?>">
+                                        <i class="fas fa-file<?php echo $fileExt === 'pdf' ? '-pdf' : ''; ?>"></i>
+                                    </div>
+                                    <div class="resource-details">
+                                        <div class="resource-name">
+                                            <?php echo htmlspecialchars($resource['title'] ?? ''); ?>
+                                            <?php if ($isNew): ?>
+                                                <span class="new-badge"><i class="fas fa-sparkles"></i> NEW</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="resource-meta"><?php echo htmlspecialchars($originalName); ?></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-badge <?php echo $catClass; ?>"><?php echo ucwords(str_replace('_', ' ', $category)); ?></span></td>
+                            <td class="file-size"><?php echo Resource::formatFileSize($resource['file_size'] ?? 0); ?></td>
+                            <td class="download-count"><i class="fas fa-download" style="margin-right: 4px; color: #9CA3AF;"></i><?php echo number_format($resource['download_count'] ?? 0); ?></td>
+                            <td class="upload-date"><?php echo $createdAt ? date('M d, Y', strtotime($createdAt)) : ''; ?><br><small style="color: #9CA3AF;">by <?php echo htmlspecialchars($resource['uploaded_by_name'] ?? $resource['uploader_name'] ?? 'Admin'); ?></small></td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="/admin/agents/resources/download/<?php echo $resource['id'] ?? 0; ?>" class="action-btn" title="Download"><i class="fas fa-download"></i></a>
+                                    <button class="action-btn delete" onclick="confirmDelete(<?php echo $resource['id'] ?? 0; ?>, '<?php echo htmlspecialchars(addslashes($resource['title'] ?? '')); ?>')" title="Delete"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
 </div>
 
 <!-- Upload Modal -->
-<div id="uploadModal" class="modal">
-    <div class="modal-content">
-        <h2 class="modal-header">
-            <i class="fas fa-cloud-upload-alt" style="color: #7F3D9E; margin-right: 8px;"></i>
-            Upload New Resource
-        </h2>
-        <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/admin/agents/resources/upload">
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-tag"></i> Resource Name *
-                </label>
-                <input type="text" name="name" class="form-input" placeholder="Enter descriptive resource name" required>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-folder"></i> Category *
-                </label>
-                <select name="category" class="form-select" id="categorySelect" required>
-                    <option value="">Select Category</option>
-                    <option value="marketing_materials">📢 Marketing Materials</option>
-                    <option value="training_documents">🎓 Training Documents</option>
-                    <option value="policy_documents">📋 Policy Documents</option>
-                    <option value="forms">📝 Forms & Templates</option>
-                    <option value="videos">🎥 Video Tutorials</option>
-                    <option value="presentations">📊 Presentations</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-align-left"></i> Description
-                </label>
-                <textarea name="description" class="form-textarea" placeholder="Brief description of the resource (optional)" rows="3"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">
-                    <i class="fas fa-file-upload"></i> Upload File *
-                </label>
-                <div class="file-upload-area" id="fileUploadArea">
-                    <div class="upload-icon-large">
-                        <i class="fas fa-cloud-upload-alt"></i>
+<div class="modal-overlay" id="uploadModal">
+    <div class="upload-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-cloud-upload-alt"></i> Upload New Resource</h3>
+            <button class="modal-close" onclick="closeUploadModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="/admin/agents/resources/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="title">Resource Title *</label>
+                    <input type="text" id="title" name="title" required placeholder="Enter resource title">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Enter resource description (optional)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="marketing_materials">Marketing Materials</option>
+                        <option value="training_documents">Training Documents</option>
+                        <option value="policy_documents">Policy Documents</option>
+                        <option value="forms">Forms</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>File *</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file" name="resource_file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip">
+                        <div class="file-input-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="file-input-text">Click to select file or drag and drop</div>
+                        <div class="file-input-hint">Max 10MB. Allowed: PDF, DOC, XLS, PPT, JPG, PNG, ZIP</div>
                     </div>
-                    <div class="upload-text-large">Drag and drop file here</div>
-                    <div class="upload-hint-large">or click to browse • PDF, DOC, DOCX, XLS, XLSX, PPT, PNG, JPG, MP4 (Max 10MB)</div>
-                    <input type="file" id="fileInput" name="file" style="display: none;" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.mp4,.avi">
-                </div>
-                <div id="selectedFile" class="selected-file" style="display: none;">
-                    <i class="fas fa-file"></i>
-                    <span class="selected-file-name"></span>
-                    <button type="button" onclick="clearFile()" style="margin-left: auto; background: none; border: none; color: #EF4444; cursor: pointer;">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div id="selectedFile" style="margin-top: 12px; font-size: 13px; color: #059669; display: none;">
+                        <i class="fas fa-check-circle"></i> <span id="fileName"></span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn-modal btn-cancel" onclick="closeUploadModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn-modal btn-submit">
-                    <i class="fas fa-check"></i> Upload Resource
-                </button>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeUploadModal()">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-cloud-upload-alt"></i> Upload Resource</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-// Modal Functions
-function openUploadModal(category = '') {
-    document.getElementById('uploadModal').classList.add('active');
-    if (category) {
-        document.getElementById('categorySelect').value = category;
-    }
+const CSRF_TOKEN = <?php echo json_encode($csrf_token); ?>;
+function openUploadModal() { document.getElementById('uploadModal').classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeUploadModal() { document.getElementById('uploadModal').classList.remove('active'); document.body.style.overflow = ''; document.getElementById('uploadForm').reset(); document.getElementById('selectedFile').style.display = 'none'; }
+const fileInput = document.getElementById('file');
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) { if (e.target.files.length > 0) { document.getElementById('fileName').textContent = e.target.files[0].name; document.getElementById('selectedFile').style.display = 'block'; } });
 }
-
-function closeUploadModal() {
-    document.getElementById('uploadModal').classList.remove('active');
-    document.getElementById('uploadForm').reset();
-    clearFile();
+const uploadModalEl = document.getElementById('uploadModal');
+if (uploadModalEl) {
+    uploadModalEl.addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
 }
-
-// File Upload Handling
-const fileUploadArea = document.getElementById('fileUploadArea');
-const fileInput = document.getElementById('fileInput');
-const selectedFile = document.getElementById('selectedFile');
-
-// Click to browse
-fileUploadArea.addEventListener('click', () => fileInput.click());
-
-// File selection
-fileInput.addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-        displaySelectedFile(e.target.files[0]);
-    }
-});
-
-// Drag and drop
-fileUploadArea.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.classList.add('drag-over');
-});
-
-fileUploadArea.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.classList.remove('drag-over');
-});
-
-fileUploadArea.addEventListener('drop', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.classList.remove('drag-over');
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        fileInput.files = files;
-        displaySelectedFile(files[0]);
-    }
-});
-
-function displaySelectedFile(file) {
-    const fileName = file.name;
-    const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-    
-    selectedFile.style.display = 'flex';
-    selectedFile.querySelector('.selected-file-name').textContent = `${fileName} (${fileSize})`;
-    fileUploadArea.style.display = 'none';
+function confirmDelete(id, title) {
+    if (!confirm('Are you sure you want to delete "' + title + '"?\n\nThis action cannot be undone.')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/agents/resources/delete/' + id;
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'csrf_token';
+    tokenInput.value = CSRF_TOKEN || '';
+    form.appendChild(tokenInput);
+    document.body.appendChild(form);
+    form.submit();
 }
-
-function clearFile() {
-    fileInput.value = '';
-    selectedFile.style.display = 'none';
-    fileUploadArea.style.display = 'block';
-}
-
-// Search Functionality
-document.getElementById('searchInput').addEventListener('input', function(e) {
-    const search = e.target.value.toLowerCase();
-    const categories = document.querySelectorAll('.resource-category');
-    
-    categories.forEach(category => {
-        const items = category.querySelectorAll('.resource-item');
-        let hasVisibleItems = false;
-        
-        items.forEach(item => {
-            const name = item.querySelector('.resource-name').textContent.toLowerCase();
-            if (name.includes(search)) {
-                item.style.display = '';
-                hasVisibleItems = true;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        // Show/hide category based on visible items
-        if (!hasVisibleItems && search) {
-            category.style.display = 'none';
-        } else {
-            category.style.display = '';
-        }
-    });
-});
-
-// Resource Actions
-function downloadResource(id) {
-    // Implement download logic
-    window.location.href = `/admin/agents/resources/download/${id}`;
-}
-
-function shareResource(id) {
-    ShenaApp.alert('Share feature coming soon!', 'info', 'Share Resource');
-}
-
-function deleteResource(id) {
-    ShenaApp.confirmAction(
-        'Are you sure you want to delete this resource? This action cannot be undone.',
-        function() {
-            // Proceed with deletion
-            window.location.href = `/admin/agents/resources/delete/${id}`;
-        },
-        null,
-        { type: 'danger', confirmText: 'Delete', title: 'Delete Resource' }
-    );
-}
-
-function playVideo(id) {
-    // Implement video player
-    window.open(`/admin/agents/resources/play/${id}`, '_blank');
-}
-
-function exportResources() {
-    ShenaApp.alert('Exporting resource catalog...', 'info', 'Export');
-    setTimeout(() => {
-        window.location.href = '/admin/agents/resources/export';
-    }, 500);
-}
-
-function bulkDelete() {
-    ShenaApp.alert('Bulk management feature coming soon!', 'info', 'Bulk Manage');
-}
-
-// Close modal on outside click
-document.getElementById('uploadModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeUploadModal();
-    }
-});
-
-// Form submission
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput.files.length === 0) {
-        e.preventDefault();
-        ShenaApp.alert('Please select a file to upload', 'warning', 'File Required');
-        return false;
-    }
-    
-    // Check file size (10MB limit)
-    if (fileInput.files[0].size > 10 * 1024 * 1024) {
-        e.preventDefault();
-        ShenaApp.alert('File size must be less than 10MB', 'warning', 'File Too Large');
-        return false;
-    }
-});
+function filterResources() { const searchValue = (document.getElementById('search-resources')?.value || '').toLowerCase(); const rows = document.querySelectorAll('.resources-table tbody tr'); rows.forEach(row => { const name = row.querySelector('.resource-name')?.textContent.toLowerCase() || ''; row.style.display = name.includes(searchValue) ? '' : 'none'; }); }
 </script>
 
 <?php include_once __DIR__ . '/../layouts/admin-footer.php'; ?>

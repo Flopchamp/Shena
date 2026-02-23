@@ -232,34 +232,47 @@ class PaymentService
                     $memberModel = new Member();
                     $member = $memberModel->find($memberId);
                     
-                    // -- Handle Registration Fee Payment --
+                    // -- Handle Registration Fee Payment & Agent Commission --
                     if ($member && $paymentType === 'registration') {
-                        // Verify total registration fee paid (KES 200)
                         $registrationFeeRequired = defined('REGISTRATION_FEE') ? REGISTRATION_FEE : 200;
-                        
                         $allRegistrationPayments = $paymentModel->findAll([
                             'member_id' => $memberId,
                             'payment_type' => 'registration',
                             'status' => 'completed'
                         ]);
-                        
                         $totalPaid = 0;
                         foreach ($allRegistrationPayments as $regPayment) {
                             $totalPaid += $regPayment['amount'];
                         }
-                        
                         // Auto-activate if full registration fee is paid
                         if ($totalPaid >= $registrationFeeRequired && $member['status'] === 'inactive') {
                             $memberModel->update($memberId, [
                                 'status' => 'active',
                                 'coverage_ends' => date('Y-m-d', strtotime('+1 year'))
                             ]);
-                            
                             // Also activate user account
                             $userModel = new User();
                             $userModel->update($member['user_id'], ['status' => 'active']);
-                            
                             error_log("Member #{$memberId} automatically activated after registration fee payment of KES {$totalPaid}.");
+                        }
+                        // Award agent commission for registration (KES 200, one-time, only if not already awarded)
+                        if (!empty($member['agent_id'])) {
+                            $agentModel = new Agent();
+                            // Check if commission already exists for this member registration
+                            $existing = $agentModel->getAgentCommissions($member['agent_id'], ['status' => '', 'member_id' => $memberId, 'commission_type' => 'registration']);
+                            if (empty($existing)) {
+                                $agentModel->recordCommission([
+                                    'agent_id' => $member['agent_id'],
+                                    'member_id' => $memberId,
+                                    'payment_id' => null,
+                                    'commission_type' => 'registration',
+                                    'amount' => 200,
+                                    'commission_rate' => 100,
+                                    'commission_amount' => 200,
+                                    'status' => 'pending'
+                                ]);
+                                error_log("Agent {$member['agent_id']} awarded KES 200 commission for member registration #{$memberId}.");
+                            }
                         }
                     }
                     
@@ -309,9 +322,14 @@ class PaymentService
                          }
                     }
                     
+                    // No commission for monthly payments anymore
+                    // if ($paymentType === 'monthly') {
+                    //     $this->recordCommissionForPayment($memberId, $paymentId, $amount);
+                    // }
+
                     // Send confirmation SMS and email
                     $this->sendPaymentConfirmation($payment[0], $amount, $mpesaReceiptNumber);
-                    
+
                     return ['status' => 'success', 'message' => 'Payment processed successfully'];
                 }
             } else {
@@ -435,7 +453,7 @@ class PaymentService
     public function processManualPayment($memberId, $amount, $paymentMethod, $reference, $notes = null)
     {
         $paymentModel = new Payment();
-        
+
         return $paymentModel->recordPayment([
             'member_id' => $memberId,
             'amount' => $amount,
@@ -446,5 +464,79 @@ class PaymentService
             'notes' => $notes,
             'payment_date' => date('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * Record commission for agent when member makes a payment
+     */
+    private function recordCommissionForPayment($memberId, $paymentId, $amount)
+    {
+        try {
+            // Get member details to find agent
+            $memberModel = new Member();
+            $member = $memberModel->find($memberId);
+
+            if (!$member || empty($member['agent_id'])) {
+                return; // No agent assigned
+            }
+
+            $agentId = $member['agent_id'];
+
+            // Get agent details for commission rate
+            $agentModel = new Agent();
+            $agent = $agentModel->getAgentById($agentId);
+
+            if (!$agent || empty($agent['commission_rate'])) {
+                return; // No commission rate set
+            }
+
+            $commissionRate = $agent['commission_rate'];
+            $commissionAmount = ($amount * $commissionRate) / 100;
+
+            // Record the commission
+            $agentModel->recordCommission([
+                'agent_id' => $agentId,
+                'member_id' => $memberId,
+                'payment_id' => $paymentId,
+                'commission_type' => 'monthly_contribution',
+                'amount' => $amount,
+                'commission_rate' => $commissionRate,
+                'commission_amount' => $commissionAmount,
+                'status' => 'pending' // Commissions need admin approval
+            ]);
+
+            error_log("Commission recorded for agent {$agentId}: KES {$commissionAmount} on payment of KES {$amount}");
+
+            // Send notification to agent
+            $this->sendAgentNotification(
+                $agent['user_id'],
+                'Commission Earned',
+                "You've earned a commission of KES " . number_format($commissionAmount, 2) . " from a member payment of KES " . number_format($amount, 2) . ". The commission is pending approval.",
+                '/agent/commissions',
+                'View Commissions'
+            );
+
+        } catch (Exception $e) {
+            error_log('Commission recording error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send in-app notification to an agent
+     */
+    private function sendAgentNotification($userId, $subject, $message, $actionUrl = null, $actionText = null)
+    {
+        try {
+            require_once __DIR__ . '/InAppNotificationService.php';
+            $notificationService = new InAppNotificationService();
+            $notificationService->notifyUser($userId, [
+                'subject' => $subject,
+                'message' => $message,
+                'action_url' => $actionUrl,
+                'action_text' => $actionText
+            ]);
+        } catch (Exception $e) {
+            error_log('Agent notification error: ' . $e->getMessage());
+        }
     }
 }

@@ -156,7 +156,7 @@ class SmsService
         return $this->sendSms($phone, $message);
     }
     
-    private function formatPhoneNumber($phone)
+    public function formatPhoneNumber($phone)
     {
         // Remove any non-digit characters
         $phone = preg_replace('/[^0-9]/', '', $phone);

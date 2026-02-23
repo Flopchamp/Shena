@@ -284,18 +284,25 @@ class Agent extends BaseModel
     
     /**
      * Approve commission payment
-     * 
+     *
      * @param int $commissionId Commission ID
      * @param int $approvedBy User ID of approver
      * @return bool Success status
      */
     public function approveCommission($commissionId, $approvedBy)
     {
-        $sql = "UPDATE agent_commissions 
+        $sql = "UPDATE agent_commissions
                 SET status = 'approved', approved_by = ?, approved_at = NOW()
                 WHERE id = ?";
-        
-        return $this->db->query($sql, [$approvedBy, $commissionId]);
+
+        $result = $this->db->query($sql, [$approvedBy, $commissionId]);
+
+        if ($result) {
+            // Send notification to agent
+            $this->sendCommissionNotification($commissionId, 'approved');
+        }
+
+        return $result;
     }
     
     /**
@@ -323,6 +330,8 @@ class Agent extends BaseModel
             if ($commission) {
                 $this->updateAgentCommissionTotal($commission['agent_id']);
             }
+
+            $this->sendCommissionNotification($commissionId, 'paid');
             
             return true;
         }
@@ -433,6 +442,18 @@ class Agent extends BaseModel
     }
 
     /**
+     * Get a single commission by ID
+     *
+     * @param int $commissionId
+     * @return array|false
+     */
+    public function getCommissionById($commissionId)
+    {
+        $sql = "SELECT * FROM agent_commissions WHERE id = ?";
+        return $this->db->query($sql, [$commissionId])->fetch();
+    }
+
+    /**
      * Approve all pending commissions
      *
      * @param int $approvedBy
@@ -521,16 +542,60 @@ class Agent extends BaseModel
     
     /**
      * Get count of active agents
-     * 
+     *
      * @return int Count of active agents
      */
     public function getActiveAgentsCount()
     {
-        $sql = "SELECT COUNT(*) as count 
-                FROM agents 
+        $sql = "SELECT COUNT(*) as count
+                FROM agents
                 WHERE status = 'active'";
-        
+
         $result = $this->db->query($sql)->fetch();
         return $result ? (int)$result['count'] : 0;
+    }
+
+    /**
+     * Send notification to agent about commission status change
+     *
+     * @param int $commissionId Commission ID
+     * @param string $status New status (approved, paid)
+     */
+    private function sendCommissionNotification($commissionId, $status)
+    {
+        try {
+            // Get commission details
+            $commission = $this->getCommissionById($commissionId);
+            if (!$commission) {
+                return;
+            }
+
+            // Get agent details
+            $Agent = $this->getAgentById($commission['agent_id']);
+            if (!$Agent || empty($Agent['user_id'])) {
+                return;
+            }
+
+            require_once __DIR__ . '/../services/InAppNotificationService.php';
+            $notificationService = new InAppNotificationService();
+
+            if ($status === 'approved') {
+                $notificationService->notifyUser($Agent['user_id'], [
+                    'subject' => 'Commission Approved',
+                    'message' => "Your commission of KES " . number_format($commission['commission_amount'], 2) . " has been approved. It will be paid to your account soon.",
+                    'action_url' => '/agent/commissions',
+                    'action_text' => 'View Commissions'
+                ]);
+            } elseif ($status === 'paid') {
+                $notificationService->notifyUser($Agent['user_id'], [
+                    'subject' => 'Commission Paid',
+                    'message' => "Your commission of KES " . number_format($commission['commission_amount'], 2) . " has been paid to your account.",
+                    'action_url' => '/agent/payouts',
+                    'action_text' => 'View Payouts'
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log('Commission notification error: ' . $e->getMessage());
+        }
     }
 }

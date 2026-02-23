@@ -9,6 +9,7 @@ class AdminController extends BaseController
     private $claimModel;
     private $userModel;
     private $agentModel;
+    private $payoutRequestModel;
 
     public function __construct()
     {
@@ -18,7 +19,9 @@ class AdminController extends BaseController
         $this->claimModel = new Claim();
         $this->userModel = new User();
         $this->agentModel = new Agent();
+        $this->payoutRequestModel = new PayoutRequest();
     }
+
 
     private function requireAdminAccess()
     {
@@ -423,8 +426,8 @@ class AdminController extends BaseController
     {
         $this->requireAdminAccess();
         
-        // Get member details
-        $member = $this->memberModel->find($id);
+        // Get member details (include user email/phone)
+        $member = $this->memberModel->getMemberById($id);
         
         if (!$member) {
             $_SESSION['error'] = 'Member not found.';
@@ -451,6 +454,17 @@ class AdminController extends BaseController
         
         // Get beneficiaries
         $beneficiaries = $this->memberModel->getMemberDependents($id);
+
+        // Enrich member with agent contact details for display (agent number/phone/email)
+        if (!empty($member['agent_id'])) {
+            $agent = $this->agentModel->getAgentById($member['agent_id']);
+            if ($agent) {
+                $member['agent_number'] = $agent['agent_number'] ?? ($member['agent_number'] ?? null);
+                $member['agent_phone'] = $agent['phone'] ?? null;
+                // Agent email may be stored on agents.email or users.email (user_email alias)
+                $member['agent_email'] = $agent['email'] ?? $agent['user_email'] ?? null;
+            }
+        }
         
         $data = [
             'title' => 'Member Details - Admin',
@@ -893,7 +907,7 @@ class AdminController extends BaseController
             try {
                 $checklistModel = new ClaimServiceChecklist();
                 $checklistModel->markServiceCompleted($claimId, $serviceType, $_SESSION['user_id'], $serviceNotes);
-                
+
                 // Update main claim table
                 $fieldMap = [
                     'mortuary_bill' => 'mortuary_bill_settled',
@@ -902,13 +916,94 @@ class AdminController extends BaseController
                     'transportation' => 'transportation_arranged',
                     'equipment' => 'equipment_delivered'
                 ];
-                
+
                 if (isset($fieldMap[$serviceType])) {
                     $this->claimModel->updateServiceDeliveryStatus($claimId, $fieldMap[$serviceType], $completed);
                 }
-                
+
                 $_SESSION['success'] = 'Service delivery status updated.';
-                
+
+                // Send notification to member (email + SMS) about checklist update
+                try {
+                    $claimDetails = $this->claimModel->getClaimDetails($claimId);
+
+                    $memberEmail = $claimDetails['email'] ?? null;
+                    $memberPhone = $claimDetails['phone'] ?? null;
+                    $memberName = trim(($claimDetails['first_name'] ?? '') . ' ' . ($claimDetails['last_name'] ?? '')) ?: ($claimDetails['member_name'] ?? 'Member');
+
+                    $serviceLabels = [
+                        'mortuary_bill' => 'Mortuary bill settlement',
+                        'body_dressing' => 'Body dressing',
+                        'coffin' => 'Coffin delivery',
+                        'transportation' => 'Transportation arrangement',
+                        'equipment' => 'Equipment delivery'
+                    ];
+
+                    $serviceLabel = $serviceLabels[$serviceType] ?? $serviceType;
+
+                    $adminName = $_SESSION['user_name'] ?? 'Admin';
+                    $claimRef = 'CLM-' . date('Y') . '-' . str_pad($claimId, 4, '0', STR_PAD_LEFT);
+
+                    $emailData = [
+                        'status' => 'service completed',
+                        'name' => $memberName,
+                        'claim_id' => $claimId,
+                        'notes' => "{$serviceLabel} completed by {$adminName}. {$serviceNotes}",
+                    ];
+
+                    if ($memberEmail && class_exists('EmailService')) {
+                        try {
+                            $emailService = new EmailService();
+                            $emailService->sendClaimStatusUpdateEmail($memberEmail, $emailData);
+                        } catch (Exception $e) {
+                            error_log('Failed sending claim checklist email: ' . $e->getMessage());
+                        }
+                    }
+
+                    if ($memberPhone && class_exists('SmsService')) {
+                        try {
+                            $smsService = new SmsService();
+                            $smsMessage = "Claim Update: {$serviceLabel} completed for {$claimRef}. Notes: {$serviceNotes}. - Shena Companion";
+                            $smsService->sendCustomMessage($memberPhone, $smsMessage, $claimDetails['member_number'] ?? null);
+                        } catch (Exception $e) {
+                            error_log('Failed sending claim checklist SMS: ' . $e->getMessage());
+                        }
+                    }
+
+                    // Create in-app notification for the member
+                    try {
+                        $memberId = $claimDetails['member_id'] ?? null;
+                        $userId = null;
+
+                        if ($memberId && isset($this->memberModel)) {
+                            $member = $this->memberModel->find($memberId);
+                            if ($member && isset($member['user_id'])) {
+                                $userId = (int)$member['user_id'];
+                            }
+                        }
+
+                        if ($userId && class_exists('InAppNotificationService')) {
+                            $inApp = new InAppNotificationService();
+                            $payload = [
+                                'subject' => "{$serviceLabel} completed",
+                                'message' => "{$serviceLabel} has been completed for claim {$claimRef}. {$serviceNotes}",
+                                'action_url' => '/claims/view/' . $claimId,
+                                'action_text' => 'View claim'
+                            ];
+
+                            try {
+                                $inApp->notifyUser($userId, $payload, $_SESSION['user_id'] ?? null);
+                            } catch (Exception $e) {
+                                error_log('Failed to create in-app notification: ' . $e->getMessage());
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('In-app notification error: ' . $e->getMessage());
+                    }
+                } catch (Exception $e) {
+                    error_log('Notification error after checklist update: ' . $e->getMessage());
+                }
+
             } catch (Exception $e) {
                 error_log('Service tracking error: ' . $e->getMessage());
                 $_SESSION['error'] = 'Failed to update service status: ' . $e->getMessage();
@@ -1036,21 +1131,67 @@ class AdminController extends BaseController
         $this->requireAdminAccess();
 
         $type = $_GET['type'] ?? '';
-        if ($type !== 'members') {
-            http_response_code(400);
-            echo 'Unsupported report type.';
-            return;
-        }
-
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+        $dateTo = $_GET['date_to'] ?? date('Y-m-d');
         set_time_limit(120);
 
-        $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
-        $html = $this->renderPdfView('admin/reports-members-pdf', [
-            'members' => $members,
-            'generatedAt' => date('Y-m-d H:i')
-        ]);
-
-        $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
+        if ($type === 'payments') {
+            $payments = $this->paymentModel->getPaymentReport($dateFrom, $dateTo);
+            $html = $this->renderPdfView('admin/reports-payments-pdf', [
+                'payments' => $payments,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'monthly-payments-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'financial') {
+            $summary = $this->paymentModel->getPaymentStatistics();
+            $methods = $this->paymentModel->getPaymentsByMethod($dateFrom, $dateTo);
+            $types = $this->paymentModel->getPaymentsByType($dateFrom, $dateTo);
+            $html = $this->renderPdfView('admin/reports-financial-pdf', [
+                'summary' => $summary,
+                'methods' => $methods,
+                'types' => $types,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'financial-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'member_payments') {
+            $memberId = $_GET['member_id'] ?? null;
+            if (!$memberId) {
+                http_response_code(400);
+                echo 'Missing member_id.';
+                return;
+            }
+            $member = $this->memberModel->getMemberById($memberId);
+            $payments = $this->paymentModel->getMemberPayments($memberId);
+            $html = $this->renderPdfView('admin/reports-member-payments-pdf', [
+                'member' => $member,
+                'payments' => $payments,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'member-' . ($member['member_number'] ?? 'report') . '-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        if ($type === 'members') {
+            $members = $this->memberModel->getAllMembersWithDetails('', 'all', 'all');
+            $html = $this->renderPdfView('admin/reports-members-pdf', [
+                'members' => $members,
+                'generatedAt' => date('Y-m-d H:i')
+            ]);
+            $this->streamPdf($html, 'members-report-' . date('Ymd_His') . '.pdf');
+            return;
+        }
+        http_response_code(400);
+        echo 'Unsupported report type.';
+        return;
     }
 
     private function renderPdfView($template, $data = [])
@@ -1144,74 +1285,284 @@ class AdminController extends BaseController
     public function notifications()
     {
         $this->requireAdminAccess();
-        
-        // Get notification logs from database
-        // This could be extended to show SMS logs, email logs, system alerts, etc.
-        
-        // Sample notification data (replace with actual database queries)
-        $notifications = [
-            [
-                'title' => 'New Member Registration',
-                'message' => 'Member John Doe (ID: MB123456) successfully registered for Platinum Plan',
-                'type' => 'success',
-                'icon' => 'user-plus',
-                'time' => '2 hours ago',
-                'recipient' => 'System Admin',
-                'category' => 'Membership'
-            ],
-            [
-                'title' => 'M-Pesa Payment Received',
-                'message' => 'Payment of KES 5,000 received from phone 0712345678. Transaction: ABC123XYZ',
-                'type' => 'success',
-                'icon' => 'money-bill-wave',
-                'time' => '3 hours ago',
-                'recipient' => 'Finance Team',
-                'category' => 'Payment'
-            ],
-            [
-                'title' => 'Claim Submitted',
-                'message' => 'New death claim submitted by member Sarah Jane (MB987654). Policy: POL-2024-001',
-                'type' => 'warning',
-                'icon' => 'file-medical',
-                'time' => '5 hours ago',
-                'recipient' => 'Claims Officer',
-                'category' => 'Claims'
-            ],
-            [
-                'title' => 'Email Notification Sent',
-                'message' => 'Welcome email sent to newmember@example.com - Status: Delivered',
-                'type' => 'info',
-                'icon' => 'envelope',
-                'time' => '1 day ago',
-                'recipient' => '5 Members',
-                'category' => 'Email'
-            ],
-            [
-                'title' => 'SMS Campaign Delivered',
-                'message' => 'Monthly reminder SMS sent to 150 members - 145 delivered, 5 failed',
-                'type' => 'info',
-                'icon' => 'sms',
-                'time' => '2 days ago',
-                'recipient' => '150 Members',
-                'category' => 'SMS'
-            ],
-            [
-                'title' => 'System Backup Completed',
-                'message' => 'Daily database backup completed successfully. Size: 245 MB',
-                'type' => 'success',
-                'icon' => 'database',
-                'time' => '3 days ago',
-                'recipient' => 'System',
-                'category' => 'System'
-            ]
-        ];
+
+        $notifications = $this->getAdminNotifications($_SESSION['user_id'], [
+            'category' => $_GET['category'] ?? 'all',
+            'type' => $_GET['type'] ?? 'all',
+            'date' => $_GET['date'] ?? 'all'
+        ]);
         
         $data = [
             'title' => 'System Notifications - Admin',
-            'notifications' => $notifications
+            'notifications' => $notifications,
+            'csrf_token' => $this->generateCsrfToken()
         ];
         
         $this->view('admin.notifications', $data);
+    }
+
+    private function getAdminNotifications($userId, array $filters = [])
+    {
+        $stmt = $this->db->getConnection()->prepare('
+            SELECT cr.id AS notification_id,
+                   cr.status,
+                   cr.read_at,
+                   cr.sent_at,
+                   c.subject,
+                   c.message,
+                   c.type,
+                   c.created_at,
+                   u.first_name,
+                   u.last_name
+            FROM communication_recipients cr
+            INNER JOIN communications c ON c.id = cr.communication_id
+            LEFT JOIN users u ON c.sender_id = u.id
+            WHERE cr.user_id = :user_id
+            ORDER BY COALESCE(cr.sent_at, c.sent_at, c.created_at) DESC
+            LIMIT 100
+        ');
+        $stmt->execute([':user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $notifications = [];
+        foreach ($rows as $row) {
+            $title = $row['subject'] ?: 'Notification';
+            $message = $row['message'] ?: '';
+            $meta = $this->inferAdminNotificationCategory($title, $message);
+            $timestamp = $row['sent_at'] ?? $row['created_at'] ?? 'now';
+            $senderName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+            $isRead = !empty($row['read_at']) || ($row['status'] ?? '') === 'read';
+
+            $notifications[] = [
+                'id' => (int)$row['notification_id'],
+                'title' => $title,
+                'message' => $message,
+                'type' => $meta['type'],
+                'icon' => $meta['icon'],
+                'time' => $this->formatTimeAgo($timestamp),
+                'recipient' => $senderName !== '' ? $senderName : 'System',
+                'category' => $meta['category_label'],
+                'category_key' => $meta['category_key'],
+                'created_at' => $timestamp,
+                'read' => $isRead,
+                'action_url' => $meta['action_url'],
+                'action_text' => $meta['action_text']
+            ];
+        }
+
+        return $this->filterAdminNotifications($notifications, $filters);
+    }
+
+    private function filterAdminNotifications(array $notifications, array $filters)
+    {
+        $category = strtolower($filters['category'] ?? 'all');
+        $type = strtolower($filters['type'] ?? 'all');
+        $date = strtolower($filters['date'] ?? 'all');
+
+        return array_values(array_filter($notifications, function ($notification) use ($category, $type, $date) {
+            if ($category !== 'all' && strtolower($notification['category_key'] ?? '') !== $category) {
+                return false;
+            }
+
+            if ($type !== 'all' && strtolower($notification['type'] ?? '') !== $type) {
+                return false;
+            }
+
+            if ($date === 'all') {
+                return true;
+            }
+
+            $timestamp = strtotime($notification['created_at'] ?? 'now');
+            $now = time();
+
+            if ($date === 'today') {
+                return date('Y-m-d', $timestamp) === date('Y-m-d', $now);
+            }
+
+            if ($date === 'week') {
+                return $timestamp >= strtotime('-7 days', $now);
+            }
+
+            if ($date === 'month') {
+                return $timestamp >= strtotime('-30 days', $now);
+            }
+
+            return true;
+        }));
+    }
+
+    private function inferAdminNotificationCategory($title, $message)
+    {
+        $haystack = strtolower($title . ' ' . $message);
+
+        if (preg_match('/claim|burial|mortuary/', $haystack)) {
+            return [
+                'category_key' => 'claims',
+                'category_label' => 'Claims',
+                'type' => 'warning',
+                'icon' => 'file-medical',
+                'action_url' => '/admin/claims',
+                'action_text' => 'Review claims'
+            ];
+        }
+
+        if (preg_match('/upgrade|plan change/', $haystack)) {
+            return [
+                'category_key' => 'upgrades',
+                'category_label' => 'Upgrades',
+                'type' => 'info',
+                'icon' => 'level-up-alt',
+                'action_url' => '/admin/plan-upgrades',
+                'action_text' => 'Review upgrades'
+            ];
+        }
+
+        if (preg_match('/commission|payout|cashout/', $haystack)) {
+            return [
+                'category_key' => 'commissions',
+                'category_label' => 'Commissions',
+                'type' => 'warning',
+                'icon' => 'money-bill-wave',
+                'action_url' => '/admin/commissions',
+                'action_text' => 'Review commissions'
+            ];
+        }
+
+        if (preg_match('/payment|mpesa|contribution|invoice|receipt/', $haystack)) {
+            return [
+                'category_key' => 'payment',
+                'category_label' => 'Payment',
+                'type' => 'success',
+                'icon' => 'money-bill-wave',
+                'action_url' => '/admin/payments',
+                'action_text' => 'Review payments'
+            ];
+        }
+
+        if (preg_match('/member|registration|activation/', $haystack)) {
+            return [
+                'category_key' => 'membership',
+                'category_label' => 'Membership',
+                'type' => 'success',
+                'icon' => 'user-plus',
+                'action_url' => '/admin/members',
+                'action_text' => 'View members'
+            ];
+        }
+
+        if (preg_match('/sms/', $haystack)) {
+            return [
+                'category_key' => 'sms',
+                'category_label' => 'SMS',
+                'type' => 'info',
+                'icon' => 'sms',
+                'action_url' => '/admin/communications',
+                'action_text' => 'Open communications'
+            ];
+        }
+
+        if (preg_match('/email/', $haystack)) {
+            return [
+                'category_key' => 'email',
+                'category_label' => 'Email',
+                'type' => 'info',
+                'icon' => 'envelope',
+                'action_url' => '/admin/communications',
+                'action_text' => 'Open communications'
+            ];
+        }
+
+        return [
+            'category_key' => 'system',
+            'category_label' => 'System',
+            'type' => 'info',
+            'icon' => 'bell',
+            'action_url' => '/admin/notifications',
+            'action_text' => 'View details'
+        ];
+    }
+
+    /**
+     * Mark notification as read (admin)
+     */
+    public function markNotificationAsRead()
+    {
+        $this->requireAdminAccess();
+
+        try {
+            $this->validateCsrf();
+            $id = (int)($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                $this->json(['success' => false, 'message' => 'Invalid notification.'], 400);
+            }
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE id = :id AND user_id = :user_id
+            ');
+            $stmt->execute([
+                ':id' => $id,
+                ':user_id' => $_SESSION['user_id']
+            ]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notification as read.'], 500);
+        }
+    }
+
+    /**
+     * Mark all notifications as read (admin)
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $this->requireAdminAccess();
+
+        try {
+            $this->validateCsrf();
+
+            $stmt = $this->db->getConnection()->prepare('
+                UPDATE communication_recipients
+                SET status = "read", read_at = NOW()
+                WHERE user_id = :user_id AND status <> "read"
+            ');
+            $stmt->execute([':user_id' => $_SESSION['user_id']]);
+
+            $this->json(['success' => true]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Failed to mark notifications as read.'], 500);
+        }
+    }
+
+    private function formatTimeAgo($datetime)
+    {
+        try {
+            $date = new DateTime($datetime);
+            $now = new DateTime();
+            $diff = $now->diff($date);
+
+            if ($diff->y > 0) {
+                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->m > 0) {
+                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->d > 0) {
+                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->h > 0) {
+                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+            }
+            if ($diff->i > 0) {
+                return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+            }
+
+            return 'Just now';
+        } catch (Exception $e) {
+            return 'Just now';
+        }
     }
 
     /**
@@ -1753,6 +2104,56 @@ class AdminController extends BaseController
     }
 
     /**
+     * Approve Plan Upgrade (admin)
+     */
+    public function approvePlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+
+        try {
+            require_once 'app/services/PlanUpgradeService.php';
+            $service = new PlanUpgradeService();
+            $service->approveUpgrade($id, $_SESSION['user_id'] ?? null);
+            $_SESSION['success'] = 'Upgrade approved. Payment initiation queued.';
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error approving upgrade: ' . $e->getMessage();
+        }
+
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
+     * Reject Plan Upgrade (admin)
+     */
+    public function rejectPlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+
+        $reason = $_POST['reason'] ?? 'Rejected by admin';
+
+        try {
+            require_once 'app/services/PlanUpgradeService.php';
+            $service = new PlanUpgradeService();
+            $service->rejectUpgrade($id, $reason, $_SESSION['user_id'] ?? null);
+            $_SESSION['success'] = 'Upgrade request rejected';
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error rejecting upgrade: ' . $e->getMessage();
+        }
+
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
      * Financial Dashboard
      */
     public function viewFinancialDashboard()
@@ -1828,9 +2229,244 @@ class AdminController extends BaseController
     }
 
     /**
+     * View all payout requests (admin)
+     */
+    public function payoutRequests()
+    {
+        $this->requireAdminAccess();
+        
+        $status = $_GET['status'] ?? 'all';
+        $agentId = $_GET['agent_id'] ?? null;
+        
+        // Get payout requests based on filters
+        if ($status !== 'all') {
+            $payoutRequests = $this->payoutRequestModel->getAllPayouts($status);
+        } else {
+            $payoutRequests = $this->payoutRequestModel->getAllPayouts();
+        }
+        
+        // Filter by agent if specified
+        if ($agentId) {
+            $payoutRequests = array_filter($payoutRequests, function($request) use ($agentId) {
+                return $request['agent_id'] == $agentId;
+            });
+        }
+        
+        // Get statistics
+        $stats = [
+            'total' => 0,
+            'requested' => 0,
+            'processing' => 0,
+            'paid' => 0,
+            'rejected' => 0,
+            'total_amount' => 0
+        ];
+        
+        foreach ($payoutRequests as $request) {
+            $stats['total']++;
+            $stats[$request['status']]++;
+            if ($request['status'] === 'paid') {
+                $stats['total_amount'] += $request['amount'];
+            }
+        }
+        
+        $data = [
+            'title' => 'Payout Requests - Admin',
+            'payout_requests' => $payoutRequests,
+            'stats' => $stats,
+            'status_filter' => $status,
+            'agent_id' => $agentId
+        ];
+        
+        $this->view('admin.payout-requests', $data);
+    }
+    
+    /**
+     * Process (approve/reject) a payout request
+     */
+    public function processPayoutRequest($payoutId)
+    {
+        $this->requireAdminAccess();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error'] = 'Invalid request method.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        $action = $_POST['action'] ?? '';
+        $paymentReference = $_POST['payment_reference'] ?? '';
+        $adminNotes = $_POST['admin_notes'] ?? '';
+        
+        $payout = $this->payoutRequestModel->getPayoutById($payoutId);
+        
+        if (!$payout) {
+            $_SESSION['error'] = 'Payout request not found.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        // Handle mark_paid action separately - requires status to be 'processing'
+        if ($action === 'mark_paid') {
+            // Verify payout is in 'processing' status for mark_paid action
+            if ($payout['status'] !== 'processing') {
+                $_SESSION['error'] = 'Payout request must be in processing status to mark as paid.';
+                $this->redirect('/admin/payouts');
+                return;
+            }
+            
+            try {
+                $result = $this->payoutRequestModel->markAsPaid($payoutId);
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['user_id'],
+                        [
+                            'subject' => 'Payout Completed',
+                            'message' => "Your payout of KES " . number_format($payout['amount'], 2) . " has been marked as paid.",
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Payout marked as paid successfully.';
+                } else {
+                    $_SESSION['error'] = 'Failed to mark payout as paid. The payout may have already been processed.';
+                }
+            } catch (Exception $e) {
+                error_log('Mark as paid error: ' . $e->getMessage());
+                $_SESSION['error'] = 'Error marking payout as paid: ' . $e->getMessage();
+            }
+            
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        // For approve/reject actions, verify payout is in 'requested' status
+        if ($payout['status'] !== 'requested') {
+            $_SESSION['error'] = 'Payout request has already been processed.';
+            $this->redirect('/admin/payouts');
+            return;
+        }
+        
+        try {
+            if ($action === 'approve') {
+                // Process the payout (mark as processing)
+                $result = $this->payoutRequestModel->processPayout(
+                    $payoutId,
+                    $_SESSION['user_id'],
+                    $paymentReference,
+                    $adminNotes
+                );
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['user_id'],
+                        [
+                            'subject' => 'Payout Request Approved',
+                            'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been approved and is being processed. Reference: " . ($paymentReference ?: 'N/A'),
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+
+                    $_SESSION['success'] = 'Payout request approved and marked as processing.';
+                } else {
+                    $_SESSION['error'] = 'Failed to process payout request.';
+                }
+            } elseif ($action === 'reject') {
+                // Reject the payout
+                $result = $this->payoutRequestModel->rejectPayout(
+                    $payoutId,
+                    $_SESSION['user_id'],
+                    $adminNotes
+                );
+                
+                if ($result) {
+                    // Send notification to agent
+                    $notification = new InAppNotificationService();
+                    $notification->notifyUser(
+                        $payout['user_id'],
+                        [
+                            'subject' => 'Payout Request Rejected',
+                            'message' => "Your payout request of KES " . number_format($payout['amount'], 2) . " has been rejected. Reason: " . $adminNotes,
+                            'action_url' => '/agent/payouts',
+                            'action_text' => 'View Payouts'
+                        ]
+                    );
+                    
+                    $_SESSION['success'] = 'Payout request rejected.';
+                } else {
+                    $_SESSION['error'] = 'Failed to reject payout request.';
+                }
+            } else {
+                $_SESSION['error'] = 'Invalid action specified.';
+            }
+        } catch (Exception $e) {
+            error_log('Payout processing error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error processing payout: ' . $e->getMessage();
+        }
+        
+        // Redirect back to agent details if agent_id is provided, otherwise to payouts list
+        if (!empty($_POST['redirect_to_agent'])) {
+            $this->redirect('/admin/agents/view/' . $payout['agent_id']);
+        } else {
+            $this->redirect('/admin/payouts');
+        }
+    }
+    
+    /**
+     * View Agent Details with Payout Requests
+     */
+    public function viewAgent($id)
+    {
+        $this->requireAdminAccess();
+        
+        $agent = $this->agentModel->getAgentById($id);
+        
+        if (!$agent) {
+            $_SESSION['error'] = 'Agent not found.';
+            $this->redirect('/admin/agents');
+            return;
+        }
+        
+        // Get agent statistics
+        $stats = $this->agentModel->getAgentDashboardStats($id);
+        
+        // Get commissions
+        $commissions = $this->agentModel->getAgentCommissions($id);
+        
+        // Get payout requests for this agent
+        $payoutRequests = $this->payoutRequestModel->getAgentPayouts($id);
+        
+        // Get available balance
+        $availableBalance = $this->payoutRequestModel->getAvailableBalance($id);
+        
+        // Get recent members
+        $recentMembers = $this->memberModel->getMembersByAgent($id);
+        
+        $data = [
+            'title' => 'Agent Details - ' . $agent['agent_number'],
+            'agent' => $agent,
+            'stats' => $stats,
+            'commissions' => $commissions,
+            'payout_requests' => $payoutRequests,
+            'available_balance' => $availableBalance,
+            'recent_members' => $recentMembers
+        ];
+        
+        $this->view('admin.agent-details', $data);
+    }
+
+    /**
      * Get dashboard alerts for urgent notifications
      */
     private function getDashboardAlerts()
+
     {
         $alerts = [];
 
@@ -1913,7 +2549,7 @@ class AdminController extends BaseController
                 LEFT JOIN (
                     SELECT agent_id, SUM(amount) as total_commission
                     FROM agent_commissions
-                    WHERE commission_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                     GROUP BY agent_id
                 ) ac ON a.id = ac.agent_id
                 WHERE a.status = 'active'
@@ -1929,6 +2565,44 @@ class AdminController extends BaseController
                     'action_url' => '/admin/agents',
                     'action_text' => 'View Agents',
                     'priority' => 'low'
+                ];
+            }
+
+            // Check for pending plan upgrade requests
+            $pendingUpgrades = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM plan_upgrade_requests
+                WHERE status IN ('pending', 'payment_initiated')
+            ");
+
+            if ($pendingUpgrades && $pendingUpgrades['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => 'fas fa-level-up-alt',
+                    'title' => 'Plan Upgrade Requests',
+                    'message' => $pendingUpgrades['count'] . ' plan upgrade request(s) awaiting review.',
+                    'action_url' => '/admin/plan-upgrades',
+                    'action_text' => 'Review Upgrades',
+                    'priority' => 'medium'
+                ];
+            }
+
+            // Check for commission payouts pending processing
+            $pendingPayouts = $db->fetch("
+                SELECT COUNT(*) as count
+                FROM agent_commissions
+                WHERE status IN ('pending', 'approved')
+            ");
+
+            if ($pendingPayouts && $pendingPayouts['count'] > 0) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => 'fas fa-money-bill-wave',
+                    'title' => 'Commission Payout Requests',
+                    'message' => $pendingPayouts['count'] . ' commission payout(s) awaiting processing.',
+                    'action_url' => '/admin/commissions',
+                    'action_text' => 'Review Payouts',
+                    'priority' => 'high'
                 ];
             }
 

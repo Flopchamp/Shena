@@ -480,7 +480,7 @@ const ShenaApp = {
             <div class="shena-notification ${colors[type] || colors.info} text-white shadow-lg animate__animated animate__fadeInRight" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 8px; padding: 15px 20px;">
                 <div class="d-flex align-items-center">
                     <i class="fas ${icons[type] || icons.info} me-2 fs-5"></i>
-                    <span class="flex-grow-1">${message}</span>
+                    <span class=" grow">${message}</span>
                     <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
                 </div>
             </div>

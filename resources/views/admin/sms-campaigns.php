@@ -1,3 +1,13 @@
+
+<?php
+// Ensure CSRF token is set for the session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
 <?php include_once __DIR__ . '/../layouts/admin-header.php'; ?>
 
 <style>
@@ -659,6 +669,9 @@
         </div>
         <div class="modal-body-modern">
             <form action="/admin/communications/quick-sms" method="POST" id="quickSMSForm">
+                                <?php if (isset($_SESSION['csrf_token'])): ?>
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                <?php endif; ?>
                 <div class="form-group">
                     <label for="quick-recipient-type">Recipients</label>
                     <select class="form-control" id="quick-recipient-type" name="recipient_type" required>
@@ -751,9 +764,29 @@ document.getElementById('schedule-type')?.addEventListener('change', function() 
 document.getElementById('quick-recipient-type')?.addEventListener('change', function() {
     const groupField = document.getElementById('quick-group-field');
     const individualField = document.getElementById('quick-individual-field');
-    
+    const recipientDropdown = document.getElementById('quick-recipient-id');
     groupField.style.display = this.value === 'group' ? 'block' : 'none';
     individualField.style.display = this.value === 'individual' ? 'block' : 'none';
+
+    if (this.value === 'individual') {
+        // Fetch members for dropdown
+        recipientDropdown.innerHTML = '<option value="">Loading...</option>';
+        fetch('/admin/api/members')
+            .then(response => response.json())
+            .then(data => {
+                recipientDropdown.innerHTML = '<option value="">Select member...</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(member => {
+                        recipientDropdown.innerHTML += `<option value="${member.id}">${member.member_name} (${member.member_number})</option>`;
+                    });
+                }
+            })
+            .catch(() => {
+                recipientDropdown.innerHTML = '<option value="">Failed to load members</option>';
+            });
+    } else {
+        recipientDropdown.innerHTML = '';
+    }
 });
 
 // Campaign actions

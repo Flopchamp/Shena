@@ -4,6 +4,16 @@ include __DIR__ . '/../layouts/member-header.php';
 
 // Use member data from controller
 $memberData = $member ?? [];
+
+// Helper function to retrieve old form data
+$getOldValue = function($field) {
+    $value = $_SESSION['form_data'][$field] ?? '';
+    if (!empty($value)) {
+        unset($_SESSION['form_data'][$field]);
+        return htmlspecialchars($value);
+    }
+    return '';
+};
 ?>
 
 <style>
@@ -306,13 +316,13 @@ $memberData = $member ?? [];
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Full Name</label>
-                          <input type="text" name="full_name" class="form-control" 
-                              value="<?php echo htmlspecialchars(trim(($memberData['full_name'] ?? '') ?: (($memberData['first_name'] ?? '') . ' ' . ($memberData['last_name'] ?? '')))); ?>" required>
+                    <input type="text" name="full_name" class="form-control" 
+                        value="<?php $old = $getOldValue('full_name'); echo $old ? $old : htmlspecialchars(trim(($memberData['full_name'] ?? '') ?: (($memberData['first_name'] ?? '') . ' ' . ($memberData['last_name'] ?? '')))); ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">National ID / Passport</label>
                     <input type="text" name="national_id" class="form-control" 
-                              value="<?php echo htmlspecialchars($memberData['id_number'] ?? ''); ?>" required>
+                        value="<?php $old = $getOldValue('national_id'); echo $old ? $old : htmlspecialchars($memberData['id_number'] ?? ''); ?>" required>
                 </div>
             </div>
 
@@ -320,18 +330,18 @@ $memberData = $member ?? [];
                 <div class="col-md-6">
                     <label class="form-label">Phone Number</label>
                     <input type="tel" name="phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['phone'] ?? ''); ?>" required>
+                        value="<?php $old = $getOldValue('phone'); echo $old ? $old : htmlspecialchars($memberData['phone'] ?? ''); ?>" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email Address</label>
                     <input type="email" name="email" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['email'] ?? ''); ?>" required>
+                        value="<?php $old = $getOldValue('email'); echo $old ? $old : htmlspecialchars($memberData['email'] ?? ''); ?>" required>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Residential Address</label>
-                <textarea name="address" class="form-control" rows="3" required><?php echo htmlspecialchars($memberData['address'] ?? ''); ?></textarea>
+                <textarea name="address" class="form-control" rows="3" required><?php $old = $getOldValue('address'); echo $old ? $old : htmlspecialchars($memberData['address'] ?? ''); ?></textarea>
             </div>
         </form>
     </div>
@@ -355,26 +365,27 @@ $memberData = $member ?? [];
                 
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
-                          <input type="text" name="next_of_kin_name" class="form-control" 
-                              value="<?php echo htmlspecialchars($memberData['next_of_kin'] ?? ''); ?>" required>
+                    <input type="text" name="next_of_kin_name" class="form-control" 
+                        value="<?php $old = $getOldValue('next_of_kin_name'); echo $old ? $old : htmlspecialchars($memberData['next_of_kin'] ?? ''); ?>" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Relationship</label>
                     <select name="next_of_kin_relationship" class="form-select" required>
-                        <option value="Spouse" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
-                        <option value="Parent" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Parent' ? 'selected' : ''; ?>>Parent</option>
-                        <option value="Child" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Child' ? 'selected' : ''; ?>>Child</option>
-                        <option value="Sibling" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Sibling' ? 'selected' : ''; ?>>Sibling</option>
-                        <option value="Friend" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Friend' ? 'selected' : ''; ?>>Friend</option>
-                        <option value="Other" <?php echo ($memberData['next_of_kin_relationship'] ?? '') == 'Other' ? 'selected' : ''; ?>>Other</option>
+                        <?php $old = $getOldValue('next_of_kin_relationship'); $selected = $old ? $old : ($memberData['next_of_kin_relationship'] ?? ''); ?>
+                        <option value="Spouse" <?php echo $selected == 'Spouse' ? 'selected' : ''; ?>>Spouse</option>
+                        <option value="Parent" <?php echo $selected == 'Parent' ? 'selected' : ''; ?>>Parent</option>
+                        <option value="Child" <?php echo $selected == 'Child' ? 'selected' : ''; ?>>Child</option>
+                        <option value="Sibling" <?php echo $selected == 'Sibling' ? 'selected' : ''; ?>>Sibling</option>
+                        <option value="Friend" <?php echo $selected == 'Friend' ? 'selected' : ''; ?>>Friend</option>
+                        <option value="Other" <?php echo $selected == 'Other' ? 'selected' : ''; ?>>Other</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Phone Number</label>
                     <input type="tel" name="next_of_kin_phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($memberData['next_of_kin_phone'] ?? ''); ?>" required>
+                        value="<?php $old = $getOldValue('next_of_kin_phone'); echo $old ? $old : htmlspecialchars($memberData['next_of_kin_phone'] ?? ''); ?>" required>
                 </div>
 
                 <button type="submit" class="btn-save-changes" style="width: 100%;">Save Next of Kin</button>

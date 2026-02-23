@@ -261,6 +261,11 @@ if (!empty($payment_history)) {
     background: rgba(255, 255, 255, 0.25);
 }
 
+.btn-initiate-claim,
+.btn-assist-payment {
+    opacity: 0.6;
+}
+
 /* Main Grid */
 .details-grid {
     display: grid;
@@ -723,11 +728,11 @@ if (!empty($payment_history)) {
                 </div>
             </div>
             <div class="member-actions">
-                <button class="btn-initiate-claim">
+                <button class="btn-initiate-claim" type="button" onclick="alert('Claim processing is only handled by admins.'); return false;">
                     <i class="fas fa-file-medical"></i>
                     Initiate Claim
                 </button>
-                <button class="btn-assist-payment">
+                <button class="btn-assist-payment" type="button" onclick="alert('Payment assistance is only handled by admins.'); return false;">
                     <i class="fas fa-hand-holding-usd"></i>
                     Assist Payment
                 </button>
@@ -749,7 +754,7 @@ if (!empty($payment_history)) {
                             <p class="section-subtitle"><?php echo count($dependents); ?> family member<?php echo count($dependents) != 1 ? 's' : ''; ?> covered under this policy</p>
                         </div>
                     </div>
-                    <button class="btn-add-dependent">Add Dependent</button>
+                    <button class="btn-add-dependent" type="button" data-bs-toggle="modal" data-bs-target="#addDependentModal">Add Dependent</button>
                 </div>
 
                 <?php if (empty($dependents)): ?>
@@ -770,16 +775,25 @@ if (!empty($payment_history)) {
                     </thead>
                     <tbody>
                         <?php foreach ($dependents as $dependent): ?>
+                        <?php
+                            $dependentName = $dependent['full_name'] ?? trim(($dependent['first_name'] ?? '') . ' ' . ($dependent['last_name'] ?? ''));
+                            $dependentIdNumber = $dependent['id_number'] ?? ($dependent['display_id'] ?? 'N/A');
+                            $dependentAge = $dependent['age'] ?? 'N/A';
+                            $nameParts = preg_split('/\s+/', trim($dependentName));
+                            $firstInitial = !empty($nameParts[0]) ? strtoupper(substr($nameParts[0], 0, 1)) : 'D';
+                            $lastInitial = count($nameParts) > 1 ? strtoupper(substr($nameParts[1], 0, 1)) : $firstInitial;
+                            $dependentInitials = $dependent['initials'] ?? ($firstInitial . $lastInitial);
+                        ?>
                         <tr>
                             <td>
                                 <div class="dependent-info">
-                                    <div class="dependent-avatar"><?php echo $dependent['initials']; ?></div>
-                                    <span class="dependent-name"><?php echo htmlspecialchars($dependent['first_name'] . ' ' . ($dependent['last_name'] ?? '')); ?></span>
+                                    <div class="dependent-avatar"><?php echo htmlspecialchars($dependentInitials); ?></div>
+                                    <span class="dependent-name"><?php echo htmlspecialchars($dependentName); ?></span>
                                 </div>
                             </td>
                             <td class="dependent-relation"><?php echo htmlspecialchars($dependent['relationship'] ?? 'N/A'); ?></td>
-                            <td class="dependent-id"><?php echo htmlspecialchars($dependent['display_id']); ?></td>
-                            <td class="dependent-age"><?php echo $dependent['age']; ?></td>
+                            <td class="dependent-id"><?php echo htmlspecialchars($dependentIdNumber); ?></td>
+                            <td class="dependent-age"><?php echo htmlspecialchars($dependentAge); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -867,7 +881,7 @@ if (!empty($payment_history)) {
                 <?php endif; ?>
 
                 <div class="download-statement">
-                    <button class="btn-download-statement">Download Full Statement</button>
+                    <a class="btn-download-statement" href="/agent/member-details/<?php echo (int)$member['id']; ?>/statement">Download Full Statement</a>
                 </div>
             </div>
 
@@ -882,8 +896,122 @@ if (!empty($payment_history)) {
                 <p class="support-tip-text">
                     Member missed last payment. Remind them to settle any arrears to avoid policy degradation. Check their payment history for details.
                 </p>
-                <button class="btn-view-playbook">View Agent Playbook</button>
+                <button class="btn-view-playbook" onclick="window.location.href='/agent/resources'">View Agent Playbook</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Claim Assistance Modal -->
+<div class="modal fade" id="claimAssistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="/agent/member-details/<?php echo (int)$member['id']; ?>/claim-request">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-medical"></i> Claim Assistance Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Deceased Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="deceased_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Death <span class="text-danger">*</span></label>
+                            <input type="date" name="date_of_death" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="claim_notes" class="form-control" rows="3" placeholder="Provide any extra details for admin review"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Assistance Modal -->
+<div class="modal fade" id="paymentAssistModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/agent/member-details/<?php echo (int)$member['id']; ?>/payment-assist">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-hand-holding-usd"></i> Payment Assistance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                    <div class="mb-3">
+                        <label class="form-label">Amount (KES) <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" class="form-control" min="1" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="">Select method</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="payment_notes" class="form-control" rows="3" placeholder="Add any payment guidance or notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Dependent Modal -->
+<div class="modal fade" id="addDependentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/agent/member-details/<?php echo (int)$member['id']; ?>/dependents/add">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-users"></i> Add Dependent</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Relationship <span class="text-danger">*</span></label>
+                        <input type="text" name="relationship" class="form-control" placeholder="e.g., Spouse, Child" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ID Number <span class="text-danger">*</span></label>
+                        <input type="text" name="id_number" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Percentage (%) <span class="text-danger">*</span></label>
+                        <input type="number" name="percentage" class="form-control" min="1" max="100" value="100" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Dependent</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

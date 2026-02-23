@@ -589,6 +589,22 @@ function markAllAsRead() {
     proceed();
 }
 
+document.querySelectorAll('.notification-action').forEach(link => {
+    link.addEventListener('click', function (event) {
+        const item = this.closest('.notification-item');
+        const id = item?.dataset.id;
+        if (!id || !item?.classList.contains('unread')) {
+            return;
+        }
+
+        event.preventDefault();
+        postNotificationAction('/member/notifications/mark-read', { id: id })
+            .finally(() => {
+                window.location.href = this.getAttribute('href');
+            });
+    });
+});
+
 // Delete Notification
 function deleteNotification(id) {
     const proceed = () => postNotificationAction('/member/notifications/delete', { id: id })
