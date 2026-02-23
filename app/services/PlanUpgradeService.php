@@ -291,6 +291,42 @@ class PlanUpgradeService
         
         return true;
     }
+
+    /**
+     * Approve an upgrade request (admin action)
+     * Sets the request to payment_initiated so payment can be processed
+     * @param int $upgradeRequestId
+     * @param int|null $approvedBy
+     * @return bool
+     */
+    public function approveUpgrade($upgradeRequestId, $approvedBy = null)
+    {
+        $data = ['status' => 'payment_initiated'];
+        if ($approvedBy !== null) $data['processed_by'] = $approvedBy;
+        $this->updateUpgradeRequest($upgradeRequestId, $data);
+
+        return true;
+    }
+
+    /**
+     * Reject an upgrade request (admin action)
+     * Marks the request as cancelled with a reason
+     * @param int $upgradeRequestId
+     * @param string $reason
+     * @param int|null $rejectedBy
+     * @return bool
+     */
+    public function rejectUpgrade($upgradeRequestId, $reason = 'Rejected by admin', $rejectedBy = null)
+    {
+        $data = [
+            'status' => 'cancelled',
+            'cancellation_reason' => $reason
+        ];
+        if ($rejectedBy !== null) $data['processed_by'] = $rejectedBy;
+        $this->updateUpgradeRequest($upgradeRequestId, $data);
+
+        return true;
+    }
     
     /**
      * Get upgrade request details

@@ -907,7 +907,7 @@ class AdminController extends BaseController
             try {
                 $checklistModel = new ClaimServiceChecklist();
                 $checklistModel->markServiceCompleted($claimId, $serviceType, $_SESSION['user_id'], $serviceNotes);
-                
+
                 // Update main claim table
                 $fieldMap = [
                     'mortuary_bill' => 'mortuary_bill_settled',
@@ -916,13 +916,94 @@ class AdminController extends BaseController
                     'transportation' => 'transportation_arranged',
                     'equipment' => 'equipment_delivered'
                 ];
-                
+
                 if (isset($fieldMap[$serviceType])) {
                     $this->claimModel->updateServiceDeliveryStatus($claimId, $fieldMap[$serviceType], $completed);
                 }
-                
+
                 $_SESSION['success'] = 'Service delivery status updated.';
-                
+
+                // Send notification to member (email + SMS) about checklist update
+                try {
+                    $claimDetails = $this->claimModel->getClaimDetails($claimId);
+
+                    $memberEmail = $claimDetails['email'] ?? null;
+                    $memberPhone = $claimDetails['phone'] ?? null;
+                    $memberName = trim(($claimDetails['first_name'] ?? '') . ' ' . ($claimDetails['last_name'] ?? '')) ?: ($claimDetails['member_name'] ?? 'Member');
+
+                    $serviceLabels = [
+                        'mortuary_bill' => 'Mortuary bill settlement',
+                        'body_dressing' => 'Body dressing',
+                        'coffin' => 'Coffin delivery',
+                        'transportation' => 'Transportation arrangement',
+                        'equipment' => 'Equipment delivery'
+                    ];
+
+                    $serviceLabel = $serviceLabels[$serviceType] ?? $serviceType;
+
+                    $adminName = $_SESSION['user_name'] ?? 'Admin';
+                    $claimRef = 'CLM-' . date('Y') . '-' . str_pad($claimId, 4, '0', STR_PAD_LEFT);
+
+                    $emailData = [
+                        'status' => 'service completed',
+                        'name' => $memberName,
+                        'claim_id' => $claimId,
+                        'notes' => "{$serviceLabel} completed by {$adminName}. {$serviceNotes}",
+                    ];
+
+                    if ($memberEmail && class_exists('EmailService')) {
+                        try {
+                            $emailService = new EmailService();
+                            $emailService->sendClaimStatusUpdateEmail($memberEmail, $emailData);
+                        } catch (Exception $e) {
+                            error_log('Failed sending claim checklist email: ' . $e->getMessage());
+                        }
+                    }
+
+                    if ($memberPhone && class_exists('SmsService')) {
+                        try {
+                            $smsService = new SmsService();
+                            $smsMessage = "Claim Update: {$serviceLabel} completed for {$claimRef}. Notes: {$serviceNotes}. - Shena Companion";
+                            $smsService->sendCustomMessage($memberPhone, $smsMessage, $claimDetails['member_number'] ?? null);
+                        } catch (Exception $e) {
+                            error_log('Failed sending claim checklist SMS: ' . $e->getMessage());
+                        }
+                    }
+
+                    // Create in-app notification for the member
+                    try {
+                        $memberId = $claimDetails['member_id'] ?? null;
+                        $userId = null;
+
+                        if ($memberId && isset($this->memberModel)) {
+                            $member = $this->memberModel->find($memberId);
+                            if ($member && isset($member['user_id'])) {
+                                $userId = (int)$member['user_id'];
+                            }
+                        }
+
+                        if ($userId && class_exists('InAppNotificationService')) {
+                            $inApp = new InAppNotificationService();
+                            $payload = [
+                                'subject' => "{$serviceLabel} completed",
+                                'message' => "{$serviceLabel} has been completed for claim {$claimRef}. {$serviceNotes}",
+                                'action_url' => '/claims/view/' . $claimId,
+                                'action_text' => 'View claim'
+                            ];
+
+                            try {
+                                $inApp->notifyUser($userId, $payload, $_SESSION['user_id'] ?? null);
+                            } catch (Exception $e) {
+                                error_log('Failed to create in-app notification: ' . $e->getMessage());
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('In-app notification error: ' . $e->getMessage());
+                    }
+                } catch (Exception $e) {
+                    error_log('Notification error after checklist update: ' . $e->getMessage());
+                }
+
             } catch (Exception $e) {
                 error_log('Service tracking error: ' . $e->getMessage());
                 $_SESSION['error'] = 'Failed to update service status: ' . $e->getMessage();
@@ -2019,6 +2100,56 @@ class AdminController extends BaseController
             $_SESSION['error'] = 'Error cancelling upgrade: ' . $e->getMessage();
         }
         
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
+     * Approve Plan Upgrade (admin)
+     */
+    public function approvePlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+
+        try {
+            require_once 'app/services/PlanUpgradeService.php';
+            $service = new PlanUpgradeService();
+            $service->approveUpgrade($id, $_SESSION['user_id'] ?? null);
+            $_SESSION['success'] = 'Upgrade approved. Payment initiation queued.';
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error approving upgrade: ' . $e->getMessage();
+        }
+
+        $this->redirect('/admin/plan-upgrades');
+    }
+
+    /**
+     * Reject Plan Upgrade (admin)
+     */
+    public function rejectPlanUpgrade($id)
+    {
+        $this->requireAdminAccess();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/admin/plan-upgrades');
+            return;
+        }
+
+        $reason = $_POST['reason'] ?? 'Rejected by admin';
+
+        try {
+            require_once 'app/services/PlanUpgradeService.php';
+            $service = new PlanUpgradeService();
+            $service->rejectUpgrade($id, $reason, $_SESSION['user_id'] ?? null);
+            $_SESSION['success'] = 'Upgrade request rejected';
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error rejecting upgrade: ' . $e->getMessage();
+        }
+
         $this->redirect('/admin/plan-upgrades');
     }
 

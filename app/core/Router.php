@@ -179,6 +179,8 @@ class Router
         $this->addRoute('GET', '/admin/plan-upgrades/export', 'AdminController@exportPlanUpgrades');
         $this->addRoute('POST', '/admin/plan-upgrades/complete/{id}', 'AdminController@completePlanUpgrade');
         $this->addRoute('POST', '/admin/plan-upgrades/cancel/{id}', 'AdminController@cancelPlanUpgrade');
+        $this->addRoute('POST', '/admin/plan-upgrades/approve/{id}', 'AdminController@approvePlanUpgrade');
+        $this->addRoute('POST', '/admin/plan-upgrades/reject/{id}', 'AdminController@rejectPlanUpgrade');
         
         // Phase 4: Financial Dashboard Routes
         $this->addRoute('GET', '/admin/financial-dashboard', 'AdminController@viewFinancialDashboard');

@@ -21,7 +21,7 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 
  
 <!-- Tab Content -->
-<div class="tab-content" id="claimsTabContent">
+<div id="claimsTabContent">
 
 <style>
     /* Page Header */
@@ -853,7 +853,7 @@ $actionNeededCount = count(array_filter($all_claims, fn($c) =>
 </div>
 
 <script>
-function switchClaimTab(tabName) {
+function switchClaimTab(tabName, evt) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(content => {
         content.style.display = 'none';
@@ -870,10 +870,26 @@ function switchClaimTab(tabName) {
         selectedTab.style.display = 'block';
     }
 
-    // Add active class
-    event.target.closest('.tab-item').classList.add('active');
+    // Add active class to the clicked tab. If event is not provided (inline onclick), try to find the button by its onclick attribute.
+    try {
+        if (evt && evt.target) {
+            const btn = evt.target.closest('.tab-item');
+            if (btn) btn.classList.add('active');
+        } else {
+            // fallback: find tab button with matching onclick
+            const buttons = document.querySelectorAll('.tab-item');
+            buttons.forEach(b => {
+                const attr = b.getAttribute('onclick') || '';
+                if (attr.indexOf("switchClaimTab('" + tabName + "')") !== -1) {
+                    b.classList.add('active');
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('switchClaimTab: could not set active tab', e);
+    }
 
-    // Filter and display data
+    // Filter and display data (for other tabs)
     if (tabName !== 'all') {
         filterClaimsByStatus(tabName);
     }

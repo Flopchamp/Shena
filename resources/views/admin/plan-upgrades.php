@@ -586,6 +586,8 @@
             <tbody>
                 <?php if (!empty($data['upgrades'])): ?>
                     <?php foreach ($data['upgrades'] as $upgrade): ?>
+                        <?php $paymentStatus = isset($upgrade['payment_status']) && $upgrade['payment_status'] !== null && $upgrade['payment_status'] !== '' ? $upgrade['payment_status'] : 'pending'; ?>
+                        <?php $reqStatus = isset($upgrade['status']) && $upgrade['status'] !== null && $upgrade['status'] !== '' ? $upgrade['status'] : 'pending'; ?>
                         <tr>
                             <td><strong>#<?php echo htmlspecialchars($upgrade['id']); ?></strong></td>
                             <td>
@@ -606,40 +608,61 @@
                             </td>
                             <td><strong>KES <?php echo number_format($upgrade['prorated_amount'], 2); ?></strong></td>
                             <td>
+                                <?php $paymentStatus = isset($upgrade['payment_status']) && $upgrade['payment_status'] !== null && $upgrade['payment_status'] !== '' ? $upgrade['payment_status'] : 'pending'; ?>
                                 <span class="badge badge-<?php 
-                                    echo $upgrade['payment_status'] === 'completed' ? 'success' : 
-                                         ($upgrade['payment_status'] === 'pending' ? 'warning' : 'danger'); 
+                                    echo $paymentStatus === 'completed' ? 'success' : 
+                                         ($paymentStatus === 'pending' ? 'warning' : 'danger'); 
                                 ?>">
-                                    <?php echo ucfirst($upgrade['payment_status']); ?>
+                                    <?php echo htmlspecialchars(ucfirst((string)$paymentStatus)); ?>
                                 </span>
                             </td>
                             <td>
+                                <?php $reqStatus = isset($upgrade['status']) && $upgrade['status'] !== null && $upgrade['status'] !== '' ? $upgrade['status'] : 'pending'; ?>
                                 <span class="badge badge-<?php 
-                                    echo $upgrade['status'] === 'completed' ? 'success' : 
-                                         ($upgrade['status'] === 'pending' ? 'warning' : 'danger'); 
+                                    echo $reqStatus === 'completed' ? 'success' : 
+                                         ($reqStatus === 'pending' ? 'warning' : 'danger'); 
                                 ?>">
-                                    <?php echo ucfirst($upgrade['status']); ?>
+                                    <?php echo htmlspecialchars(ucfirst((string)$reqStatus)); ?>
                                 </span>
                             </td>
                             <td><?php echo date('M d, Y', strtotime($upgrade['requested_at'])); ?></td>
                             <td>
                                 <div class="action-buttons">
-                                    <?php if ($upgrade['status'] === 'pending' && $upgrade['payment_status'] === 'completed'): ?>
-                                        <button class="btn-action success" 
-                                                onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'complete')"
-                                                title="Complete Upgrade">
-                                            <i class="fas fa-check"></i>
+                                    <?php // Dropdown action button with inline quick actions ?>
+                                    <?php $upgradeJson = htmlspecialchars(json_encode($upgrade), ENT_QUOTES, 'UTF-8'); ?>
+                                    <div class="action-dropdown-root" data-upgrade='<?php echo $upgradeJson; ?>'>
+                                            <?php $isPending = (isset($upgrade['status']) && trim(strtolower($upgrade['status'])) === 'pending'); ?>
+                                            <button class="btn-action success btn-quick" title="Approve" <?php echo $isPending ? '' : 'disabled'; ?> onclick="if(!this.disabled) processUpgrade(<?php echo $upgrade['id']; ?>, 'approve')">
+                                                <i class="fas fa-thumbs-up"></i>
+                                            </button>
+                                            <button class="btn-action danger btn-quick" title="Reject" <?php echo $isPending ? '' : 'disabled'; ?> onclick="if(!this.disabled) processUpgrade(<?php echo $upgrade['id']; ?>, 'reject')">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        <button class="btn-action info dropdown-toggle" aria-expanded="false" title="More actions">
+                                            <i class="fas fa-ellipsis-v"></i>
                                         </button>
-                                        <button class="btn-action danger" 
-                                                onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'cancel')"
-                                                title="Cancel & Refund">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    <?php endif; ?>
-                                    <a href="/admin/plan-upgrades/view/<?php echo $upgrade['id']; ?>" 
-                                       class="btn-action info" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                        <div class="action-dropdown-menu" role="menu">
+                                            <button type="button" class="action-item" onclick="openQuickView(this)">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </button>
+                                            <?php if ($reqStatus === 'pending'): ?>
+                                                <button type="button" class="action-item" onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'approve')">
+                                                    <i class="fas fa-thumbs-up"></i> Approve
+                                                </button>
+                                                <button type="button" class="action-item" onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'reject')">
+                                                    <i class="fas fa-ban"></i> Reject
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if ($reqStatus === 'pending' && $paymentStatus === 'completed'): ?>
+                                                <button type="button" class="action-item" onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'complete')">
+                                                    <i class="fas fa-check"></i> Complete
+                                                </button>
+                                                <button type="button" class="action-item" onclick="processUpgrade(<?php echo $upgrade['id']; ?>, 'cancel')">
+                                                    <i class="fas fa-times"></i> Cancel & Refund
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -661,31 +684,64 @@
 
 <script>
 function processUpgrade(id, action) {
-    const actionText = action === 'complete' ? 'complete' : 'cancel and refund';
+    const actionLabels = {
+        complete: 'complete',
+        cancel: 'cancel and refund',
+        approve: 'approve',
+        reject: 'reject'
+    };
+
+    const actionText = actionLabels[action] || action;
     const confirmMsg = `Are you sure you want to ${actionText} this upgrade request?`;
 
-    const proceed = () => {
+    const proceed = (extraFields = {}) => {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/admin/plan-upgrades/${action}/${id}`;
-        
+
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = 'csrf_token';
         csrfInput.value = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
-        
         form.appendChild(csrfInput);
+
+        // append any extra fields (e.g., rejection reason)
+        for (const k in extraFields) {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = k;
+            inp.value = extraFields[k];
+            form.appendChild(inp);
+        }
+
         document.body.appendChild(form);
         form.submit();
     };
 
+    // If the app has a nicer confirmation UI, use it
     if (window.ShenaApp && typeof ShenaApp.confirmAction === 'function') {
+        // For reject, ask for reason using prompt fallback
+        if (action === 'reject') {
+            ShenaApp.prompt(
+                'Rejection reason (optional)',
+                '',
+                function(reason) { proceed({ reason: reason || '' }); }
+            );
+            return;
+        }
+
         ShenaApp.confirmAction(
             confirmMsg,
-            proceed,
+            function() { proceed(); },
             null,
             { type: 'warning', title: 'Confirm Action', confirmText: 'Proceed' }
         );
+        return;
+    }
+
+    if (action === 'reject') {
+        const reason = prompt('Please enter a reason for rejection (optional):', '');
+        if (confirm(confirmMsg)) proceed({ reason: reason || '' });
         return;
     }
 
@@ -696,6 +752,92 @@ function processUpgrade(id, action) {
 
 function exportToCSV() {
     window.location.href = '/admin/plan-upgrades/export?<?php echo http_build_query($_GET); ?>';
+}
+</script>
+
+<!-- Quick View Modal -->
+<div id="upgradeQuickViewModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeQuickView()">&times;</button>
+        <h3 id="quickViewTitle">Upgrade Details</h3>
+        <div id="quickViewBody"></div>
+    </div>
+</div>
+
+<style>
+/* Dropdown menu */
+.action-dropdown-root{position:relative;display:inline-block}
+.action-dropdown-root .action-dropdown-menu{display:none;position:absolute;right:0;top:36px;background:#fff;border:1px solid #E5E7EB;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.08);min-width:180px;z-index:50;padding:8px}
+.action-dropdown-root .action-dropdown-menu .action-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px;border:none;background:transparent;text-align:left;cursor:pointer;border-radius:6px}
+.action-dropdown-root .action-dropdown-menu .action-item:hover{background:#F3F4F6}
+.action-dropdown-root.show .action-dropdown-menu{display:block}
+
+/* Quick small buttons next to dropdown */
+.btn-quick{width:32px;height:32px;padding:0;margin-right:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
+.btn-action[disabled]{opacity:0.5;cursor:not-allowed}
+.btn-action[disabled] .fas{opacity:0.6}
+.btn-quick .fas{font-size:13px}
+
+/* Simple modal */
+#upgradeQuickViewModal{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:60}
+.modal-content{background:#fff;padding:20px;border-radius:12px;max-width:680px;width:90%;position:relative}
+.modal-close{position:absolute;right:12px;top:12px;border:none;background:transparent;font-size:22px;cursor:pointer}
+#quickViewBody p{margin:8px 0}
+</style>
+
+<script>
+// Toggle dropdowns
+document.addEventListener('click', function(e){
+    // close any open dropdown if clicked outside
+    document.querySelectorAll('.action-dropdown-root').forEach(function(root){
+        if (!root.contains(e.target)) root.classList.remove('show');
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.action-dropdown-root .dropdown-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(ev){
+            ev.stopPropagation();
+            const root = btn.closest('.action-dropdown-root');
+            // toggle
+            const isOpen = root.classList.contains('show');
+            // close others
+            document.querySelectorAll('.action-dropdown-root').forEach(r=>r.classList.remove('show'));
+            if (!isOpen) root.classList.add('show');
+        });
+    });
+});
+
+function openQuickView(button){
+    const root = button.closest('.action-dropdown-root');
+    const raw = root.getAttribute('data-upgrade') || '{}';
+    let data = {};
+    try { data = JSON.parse(raw); } catch(e) { data = {}; }
+
+    const body = document.getElementById('quickViewBody');
+    body.innerHTML = '';
+    const rows = [
+        ['ID', data.id],
+        ['Member', data.member_name + ' (' + (data.member_number || 'N/A') + ')'],
+        ['From', data.from_package],
+        ['To', data.to_package],
+        ['Prorated amount', 'KES ' + (parseFloat(data.prorated_amount || 0).toFixed(2))],
+        ['Payment status', data.payment_status || 'N/A'],
+        ['Status', data.status || 'N/A'],
+        ['Requested', data.requested_at]
+    ];
+
+    rows.forEach(function(r){
+        const p = document.createElement('p');
+        p.innerHTML = '<strong>' + r[0] + ':</strong> ' + (r[1] === null || r[1] === undefined ? 'N/A' : r[1]);
+        body.appendChild(p);
+    });
+
+    document.getElementById('upgradeQuickViewModal').style.display = 'flex';
+}
+
+function closeQuickView(){
+    document.getElementById('upgradeQuickViewModal').style.display = 'none';
 }
 </script>
 
