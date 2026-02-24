@@ -1,0 +1,954 @@
+<?php 
+$page = 'beneficiaries';
+include __DIR__ . '/../layouts/member-header.php';
+
+$beneficiaries = $beneficiaries ?? [];
+$maxBeneficiaries = 5;
+$availableSlots = $maxBeneficiaries - count($beneficiaries);
+?>
+
+<style>
+.beneficiaries-container {
+    padding: 30px 30px 40px 25px;
+    background: #F8F9FC;
+    max-width: 100%;
+    margin: 0 0 0 0;
+}
+
+main {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.page-title h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #4A1468;
+    margin: 0;
+}
+
+.search-bar {
+    position: relative;
+    width: 300px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
+}
+
+/* Main 2/3 and 1/3 Layout */
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+.content-area {
+    width: 100%;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4A1468;
+    margin: 0;
+}
+
+.add-dependent-btn {
+    background: #7F3D9E;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.add-dependent-btn:hover {
+    background: #6B2D8A;
+    transform: translateY(-1px);
+}
+
+.section-description {
+    font-size: 0.9rem;
+    color: #6B7280;
+    margin: 0 0 30px 0;
+}
+
+.beneficiaries-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.beneficiary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.beneficiary-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.beneficiary-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #EC4899, #F472B6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.beneficiary-avatar.male {
+    background: linear-gradient(135deg, #3B82F6, #60A5FA);
+}
+
+.beneficiary-info h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 6px 0;
+}
+
+.beneficiary-info p {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin: 0 0 4px 0;
+}
+
+.age-bracket {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+}
+
+.status-badge-card {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+}
+
+.active-badge-card {
+    background: #D1FAE5;
+    color: #059669;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.waiting-badge-card {
+    background: #FEF3C7;
+    color: #D97706;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.edit-details-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #7F3D9E;
+    background: transparent;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: all 0.3s;
+}
+
+.edit-details-btn:hover {
+    color: #6B2D8A;
+}
+
+.add-member-card {
+    background: white;
+    border: 2px dashed #D1D5DB;
+    border-radius: 16px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-member-card:hover {
+    border-color: #7F3D9E;
+    background: #F9FAFB;
+}
+
+.add-icon {
+    width: 60px;
+    height: 60px;
+    background: #F3F4F6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.add-icon i {
+    font-size: 1.8rem;
+    color: #9CA3AF;
+}
+
+.add-member-card h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0 0 6px 0;
+}
+
+.add-member-card p {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* Right Sidebar (1/3) */
+.right-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 20px;
+}
+
+.coverage-policy-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    border-left: 4px solid #7F20B0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.policy-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.policy-icon {
+    width: 32px;
+    height: 32px;
+    background: #F59E0B;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.policy-icon i {
+    color: white;
+    font-size: 1rem;
+}
+
+.policy-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0;
+}
+
+.policy-section {
+    margin-bottom: 25px;
+}
+
+.policy-section:last-child {
+    margin-bottom: 0;
+}
+
+.policy-section h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6B7280;
+    letter-spacing: 1px;
+    margin: 0 0 12px 0;
+}
+
+.policy-section p {
+    font-size: 0.85rem;
+    color: #4B5563;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.benefit-limit {
+    background: #F3E8FF;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-top: 25px;
+}
+
+.benefit-limit h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #7F3D9E;
+    letter-spacing: 1px;
+    margin: 0 0 8px 0;
+}
+
+.benefit-limit h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #7F3D9E;
+    margin: 0 0 4px 0;
+}
+
+.benefit-limit .currency-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #7F3D9E;
+    margin-right: 4px;
+}
+
+.benefit-limit p {
+    font-size: 0.8rem;
+    color: #9333EA;
+    margin: 0;
+}
+
+.need-help-card {
+    background: linear-gradient(135deg, #7F20B0 0%, #5E2B7A 100%);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+}
+
+.need-help-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+}
+
+.need-help-card p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+}
+
+.chat-btn {
+    background: #F59E0B;
+    color: #1F2937;
+    border: none;
+    padding: 14px 0;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s;
+}
+
+.chat-btn:hover {
+    background: #D97706;
+}
+
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .beneficiaries-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="beneficiaries-container">
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Manage Dependents & Beneficiaries</h1>
+        </div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search dependents...">
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="content-area">
+            <div class="section-header">
+                <h2>Your Covered Family</h2>
+                <button class="add-dependent-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                    <i class="fas fa-user-plus"></i> Add New Dependent
+                </button>
+            </div>
+            <p class="section-description">Review and manage your policy beneficiaries and dependents.</p>
+            
+            <div class="beneficiaries-grid">
+                <?php if (!empty($beneficiaries)): ?>
+                    <?php foreach ($beneficiaries as $index => $beneficiary): ?>
+                        <div class="beneficiary-card">
+                            <div class="status-badge-card">
+                                <span class="<?php echo ($beneficiary['is_active'] ?? true) ? 'active-badge-card' : 'waiting-badge-card'; ?>">
+                                    <?php echo ($beneficiary['is_active'] ?? true) ? 'ACTIVE' : 'WAITING'; ?>
+                                </span>
+                            </div>
+                            <div class="beneficiary-header">
+                                <div class="beneficiary-avatar <?php echo in_array(strtolower($beneficiary['relationship'] ?? ''), ['son', 'father', 'brother']) ? 'male' : ''; ?>">
+                                    <?php echo strtoupper(substr($beneficiary['full_name'] ?? 'U', 0, 1)); ?>
+                                </div>
+                                <div class="beneficiary-info">
+                                    <h3><?php echo htmlspecialchars($beneficiary['full_name'] ?? 'Unknown'); ?></h3>
+                                    <p><?php echo htmlspecialchars(ucfirst($beneficiary['relationship'] ?? 'Relation')); ?></p>
+                                    <p class="age-bracket">Age Bracket: <?php echo htmlspecialchars($beneficiary['age_bracket'] ?? '35-40 years'); ?></p>
+                                </div>
+                            </div>
+                            <button class="edit-details-btn" onclick="editBeneficiary(<?php echo $beneficiary['id']; ?>)">
+                                <i class="fas fa-edit"></i> Edit Details
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="beneficiary-card" style="text-align: center;">
+                        <div class="beneficiary-header" style="justify-content: center;">
+                            <div class="beneficiary-avatar">?</div>
+                            <div class="beneficiary-info">
+                                <h3>No beneficiaries yet</h3>
+                                <p>Add a dependent to start managing your covered family members.</p>
+                            </div>
+                        </div>
+                        <button class="edit-details-btn" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                            <i class="fas fa-user-plus"></i> Add Beneficiary
+                        </button>
+                    </div>
+                <?php endif; ?>
+                
+                <div class="add-member-card" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
+                    <div class="add-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <h4>Add Beneficiary</h4>
+                    <p>Available slots: <?php echo $availableSlots; ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="right-sidebar">
+            <div class="coverage-policy-card">
+                <div class="policy-header">
+                    <div class="policy-icon">
+                        <i class="fas fa-exclamation"></i>
+                    </div>
+                    <h3>Coverage Policy</h3>
+                </div>
+                
+                <div class="policy-section">
+                    <h4>NUCLEAR FAMILY</h4>
+                    <p>Includes spouse and up to 4 biological or legally adopted children under 21 years. Full coverage applies after a 3-month waiting period.</p>
+                </div>
+                
+                <div class="policy-section">
+                    <h4>EXTENDED FAMILY</h4>
+                    <p>Includes parents, siblings, or in-laws. Maximum of 2 extended members allowed per policy. A 6-month waiting period applies for natural causes.</p>
+                </div>
+                
+                <div class="benefit-limit">
+                    <h4>BENEFIT LIMIT</h4>
+                    <h2>KES 15,000</h2>
+                    <p>per member</p>
+                </div>
+            </div>
+            
+            <div class="need-help-card">
+                <h3>Need Help?</h3>
+                <p>Unsure about relationship proof documents? Chat with our support team.</p>
+                <button class="chat-btn" onclick="window.location.href='/member/support'">START CHAT</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade CTA Card -->
+<div class="upgrade-cta-section">
+    <div class="upgrade-cta-card">
+        <div class="upgrade-icon">
+            <i class="fas fa-crown"></i>
+        </div>
+        <div class="upgrade-content">
+            <h2>Unlock More Coverage for Your Loved Ones</h2>
+            <p class="upgrade-subtitle">Upgrade your plan and protect more family members with enhanced benefits</p>
+            
+            <div class="tier-comparison">
+                <div class="tier-item">
+                    <div class="tier-badge bronze">Individual</div>
+                    <div class="tier-value">Self</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge silver">Couple</div>
+                    <div class="tier-value">2 Adults</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge gold">Family</div>
+                    <div class="tier-value">Children</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+                <div class="tier-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="tier-item highlight">
+                    <div class="tier-badge platinum">Executive</div>
+                    <div class="tier-value">Extended</div>
+                    <div class="tier-label">Coverage</div>
+                </div>
+            </div>
+            
+            <div class="upgrade-benefits">
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Cover more family members</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Priority claim processing</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Enhanced funeral services</span>
+                </div>
+                <div class="benefit-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Dedicated support team</span>
+                </div>
+            </div>
+            
+            <button class="upgrade-btn" onclick="window.location.href='/member/upgrade'">
+                <span>Upgrade Now</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.upgrade-cta-section {
+    margin: 3rem 0;
+    padding: 0 1rem;
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upgrade-cta-card {
+    background: linear-gradient(135deg, #7F20B0 0%, #a855f7 50%, #F59E0B 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(127, 32, 176, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upgrade-cta-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 50px rgba(127, 32, 176, 0.4);
+}
+
+.upgrade-cta-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(-10%, -10%) scale(1.1);
+    }
+}
+
+.upgrade-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.upgrade-icon i {
+    font-size: 4rem;
+    color: #FFD700;
+    text-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.upgrade-content {
+    position: relative;
+    z-index: 1;
+}
+
+.upgrade-content h2 {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-subtitle {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.tier-comparison {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tier-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.tier-item.highlight {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.tier-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    margin-bottom: 0.8rem;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tier-badge.bronze {
+    background: #CD7F32;
+    color: white;
+}
+
+.tier-badge.silver {
+    background: #C0C0C0;
+    color: #333;
+}
+
+.tier-badge.gold {
+    background: #FFD700;
+    color: #333;
+}
+
+.tier-badge.platinum {
+    background: #E5E7EB;
+    color: #111827;
+}
+
+.tier-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+}
+
+.tier-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.tier-arrow {
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.upgrade-benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: white;
+    font-size: 1rem;
+    padding: 0.5rem;
+}
+
+.benefit-item i {
+    color: #10B981;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.upgrade-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    background: white;
+    color: #7F20B0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: #FFD700;
+    color: #333;
+}
+
+.upgrade-btn i {
+    transition: transform 0.3s ease;
+}
+
+.upgrade-btn:hover i {
+    transform: translateX(5px);
+}
+
+@media (max-width: 768px) {
+    .upgrade-cta-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .upgrade-content h2 {
+        font-size: 1.6rem;
+    }
+    
+    .upgrade-subtitle {
+        font-size: 1rem;
+    }
+    
+    .tier-comparison {
+        gap: 0.8rem;
+    }
+    
+    .tier-item {
+        min-width: 90px;
+        padding: 1rem;
+    }
+    
+    .tier-value {
+        font-size: 2rem;
+    }
+    
+    .tier-arrow {
+        font-size: 1.2rem;
+    }
+    
+    .upgrade-benefits {
+        grid-template-columns: 1fr;
+    }
+    
+    .upgrade-btn {
+        font-size: 1rem;
+        padding: 0.8rem 2rem;
+    }
+}
+</style>
+
+<!-- Edit Beneficiary Modal -->
+<div class="modal fade" id="editBeneficiaryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/beneficiaries/update">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Beneficiary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                    <input type="hidden" name="beneficiary_id" id="editBeneficiaryId">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" id="editFullName" class="form-control" value="<?php echo getOldValue('full_name_edit') ?: ''; ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Relationship *</label>
+                        <input type="text" name="relationship" id="editRelationship" class="form-control" value="<?php echo getOldValue('relationship_edit') ?: ''; ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ID Number *</label>
+                        <input type="text" name="id_number" id="editIdNumber" class="form-control" value="<?php echo getOldValue('id_number_edit') ?: ''; ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone_number" id="editPhoneNumber" class="form-control" value="<?php echo getOldValue('phone_number_edit') ?: ''; ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Percentage (%) *</label>
+                        <input type="number" name="percentage" id="editPercentage" class="form-control" min="1" max="100" value="<?php echo getOldValue('percentage_edit') ?: '100'; ?>" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Beneficiary</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Beneficiary Modal -->
+<div class="modal fade" id="addBeneficiaryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="/beneficiaries" id="addBeneficiaryForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Beneficiary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" class="form-control" value="<?php echo getOldValue('full_name'); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Relationship *</label>
+                        <input type="text" name="relationship" class="form-control" placeholder="e.g., Spouse, Child, Parent" value="<?php echo getOldValue('relationship'); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ID Number *</label>
+                        <input type="text" name="id_number" class="form-control" value="<?php echo getOldValue('id_number'); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control" value="<?php echo getOldValue('phone_number'); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Percentage (%) *</label>
+                        <input type="number" name="percentage" class="form-control" min="1" max="100" value="<?php echo getOldValue('percentage') ?: '100'; ?>" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Beneficiary</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editBeneficiary(id) {
+    const beneficiaries = <?php echo json_encode($beneficiaries ?? []); ?>;
+    const beneficiary = beneficiaries.find(b => b.id == id);
+    if (!beneficiary) return;
+    
+    document.getElementById('editBeneficiaryId').value = beneficiary.id;
+    document.getElementById('editFullName').value = beneficiary.full_name;
+    document.getElementById('editRelationship').value = beneficiary.relationship;
+    document.getElementById('editIdNumber').value = beneficiary.id_number;
+    document.getElementById('editPhoneNumber').value = beneficiary.phone_number || '';
+    document.getElementById('editPercentage').value = beneficiary.percentage;
+    
+    new bootstrap.Modal(document.getElementById('editBeneficiaryModal')).show();
+}
+</script>
+
+<?php include __DIR__ . '/../layouts/member-footer.php'; ?>
