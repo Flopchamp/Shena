@@ -191,3 +191,73 @@ This document lists all necessary deployment-related adjustments, UI/logic fixes
   5. Tests and README updates (how to configure `.env` for SMTP and HostPinnacle).
 
 If you want, I can open a PR with the DB migration + model skeleton and update the registration & beneficiary views to include the DOB and phone-normalization UI changes. Which step should I start implementing first? (I recommend starting with the DB migration and model changes.)
+\
+**Homepage: Copy & Visual Adjustments (Phase 1)**
+
+- **Home — Key copy changes**
+  1. Update the main hero or site tagline to read: "Serving communities across Kenya" (replace any narrower location copy).
+  2. Update the tagline/strapline to "The Royal Choice" and remove any explicit mention of "Kisumu" from homepage lists, carousels, or footers where counties/locations are enumerated.
+
+- **Discover our impact**
+  - Add an "Our Impact" gallery section on the homepage with curated photos of services rendered (funerals arranged, community outreach, vehicle/teams in action). The gallery must be:
+    - Minimal and tasteful.
+    - Lazy-loaded and responsive.
+    - Stored under `storage/uploads/impact/` and referenced via a new partial: `resources/views/public/partials/impact-gallery.php`.
+  - Files to update:
+    - `resources/views/public/home.php` or equivalent homepage view.
+    - `resources/views/layouts/footer.php` (remove Kisumu references if present).
+    - Add `resources/views/public/partials/impact-gallery.php` to render images and captions.
+
+**Packages: Align with the flier and add descriptions**
+
+Ensure the app's package names, descriptions and allowed dependents match the printed flier. Add a small canonical package configuration file `config/packages.php` (or populate `settings` DB) so UI and backend use the same source of truth.
+
+Suggested canonical packages and descriptions (add these to docs and `config/packages.php`):
+
+- **Basic**
+  - Description: Entry-level coverage for individuals who want core support. Covers the member only (no dependents). Short waiting period: 1 month. Limited funeral services package.
+  - Who it's for: Single individuals on tight budgets wanting basic protection.
+
+- **Individual**
+  - Description: Core individual membership providing the standard funeral benefit and support services. Includes maturity period of 4 months before full benefits apply.
+  - Who it's for: Single adults.
+
+- **Couple**
+  - Description: Covers two adults (member + spouse) under one policy. Both adults are full beneficiaries; dependent children can be added at incremental contribution rates.
+  - Who it's for: Married or cohabiting couples.
+
+- **Family**
+  - Description: Covers member, spouse and children. Typically includes spouse plus up to 4 biological or legally adopted children under 18 (or under 21 per policy) with incremental fees for additional children. Full benefits after the defined maturity period.
+  - Who it's for: Nuclear families wanting broad household coverage.
+
+- **Executive**
+  - Description: Enhanced coverage for higher benefit limits and extended family inclusion (parents or in-laws) with priority claim processing and elevated funeral service packages. Longer waiting periods for certain natural-cause claims.
+  - Who it's for: Customers seeking premium service, higher limits, and extended-family protection.
+
+- **Premium**
+  - Description: Top-tier package with maximum benefit limits, additional service inclusions (upgraded coffin options, extended transport, priority support), and higher monthly contributions.
+  - Who it's for: Customers wanting the most comprehensive coverage.
+
+Notes on contribution rules to include in app and docs:
+- Base monthly fee should be declared in `config/packages.php` per package.
+- Define incremental rules for dependents (for example):
+  - Child (0-5): +10% of base per child
+  - Child (6-17): +15% per child; second child may have reduced incremental rate as per flier
+  - Adult dependent (18+): +30% per adult dependent
+  - Senior (65+): +50% surcharge or special premium band
+- These example rates must be replaced by the exact rules used in your flier; add them into `config/packages.php` and use `Member::calculateMonthlyContribution()` to apply them consistently.
+
+Files to update for package alignment:
+- `config/packages.php` (new canonical package config)
+- `resources/views/auth/register.php` (package selection UI and breakdown)
+- `resources/views/member/upgrade.php` (upgrade preview and prorate calculations)
+- `app/models/Member.php` (calculation, backfill, validation)
+- `app/controllers/AuthController.php` and `MemberController.php` (use canonical config and validate package/dependents)
+
+**Next steps (short)**
+1. Add `config/packages.php` with canonical package definitions and incremental rules copied exactly from the flier.
+2. Update homepage view to adopt new tagline, remove Kisumu from any lists, and add the `impact-gallery` partial.
+3. Update package selection UIs to use the config and display the description text and instant contribution breakdown.
+4. Run a brief content review so the homepage and registration pages use the same short, minimalist copy style as the flier.
+
+If you want I can: create the `config/packages.php` stub and patch `resources/views/public/home.php` and the registration package UI next. Which should I implement first — the `config/packages.php` or the homepage gallery and copy updates?
