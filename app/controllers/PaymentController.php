@@ -149,6 +149,34 @@ class PaymentController extends BaseController
             $this->json(['error' => 'Status query failed'], 500);
         }
     }
+
+    /**
+     * Serve a small QR URL for paybill/account so views can embed it dynamically.
+     * Example: /qr/paybill?paybill=4163987&account=SC20260001
+     */
+    public function qrPaybill()
+    {
+        try {
+            $paybill = $_GET['paybill'] ?? MPESA_BUSINESS_SHORTCODE ?? '';
+            $account = $_GET['account'] ?? '';
+            if (empty($paybill) || empty($account)) {
+                http_response_code(400);
+                echo 'Missing paybill or account';
+                return;
+            }
+
+            require_once __DIR__ . '/../services/QrService.php';
+            $url = QrService::paybillQrUrl($paybill, $account, 240);
+
+            // Redirect to the QR image URL (external provider)
+            header('Location: ' . $url);
+            exit;
+        } catch (Exception $e) {
+            error_log('QR generation error: ' . $e->getMessage());
+            http_response_code(500);
+            echo 'QR generation failed';
+        }
+    }
     
     private function formatPhoneNumber($phone)
     {

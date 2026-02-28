@@ -18,6 +18,11 @@ class SmsService
     public function sendSms($to, $message)
     {
         try {
+            // Validate phone presence
+            if (empty($to)) {
+                error_log('SMS not sent: recipient phone is empty');
+                return ['success' => false, 'error' => 'empty_recipient'];
+            }
             // Check if SMS credentials are configured
             if (empty($this->config['user_id']) || empty($this->config['api_key'])) {
                 error_log('SMS not sent: HostPinnacle credentials not configured');
@@ -26,6 +31,12 @@ class SmsService
             
             // Format phone number for Kenyan numbers
             $to = $this->formatPhoneNumber($to);
+
+            // Validate formatted number
+            if (!$this->validatePhoneNumber($to)) {
+                error_log('SMS not sent: invalid phone number ' . $to);
+                return ['success' => false, 'error' => 'invalid_phone'];
+            }
             
             // HostPinnacle API endpoint
             $url = "https://sms.hostpinnacle.co.ke/api/services/sendsms";

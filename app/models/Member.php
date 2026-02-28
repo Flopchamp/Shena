@@ -201,6 +201,74 @@ class Member extends BaseModel
         $today = new DateTime('today');
         return $birthDate->diff($today)->y;
     }
+
+    /**
+     * Calculate the monthly contribution for a member based on age, package and dependents.
+     * Centralized logic that uses canonical package definitions from config/packages.php
+     *
+     * @param array $member Member record (expects at least date_of_birth and package)
+     * @param array $dependents Array of dependent records (each may include date_of_birth)
+     * @return int Monthly contribution in Ksh
+     */
+    public function calculateMonthlyContribution($member, $dependents = [])
+    {
+        global $membership_packages;
+
+        // If explicit package key is set and exists in config, use it
+        $pkgKey = $member['package'] ?? null;
+        if ($pkgKey && isset($membership_packages[$pkgKey])) {
+            return (int)$membership_packages[$pkgKey]['monthly_contribution'];
+        }
+
+        // Determine member age
+        $age = $this->calculateAge($member['date_of_birth'] ?? ($member['dob'] ?? ''));
+
+        // Detect children (age < 18)
+        $hasChild = false;
+        foreach ($dependents as $d) {
+            $dAge = $this->calculateAge($d['date_of_birth'] ?? ($d['dob'] ?? ''));
+            if ($dAge > 0 && $dAge < 18) {
+                $hasChild = true;
+                break;
+            }
+        }
+
+        // Prefer family packages when children are present
+        if ($hasChild) {
+            foreach ($membership_packages as $key => $pkg) {
+                $category = $pkg['category'] ?? '';
+                if (in_array($category, ['family', 'extended_family', 'maximum_family'])) {
+                    if (isset($pkg['age_min'], $pkg['age_max']) && $age >= $pkg['age_min'] && $age <= $pkg['age_max']) {
+                        return (int)$pkg['monthly_contribution'];
+                    }
+                }
+            }
+        }
+
+        // Find an individual package that matches age
+        $best = null;
+        foreach ($membership_packages as $key => $pkg) {
+            $category = $pkg['category'] ?? '';
+            if ($category === 'individual') {
+                if (isset($pkg['age_min'], $pkg['age_max']) && $age >= $pkg['age_min'] && $age <= $pkg['age_max']) {
+                    if ($best === null || $pkg['monthly_contribution'] < $best['monthly_contribution']) {
+                        $best = $pkg;
+                    }
+                }
+            }
+        }
+
+        if ($best) {
+            return (int)$best['monthly_contribution'];
+        }
+
+        // Fallback: return a sensible default
+        if (isset($membership_packages['individual_below_70'])) {
+            return (int)$membership_packages['individual_below_70']['monthly_contribution'];
+        }
+
+        return 100;
+    }
     
     /**
      * Find member by national ID

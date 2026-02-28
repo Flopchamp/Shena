@@ -876,6 +876,10 @@ main {
                         <input type="text" name="id_number" id="editIdNumber" class="form-control" value="<?php echo getOldValue('id_number_edit') ?: ''; ?>" required>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="date_of_birth" id="editDateOfBirth" class="form-control" value="<?php echo getOldValue('date_of_birth_edit') ?: ''; ?>">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Phone Number</label>
                         <input type="tel" name="phone_number" id="editPhoneNumber" class="form-control" value="<?php echo getOldValue('phone_number_edit') ?: ''; ?>">
                     </div>
@@ -917,6 +921,10 @@ main {
                         <input type="text" name="id_number" class="form-control" value="<?php echo getOldValue('id_number'); ?>" required>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" name="date_of_birth" class="form-control" value="<?php echo getOldValue('date_of_birth'); ?>">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Phone Number</label>
                         <input type="tel" name="phone_number" class="form-control" value="<?php echo getOldValue('phone_number'); ?>">
                     </div>
@@ -944,6 +952,7 @@ function editBeneficiary(id) {
     document.getElementById('editFullName').value = beneficiary.full_name;
     document.getElementById('editRelationship').value = beneficiary.relationship;
     document.getElementById('editIdNumber').value = beneficiary.id_number;
+    document.getElementById('editDateOfBirth').value = beneficiary.date_of_birth || '';
     document.getElementById('editPhoneNumber').value = beneficiary.phone_number || '';
     document.getElementById('editPercentage').value = beneficiary.percentage;
     

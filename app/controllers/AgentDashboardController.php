@@ -332,16 +332,20 @@ class AgentDashboardController extends BaseController
                 return;
             }
 
-            // Validate email not already registered
-            $emailCheck = $this->db->fetch('SELECT id FROM users WHERE email = :email', ['email' => $this->sanitizeInput($_POST['email'])]);
-            if ($emailCheck) {
-                $_SESSION['error'] = 'Email already registered.';
-                $this->redirect('/agent/register-member');
-                return;
+            // Validate email if provided
+            $emailInput = $this->sanitizeInput($_POST['email'] ?? '');
+            if (!empty($emailInput)) {
+                $emailCheck = $this->db->fetch('SELECT id FROM users WHERE email = :email', ['email' => $emailInput]);
+                if ($emailCheck) {
+                    $_SESSION['error'] = 'Email already registered.';
+                    $this->redirect('/agent/register-member');
+                    return;
+                }
             }
 
-            // Validate phone not already registered
-            $phoneCheck = $this->db->fetch('SELECT id FROM users WHERE phone = :phone', ['phone' => $this->sanitizeInput($_POST['phone'])]);
+            // Normalize phone and validate uniqueness
+            $phoneInput = formatKenyanPhone($this->sanitizeInput($_POST['phone'] ?? ''));
+            $phoneCheck = $this->db->fetch('SELECT id FROM users WHERE phone = :phone', ['phone' => $phoneInput]);
             if ($phoneCheck) {
                 $_SESSION['error'] = 'Phone number already registered.';
                 $this->redirect('/agent/register-member');
@@ -374,8 +378,8 @@ class AgentDashboardController extends BaseController
             $userStmt->execute([
                 ':first_name' => $firstName,
                 ':last_name' => $lastName,
-                ':email' => $email,
-                ':phone' => $phone,
+                ':email' => $emailInput ?: null,
+                ':phone' => $phoneInput,
                 ':password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
                 ':role' => 'member',
                 ':status' => 'pending'
@@ -388,12 +392,24 @@ class AgentDashboardController extends BaseController
             $memberStmt = $this->db->getConnection()->prepare(
                 'INSERT INTO members (
                     user_id, agent_id, member_number, id_number, date_of_birth, gender, 
-                    address, next_of_kin, next_of_kin_phone, package, status, created_at
+                    address, next_of_kin, next_of_kin_phone, package, monthly_contribution, status, created_at
                  ) VALUES (
                     :user_id, :agent_id, :member_number, :id_number, :date_of_birth, :gender,
-                    :address, :next_of_kin, :next_of_kin_phone, :package, :status, NOW()
+                    :address, :next_of_kin, :next_of_kin_phone, :package, :monthly_contribution, :status, NOW()
                  )'
             );
+            // Calculate monthly contribution using central logic
+            $age = 0;
+            try {
+                $age = $this->memberModel->calculateAge($_POST['date_of_birth'] ?? '');
+            } catch (Exception $e) {
+                error_log('Agent reg age calc error: ' . $e->getMessage());
+            }
+
+            $packageKey = $_POST['package'] ?? '';
+            $memberForCalc = ['date_of_birth' => $_POST['date_of_birth'] ?? null, 'package' => $packageKey];
+            $monthlyContribution = $this->memberModel->calculateMonthlyContribution($memberForCalc, []);
+
             $memberStmt->execute([
                 ':user_id' => $userId,
                 ':agent_id' => $agent['id'],
@@ -403,8 +419,9 @@ class AgentDashboardController extends BaseController
                 ':gender' => $_POST['gender'],
                 ':address' => $this->sanitizeInput($_POST['address'] ?? ''),
                 ':next_of_kin' => $this->sanitizeInput($_POST['next_of_kin']),
-                ':next_of_kin_phone' => $this->sanitizeInput($_POST['next_of_kin_phone']),
+                ':next_of_kin_phone' => formatKenyanPhone($this->sanitizeInput($_POST['next_of_kin_phone'] ?? '')),
                 ':package' => $_POST['package'],
+                ':monthly_contribution' => $monthlyContribution,
                 // New members registered by agents should start in 'inactive' status
                 // so admins can review/activate them. User account remains 'pending'.
                 ':status' => 'inactive'
@@ -803,6 +820,25 @@ class AgentDashboardController extends BaseController
             $this->redirect('/agent/member-details/' . (int)$memberId);
             return;
         }
+
+            // Validate dependent age against package rules when possible
+            global $membership_packages;
+            $pkgKey = $member['package'] ?? null;
+            if (!empty($_POST['date_of_birth'])) {
+                try {
+                    $benAge = $this->memberModel->calculateAge($_POST['date_of_birth']);
+                    if ($pkgKey && isset($membership_packages[$pkgKey]) && isset($membership_packages[$pkgKey]['age_max'])) {
+                        $pkg = $membership_packages[$pkgKey];
+                        if ($benAge > (int)$pkg['age_max']) {
+                            $_SESSION['error'] = 'Dependent age exceeds limits for this member\'s package.';
+                            $this->redirect('/agent/member-details/' . (int)$memberId);
+                            return;
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Dependent age calc error: ' . $e->getMessage());
+                }
+            }
 
         try {
             $this->beneficiaryModel->addBeneficiary($dependentData);

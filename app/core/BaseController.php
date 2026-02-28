@@ -109,8 +109,8 @@ abstract class BaseController
     
     protected function validatePhone($phone)
     {
-        // Kenyan phone number validation
-        $pattern = '/^(\+254|254|0)?([17][0-9]{8})$/';
-        return preg_match($pattern, $phone);
+        // Use helper pattern: allow 07..., +2547..., 2547..., or 7...
+        $pattern = '/^(\+254|254|0)?(7[0-9]{8})$/';
+        return preg_match($pattern, $phone) === 1;
     }
 }

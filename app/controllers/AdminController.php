@@ -323,9 +323,137 @@ class AdminController extends BaseController
         }
         
         // Handle POST - process registration
-        // This will be implemented based on your registration flow
-        $_SESSION['info'] = 'Member registration form loaded. Complete the form to register a new member.';
-        $this->redirect('/admin/members');
+        try {
+            $this->validateCsrf();
+
+            // Collect and sanitize inputs
+            $firstName = $this->sanitizeInput($_POST['first_name'] ?? '');
+            $lastName = $this->sanitizeInput($_POST['last_name'] ?? '');
+            $email = $this->sanitizeInput($_POST['email'] ?? '');
+            $phoneRaw = $this->sanitizeInput($_POST['phone'] ?? '');
+            $idNumber = $this->sanitizeInput($_POST['id_number'] ?? '');
+            $dateOfBirth = $this->sanitizeInput($_POST['date_of_birth'] ?? '');
+            $gender = $this->sanitizeInput($_POST['gender'] ?? 'male');
+            $address = $this->sanitizeInput($_POST['address'] ?? '');
+            $packageKey = $this->sanitizeInput($_POST['package'] ?? 'individual_below_70');
+            $password = $_POST['password'] ?? null;
+
+            // Basic validation
+            if (empty($firstName) || empty($lastName) || empty($phoneRaw) || empty($idNumber) || empty($dateOfBirth)) {
+                $_SESSION['error'] = 'Please fill in all required fields.';
+                $this->redirect('/admin/members/register');
+                return;
+            }
+
+            // Normalize phone
+            $phone = formatKenyanPhone($phoneRaw);
+            if (!$phone) {
+                $_SESSION['error'] = 'Invalid phone number format.';
+                $this->redirect('/admin/members/register');
+                return;
+            }
+
+            // Check uniqueness: phone and ID
+            $exists = $this->userModel->findByPhone($phone);
+            if ($exists) {
+                $_SESSION['error'] = 'Phone number already registered.';
+                $this->redirect('/admin/members/register');
+                return;
+            }
+
+            if (!empty($email) && $this->userModel->findByEmail($email)) {
+                $_SESSION['error'] = 'Email already registered.';
+                $this->redirect('/admin/members/register');
+                return;
+            }
+
+            if (!empty($idNumber)) {
+                $existing = $this->memberModel->findByNationalId($idNumber);
+                if ($existing) {
+                    $_SESSION['error'] = 'National ID already registered.';
+                    $this->redirect('/admin/members/register');
+                    return;
+                }
+            }
+
+            // Prepare password
+            if (empty($password)) {
+                $temp = bin2hex(random_bytes(6));
+                $passwordHash = password_hash($temp, PASSWORD_DEFAULT);
+            } else {
+                if (strlen($password) < 8) {
+                    $_SESSION['error'] = 'Password must be at least 8 characters.';
+                    $this->redirect('/admin/members/register');
+                    return;
+                }
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            }
+
+            // Start DB transaction
+            $this->db->getConnection()->beginTransaction();
+
+            // Create user
+            $userId = $this->userModel->createUser([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email ?: null,
+                'phone' => $phone,
+                'password' => $passwordHash,
+                'role' => 'member',
+                'status' => 'pending'
+            ]);
+
+            // Generate member number
+            $memberNumber = 'ADM' . date('Y') . str_pad($userId, 4, '0', STR_PAD_LEFT);
+
+            // Calculate monthly contribution centrally
+            $memberForCalc = ['date_of_birth' => $dateOfBirth, 'package' => $packageKey];
+            $monthlyContribution = $this->memberModel->calculateMonthlyContribution($memberForCalc, []);
+
+            // Maturity ends default
+            $maturityMonths = defined('MATURITY_PERIOD_UNDER_80') ? MATURITY_PERIOD_UNDER_80 : 4;
+            $maturityEnds = date('Y-m-d', strtotime("+{$maturityMonths} months"));
+
+            // Create member record
+            $this->memberModel->create([
+                'user_id' => $userId,
+                'member_number' => $memberNumber,
+                'id_number' => $idNumber,
+                'date_of_birth' => $dateOfBirth,
+                'gender' => $gender,
+                'address' => $address,
+                'package' => $packageKey,
+                'monthly_contribution' => $monthlyContribution,
+                'maturity_ends' => $maturityEnds,
+                'status' => 'inactive',
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->db->getConnection()->commit();
+
+            // Optionally notify user (email optional)
+            try {
+                $emailSvc = new EmailService();
+                if (!empty($email)) {
+                    $emailSvc->sendRegistrationConfirmation($email, [
+                        'name' => $firstName . ' ' . $lastName,
+                        'member_number' => $memberNumber,
+                        'monthly_contribution' => $monthlyContribution
+                    ]);
+                }
+            } catch (Exception $e) {
+                error_log('Admin register email failed: ' . $e->getMessage());
+            }
+
+            $_SESSION['success'] = 'Member registered successfully.';
+            $this->redirect('/admin/members');
+
+        } catch (Exception $e) {
+            $this->db->getConnection()->rollBack();
+            error_log('Admin register error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Failed to register member: ' . $e->getMessage();
+            $this->redirect('/admin/members/register');
+        }
     }
 
     /**

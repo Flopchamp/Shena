@@ -17,6 +17,7 @@ class Beneficiary extends BaseModel
             'member_id' => $data['member_id'],
             'full_name' => $data['full_name'],
             'relationship' => $data['relationship'],
+            'date_of_birth' => $data['date_of_birth'] ?? null,
             'id_number' => $data['id_number'],
             'phone_number' => $data['phone_number'] ?? null,
             'percentage' => $data['percentage'] ?? 100,
@@ -28,7 +29,7 @@ class Beneficiary extends BaseModel
     
     public function updateBeneficiary($id, $data)
     {
-        $allowedFields = ['full_name', 'relationship', 'id_number', 'phone_number', 'percentage'];
+        $allowedFields = ['full_name', 'relationship', 'date_of_birth', 'id_number', 'phone_number', 'percentage'];
         $updateData = array_intersect_key($data, array_flip($allowedFields));
         
         return $this->update($id, $updateData);

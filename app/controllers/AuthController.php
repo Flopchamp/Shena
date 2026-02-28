@@ -223,7 +223,7 @@ class AuthController extends BaseController
             ];
             
             // Validate required fields
-            $required = ['first_name', 'last_name', 'email', 'phone', 'password'];
+            $required = ['first_name', 'last_name', 'phone', 'password'];
             foreach ($required as $field) {
                 if (empty($userData[$field])) {
                     $_SESSION['error'] = 'Please fill in all required fields.';
@@ -234,8 +234,8 @@ class AuthController extends BaseController
                 }
             }
             
-            // Validate email
-            if (!$this->validateEmail($userData['email'])) {
+            // Validate email if provided (email is optional)
+            if (!empty($userData['email']) && !$this->validateEmail($userData['email'])) {
                 $_SESSION['error'] = 'Please enter a valid email address.';
                 $_SESSION['old_input'] = array_merge($userData, $memberData);
                 unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
@@ -273,8 +273,8 @@ class AuthController extends BaseController
                 return;
             }
             
-            // Check if email already exists
-            if ($this->userModel->findByEmail($userData['email'])) {
+            // Check if email already exists (only if provided)
+            if (!empty($userData['email']) && $this->userModel->findByEmail($userData['email'])) {
                 $_SESSION['error'] = 'Email address already registered.';
                 $_SESSION['old_input'] = array_merge($userData, $memberData);
                 unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
@@ -283,7 +283,8 @@ class AuthController extends BaseController
                 return;
             }
             
-            // Check if phone already exists
+            // Normalize phone and check uniqueness
+            $userData['phone'] = formatKenyanPhone($userData['phone']);
             if ($this->userModel->findByPhone($userData['phone'])) {
                 $_SESSION['error'] = 'Phone number already registered.';
                 $_SESSION['old_input'] = array_merge($userData, $memberData);
@@ -346,8 +347,10 @@ class AuthController extends BaseController
             }
             
             try {
-                // Create user
+                // Create user (ensure phone normalized; email optional)
                 unset($userData['confirm_password']);
+                $userData['phone'] = formatKenyanPhone($userData['phone']);
+                $userData['email'] = $userData['email'] ?: null;
                 $userId = $this->userModel->createUser($userData);
                 
                 // Generate member number
@@ -382,8 +385,25 @@ class AuthController extends BaseController
                 }
                 
                 $selectedPackage = $membership_packages[$packageKey];
-                $monthlyContribution = $selectedPackage['monthly_contribution'];
+                // Validate selected package age bracket
+                if (isset($selectedPackage['age_min'], $selectedPackage['age_max']) && ($age < $selectedPackage['age_min'] || $age > $selectedPackage['age_max'])) {
+                    $_SESSION['error'] = 'Selected package does not match your age. Please choose an appropriate package or update your date of birth.';
+                    $_SESSION['old_input'] = array_merge($userData, $memberData);
+                    unset($_SESSION['old_input']['password'], $_SESSION['old_input']['confirm_password']);
+                    $_SESSION['error_field'] = 'package';
+                    $this->db->getConnection()->rollback();
+                    $this->redirect('/register');
+                    return;
+                }
+
                 $packageCategory = $selectedPackage['category'] ?? 'individual';
+
+                // Compute monthly contribution centrally using Member model (considers age and dependents)
+                $memberForCalc = [
+                    'date_of_birth' => $memberData['date_of_birth'] ?? null,
+                    'package' => $packageKey
+                ];
+                $monthlyContribution = $this->memberModel->calculateMonthlyContribution($memberForCalc, []);
                 
                 // Calculate maturity period end date based on age and policy configuration
                 $maturityMonths = isset($selectedPackage['maturity_months']) ? $selectedPackage['maturity_months'] : 

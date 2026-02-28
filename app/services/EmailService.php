@@ -24,6 +24,12 @@ class EmailService
     public function sendEmail($to, $subject, $body, $isHtml = true)
     {
         try {
+            // Basic validation: if recipient missing, skip sending
+            if (empty($to)) {
+                error_log('Email not sent: recipient email is empty');
+                $this->logEmailAttempt($to, $subject, $body, 'skipped', 'empty_recipient');
+                return false;
+            }
             // Configure SMTP settings using ini_set
             ini_set('SMTP', $this->config['host']);
             ini_set('smtp_port', $this->config['port']);

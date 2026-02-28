@@ -1035,7 +1035,7 @@ include VIEWS_PATH . '/layouts/header.php';
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="<?php echo e(old('email')); ?>" required>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" value="<?php echo e(old('email')); ?>">
                     </div>
                     <div class="col-md-6 mb-4">
                         <label for="date_of_birth" class="form-label">Date of Birth</label>
@@ -1075,8 +1075,8 @@ include VIEWS_PATH . '/layouts/header.php';
                 </div>
                 
                 <div class="qr-code">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=4163987" alt="QR Code">
-                    <div class="qr-note">"Scan QR to Pay"</div>
+                    <img src="/qr/paybill?paybill=4163987&account=4163987" alt="QR Code">
+                    <div class="qr-note">Scan QR to Pay</div>
                 </div>
                 
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed rgba(127, 61, 158, 0.3);">

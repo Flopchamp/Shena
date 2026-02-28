@@ -270,6 +270,8 @@ class Router
         // API Routes
         $this->addRoute('POST', '/api/mpesa/callback', 'PaymentController@mpesaCallback');
         $this->addRoute('POST', '/api/payment/initiate', 'PaymentController@initiatePayment');
+        // QR image route
+        $this->addRoute('GET', '/qr/paybill', 'PaymentController@qrPaybill');
         
         // Payment Routes (Member & Public)
         $this->addRoute('POST', '/payment/initiate', 'PaymentController@initiatePayment');

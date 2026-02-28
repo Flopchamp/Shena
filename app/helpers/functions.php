@@ -204,8 +204,9 @@ function js($file)
  */
 function validateKenyanPhone($phone)
 {
-    $pattern = '/^(\+254|254|0)?([17][0-9]{8})$/';
-    return preg_match($pattern, $phone);
+    // Accept formats: 07XXXXXXXX, +2547XXXXXXXX, 2547XXXXXXXX, or 7XXXXXXXX
+    $pattern = '/^(\+254|254|0)?(7[0-9]{8})$/';
+    return preg_match($pattern, $phone) === 1;
 }
 
 /**
@@ -217,14 +218,15 @@ function formatKenyanPhone($phone)
     $phone = preg_replace('/[^0-9]/', '', $phone);
     
     // Handle different formats
+    // Normalize to MSISDN without plus: 2547XXXXXXXX
     if (substr($phone, 0, 3) === '254') {
-        return '+' . $phone;
+        return $phone;
     } elseif (substr($phone, 0, 1) === '0') {
-        return '+254' . substr($phone, 1);
+        return '254' . substr($phone, 1);
     } elseif (strlen($phone) === 9) {
-        return '+254' . $phone;
+        return '254' . $phone;
     }
-    
+
     return $phone;
 }
 

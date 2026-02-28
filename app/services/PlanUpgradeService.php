@@ -207,16 +207,24 @@ class PlanUpgradeService
             $this->db->getConnection()->beginTransaction();
             
             // Update member package
+            // Recalculate monthly contribution centrally (considers dependents)
+            $member = $this->memberModel->getMemberById($request['member_id']);
+            $dependents = $this->memberModel->getMemberDependents($request['member_id']);
+            // Ensure member array includes the new target package key for calculation
+            $memberForCalc = $member;
+            $memberForCalc['package'] = $request['to_package'];
+            $newMonthly = $this->memberModel->calculateMonthlyContribution($memberForCalc, $dependents);
+
             $updateMember = "UPDATE members SET 
                 package = :package,
                 monthly_contribution = :monthly_contribution,
                 last_upgrade_date = NOW(),
                 upgrade_count = upgrade_count + 1
                 WHERE id = :member_id";
-            
+
             $this->db->execute($updateMember, [
                 'package' => $request['to_package'],
-                'monthly_contribution' => $request['new_monthly_fee'],
+                'monthly_contribution' => $newMonthly,
                 'member_id' => $request['member_id']
             ]);
             

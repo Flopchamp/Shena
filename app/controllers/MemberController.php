@@ -789,7 +789,8 @@ class MemberController extends BaseController
                 'full_name' => $this->sanitizeInput($_POST['full_name'] ?? ''),
                 'relationship' => $this->sanitizeInput($_POST['relationship'] ?? ''),
                 'id_number' => $this->sanitizeInput($_POST['id_number'] ?? ''),
-                'phone_number' => $this->sanitizeInput($_POST['phone_number'] ?? ''),
+                'date_of_birth' => $this->sanitizeInput($_POST['date_of_birth'] ?? null),
+                'phone_number' => formatKenyanPhone($this->sanitizeInput($_POST['phone_number'] ?? '')),
                 'percentage' => (float)($_POST['percentage'] ?? 100)
             ];
             
@@ -811,6 +812,25 @@ class MemberController extends BaseController
                 $this->redirect('/beneficiaries');
                 return;
             }
+
+            // Validate beneficiary age against member's package rules when possible
+            global $membership_packages;
+            $pkgKey = $member['package'] ?? null;
+            if (!empty($beneficiaryData['date_of_birth'])) {
+                try {
+                    $benAge = $this->memberModel->calculateAge($beneficiaryData['date_of_birth']);
+                    if ($pkgKey && isset($membership_packages[$pkgKey]) && isset($membership_packages[$pkgKey]['age_max'])) {
+                        $pkg = $membership_packages[$pkgKey];
+                        if ($benAge > (int)$pkg['age_max']) {
+                            $_SESSION['error'] = 'Beneficiary age exceeds limits for your package.';
+                            $this->redirect('/beneficiaries');
+                            return;
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Beneficiary age calc error: ' . $e->getMessage());
+                }
+            }
             
             // Check total percentage
             $currentTotal = $this->beneficiaryModel->validateBeneficiaryPercentages($member['id']);
@@ -825,7 +845,19 @@ class MemberController extends BaseController
             
             $beneficiaryId = $this->beneficiaryModel->addBeneficiary($beneficiaryData);
             error_log('Beneficiary added with ID: ' . $beneficiaryId);
-            
+
+            // Recalculate member's monthly contribution now that a beneficiary (dependent) was added
+            try {
+                $beneficiaries = $this->beneficiaryModel->getActiveBeneficiaries($member['id']);
+                $dependents = $beneficiaries ?: [];
+                $memberForCalc = ['date_of_birth' => $member['date_of_birth'] ?? null];
+                $newMonthly = $this->memberModel->calculateMonthlyContribution($memberForCalc, $dependents);
+                $this->memberModel->update($member['id'], ['monthly_contribution' => $newMonthly]);
+                error_log('Member monthly contribution updated to: ' . $newMonthly);
+            } catch (Exception $e) {
+                error_log('Failed to recalc monthly contribution after adding beneficiary: ' . $e->getMessage());
+            }
+
             $_SESSION['success'] = 'Beneficiary added successfully.';
             
         } catch (Exception $e) {
@@ -1201,6 +1233,7 @@ class MemberController extends BaseController
                 'full_name' => $this->sanitizeInput($_POST['full_name'] ?? ''),
                 'relationship' => $this->sanitizeInput($_POST['relationship'] ?? ''),
                 'id_number' => $this->sanitizeInput($_POST['id_number'] ?? ''),
+                'date_of_birth' => $this->sanitizeInput($_POST['date_of_birth'] ?? null),
                 'phone_number' => $this->sanitizeInput($_POST['phone_number'] ?? ''),
                 'percentage' => (float)($_POST['percentage'] ?? 0)
             ];
